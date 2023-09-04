@@ -1,9 +1,15 @@
 // place files you want to import through the `$lib` alias in this folder.
 import * as THREE from 'three';
-import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+// import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+// import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+import CameraControls from 'camera-controls';
+
+CameraControls.install({ THREE: THREE });
+
 
 export const createScene = (el) => {
+    const clock = new THREE.Clock();
     const scene = new THREE.Scene();
 
     const { width, height } = el.getBoundingClientRect();
@@ -17,10 +23,16 @@ export const createScene = (el) => {
     camera.lookAt(0, 0, 0);
 
     console.log("el:", el)
-    const controls = new TrackballControls(camera, el);
-    controls.rotateSpeed = 3.0;
-    // const controls = new OrbitControls(camera, el);
 
+    // camera-controls
+    const cameraControls = new CameraControls(camera, el);
+
+    // TrackballControls
+    // const controls = new TrackballControls(camera, el);
+    // controls.rotateSpeed = 3.0;
+
+    // OrbitControls
+    // const controls = new OrbitControls(camera, el);
 
     const geometry = new THREE.BoxGeometry();
 
@@ -43,14 +55,25 @@ export const createScene = (el) => {
     let renderer;
 
     const animate = () => {
+        // snip
+        const delta = clock.getDelta();
+        const hasControlsUpdated = cameraControls.update(delta);
+
+
         requestAnimationFrame(animate);
         // cube.rotation.x += 0.01;
         // cube.rotation.y += 0.01;
 
         // required if controls.enableDamping or controls.autoRotate are set to true
-        controls.update();
+        // controls.update();
 
+
+        // you can skip this condition to render though
+        // if (hasControlsUpdated) {
         renderer.render(scene, camera);
+        // }
+
+        // renderer.render(scene, camera);
     };
 
     const resize = () => {
