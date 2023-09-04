@@ -13,7 +13,7 @@
 
 <style>
 	.main {
-		background-color: #f0f0f0;
+		background-color: #eeeeee;
 		padding: 20px;
 		margin: 20px;
 		border-radius: 5px;

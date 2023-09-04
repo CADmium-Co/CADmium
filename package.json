@@ -27,6 +27,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@fontsource-variable/manrope": "^5.0.8",
 		"three": "^0.156.0"
 	}
 }
