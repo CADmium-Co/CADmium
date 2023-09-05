@@ -3,9 +3,9 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"wasm": "wasm-pack build --target web src/rust/cadmium",
+		"build:wasm": "wasm-pack build --target web src/rust/cadmium",
 		"dev": "vite dev",
-		"build": "wasm-pack build --target web src/rust/cadmium && vite build",
+		"build": "vite build",
 		"preview": "vite preview",
 		"test": "npm run test:integration && npm run test:unit",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",
