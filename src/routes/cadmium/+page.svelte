@@ -3,9 +3,19 @@
 	import { browser } from '$app/environment';
 	import { createScene } from '$lib/scene.js';
 
+	// import init from '../../wasm/cadmium_bg.wasm?init';
+	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
+	import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
+	// import init from '../../../cadmium/pkg/cadmium_bg.wasm?init';
+
 	let el;
 	if (browser) {
-		onMount(() => {
+		onMount(async () => {
+			init().then((instance) => {
+				const result = instance.exports.add(2, 3);
+				console.log('result: ' + result);
+			});
+
 			createScene(el);
 		});
 	}

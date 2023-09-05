@@ -22,7 +22,7 @@ export const createScene = (el) => {
     camera.position.z = -5;
     camera.lookAt(0, 0, 0);
 
-    console.log("el:", el)
+    // console.log("el:", el)
 
     // camera-controls
     const cameraControls = new CameraControls(camera, el);
@@ -93,7 +93,7 @@ export const createScene = (el) => {
     window.addEventListener('resize', resize);
 
     getStarted(el);
-    console.log("Created scene!");
+    // console.log("Created scene!");
 }
 
 
