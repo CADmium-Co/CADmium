@@ -1,6 +1,6 @@
 <script>
 	import '@fontsource-variable/manrope';
-	import '../app.css';
+	import '../app.postcss';
 	import '../colors.css';
 </script>
 
