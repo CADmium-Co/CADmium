@@ -4,6 +4,12 @@
 @tailwind utilities;
 
 
+@layer components {
+	.btn-primary {
+	  @apply h-[45px] px-2 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75;
+	}
+}
+
 body {
 	font-family: 'Manrope Variable', sans-serif;
 }
