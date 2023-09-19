@@ -1,38 +1,23 @@
-# create-svelte
+# CADmium
 
-Everything you need to build a Svelte project, powered by [`create-svelte`](https://github.com/sveltejs/kit/tree/master/packages/create-svelte).
+This is an attempt to create a new CAD program from scratch. Legacy CAD programs have taken many thousands of years of collective engineering time to get where they are so this program will never be able to compete on breadth of features. CADmium is intended to capture 80% of the most common CAD use cases while doing less than 20% of the work.
 
-## Creating a project
+Features:
+- Simple, modern parametric CAD UI
+- Runs in a browser
+- Export as STEP, STL, or OBJ
+- Functions without an internet connection (once you've loaded the page)
 
-If you're seeing this, you've probably already done this step. Congrats!
+**Status**: Early prototype. This tool is not yet minimally functional, but is being developed in the open.
 
-```bash
-# create a new project in the current directory
-npm create svelte@latest
+## Technology
 
-# create a new project in my-app
-npm create svelte@latest my-app
-```
+The boundary representation engine under the hood is [truck](https://github.com/ricosjp/truck), which is written in rust and is not dependent on any legacy b-rep engine.
 
-## Developing
+Leveraging truck, I wrote a small rust library called [cadmium](https://github.com/MattFerraro/CADmium/tree/main/src/rust/cadmium) which provides structs for projects, workspaces, sketches, extrusions, and constraints. My goal is that this rust library provides all the same functionality as the UI for anyone who prefers code-first CAD. This library is able to save and load projects to disk as json. I have also built a set of javascript bindings so that the whole thing can be compiled to wasm and run in a browser.
 
-Once you've created a project and installed dependencies with `npm install` (or `pnpm install` or `yarn`), start a development server:
+The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood.
 
-```bash
-npm run dev
+## Licensing
 
-# or start the server and open the app in a new browser tab
-npm run dev -- --open
-```
-
-## Building
-
-To create a production version of your app:
-
-```bash
-npm run build
-```
-
-You can preview the production build with `npm run preview`.
-
-> To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+The entire project is available under the MIT license.
