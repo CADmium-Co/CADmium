@@ -1,6 +1,7 @@
 #![allow(dead_code, unused)]
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 use truck_polymesh::SearchNearestParameterD1;
 use wasm_bindgen::prelude::*;
 
@@ -56,6 +57,25 @@ impl Workbench {
             name: name.to_owned(),
             history: vec![],
         }
+    }
+
+    pub fn get_sketch_mut(&mut self, name: &str) -> Option<&mut Sketch> {
+        for step in self.history.iter_mut() {
+            match &mut step.data {
+                StepData::Sketch {
+                    plane_name,
+                    width,
+                    height,
+                    sketch,
+                } => {
+                    if name == step.name {
+                        return Some(sketch);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
     }
 
     pub fn add_defaults(&mut self) {
@@ -356,62 +376,87 @@ impl Spring {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sketch {
-    points: Vec<Point2>,
-    springs: Vec<Spring>,
+    points: HashMap<u64, Point2>,
+    highest_point_id: u64,
+    springs: HashMap<u64, Spring>,
+    highest_spring_id: u64,
 }
 
 impl Sketch {
     pub fn new() -> Self {
         Sketch {
-            points: vec![],
-            springs: vec![],
+            points: HashMap::new(),
+            highest_point_id: 0,
+            springs: HashMap::new(),
+            highest_spring_id: 0,
         }
     }
 
-    fn add_point(&mut self, x: f64, y: f64) -> u64 {
-        let id = self.points.len();
-        self.points.push(Point2::new(x, y));
-        id as u64
+    pub fn add_point(&mut self, x: f64, y: f64) -> u64 {
+        let id = self.highest_point_id + 1;
+        self.points.insert(id, Point2::new(x, y));
+        self.highest_point_id += 1;
+        id
     }
 
-    fn add_spring(&mut self, start_id: u64, end_id: u64, length: f64) -> u64 {
-        let id = self.springs.len();
+    pub fn add_fixed_point(&mut self, x: f64, y: f64) -> u64 {
+        let id = self.highest_point_id + 1;
+        self.points.insert(id, Point2::new_fixed(x, y));
+        self.highest_point_id += 1;
+        id
+    }
+
+    pub fn add_spring(&mut self, start_id: u64, end_id: u64, length: f64) -> u64 {
+        let id = self.highest_spring_id + 1;
         let s = Spring::new(start_id, end_id, length, SpringKind::Length);
-        self.springs.push(s);
-        id as u64
+        self.springs.insert(id, s);
+        self.highest_spring_id += 1;
+        id
     }
 
-    fn add_torsion(&mut self, start_id: u64, end_id: u64, angle: f64) -> u64 {
-        let id = self.springs.len();
-        self.springs
-            .push(Spring::new(start_id, end_id, angle, SpringKind::Torsion));
-        id as u64
+    pub fn add_torsion(&mut self, start_id: u64, end_id: u64, angle: f64) -> u64 {
+        let id = self.highest_spring_id + 1;
+        self.springs.insert(
+            id,
+            Spring::new(start_id, end_id, angle, SpringKind::Torsion),
+        );
+        self.highest_spring_id += 1;
+        id
     }
 
-    fn solve(&mut self, steps: u64) {
-        self.print_state();
+    pub fn solve(&mut self, steps: u64) {
+        // self.print_state();
         for _ in 0..steps {
             self.step();
-            self.print_state();
+            // self.print_state();
         }
     }
 
-    fn step(&mut self) {
+    pub fn step(&mut self) {
         let dt = 0.04;
-        for point in self.points.iter_mut() {
+        for (point_id, point) in self.points.iter_mut() {
             point.reset_forces();
         }
-        for spring in self.springs.iter() {
-            let point_a = &self.points[spring.start_id as usize];
-            let point_b = &self.points[spring.end_id as usize];
+        for (spring_id, spring) in self.springs.iter() {
+            let point_a = self.points.get(&spring.start_id).unwrap();
+            let point_b = self.points.get(&spring.end_id).unwrap();
             let forces = spring.compute_forces(point_a, point_b);
 
-            self.points[spring.start_id as usize].fx += forces[0];
-            self.points[spring.start_id as usize].fy += forces[1];
-            self.points[spring.end_id as usize].fx += forces[2];
-            self.points[spring.end_id as usize].fy += forces[3];
+            {
+                let mut point_a = self.points.get_mut(&spring.start_id).unwrap();
+                point_a.fx += forces[0];
+                point_a.fy += forces[1];
+            }
+            {
+                let mut point_b = self.points.get_mut(&spring.end_id).unwrap();
+                point_b.fx += forces[2];
+                point_b.fy += forces[3];
+            }
         }
-        for point in self.points.iter_mut() {
+        for (point_id, point) in self.points.iter_mut() {
+            if point.fixed {
+                continue;
+            }
             let ax = point.fx / point.m;
             let ay = point.fy / point.m;
             point.dx += ax;
@@ -421,9 +466,20 @@ impl Sketch {
         }
     }
 
-    fn print_state(&self) {
+    pub fn print_state_minimal(&self) {
         let mut data = vec![];
-        for point in self.points.iter() {
+        for (point_id, point) in self.points.iter().sorted_by_key(|(id, _)| *id) {
+            data.push(*point_id as f64);
+            data.push(point.x);
+            data.push(point.y);
+        }
+        let mut strings = data.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        println!("{}", strings.join(","));
+    }
+
+    pub fn print_state(&self) {
+        let mut data = vec![];
+        for (point_id, point) in self.points.iter() {
             data.push(point.x);
             data.push(point.y);
             data.push(point.dx);
@@ -445,6 +501,7 @@ pub struct Point2 {
     dy: f64,
     fx: f64,
     fy: f64,
+    fixed: bool,
 }
 
 impl Point2 {
@@ -457,6 +514,20 @@ impl Point2 {
             dy: 0.0,
             fx: 0.0,
             fy: 0.0,
+            fixed: false,
+        }
+    }
+
+    pub fn new_fixed(x: f64, y: f64) -> Self {
+        Point2 {
+            x,
+            y,
+            m: 1.0,
+            dx: 0.0,
+            dy: 0.0,
+            fx: 0.0,
+            fy: 0.0,
+            fixed: true,
         }
     }
 
