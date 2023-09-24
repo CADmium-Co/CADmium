@@ -50,6 +50,7 @@ dependencies = [
  "itertools",
  "serde",
  "serde_json",
+ "svg",
  "truck-meshalgo",
  "truck-modeling",
  "truck-polymesh",
@@ -514,6 +515,12 @@ dependencies = [
  "robust",
  "smallvec",
 ]
+
+[[package]]
+name = "svg"
+version = "0.13.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02d815ad337e8449d2374d4248448645edfe74e699343dd5719139d93fa87112"
 
 [[package]]
 name = "syn"

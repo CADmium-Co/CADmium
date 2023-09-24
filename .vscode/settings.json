@@ -1,0 +1,5 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./src/rust/cadmium/Cargo.toml",
+    ]
+}

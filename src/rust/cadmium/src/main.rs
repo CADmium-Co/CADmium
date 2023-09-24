@@ -1,4 +1,6 @@
 #![allow(dead_code, unused)]
+// use cadmium::sketch::test_svg;
+use cadmium::sketch::test_svg;
 use cadmium::Project;
 
 fn main() {
@@ -11,9 +13,15 @@ fn main() {
     let sketch = wb.get_sketch_mut("Sketch1").unwrap();
 
     let id0 = sketch.add_fixed_point(0.0, 0.0);
-    let id1 = sketch.add_point(2.0, 0.0);
+    let id1 = sketch.add_fixed_point(1.0, 0.0);
+    let id2 = sketch.add_point(0.5, 0.2);
 
-    let spring0 = sketch.add_spring(id0, id1, 1.0);
+    // TODO: instead of point masses and springs, implement an API
+    // that looks a lot more like regular 2D constraints: lines with lengths,
+    // defined angles, etc.
+
+    let spring0 = sketch.add_spring(id0, id2, 1.0);
+    let spring1 = sketch.add_spring(id1, id2, 1.0);
 
     // for i in 0..10 {
     //     sketch.step();
@@ -21,16 +29,22 @@ fn main() {
     // }
     // println!("A mut sketch: {:?}", sketch);
 
-    sketch.print_state_minimal();
-    sketch.solve(100);
-    sketch.print_state_minimal();
+    // sketch.print_state_minimal();
+    // sketch.solve(100);
+    // sketch.print_state_minimal();
 
     // println!("Project: {:?}", p);
 
-    // let serialized = serde_json::to_string(&p).unwrap();
-    // println!("serialized = {}", serialized);
+    let c_id = sketch.add_circle(-1.0, 0.0, 0.5);
+
+    let serialized = serde_json::to_string(&p).unwrap();
+    println!("serialized = {}", serialized);
+
+    test_svg();
 
     // let realized = wb.realize(30);
     // println!("Real: {:?}", realized);
     // println!("Real json: {}", serde_json::to_string(&realized).unwrap())
+
+    // wb.add_extrusion("Ext1", "Sketch1", 0.5);
 }
