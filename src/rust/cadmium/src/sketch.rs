@@ -1,7 +1,13 @@
+use geo::Area;
+use geo::Contains;
+use geo::LineString;
+use geo::Polygon;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::f64::consts::TAU;
 use std::{collections::HashMap, hash::Hash};
 use svg::node::element::path::Data;
+use svg::node::element::Circle;
 use svg::node::element::Path;
 use svg::Document;
 
@@ -35,6 +41,53 @@ impl Sketch {
         }
     }
 
+    pub fn as_polygon(&self, ring: &Ring) -> Polygon {
+        match ring {
+            Ring::Circle(circle) => {
+                let mut b: Vec<(f64, f64)> = vec![];
+                let center = self.points.get(&circle.center).unwrap();
+
+                for i in 0..10 {
+                    let angle = i as f64 / 100.0 * TAU;
+                    let x = center.x + circle.radius * angle.cos();
+                    let y = center.y + circle.radius * angle.sin();
+                    b.push((x, y));
+                }
+
+                let polygon = Polygon::new(LineString::from(b), vec![]);
+                polygon
+            }
+            Ring::Segments(segments) => {
+                let mut b: Vec<(f64, f64)> = vec![];
+                // TODO: figure out how to better support arcs here! At least
+                // approximate them with a few line segments!
+                for segment in segments {
+                    let start = segment.get_start();
+                    let start_pt = self.points.get(&start).unwrap();
+                    let start_tuple = (start_pt.x, start_pt.y);
+                    b.push(start_tuple);
+                }
+                let polygon = Polygon::new(LineString::from(b), vec![]);
+                polygon
+            }
+        }
+    }
+
+    pub fn signed_area(&self, ring: &Ring) -> f64 {
+        match ring {
+            Ring::Circle(circle) => circle.radius * circle.radius * std::f64::consts::PI,
+            Ring::Segments(segments) => {
+                let mut area: f64 = 0.0;
+                for segment in segments {
+                    let end = self.points.get(&segment.get_end()).unwrap();
+                    let start = self.points.get(&segment.get_start()).unwrap();
+                    area += (end.x - start.x) * (end.y + start.y);
+                }
+                return area / -2.0;
+            }
+        }
+    }
+
     pub fn add_point(&mut self, x: f64, y: f64) -> u64 {
         let id = self.highest_point_id + 1;
         self.points.insert(id, Point2::new(x, y));
@@ -49,15 +102,37 @@ impl Sketch {
         id
     }
 
-    pub fn add_circle(&mut self, x: f64, y: f64, radius: f64) -> u64 {
-        let center_id = self.add_point(x, y);
-        let c = Circle2 {
+    pub fn add_arc(&mut self, center_id: u64, start_id: u64, end_id: u64) -> u64 {
+        let a = Arc2 {
             center: center_id,
+            start: start_id,
+            end: end_id,
+        };
+        let id = self.highest_arc_id + 1;
+        self.arcs.insert(id, a);
+        self.highest_arc_id += 1;
+        id
+    }
+
+    pub fn add_circle(&mut self, point_id: u64, radius: f64) -> u64 {
+        let c = Circle2 {
+            center: point_id,
             radius,
         };
         let id = self.highest_circle_id + 1;
         self.circles.insert(id, c);
         self.highest_circle_id += 1;
+        id
+    }
+
+    pub fn add_segment(&mut self, id0: u64, id1: u64) -> u64 {
+        let l = Line2 {
+            start: id0,
+            end: id1,
+        };
+        let id = self.highest_line_segment_id + 1;
+        self.line_segments.insert(id, l);
+        self.highest_line_segment_id += 1;
         id
     }
 
@@ -157,6 +232,372 @@ impl Sketch {
         }
         let mut strings = data.iter().map(|x| x.to_string()).collect::<Vec<_>>();
         println!("{}", strings.join(","));
+    }
+
+    pub fn save_svg(&self, filename: &str) {
+        // Find the maximum extent of the points so we can set a viewport
+        let mut extended_points: Vec<Point2> = self.points.values().map(|p| p.clone()).collect();
+
+        for (circle_id, circle) in self.circles.iter() {
+            let center = self.points.get(&circle.center).unwrap();
+            let left = Point2::new(center.x - circle.radius, center.y);
+            let right = Point2::new(center.x + circle.radius, center.y);
+            let top = Point2::new(center.x, center.y + circle.radius);
+            let bottom = Point2::new(center.x, center.y - circle.radius);
+            extended_points.extend(vec![left, right, top, bottom]);
+        }
+
+        let point0 = &extended_points[0];
+        let mut min_x = point0.x;
+        let mut min_y = point0.y;
+        let mut max_x = point0.x;
+        let mut max_y = point0.y;
+        for point in extended_points {
+            if point.x < min_x {
+                min_x = point.x;
+            }
+            if point.y < min_y {
+                min_y = point.y;
+            }
+            if point.x > max_x {
+                max_x = point.x;
+            }
+            if point.y > max_y {
+                max_y = point.y;
+            }
+        }
+
+        let dx = max_x - min_x;
+        let dy = max_y - min_y;
+        let buffer_percent = 10.0;
+        let buffer_x = dx * buffer_percent / 100.0;
+        let buffer_y = dy * buffer_percent / 100.0;
+
+        let mut document = Document::new().set(
+            "viewBox",
+            (
+                min_x - buffer_x,
+                -(max_y + buffer_y),
+                dx + buffer_x * 2.0,
+                dy + buffer_y * 2.0,
+            ),
+        );
+
+        let faces = self.find_faces(false);
+        for face in faces.iter() {
+            let exterior = &face.exterior;
+
+            let mut data = self.ring_to_data(exterior, Data::new());
+
+            for hole in face.holes.iter() {
+                data = self.ring_to_data(hole, data);
+            }
+
+            let path = Path::new()
+                .set("fill", "none")
+                .set("stroke", "black")
+                .set("stroke-width", 0.01)
+                .set("fill-rule", "evenodd")
+                .set("d", data);
+
+            document = document.add(path);
+        }
+
+        // for now just do each segment individually. After I figure out how to
+        // find the closed loops, I can do those as a single path.
+        // for (line_id, line) in self.line_segments.iter() {
+        //     let mut data = Data::new();
+        //     let start = self.points.get(&line.start).unwrap();
+        //     let end = self.points.get(&line.end).unwrap();
+        //     data = data.move_to((start.x, -start.y));
+        //     data = data.line_to((end.x, -end.y));
+
+        //     let path = Path::new()
+        //         .set("fill", "none")
+        //         .set("stroke", "black")
+        //         .set("stroke-width", 0.01)
+        //         .set("d", data);
+
+        //     document = document.add(path);
+        // }
+
+        for (circle_id, circle) in self.circles.iter() {
+            let center = self.points.get(&circle.center).unwrap();
+
+            let mut svg_circle = Circle::new()
+                .set("cx", center.x)
+                .set("cy", -center.y)
+                .set("r", circle.radius)
+                .set("fill", "none")
+                .set("stroke", "black")
+                .set("stroke-width", 0.01);
+
+            document = document.add(svg_circle);
+        }
+
+        // for (arc_id, arc) in self.arcs.iter() {
+        //     let center = self.points.get(&arc.center).unwrap();
+        //     let start = self.points.get(&arc.start).unwrap();
+        //     let end = self.points.get(&arc.end).unwrap();
+
+        //     let r = (center.x - start.x).hypot(center.y - start.y);
+
+        //     let mut data = Data::new();
+        //     data = data.move_to((start.x, -start.y));
+        //     //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+        //     data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+
+        //     let path = Path::new()
+        //         .set("fill", "none")
+        //         .set("stroke", "black")
+        //         .set("stroke-width", 0.01)
+        //         .set("d", data);
+
+        //     document = document.add(path);
+        // }
+
+        svg::save(filename, &document).unwrap();
+    }
+
+    pub fn find_faces(&self, debug: bool) -> Vec<Face> {
+        let rings = self.find_rings(debug);
+        let mut faces: Vec<Face> = rings.iter().map(|r| Face::from_ring(r)).collect();
+
+        // this next block of code converts everything to Polygons just so we can
+        // determine what faces contain which other faces. It's a bit of a waste
+        // because geo is a relatively heavy dependency and we don't need all of
+        let mut polygons: Vec<Polygon> = rings.iter().map(|r| self.as_polygon(r)).collect();
+        // they are already sorted from smallest to largest area - self.find_rings does this
+        let mut what_contains_what: Vec<(usize, usize)> = vec![];
+        for smaller_polygon_index in 0..polygons.len() - 1 {
+            let smaller_polygon = &polygons[smaller_polygon_index];
+            println!("Smaller poly area: {:?}", smaller_polygon.signed_area());
+
+            for bigger_polygon_index in smaller_polygon_index + 1..polygons.len() {
+                let bigger_polygon = &polygons[bigger_polygon_index];
+                let inside = bigger_polygon.contains(smaller_polygon);
+                println!(
+                    "Bigger poly area: {} contains? {}",
+                    bigger_polygon.signed_area(),
+                    inside
+                );
+
+                if inside {
+                    what_contains_what.push((bigger_polygon_index, smaller_polygon_index));
+                    break;
+                }
+            }
+        }
+
+        // cool, now we know what faces contain which other faces. Let's just add the holes
+        for (bigger_index, smaller_index) in what_contains_what {
+            let smaller_face = &faces[smaller_index].clone();
+            faces[bigger_index].add_hole(smaller_face)
+        }
+
+        // let faces: Vec<Face> = polygons.iter().map(|p| Face::from_polygon(p)).collect();
+        faces
+    }
+
+    pub fn find_rings(&self, debug: bool) -> Vec<Ring> {
+        // First just collect each segment that we know about
+        let mut segments_overall: Vec<Segment> = vec![];
+        for (_, line) in self.line_segments.iter() {
+            segments_overall.push(Segment::Line(line.clone()));
+        }
+        for (_, arc) in self.arcs.iter() {
+            segments_overall.push(Segment::Arc(arc.clone()));
+        }
+
+        // Then reverse each one and add it to the list
+        let segments_reversed: Vec<Segment> =
+            segments_overall.iter().map(|s| s.reverse()).collect();
+        segments_overall.extend(segments_reversed);
+
+        if debug {
+            println!(
+                "Overall: {:?} segments including reversals",
+                segments_overall.len()
+            );
+        }
+
+        // keep track of every index we've already used--each segment can only be used once
+        let mut used_indices: Vec<usize> = vec![];
+        // this is the output variable
+        let mut new_rings: Vec<Vec<usize>> = vec![];
+
+        for (seg_idx, s) in segments_overall.iter().enumerate() {
+            if debug {
+                println!("Starting a loop with segment: {:?}", s);
+            }
+            if used_indices.contains(&seg_idx) {
+                if debug {
+                    println!("Skipping because it's been used");
+                }
+                continue;
+            }
+            // this variable will accumulate the indices of our new ring
+            let mut new_ring_indices: Vec<usize> = vec![];
+            let starting_point = s.get_start();
+            if debug {
+                println!("Starting point: {:?}", starting_point);
+            }
+
+            let mut next_segment_index: usize = seg_idx;
+            for i in 1..segments_overall.len() {
+                let next_segment = segments_overall.get(next_segment_index).unwrap();
+                if debug {
+                    println!("next segment: {:?}", next_segment);
+                }
+                new_ring_indices.push(next_segment_index);
+
+                match self.find_next_segment_index(
+                    &segments_overall,
+                    next_segment,
+                    &used_indices,
+                    debug,
+                ) {
+                    None => {
+                        if debug {
+                            println!("\tno viable next segments!");
+                        }
+                        break;
+                    }
+                    Some(idx) => next_segment_index = idx,
+                }
+                if next_segment.get_end() == starting_point {
+                    if debug {
+                        println!("\tomg finished!");
+                        println!("\tring indices: {:?}", new_ring_indices);
+                    }
+                    new_rings.push(new_ring_indices.clone());
+                    used_indices.extend(new_ring_indices);
+                    break;
+                }
+            }
+        }
+
+        let mut all_rings: Vec<Ring> = vec![];
+        for ring_indices in new_rings.iter() {
+            // let mut this_ring: Ring = Ring::Segments(vec![]);
+            let mut this_ring: Vec<Segment> = vec![];
+            for segment_index in ring_indices {
+                let actual_segment = segments_overall.get(*segment_index).unwrap();
+                this_ring.push(actual_segment.clone());
+            }
+            all_rings.push(Ring::Segments(this_ring));
+        }
+
+        all_rings.sort_by(|r1, r2| {
+            self.signed_area(r1)
+                .partial_cmp(&self.signed_area(r2))
+                .unwrap()
+        });
+
+        // filter out to only the positive-valued ones
+        all_rings = all_rings
+            .iter()
+            .filter(|r| self.signed_area(r) > 0.0)
+            .cloned()
+            .collect();
+
+        all_rings
+    }
+
+    pub fn find_next_segment_index(
+        &self,
+        segments: &Vec<Segment>,
+        starting_segment: &Segment,
+        used_indices: &Vec<usize>,
+        debug: bool,
+    ) -> Option<usize> {
+        let mut matches: Vec<usize> = vec![];
+        for (idx, s2) in segments.iter().enumerate() {
+            if used_indices.contains(&idx) {
+                continue;
+            }
+            if s2.continues(&starting_segment) && !s2.equals_or_reverse_equals(&starting_segment) {
+                matches.push(idx);
+            }
+        }
+
+        if matches.len() == 0 {
+            None
+        } else if matches.len() == 1 {
+            Some(matches[0])
+        } else {
+            if debug {
+                println!("\tMultiple options! Deciding which one to take...");
+            }
+            let point_a = starting_segment.get_start();
+            let point_b = starting_segment.get_end();
+
+            let mut best_option: usize = 0;
+            let mut biggest_angle: f64 = 0.0;
+            for option in matches {
+                let point_c = segments[option].get_end();
+                let ang = angle(
+                    &self.points[&point_a],
+                    &self.points[&point_b],
+                    &self.points[&point_c],
+                );
+                if debug {
+                    println!(
+                        "\tAngle from {} to {} to {}: {}",
+                        point_a,
+                        point_b,
+                        point_c,
+                        ang * 180.0 / 3.1415926
+                    );
+                }
+                if ang >= biggest_angle {
+                    biggest_angle = ang;
+                    best_option = option;
+                }
+            }
+
+            Some(best_option)
+        }
+    }
+
+    pub fn ring_to_data(&self, ring: &Ring, mut data: Data) -> Data {
+        match ring {
+            Ring::Circle(_) => {
+                panic!("Not implemented yet");
+            }
+            Ring::Segments(segments) => {
+                let mut first = true;
+                for segment in segments {
+                    match segment {
+                        Segment::Line(line) => {
+                            let start = self.points.get(&line.start).unwrap();
+                            let end = self.points.get(&line.end).unwrap();
+
+                            if first {
+                                data = data.move_to((start.x, -start.y));
+                                first = false;
+                            }
+                            data = data.line_to((end.x, -end.y));
+                        }
+                        Segment::Arc(arc) => {
+                            let center = self.points.get(&arc.center).unwrap();
+                            let start = self.points.get(&arc.start).unwrap();
+                            let end = self.points.get(&arc.end).unwrap();
+
+                            let r = (center.x - start.x).hypot(center.y - start.y);
+
+                            if first {
+                                data = data.move_to((start.x, -start.y));
+                                first = false;
+                            }
+                            //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                            data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                        }
+                    }
+                }
+                data
+            }
+        }
     }
 }
 
@@ -340,15 +781,152 @@ pub struct Circle2 {
     radius: f64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Arc2 {
-    center: Point2,
-    start: Point2,
-    end: Point2,
+    center: u64,
+    start: u64,
+    end: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+impl Arc2 {
+    pub fn reverse(&self) -> Self {
+        Arc2 {
+            center: self.center,
+            start: self.end,
+            end: self.start,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Line2 {
     start: u64,
     end: u64,
+}
+
+impl Line2 {
+    pub fn reverse(&self) -> Self {
+        Line2 {
+            start: self.end,
+            end: self.start,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Segment {
+    Line(Line2),
+    Arc(Arc2),
+}
+
+impl Segment {
+    pub fn reverse(&self) -> Self {
+        match self {
+            Segment::Line(line) => Segment::Line(line.reverse()),
+            Segment::Arc(arc) => Segment::Arc(arc.reverse()),
+        }
+    }
+
+    pub fn get_start(&self) -> u64 {
+        match self {
+            Segment::Line(line) => line.start,
+            Segment::Arc(arc) => arc.start,
+        }
+    }
+
+    pub fn get_end(&self) -> u64 {
+        match self {
+            Segment::Line(line) => line.end,
+            Segment::Arc(arc) => arc.end,
+        }
+    }
+
+    pub fn continues(&self, prior_segment: &Segment) -> bool {
+        // determines if this segment continues the prior segment
+        prior_segment.get_end() == self.get_start()
+    }
+
+    pub fn equals_or_reverse_equals(&self, other: &Self) -> bool {
+        self == other || self == &other.reverse()
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Ring {
+    Circle(Circle2),
+    Segments(Vec<Segment>),
+}
+
+impl Ring {}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Face {
+    exterior: Ring,
+    holes: Vec<Ring>,
+}
+
+impl Face {
+    pub fn from_ring(ring: &Ring) -> Face {
+        Face {
+            exterior: ring.clone(),
+            holes: vec![],
+        }
+    }
+
+    pub fn add_hole(&mut self, hole: &Face) {
+        self.holes.push(hole.exterior.clone());
+    }
+}
+
+pub fn angle(a: &Point2, b: &Point2, c: &Point2) -> f64 {
+    // output range is (0, 2*PI]
+    let ba_dx: f64 = a.x - b.x;
+    let ba_dy: f64 = a.y - b.y;
+    let ba_angle: f64 = ba_dy.atan2(ba_dx);
+
+    let bc_dx = c.x - b.x;
+    let bc_dy = c.y - b.y;
+    let bc_angle = bc_dy.atan2(bc_dx);
+
+    let mut naive_angle = bc_angle - ba_angle;
+    if naive_angle <= 0.0 {
+        naive_angle += TAU;
+    }
+    naive_angle
+}
+
+pub fn min_angle_diff(a0: f64, a1: f64) -> f64 {
+    let path_a = angle_difference(a0, a1);
+    let path_b = angle_difference(a1, a0);
+    if path_a < path_b {
+        return path_a;
+    } else {
+        return path_b;
+    }
+}
+
+pub fn angle_difference(mut a0: f64, mut a1: f64) -> f64 {
+    if a0 > TAU {
+        a0 -= TAU;
+    }
+    if a0 < 0.0 {
+        a0 += TAU;
+    }
+
+    if a1 > TAU {
+        a1 -= TAU;
+    }
+    if a1 < 0.0 {
+        a1 += TAU;
+    }
+
+    let mut naive_diff = a1 - a0;
+    if naive_diff > TAU {
+        naive_diff -= TAU;
+    }
+    if naive_diff < 0.0 {
+        naive_diff += TAU;
+    }
+
+    return naive_diff;
 }
