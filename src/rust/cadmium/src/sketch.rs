@@ -4,8 +4,9 @@ use geo::LineString;
 use geo::Polygon;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::collections::HashSet;
 use std::f64::consts::TAU;
-use std::{collections::HashMap, hash::Hash};
 use svg::node::element::path::Data;
 use svg::node::element::Circle;
 use svg::node::element::Path;
@@ -47,7 +48,7 @@ impl Sketch {
                 let mut b: Vec<(f64, f64)> = vec![];
                 let center = self.points.get(&circle.center).unwrap();
 
-                for i in 0..10 {
+                for i in 0..20 {
                     let angle = i as f64 / 100.0 * TAU;
                     let x = center.x + circle.radius * angle.cos();
                     let y = center.y + circle.radius * angle.sin();
@@ -177,10 +178,10 @@ impl Sketch {
 
     pub fn step(&mut self) {
         let dt = 0.04;
-        for (point_id, point) in self.points.iter_mut() {
+        for (_point_id, point) in self.points.iter_mut() {
             point.reset_forces();
         }
-        for (spring_id, spring) in self.springs.iter() {
+        for (_spring_id, spring) in self.springs.iter() {
             let point_a = self.points.get(&spring.start_id).unwrap();
             let point_b = self.points.get(&spring.end_id).unwrap();
             let forces = spring.compute_forces(point_a, point_b);
@@ -196,7 +197,7 @@ impl Sketch {
                 point_b.fy += forces[3];
             }
         }
-        for (point_id, point) in self.points.iter_mut() {
+        for (_point_id, point) in self.points.iter_mut() {
             if point.fixed {
                 continue;
             }
@@ -216,13 +217,13 @@ impl Sketch {
             data.push(point.x);
             data.push(point.y);
         }
-        let mut strings = data.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        let strings = data.iter().map(|x| x.to_string()).collect::<Vec<_>>();
         println!("{}", strings.join(","));
     }
 
     pub fn print_state(&self) {
         let mut data = vec![];
-        for (point_id, point) in self.points.iter() {
+        for (_point_id, point) in self.points.iter() {
             data.push(point.x);
             data.push(point.y);
             data.push(point.dx);
@@ -230,7 +231,7 @@ impl Sketch {
             data.push(point.fx);
             data.push(point.fy);
         }
-        let mut strings = data.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+        let strings = data.iter().map(|x| x.to_string()).collect::<Vec<_>>();
         println!("{}", strings.join(","));
     }
 
@@ -238,7 +239,7 @@ impl Sketch {
         // Find the maximum extent of the points so we can set a viewport
         let mut extended_points: Vec<Point2> = self.points.values().map(|p| p.clone()).collect();
 
-        for (circle_id, circle) in self.circles.iter() {
+        for (_circle_id, circle) in self.circles.iter() {
             let center = self.points.get(&circle.center).unwrap();
             let left = Point2::new(center.x - circle.radius, center.y);
             let right = Point2::new(center.x + circle.radius, center.y);
@@ -247,6 +248,10 @@ impl Sketch {
             extended_points.extend(vec![left, right, top, bottom]);
         }
 
+        if extended_points.len() == 0 {
+            extended_points.push(Point2::new(0.0, 0.0));
+            extended_points.push(Point2::new(1.0, 1.0));
+        }
         let point0 = &extended_points[0];
         let mut min_x = point0.x;
         let mut min_y = point0.y;
@@ -283,7 +288,7 @@ impl Sketch {
             ),
         );
 
-        let faces = self.find_faces(false);
+        let (faces, unused_segments) = self.find_faces(false);
         for face in faces.iter() {
             let exterior = &face.exterior;
 
@@ -303,28 +308,47 @@ impl Sketch {
             document = document.add(path);
         }
 
-        // for now just do each segment individually. After I figure out how to
-        // find the closed loops, I can do those as a single path.
-        // for (line_id, line) in self.line_segments.iter() {
-        //     let mut data = Data::new();
-        //     let start = self.points.get(&line.start).unwrap();
-        //     let end = self.points.get(&line.end).unwrap();
-        //     data = data.move_to((start.x, -start.y));
-        //     data = data.line_to((end.x, -end.y));
+        for segment in unused_segments.iter() {
+            let mut data = Data::new();
 
-        //     let path = Path::new()
-        //         .set("fill", "none")
-        //         .set("stroke", "black")
-        //         .set("stroke-width", 0.01)
-        //         .set("d", data);
+            match segment {
+                Segment::Line(line) => {
+                    let start = self.points.get(&line.start).unwrap();
+                    let end = self.points.get(&line.end).unwrap();
+                    data = data.move_to((start.x, -start.y));
+                    data = data.line_to((end.x, -end.y));
+                }
+                Segment::Arc(arc) => {
+                    let center = self.points.get(&arc.center).unwrap();
+                    let start = self.points.get(&arc.start).unwrap();
+                    let end = self.points.get(&arc.end).unwrap();
 
-        //     document = document.add(path);
-        // }
+                    let r = (center.x - start.x).hypot(center.y - start.y);
 
-        for (circle_id, circle) in self.circles.iter() {
+                    data = data.move_to((start.x, -start.y));
+                    //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                    data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                }
+            }
+
+            // let start = self.points.get(&segment.start).unwrap();
+            // let end = self.points.get(&segment.end).unwrap();
+            // data = data.move_to((start.x, -start.y));
+            // data = data.line_to((end.x, -end.y));
+
+            let path = Path::new()
+                .set("fill", "none")
+                .set("stroke", "black")
+                .set("stroke-width", 0.01)
+                .set("d", data);
+
+            document = document.add(path);
+        }
+
+        for (_circle_id, circle) in self.circles.iter() {
             let center = self.points.get(&circle.center).unwrap();
 
-            let mut svg_circle = Circle::new()
+            let svg_circle = Circle::new()
                 .set("cx", center.x)
                 .set("cy", -center.y)
                 .set("r", circle.radius)
@@ -335,40 +359,24 @@ impl Sketch {
             document = document.add(svg_circle);
         }
 
-        // for (arc_id, arc) in self.arcs.iter() {
-        //     let center = self.points.get(&arc.center).unwrap();
-        //     let start = self.points.get(&arc.start).unwrap();
-        //     let end = self.points.get(&arc.end).unwrap();
-
-        //     let r = (center.x - start.x).hypot(center.y - start.y);
-
-        //     let mut data = Data::new();
-        //     data = data.move_to((start.x, -start.y));
-        //     //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-        //     data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
-
-        //     let path = Path::new()
-        //         .set("fill", "none")
-        //         .set("stroke", "black")
-        //         .set("stroke-width", 0.01)
-        //         .set("d", data);
-
-        //     document = document.add(path);
-        // }
-
         svg::save(filename, &document).unwrap();
     }
 
-    pub fn find_faces(&self, debug: bool) -> Vec<Face> {
-        let rings = self.find_rings(debug);
+    pub fn find_faces(&self, debug: bool) -> (Vec<Face>, Vec<Segment>) {
+        let (rings, unused_segments) = self.find_rings(debug);
         let mut faces: Vec<Face> = rings.iter().map(|r| Face::from_ring(r)).collect();
+
+        if rings.len() == 0 {
+            return (faces, unused_segments);
+        }
 
         // this next block of code converts everything to Polygons just so we can
         // determine what faces contain which other faces. It's a bit of a waste
         // because geo is a relatively heavy dependency and we don't need all of
-        let mut polygons: Vec<Polygon> = rings.iter().map(|r| self.as_polygon(r)).collect();
+        let polygons: Vec<Polygon> = rings.iter().map(|r| self.as_polygon(r)).collect();
         // they are already sorted from smallest to largest area - self.find_rings does this
         let mut what_contains_what: Vec<(usize, usize)> = vec![];
+
         for smaller_polygon_index in 0..polygons.len() - 1 {
             let smaller_polygon = &polygons[smaller_polygon_index];
             println!("Smaller poly area: {:?}", smaller_polygon.signed_area());
@@ -396,10 +404,10 @@ impl Sketch {
         }
 
         // let faces: Vec<Face> = polygons.iter().map(|p| Face::from_polygon(p)).collect();
-        faces
+        (faces, unused_segments)
     }
 
-    pub fn find_rings(&self, debug: bool) -> Vec<Ring> {
+    pub fn find_rings(&self, debug: bool) -> (Vec<Ring>, Vec<Segment>) {
         // First just collect each segment that we know about
         let mut segments_overall: Vec<Segment> = vec![];
         for (_, line) in self.line_segments.iter() {
@@ -408,6 +416,7 @@ impl Sketch {
         for (_, arc) in self.arcs.iter() {
             segments_overall.push(Segment::Arc(arc.clone()));
         }
+        let num_segments = segments_overall.len();
 
         // Then reverse each one and add it to the list
         let segments_reversed: Vec<Segment> =
@@ -444,7 +453,7 @@ impl Sketch {
             }
 
             let mut next_segment_index: usize = seg_idx;
-            for i in 1..segments_overall.len() {
+            for _i in 1..segments_overall.len() {
                 let next_segment = segments_overall.get(next_segment_index).unwrap();
                 if debug {
                     println!("next segment: {:?}", next_segment);
@@ -477,6 +486,25 @@ impl Sketch {
             }
         }
 
+        let used_indices_set = used_indices.iter().cloned().collect::<HashSet<_>>();
+        let all_indices_set = (0..segments_overall.len()).collect::<HashSet<_>>();
+
+        let unused_indices_set = all_indices_set
+            .difference(&used_indices_set)
+            .collect::<HashSet<_>>();
+        let unused_indices = unused_indices_set
+            .iter()
+            .cloned()
+            .filter(|idx| return *idx <= &num_segments)
+            .collect::<Vec<_>>();
+        let unused_segments = unused_indices
+            .iter()
+            .cloned()
+            .map(|idx| segments_overall.get(*idx).unwrap().clone())
+            .collect::<Vec<_>>();
+        println!("Unused indices: {:?}", unused_indices);
+        println!("Unused segments: {:?}", unused_segments);
+
         let mut all_rings: Vec<Ring> = vec![];
         for ring_indices in new_rings.iter() {
             // let mut this_ring: Ring = Ring::Segments(vec![]);
@@ -501,7 +529,7 @@ impl Sketch {
             .cloned()
             .collect();
 
-        all_rings
+        (all_rings, unused_segments)
     }
 
     pub fn find_next_segment_index(

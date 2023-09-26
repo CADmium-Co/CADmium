@@ -1,7 +1,5 @@
 #![allow(dead_code, unused)]
-// use cadmium::sketch::test_svg;
-use cadmium::sketch::test_svg;
-use cadmium::Project;
+use cadmium::project::Project;
 
 fn main() {
     let mut p = Project::new("First Project");
@@ -20,36 +18,6 @@ fn main() {
     // that looks a lot more like regular 2D constraints: lines with lengths,
     // defined angles, etc.
 
-    // let seg_0 = sketch.add_segment(id0, id1);
-    // let seg_1 = sketch.add_segment(id1, id2);
-    // let seg_1 = sketch.add_segment(id2, id0);
-
-    // A big square
-    let id0 = sketch.add_point(-0.1, -1.0);
-    let id1 = sketch.add_point(1.0, -1.0);
-    let id2 = sketch.add_point(1.0, 1.0);
-    let id3 = sketch.add_point(-0.1, 1.0);
-
-    sketch.add_segment(id0, id1);
-    sketch.add_segment(id1, id2);
-    sketch.add_segment(id2, id3);
-    sketch.add_segment(id3, id0);
-
-    // add an arc
-    let s = sketch.add_point(0.25, -0.25);
-    let e = sketch.add_point(0.0, -0.50);
-    let c = sketch.add_point(0.25, -0.50);
-    let t0 = sketch.add_point(0.0, -0.75);
-    let t1 = sketch.add_point(0.5, -0.75);
-    let t2 = sketch.add_point(0.5, -0.25);
-    let arc_id = sketch.add_arc(c, s, e);
-    sketch.add_segment(e, t0);
-    sketch.add_segment(t0, t1);
-    sketch.add_segment(t1, t2);
-    sketch.add_segment(t2, s);
-
-    // sketch.add_line_segment(0.0, 0.0, 1.0, 0.0);
-
     // let spring0 = sketch.add_spring(id0, id2, 1.0);
     // let spring1 = sketch.add_spring(id1, id2, 1.0);
 
@@ -66,22 +34,18 @@ fn main() {
     // println!("Project: {:?}", p);
 
     // Add a nice circle
-    let id4 = sketch.add_point(-0.75, 0.5);
-    let c_id0 = sketch.add_circle(id4, 0.5);
-    // let c_id1 = sketch.add_circle(id1, 0.25);
-    // let c_id2 = sketch.add_circle(id2, 0.35);
-    // let c_id3 = sketch.add_circle(id3, 0.45);
+    // let id4 = sketch.add_point(-0.75, 0.5);
+    // let c_id0 = sketch.add_circle(id4, 0.5);
 
     // let serialized = serde_json::to_string(&p).unwrap();
     // println!("serialized = {}", serialized);
 
-    sketch.save_svg("test1.svg");
+    // A line off on its own
+    // let id5 = sketch.add_point(-0.5, -0.5);
+    // let id6 = sketch.add_point(-0.75, -0.75);
+    // sketch.add_segment(id5, id6);
 
-    // let rings = sketch.find_rings(false);
-    // println!("Rings: {:?}", rings);
-
-    // let faces = sketch.find_faces(false);
-    // println!("Faces: {:?}", faces);
+    sketch.save_svg("test_svgs/test2.svg");
 
     // let realized = wb.realize(30);
     // println!("Real: {:?}", realized);
@@ -89,3 +53,7 @@ fn main() {
 
     // wb.add_extrusion("Ext1", "Sketch1", 0.5);
 }
+
+// TODO: WHEN YOU RETURN:
+// 1. Move the circle to the right, inside the rectangle.
+// 2. Make a tiny circle and put it inside the innermost rounded rectangle.
