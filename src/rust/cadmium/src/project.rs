@@ -290,6 +290,28 @@ mod tests {
     }
 
     #[test]
+    fn no_rings_to_svg() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let center = sketch.add_point(0.0, 0.0);
+        let right = sketch.add_point(1.0, 0.0);
+        let top = sketch.add_point(0.0, 1.0);
+        let left = sketch.add_point(-1.0, 0.0);
+        let bottom = sketch.add_point(0.0, -1.0);
+
+        sketch.add_segment(center, right);
+        sketch.add_segment(center, top);
+        sketch.add_segment(center, left);
+        sketch.add_segment(center, bottom);
+
+        sketch.save_svg("test_svgs/no_rings.svg");
+    }
+
+    #[test]
     fn circle_to_svg() {
         let mut p = Project::new("First Project");
         p.add_defaults();
@@ -355,5 +377,60 @@ mod tests {
         sketch.add_arc(l, h, a);
 
         sketch.save_svg("test_svgs/rounded_square.svg");
+    }
+
+    #[test]
+    fn square_with_hole_to_svg() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+        let c = sketch.add_point(1.0, 1.0);
+        let d = sketch.add_point(0.0, 1.0);
+
+        let e = sketch.add_point(0.25, 0.25);
+        let f = sketch.add_point(0.75, 0.25);
+        let g = sketch.add_point(0.75, 0.75);
+        let h = sketch.add_point(0.25, 0.75);
+
+        sketch.add_segment(a, b);
+        sketch.add_segment(b, c);
+        sketch.add_segment(c, d);
+        sketch.add_segment(d, a);
+
+        sketch.add_segment(e, f);
+        sketch.add_segment(f, g);
+        sketch.add_segment(g, h);
+        sketch.add_segment(h, e);
+
+        sketch.save_svg("test_svgs/square_with_hole.svg");
+    }
+
+    #[test]
+    fn square_with_circular_hole_to_svg() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+        let c = sketch.add_point(1.0, 1.0);
+        let d = sketch.add_point(0.0, 1.0);
+        let center = sketch.add_point(0.5, 0.5);
+
+        sketch.add_segment(a, b);
+        sketch.add_segment(b, c);
+        sketch.add_segment(c, d);
+        sketch.add_segment(d, a);
+
+        sketch.add_circle(center, 0.4);
+
+        sketch.save_svg("test_svgs/square_with_circular_hole.svg");
     }
 }
