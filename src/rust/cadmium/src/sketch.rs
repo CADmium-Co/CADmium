@@ -1,4 +1,3 @@
-use geo::Area;
 use geo::Contains;
 use geo::LineString;
 use geo::Polygon;
@@ -8,7 +7,7 @@ use std::collections::HashMap;
 use std::collections::HashSet;
 use std::f64::consts::TAU;
 use svg::node::element::path::Data;
-use svg::node::element::Circle;
+// use svg::node::element::Circle;
 use svg::node::element::Path;
 use svg::Document;
 
@@ -48,8 +47,9 @@ impl Sketch {
                 let mut b: Vec<(f64, f64)> = vec![];
                 let center = self.points.get(&circle.center).unwrap();
 
-                for i in 0..20 {
-                    let angle = i as f64 / 100.0 * TAU;
+                let num_pts = 10;
+                for i in 0..num_pts {
+                    let angle = i as f64 / num_pts as f64 * TAU;
                     let x = center.x + circle.radius * angle.cos();
                     let y = center.y + circle.radius * angle.sin();
                     b.push((x, y));
@@ -288,6 +288,7 @@ impl Sketch {
             ),
         );
 
+        // Start by creating shapes for each face
         let (faces, unused_segments) = self.find_faces(false);
         for face in faces.iter() {
             let exterior = &face.exterior;
@@ -345,19 +346,19 @@ impl Sketch {
             document = document.add(path);
         }
 
-        for (_circle_id, circle) in self.circles.iter() {
-            let center = self.points.get(&circle.center).unwrap();
+        // for (_circle_id, circle) in self.circles.iter() {
+        //     let center = self.points.get(&circle.center).unwrap();
 
-            let svg_circle = Circle::new()
-                .set("cx", center.x)
-                .set("cy", -center.y)
-                .set("r", circle.radius)
-                .set("fill", "none")
-                .set("stroke", "black")
-                .set("stroke-width", 0.01);
+        //     let svg_circle = Circle::new()
+        //         .set("cx", center.x)
+        //         .set("cy", -center.y)
+        //         .set("r", circle.radius)
+        //         .set("fill", "none")
+        //         .set("stroke", "black")
+        //         .set("stroke-width", 0.01);
 
-            document = document.add(svg_circle);
-        }
+        //     document = document.add(svg_circle);
+        // }
 
         svg::save(filename, &document).unwrap();
     }
@@ -379,16 +380,10 @@ impl Sketch {
 
         for smaller_polygon_index in 0..polygons.len() - 1 {
             let smaller_polygon = &polygons[smaller_polygon_index];
-            println!("Smaller poly area: {:?}", smaller_polygon.signed_area());
 
             for bigger_polygon_index in smaller_polygon_index + 1..polygons.len() {
                 let bigger_polygon = &polygons[bigger_polygon_index];
                 let inside = bigger_polygon.contains(smaller_polygon);
-                println!(
-                    "Bigger poly area: {} contains? {}",
-                    bigger_polygon.signed_area(),
-                    inside
-                );
 
                 if inside {
                     what_contains_what.push((bigger_polygon_index, smaller_polygon_index));
@@ -502,8 +497,6 @@ impl Sketch {
             .cloned()
             .map(|idx| segments_overall.get(*idx).unwrap().clone())
             .collect::<Vec<_>>();
-        println!("Unused indices: {:?}", unused_indices);
-        println!("Unused segments: {:?}", unused_segments);
 
         let mut all_rings: Vec<Ring> = vec![];
         for ring_indices in new_rings.iter() {
@@ -514,6 +507,11 @@ impl Sketch {
                 this_ring.push(actual_segment.clone());
             }
             all_rings.push(Ring::Segments(this_ring));
+        }
+
+        // Circles are trivially rings!
+        for (_circle_id, circle) in self.circles.iter() {
+            all_rings.push(Ring::Circle(circle.clone()));
         }
 
         all_rings.sort_by(|r1, r2| {
@@ -590,8 +588,31 @@ impl Sketch {
 
     pub fn ring_to_data(&self, ring: &Ring, mut data: Data) -> Data {
         match ring {
-            Ring::Circle(_) => {
-                panic!("Not implemented yet");
+            Ring::Circle(circle) => {
+                let center = self.points.get(&circle.center).unwrap();
+                let radius = circle.radius;
+                data = data.move_to((center.x, -center.y + radius)); // starts at bottom
+                data = data.elliptical_arc_to((
+                    radius,
+                    radius,
+                    0.0,
+                    0,
+                    0,
+                    center.x,
+                    -center.y - radius,
+                )); // arc to top
+
+                data = data.elliptical_arc_to((
+                    radius,
+                    radius,
+                    0.0,
+                    0,
+                    0,
+                    center.x,
+                    -center.y + radius,
+                )); // arc back to bottom
+
+                data
             }
             Ring::Segments(segments) => {
                 let mut first = true;
