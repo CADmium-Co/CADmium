@@ -473,4 +473,94 @@ mod tests {
 
         sketch.save_svg("test_svgs/circle_with_square_hole.svg");
     }
+
+    #[test]
+    fn two_intersecting_squares_to_svg() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+        let c = sketch.add_point(1.0, 1.0);
+        let d = sketch.add_point(0.0, 1.0);
+        sketch.add_segment(a, b);
+        sketch.add_segment(b, c);
+        sketch.add_segment(c, d);
+        sketch.add_segment(d, a);
+
+        let e = sketch.add_point(0.5, 0.5);
+        let f = sketch.add_point(1.5, 0.5);
+        let g = sketch.add_point(1.5, 1.5);
+        let h = sketch.add_point(0.5, 1.5);
+        sketch.add_segment(e, f);
+        sketch.add_segment(f, g);
+        sketch.add_segment(g, h);
+        sketch.add_segment(h, e);
+
+        sketch.save_svg("test_svgs/two_intersecting_squares_unsplit.svg");
+
+        let sketch = sketch.split_intersections();
+        sketch.save_svg("test_svgs/two_intersecting_squares_split.svg");
+    }
+
+    #[test]
+    fn two_intersecting_circles_to_svg() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let center_a = sketch.add_point(0.0, 0.0);
+        sketch.add_circle(center_a, 1.0);
+
+        let center_b = sketch.add_point(1.0, 0.0);
+        sketch.add_circle(center_b, 1.0);
+
+        sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
+
+        let sketch = sketch.split_intersections();
+        sketch.save_svg("test_svgs/two_intersecting_circles_split.svg");
+    }
+
+    #[test]
+    fn two_arcs_in_a_circle_90() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let center = sketch.add_point(0.0, 0.0);
+        let top = sketch.add_point(0.0, 1.0);
+        let right = sketch.add_point(1.0, 0.0);
+
+        sketch.add_arc(center, right, top);
+        sketch.add_arc(center, top, right);
+
+        sketch.save_svg("test_svgs/two_arcs_in_a_circle_90.svg");
+    }
+
+    #[test]
+    fn two_arcs_in_a_circle_180() {
+        let mut p = Project::new("First Project");
+        p.add_defaults();
+        let wb = p.workbenches.get_mut(0).unwrap();
+
+        wb.add_sketch("Sketch1", "Top");
+        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+
+        let center = sketch.add_point(0.0, 0.0);
+        let top = sketch.add_point(0.0, 1.0);
+        let bottom = sketch.add_point(0.0, -1.0);
+
+        sketch.add_arc(center, bottom, top);
+        sketch.add_arc(center, top, bottom);
+
+        sketch.save_svg("test_svgs/two_arcs_in_a_circle_180.svg");
+    }
 }

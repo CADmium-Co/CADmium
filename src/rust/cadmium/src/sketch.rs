@@ -1,11 +1,18 @@
+#![allow(unused)]
+use geo::line_intersection::{line_intersection, LineIntersection};
 use geo::Contains;
+use geo::Intersects;
+use geo::Line;
+
+use core::panic;
 use geo::LineString;
 use geo::Polygon;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::collections::HashSet;
-use std::f64::consts::TAU;
+use std::f64::consts::{PI, TAU};
+use std::sync::Arc;
 use svg::node::element::path::Data;
 // use svg::node::element::Circle;
 use svg::node::element::Path;
@@ -23,6 +30,8 @@ pub struct Sketch {
     highest_circle_id: u64,
     arcs: HashMap<u64, Arc2>,
     highest_arc_id: u64,
+    virtual_points: HashMap<u64, Point2>,
+    highest_virtual_point_id: u64,
 }
 
 impl Sketch {
@@ -38,7 +47,17 @@ impl Sketch {
             highest_circle_id: 0,
             arcs: HashMap::new(),
             highest_arc_id: 0,
+            virtual_points: HashMap::new(),
+            highest_virtual_point_id: 0,
         }
+    }
+
+    pub fn arc_angle(&self, arc: &Arc2) -> f64 {
+        let center = self.points.get(&arc.center).unwrap();
+        let start = self.points.get(&arc.start).unwrap();
+        let end = self.points.get(&arc.end).unwrap();
+
+        angle(start, center, end)
     }
 
     pub fn as_polygon(&self, ring: &Ring) -> Polygon {
@@ -248,6 +267,17 @@ impl Sketch {
             extended_points.extend(vec![left, right, top, bottom]);
         }
 
+        for (_arc_id, arc) in self.arcs.iter() {
+            let center = self.points.get(&arc.center).unwrap();
+            let start = self.points.get(&arc.start).unwrap();
+            let r = (center.x - start.x).hypot(center.y - start.y);
+            let left = Point2::new(center.x - r, center.y);
+            let right = Point2::new(center.x + r, center.y);
+            let top = Point2::new(center.x, center.y + r);
+            let bottom = Point2::new(center.x, center.y - r);
+            extended_points.extend(vec![left, right, top, bottom]);
+        }
+
         if extended_points.len() == 0 {
             extended_points.push(Point2::new(0.0, 0.0));
             extended_points.push(Point2::new(1.0, 1.0));
@@ -289,7 +319,7 @@ impl Sketch {
         );
 
         // Start by creating shapes for each face
-        let (faces, unused_segments) = self.find_faces(false);
+        let (faces, unused_segments) = self.find_faces();
         for face in faces.iter() {
             let exterior = &face.exterior;
 
@@ -327,15 +357,19 @@ impl Sketch {
                     let r = (center.x - start.x).hypot(center.y - start.y);
 
                     data = data.move_to((start.x, -start.y));
-                    //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-                    data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+
+                    let arc_angle_degrees = self.arc_angle(arc) * 180.0 / PI;
+                    println!("arc_angle: {}", arc_angle_degrees);
+                    if arc_angle_degrees > 180.0 {
+                        println!("large arc flag!");
+                        //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                        data = data.elliptical_arc_to((r, r, 0.0, 1, 0, end.x, -end.y));
+                    } else {
+                        //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                        data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                    }
                 }
             }
-
-            // let start = self.points.get(&segment.start).unwrap();
-            // let end = self.points.get(&segment.end).unwrap();
-            // data = data.move_to((start.x, -start.y));
-            // data = data.line_to((end.x, -end.y));
 
             let path = Path::new()
                 .set("fill", "none")
@@ -363,8 +397,125 @@ impl Sketch {
         svg::save(filename, &document).unwrap();
     }
 
-    pub fn find_faces(&self, debug: bool) -> (Vec<Face>, Vec<Segment>) {
-        let (rings, unused_segments) = self.find_rings(debug);
+    pub fn split_intersections(&self) -> Self {
+        let mut temp_sketch = self.clone();
+
+        // First compare every line segment against every line segment to see if they intersect
+        let mut count = 0;
+        let mut intersections: Vec<(u64, u64, Point2)> = vec![];
+
+        for (i, (line_a_id, line_a)) in temp_sketch.line_segments.iter().enumerate() {
+            for (j, (line_b_id, line_b)) in temp_sketch.line_segments.iter().enumerate() {
+                // we only need to compare each line segment to each other line segment once
+                // so we can skip indices where i > j.
+                // Also, every line intersects itself so no need to check that.
+                if i >= j {
+                    continue;
+                }
+
+                // line segments which share a point do intersect, but there's nothing to be done
+                // so let's just skip
+                if line_a.start == line_b.start
+                    || line_a.start == line_b.end
+                    || line_a.end == line_b.end
+                    || line_a.end == line_b.start
+                {
+                    continue;
+                }
+
+                count += 1;
+
+                let intersection = temp_sketch.line_intersection(line_a, line_b);
+                match intersection {
+                    None => {}
+                    Some(point) => {
+                        intersections.push((*line_a_id, *line_b_id, point));
+                    }
+                }
+            }
+        }
+
+        for (line_a_id, line_b_id, point) in intersections {
+            let line_a = temp_sketch.line_segments.get(&line_a_id).unwrap().clone();
+            let line_b = temp_sketch.line_segments.get(&line_b_id).unwrap().clone();
+
+            let new_point_id = temp_sketch.add_point(point.x, point.y);
+            temp_sketch.add_segment(line_a.start, new_point_id);
+            temp_sketch.add_segment(new_point_id, line_a.end);
+            temp_sketch.add_segment(line_b.start, new_point_id);
+            temp_sketch.add_segment(new_point_id, line_b.end);
+
+            temp_sketch.line_segments.remove(&line_a_id);
+            temp_sketch.line_segments.remove(&line_b_id);
+        }
+
+        // Second, compare every circle against every other circle to see if they intersect
+        let mut circle_intersections: Vec<(u64, u64, Vec<Point2>)> = vec![];
+        for (i, (circle_a_id, circle_a)) in temp_sketch.circles.iter().enumerate() {
+            for (j, (circle_b_id, circle_b)) in temp_sketch.circles.iter().enumerate() {
+                // we only need to compare each circle to each other circle once
+                // so we can skip indices where i > j.
+                // Also, every line intersects itself so no need to check that.
+                if i >= j {
+                    continue;
+                }
+
+                // circles which share a point do intersect, but there's nothing to be done
+                // so let's just skip
+                if circle_a.center == circle_b.center {
+                    continue;
+                }
+
+                count += 1;
+
+                let intersection = temp_sketch.circle_intersection(circle_a, circle_b);
+                circle_intersections.push((*circle_a_id, *circle_b_id, intersection));
+            }
+        }
+
+        for (circle_a_id, circle_b_id, points) in circle_intersections {
+            // TODO: check for duplicates! Things get hairy if 3 circles intersect at the same point!
+            let circle_a = temp_sketch.circles.get(&circle_a_id).unwrap().clone();
+            let circle_b = temp_sketch.circles.get(&circle_b_id).unwrap().clone();
+
+            let center_a = temp_sketch.points.get(&circle_a.center).unwrap().clone();
+            let center_b = temp_sketch.points.get(&circle_b.center).unwrap().clone();
+
+            println!(
+                "Circle A: {:?} centered: at {}, {}",
+                circle_a, center_a.x, center_a.y
+            );
+            println!(
+                "Circle B: {:?} centered: at {}, {}",
+                circle_b, center_b.x, center_b.y
+            );
+
+            let new_point_0 = temp_sketch.add_point(points[0].x, points[0].y);
+            let new_point_1 = temp_sketch.add_point(points[1].x, points[1].y);
+
+            temp_sketch.add_arc(circle_a.center, new_point_0, new_point_1);
+            temp_sketch.add_arc(circle_a.center, new_point_1, new_point_0);
+
+            temp_sketch.add_arc(circle_b.center, new_point_0, new_point_1);
+            temp_sketch.add_arc(circle_b.center, new_point_1, new_point_0);
+
+            // temp_sketch.circles.remove(&circle_a_id);
+            // temp_sketch.circles.remove(&circle_b_id);
+        }
+
+        temp_sketch
+    }
+
+    pub fn find_faces(&self) -> (Vec<Face>, Vec<Segment>) {
+        let mut segments_overall: Vec<Segment> = vec![];
+        for line in self.line_segments.values() {
+            segments_overall.push(Segment::Line(line.clone()));
+        }
+        for arc in self.arcs.values() {
+            segments_overall.push(Segment::Arc(arc.clone()));
+        }
+
+        let (rings, unused_segments) = self.find_rings(segments_overall, false);
         let mut faces: Vec<Face> = rings.iter().map(|r| Face::from_ring(r)).collect();
 
         if rings.len() == 0 {
@@ -402,18 +553,13 @@ impl Sketch {
         (faces, unused_segments)
     }
 
-    pub fn find_rings(&self, debug: bool) -> (Vec<Ring>, Vec<Segment>) {
-        // First just collect each segment that we know about
-        let mut segments_overall: Vec<Segment> = vec![];
-        for (_, line) in self.line_segments.iter() {
-            segments_overall.push(Segment::Line(line.clone()));
-        }
-        for (_, arc) in self.arcs.iter() {
-            segments_overall.push(Segment::Arc(arc.clone()));
-        }
+    pub fn find_rings(&self, segments: Vec<Segment>, debug: bool) -> (Vec<Ring>, Vec<Segment>) {
+        // We are handed all of the segments to consider
+        let mut segments_overall = segments.clone();
         let num_segments = segments_overall.len();
 
-        // Then reverse each one and add it to the list
+        // Let's double it by reversing each one and adding it to the list of
+        // segments to consider
         let segments_reversed: Vec<Segment> =
             segments_overall.iter().map(|s| s.reverse()).collect();
         segments_overall.extend(segments_reversed);
@@ -490,7 +636,7 @@ impl Sketch {
         let unused_indices = unused_indices_set
             .iter()
             .cloned()
-            .filter(|idx| return *idx <= &num_segments)
+            .filter(|idx| return *idx < &num_segments)
             .collect::<Vec<_>>();
         let unused_segments = unused_indices
             .iter()
@@ -586,6 +732,82 @@ impl Sketch {
         }
     }
 
+    pub fn circle_intersection(&self, circle_a: &Circle2, circle_b: &Circle2) -> Vec<Point2> {
+        // See https://math.stackexchange.com/questions/256100/how-can-i-find-the-points-at-which-two-circles-intersect#comment4306998_1367732
+        // See https://gist.github.com/jupdike/bfe5eb23d1c395d8a0a1a4ddd94882ac
+        let center_a = self.points.get(&circle_a.center).unwrap();
+        let center_b = self.points.get(&circle_b.center).unwrap();
+        let r_a = circle_a.radius;
+        let r_b = circle_b.radius;
+
+        let center_dx = center_b.x - center_a.x;
+        let center_dy = center_b.y - center_a.y;
+        let center_dist = center_dx.hypot(center_dy);
+
+        if !(center_dist <= r_a + r_b && center_dist >= r_a - r_b) {
+            return vec![];
+        }
+
+        let r_2 = center_dist * center_dist;
+        let r_4 = r_2 * r_2;
+        let a = (r_a * r_a - r_b * r_b) / (2.0 * r_2);
+        let r_2_r_2 = r_a * r_a - r_b * r_b;
+        let c = (2.0 * (r_a * r_a + r_b * r_b) / r_2 - r_2_r_2 * r_2_r_2 / r_4 - 1.0).sqrt();
+
+        let fx = (center_a.x + center_b.x) / 2.0 + a * (center_b.x - center_a.x);
+        let gx = c * (center_b.y - center_a.y) / 2.0;
+        let ix1 = fx + gx;
+        let ix2 = fx - gx;
+
+        let fy = (center_a.y + center_b.y) / 2.0 + a * (center_b.y - center_a.y);
+        let gy = c * (center_a.x - center_b.x) / 2.0;
+        let iy1 = fy + gy;
+        let iy2 = fy - gy;
+
+        vec![Point2::new(ix1, iy1), Point2::new(ix2, iy2)]
+    }
+
+    pub fn line_intersection(&self, line_a: &Line2, line_b: &Line2) -> Option<Point2> {
+        let start_a = self.points.get(&line_a.start).unwrap();
+        let end_a = self.points.get(&line_a.end).unwrap();
+        let start_b = self.points.get(&line_b.start).unwrap();
+        let end_b = self.points.get(&line_b.end).unwrap();
+
+        let line_a = Line::new(
+            geo::Coord {
+                x: start_a.x,
+                y: start_a.y,
+            },
+            geo::Coord {
+                x: end_a.x,
+                y: end_a.y,
+            },
+        );
+        let line_b = Line::new(
+            geo::Coord {
+                x: start_b.x,
+                y: start_b.y,
+            },
+            geo::Coord {
+                x: end_b.x,
+                y: end_b.y,
+            },
+        );
+
+        let intersection = line_intersection(line_a, line_b);
+
+        match intersection {
+            Some(line_intersection) => match line_intersection {
+                LineIntersection::SinglePoint {
+                    intersection,
+                    is_proper,
+                } => Some(Point2::new(intersection.x, intersection.y)),
+                LineIntersection::Collinear { intersection } => panic!("Collinear!"),
+            },
+            None => None,
+        }
+    }
+
     pub fn ring_to_data(&self, ring: &Ring, mut data: Data) -> Data {
         match ring {
             Ring::Circle(circle) => {
@@ -639,6 +861,10 @@ impl Sketch {
                                 data = data.move_to((start.x, -start.y));
                                 first = false;
                             }
+
+                            let arc_angle = self.arc_angle(arc);
+                            println!("Ring has an arc with arc_angle: {}", arc_angle);
+
                             //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
                             data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
                         }
@@ -809,6 +1035,12 @@ impl Point2 {
 
     fn step(&self, dt: f64) -> (f64, f64) {
         (self.x + self.dx * dt, self.y + self.dy * dt)
+    }
+
+    fn distance_to(&self, other: &Point2) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        dx.hypot(dy)
     }
 }
 
