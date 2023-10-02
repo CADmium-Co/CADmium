@@ -508,23 +508,22 @@ mod tests {
 
     #[test]
     fn two_intersecting_circles_to_svg() {
-        let mut p = Project::new("First Project");
-        p.add_defaults();
-        let wb = p.workbenches.get_mut(0).unwrap();
-        wb.add_sketch("Sketch1", "Top");
-        let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+        // Create a new sketch
+        let mut sketch = Sketch::new();
 
+        // Add two circles which happen to intersect
         let center_a = sketch.add_point(0.0, 0.0);
-        println!("center_a: {:?}", center_a);
         sketch.add_circle(center_a, 1.0);
-
         let center_b = sketch.add_point(1.0, 0.0);
-        println!("center_b: {:?}", center_b);
         sketch.add_circle(center_b, 1.0);
 
-        // sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
+        // Save the naive svg: just two circular paths
+        sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
 
+        // Split the intersections, creating a new and different sketch
         let sketch = sketch.split_intersections();
+
+        // Save this one as an SVG, it will have three non-overlapping paths of two arcs each
         sketch.save_svg("test_svgs/two_intersecting_circles_split.svg");
     }
 
