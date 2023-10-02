@@ -368,13 +368,13 @@ mod tests {
         let l = sketch.add_point(0.25, 0.25);
 
         sketch.add_segment(a, b);
-        sketch.add_arc(i, b, c);
+        sketch.add_arc(i, b, c, false);
         sketch.add_segment(c, d);
-        sketch.add_arc(j, d, e);
+        sketch.add_arc(j, d, e, false);
         sketch.add_segment(e, f);
-        sketch.add_arc(k, f, g);
+        sketch.add_arc(k, f, g, false);
         sketch.add_segment(g, h);
-        sketch.add_arc(l, h, a);
+        sketch.add_arc(l, h, a, false);
 
         sketch.save_svg("test_svgs/rounded_square.svg");
     }
@@ -515,12 +515,14 @@ mod tests {
         let sketch = wb.get_sketch_mut("Sketch1").unwrap();
 
         let center_a = sketch.add_point(0.0, 0.0);
+        println!("center_a: {:?}", center_a);
         sketch.add_circle(center_a, 1.0);
 
         let center_b = sketch.add_point(1.0, 0.0);
+        println!("center_b: {:?}", center_b);
         sketch.add_circle(center_b, 1.0);
 
-        sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
+        // sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
 
         let sketch = sketch.split_intersections();
         sketch.save_svg("test_svgs/two_intersecting_circles_split.svg");
@@ -539,8 +541,8 @@ mod tests {
         let top = sketch.add_point(0.0, 1.0);
         let right = sketch.add_point(1.0, 0.0);
 
-        sketch.add_arc(center, right, top);
-        sketch.add_arc(center, top, right);
+        sketch.add_arc(center, right, top, false);
+        sketch.add_arc(center, top, right, false);
 
         sketch.save_svg("test_svgs/two_arcs_in_a_circle_90.svg");
     }
@@ -558,8 +560,8 @@ mod tests {
         let top = sketch.add_point(0.0, 1.0);
         let bottom = sketch.add_point(0.0, -1.0);
 
-        sketch.add_arc(center, bottom, top);
-        sketch.add_arc(center, top, bottom);
+        sketch.add_arc(center, bottom, top, false);
+        sketch.add_arc(center, top, bottom, false);
 
         sketch.save_svg("test_svgs/two_arcs_in_a_circle_180.svg");
     }

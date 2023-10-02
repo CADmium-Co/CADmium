@@ -57,7 +57,75 @@ impl Sketch {
         let start = self.points.get(&arc.start).unwrap();
         let end = self.points.get(&arc.end).unwrap();
 
-        angle(start, center, end)
+        match arc.clockwise {
+            false => angle(start, center, end),
+            true => TAU - angle(start, center, end),
+        }
+    }
+
+    pub fn arc_end_angle(&self, arc: &Arc2) -> f64 {
+        let center = self.points.get(&arc.center).unwrap();
+        let end = self.points.get(&arc.end).unwrap();
+
+        let dx = end.x - center.x;
+        let dy = end.y - center.y;
+
+        if arc.clockwise {
+            dy.atan2(dx) - PI / 2.0
+        } else {
+            dy.atan2(dx) + PI / 2.0
+        }
+    }
+
+    pub fn arc_start_angle(&self, arc: &Arc2) -> f64 {
+        let center = self.points.get(&arc.center).unwrap();
+        let start = self.points.get(&arc.start).unwrap();
+
+        let dx = start.x - center.x;
+        let dy = start.y - center.y;
+
+        if arc.clockwise {
+            dy.atan2(dx) - PI / 2.0
+        } else {
+            dy.atan2(dx) + PI / 2.0
+        }
+    }
+
+    pub fn line_start_angle(&self, line: &Line2) -> f64 {
+        let start = self.points.get(&line.start).unwrap();
+        let end = self.points.get(&line.end).unwrap();
+
+        let dx = end.x - start.x;
+        let dy = end.y - start.y;
+
+        dy.atan2(dx)
+    }
+
+    pub fn line_end_angle(&self, line: &Line2) -> f64 {
+        self.line_start_angle(line)
+    }
+
+    pub fn pretty_print_arc(&self, arc: &Arc2) {
+        let center = self.points.get(&arc.center).unwrap();
+        let start = self.points.get(&arc.start).unwrap();
+        let end = self.points.get(&arc.end).unwrap();
+
+        println!(
+            "Arc: center: {}: ({}, {}), start: {}: ({}, {}), end: {}: ({}, {}) CW: {}",
+            arc.center,
+            center.x,
+            center.y,
+            arc.start,
+            start.x,
+            start.y,
+            arc.end,
+            end.x,
+            end.y,
+            arc.clockwise
+        );
+        println!("Start angle:\t{}", self.arc_start_angle(arc) * 180.0 / PI);
+        println!("End angle:  \t{}", self.arc_end_angle(arc) * 180.0 / PI);
+        println!("Angle:      \t{}", self.arc_angle(arc) * 180.0 / PI);
     }
 
     pub fn as_polygon(&self, ring: &Ring) -> Polygon {
@@ -66,7 +134,7 @@ impl Sketch {
                 let mut b: Vec<(f64, f64)> = vec![];
                 let center = self.points.get(&circle.center).unwrap();
 
-                let num_pts = 10;
+                let num_pts = 36;
                 for i in 0..num_pts {
                     let angle = i as f64 / num_pts as f64 * TAU;
                     let x = center.x + circle.radius * angle.cos();
@@ -79,8 +147,6 @@ impl Sketch {
             }
             Ring::Segments(segments) => {
                 let mut b: Vec<(f64, f64)> = vec![];
-                // TODO: figure out how to better support arcs here! At least
-                // approximate them with a few line segments!
                 for segment in segments {
                     let start = segment.get_start();
                     let start_pt = self.points.get(&start).unwrap();
@@ -93,15 +159,67 @@ impl Sketch {
         }
     }
 
+    pub fn arc_to_points(&self, arc: &Arc2) -> Vec<Point2> {
+        let center = self.points.get(&arc.center).unwrap();
+        let start = self.points.get(&arc.start).unwrap();
+        let end = self.points.get(&arc.end).unwrap();
+
+        let r = (center.x - start.x).hypot(center.y - start.y);
+
+        let start_angle = (start.y - center.y).atan2(start.x - center.x);
+        let end_angle = (end.y - center.y).atan2(end.x - center.x);
+
+        let angle_increment = match arc.clockwise {
+            false => 10.0 * PI / 180.0,
+            true => -10.0 * PI / 180.0,
+        };
+
+        let mut lines: Vec<Point2> = vec![];
+        lines.push(start.clone());
+
+        for i in 1..100 {
+            let current_angle = i as f64 * angle_increment + start_angle;
+            let x = center.x + r * current_angle.cos();
+            let y = center.y + r * current_angle.sin();
+            let new_point = Point2::new(x, y);
+
+            let prev_point = lines.last().unwrap();
+
+            let completion_angle = angle(prev_point, &new_point, end);
+
+            if completion_angle <= 190.0 * PI / 180.0 && completion_angle >= 170.0 * PI / 180.0 {
+                lines.push(end.clone());
+                break;
+            } else {
+                lines.push(new_point);
+            }
+        }
+
+        lines
+    }
+
     pub fn signed_area(&self, ring: &Ring) -> f64 {
         match ring {
             Ring::Circle(circle) => circle.radius * circle.radius * std::f64::consts::PI,
             Ring::Segments(segments) => {
                 let mut area: f64 = 0.0;
+
                 for segment in segments {
-                    let end = self.points.get(&segment.get_end()).unwrap();
-                    let start = self.points.get(&segment.get_start()).unwrap();
-                    area += (end.x - start.x) * (end.y + start.y);
+                    match segment {
+                        Segment::Line(line) => {
+                            let end = self.points.get(&segment.get_end()).unwrap();
+                            let start = self.points.get(&segment.get_start()).unwrap();
+                            area += (end.x - start.x) * (end.y + start.y);
+                        }
+                        Segment::Arc(arc) => {
+                            let points = self.arc_to_points(arc);
+                            for i in 0..points.len() - 1 {
+                                let end = &points[i + 1];
+                                let start = &points[i];
+                                area += (end.x - start.x) * (end.y + start.y);
+                            }
+                        }
+                    }
                 }
                 return area / -2.0;
             }
@@ -122,11 +240,12 @@ impl Sketch {
         id
     }
 
-    pub fn add_arc(&mut self, center_id: u64, start_id: u64, end_id: u64) -> u64 {
+    pub fn add_arc(&mut self, center_id: u64, start_id: u64, end_id: u64, clockwise: bool) -> u64 {
         let a = Arc2 {
             center: center_id,
             start: start_id,
             end: end_id,
+            clockwise,
         };
         let id = self.highest_arc_id + 1;
         self.arcs.insert(id, a);
@@ -320,6 +439,11 @@ impl Sketch {
 
         // Start by creating shapes for each face
         let (faces, unused_segments) = self.find_faces();
+
+        println!("Making SVG. Faces:");
+        for face in faces.iter() {
+            println!("{:?}", face);
+        }
         for face in faces.iter() {
             let exterior = &face.exterior;
 
@@ -360,6 +484,7 @@ impl Sketch {
 
                     let arc_angle_degrees = self.arc_angle(arc) * 180.0 / PI;
                     println!("arc_angle: {}", arc_angle_degrees);
+
                     if arc_angle_degrees > 180.0 {
                         println!("large arc flag!");
                         //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
@@ -404,8 +529,13 @@ impl Sketch {
         let mut count = 0;
         let mut intersections: Vec<(u64, u64, Point2)> = vec![];
 
-        for (i, (line_a_id, line_a)) in temp_sketch.line_segments.iter().enumerate() {
-            for (j, (line_b_id, line_b)) in temp_sketch.line_segments.iter().enumerate() {
+        // for (i, (line_a_id, line_a)) in temp_sketch.line_segments.iter().enumerate() {
+        for (i, line_a_id) in temp_sketch.line_segments.keys().sorted().enumerate() {
+            let line_a = temp_sketch.line_segments.get(line_a_id).unwrap();
+
+            // for (j, (line_b_id, line_b)) in temp_sketch.line_segments.iter().enumerate() {
+            for (j, line_b_id) in temp_sketch.line_segments.keys().sorted().enumerate() {
+                let line_b = temp_sketch.line_segments.get(&line_b_id).unwrap();
                 // we only need to compare each line segment to each other line segment once
                 // so we can skip indices where i > j.
                 // Also, every line intersects itself so no need to check that.
@@ -451,8 +581,15 @@ impl Sketch {
 
         // Second, compare every circle against every other circle to see if they intersect
         let mut circle_intersections: Vec<(u64, u64, Vec<Point2>)> = vec![];
-        for (i, (circle_a_id, circle_a)) in temp_sketch.circles.iter().enumerate() {
-            for (j, (circle_b_id, circle_b)) in temp_sketch.circles.iter().enumerate() {
+
+        // for (i, (circle_a_id, circle_a)) in temp_sketch.circles.iter().enumerate() {
+        for (i, circle_a_id) in temp_sketch.circles.keys().sorted().enumerate() {
+            let circle_a = temp_sketch.circles.get(&circle_a_id).unwrap();
+
+            // for (j, (circle_b_id, circle_b)) in temp_sketch.circles.iter().enumerate() {
+            for (j, circle_b_id) in temp_sketch.circles.keys().sorted().enumerate() {
+                let circle_b = temp_sketch.circles.get(&circle_b_id).unwrap();
+
                 // we only need to compare each circle to each other circle once
                 // so we can skip indices where i > j.
                 // Also, every line intersects itself so no need to check that.
@@ -473,6 +610,7 @@ impl Sketch {
             }
         }
 
+        println!("Found {} intersections", circle_intersections.len());
         for (circle_a_id, circle_b_id, points) in circle_intersections {
             // TODO: check for duplicates! Things get hairy if 3 circles intersect at the same point!
             let circle_a = temp_sketch.circles.get(&circle_a_id).unwrap().clone();
@@ -493,14 +631,32 @@ impl Sketch {
             let new_point_0 = temp_sketch.add_point(points[0].x, points[0].y);
             let new_point_1 = temp_sketch.add_point(points[1].x, points[1].y);
 
-            temp_sketch.add_arc(circle_a.center, new_point_0, new_point_1);
-            temp_sketch.add_arc(circle_a.center, new_point_1, new_point_0);
+            println!(
+                "Intersections at: {}: ({}, {}) and {}: ({}, {})",
+                new_point_0, points[0].x, points[0].y, new_point_1, points[1].x, points[1].y
+            );
 
-            temp_sketch.add_arc(circle_b.center, new_point_0, new_point_1);
-            temp_sketch.add_arc(circle_b.center, new_point_1, new_point_0);
+            temp_sketch.add_arc(circle_a.center, new_point_0, new_point_1, false);
+            temp_sketch.add_arc(circle_a.center, new_point_1, new_point_0, false);
 
-            // temp_sketch.circles.remove(&circle_a_id);
-            // temp_sketch.circles.remove(&circle_b_id);
+            temp_sketch.add_arc(circle_b.center, new_point_0, new_point_1, false);
+            temp_sketch.add_arc(circle_b.center, new_point_1, new_point_0, false);
+
+            temp_sketch.circles.remove(&circle_a_id);
+            temp_sketch.circles.remove(&circle_b_id);
+
+            println!(
+                "So in the end, temp sketch has: {} circles, {} arcs, {} segments",
+                temp_sketch.circles.len(),
+                temp_sketch.arcs.len(),
+                temp_sketch.line_segments.len()
+            );
+
+            for arc_id in temp_sketch.arcs.keys().sorted() {
+                let arc = temp_sketch.arcs.get(arc_id).unwrap();
+                print!("Arc: {} ", arc_id);
+                temp_sketch.pretty_print_arc(arc);
+            }
         }
 
         temp_sketch
@@ -508,14 +664,22 @@ impl Sketch {
 
     pub fn find_faces(&self) -> (Vec<Face>, Vec<Segment>) {
         let mut segments_overall: Vec<Segment> = vec![];
-        for line in self.line_segments.values() {
+
+        for line_id in self.line_segments.keys().sorted() {
+            let line = self.line_segments.get(line_id).unwrap();
             segments_overall.push(Segment::Line(line.clone()));
         }
-        for arc in self.arcs.values() {
+        for arc_id in self.arcs.keys().sorted() {
+            let arc = self.arcs.get(arc_id).unwrap();
             segments_overall.push(Segment::Arc(arc.clone()));
         }
 
-        let (rings, unused_segments) = self.find_rings(segments_overall, false);
+        let (rings, unused_segments) = self.find_rings(segments_overall, true);
+        println!("Found {} rings", rings.len());
+        for ring in &rings {
+            println!("{:?}", ring);
+        }
+        println!("Found {} unused segments", unused_segments.len());
         let mut faces: Vec<Face> = rings.iter().map(|r| Face::from_ring(r)).collect();
 
         if rings.len() == 0 {
@@ -564,13 +728,6 @@ impl Sketch {
             segments_overall.iter().map(|s| s.reverse()).collect();
         segments_overall.extend(segments_reversed);
 
-        if debug {
-            println!(
-                "Overall: {:?} segments including reversals",
-                segments_overall.len()
-            );
-        }
-
         // keep track of every index we've already used--each segment can only be used once
         let mut used_indices: Vec<usize> = vec![];
         // this is the output variable
@@ -579,6 +736,28 @@ impl Sketch {
         for (seg_idx, s) in segments_overall.iter().enumerate() {
             if debug {
                 println!("Starting a loop with segment: {:?}", s);
+                match s {
+                    Segment::Line(line) => {
+                        println!(
+                            "Line: ({}, {}) to ({}, {})",
+                            self.points.get(&line.start).unwrap().x,
+                            self.points.get(&line.start).unwrap().y,
+                            self.points.get(&line.end).unwrap().x,
+                            self.points.get(&line.end).unwrap().y
+                        );
+                    }
+                    Segment::Arc(arc) => {
+                        println!(
+                            "Arc: center: ({}, {}), start: ({}, {}), end: ({}, {})",
+                            self.points.get(&arc.center).unwrap().x,
+                            self.points.get(&arc.center).unwrap().y,
+                            self.points.get(&arc.start).unwrap().x,
+                            self.points.get(&arc.start).unwrap().y,
+                            self.points.get(&arc.end).unwrap().x,
+                            self.points.get(&arc.end).unwrap().y
+                        );
+                    }
+                }
             }
             if used_indices.contains(&seg_idx) {
                 if debug {
@@ -655,12 +834,15 @@ impl Sketch {
             all_rings.push(Ring::Segments(this_ring));
         }
 
+        println!("--Found {} rings", all_rings.len());
+
         // Circles are trivially rings!
         for (_circle_id, circle) in self.circles.iter() {
             all_rings.push(Ring::Circle(circle.clone()));
         }
 
         all_rings.sort_by(|r1, r2| {
+            // TODO: implement signed_area for a ring which is made of arcs
             self.signed_area(r1)
                 .partial_cmp(&self.signed_area(r2))
                 .unwrap()
@@ -673,6 +855,8 @@ impl Sketch {
             .cloned()
             .collect();
 
+        println!("--Found {} rings", all_rings.len());
+
         (all_rings, unused_segments)
     }
 
@@ -683,51 +867,55 @@ impl Sketch {
         used_indices: &Vec<usize>,
         debug: bool,
     ) -> Option<usize> {
-        let mut matches: Vec<usize> = vec![];
+        println!("Finding next segment index");
+        let mut matches: Vec<(usize, f64, f64)> = vec![];
+        let mut this_segment_end_angle = match starting_segment {
+            Segment::Line(line) => self.line_end_angle(line),
+            Segment::Arc(arc) => self.arc_end_angle(arc),
+        };
+        this_segment_end_angle = (this_segment_end_angle + PI) % (2.0 * PI);
+
         for (idx, s2) in segments.iter().enumerate() {
             if used_indices.contains(&idx) {
                 continue;
             }
             if s2.continues(&starting_segment) && !s2.equals_or_reverse_equals(&starting_segment) {
-                matches.push(idx);
+                let starting_angle = match s2 {
+                    Segment::Line(line) => self.line_start_angle(line),
+                    Segment::Arc(arc) => self.arc_start_angle(arc),
+                };
+                let angle_diff = angle_difference(this_segment_end_angle, starting_angle);
+                matches.push((idx, starting_angle, angle_diff));
+                // angle_diff measures how hard you'd have to turn left to continue the path from
+                // starting_segment to s2, where a straight line would be 180, a left turn 270, a right turn 90.
+                // This is important later because to make the smallest loops possible, we always want to be
+                // turning left as hard as possible when finding rings.
             }
         }
 
         if matches.len() == 0 {
             None
         } else if matches.len() == 1 {
-            Some(matches[0])
+            Some(matches[0].0)
         } else {
             if debug {
                 println!("\tMultiple options! Deciding which one to take...");
             }
-            let point_a = starting_segment.get_start();
-            let point_b = starting_segment.get_end();
 
-            let mut best_option: usize = 0;
-            let mut biggest_angle: f64 = 0.0;
-            for option in matches {
-                let point_c = segments[option].get_end();
-                let ang = angle(
-                    &self.points[&point_a],
-                    &self.points[&point_b],
-                    &self.points[&point_c],
-                );
-                if debug {
-                    println!(
-                        "\tAngle from {} to {} to {}: {}",
-                        point_a,
-                        point_b,
-                        point_c,
-                        ang * 180.0 / 3.1415926
-                    );
-                }
-                if ang >= biggest_angle {
-                    biggest_angle = ang;
-                    best_option = option;
+            let mut best_option = 0;
+            let mut hardest_left_turn = 0.0;
+            for o in matches.iter() {
+                println!("Option: {:?}", segments.get(o.0).unwrap());
+                println!("Option: {} angle {}", o.0, o.1 * 180.0 / PI);
+                println!("Option: {}", o.2 * 180.0 / PI);
+                println!();
+
+                if o.2 > hardest_left_turn {
+                    hardest_left_turn = o.2;
+                    best_option = o.0;
                 }
             }
-
+            println!("Best option: {}", best_option);
             Some(best_option)
         }
     }
@@ -862,11 +1050,20 @@ impl Sketch {
                                 first = false;
                             }
 
-                            let arc_angle = self.arc_angle(arc);
-                            println!("Ring has an arc with arc_angle: {}", arc_angle);
+                            let arc_angle_degrees = self.arc_angle(arc) * 180.0 / PI;
+                            println!("arc_angle: {}", arc_angle_degrees);
 
-                            //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-                            data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                            if arc_angle_degrees > 180.0 {
+                                println!("large arc flag!");
+                                //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                                data = data.elliptical_arc_to((r, r, 0.0, 1, 0, end.x, -end.y));
+                            } else {
+                                //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                                data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                            }
+
+                            // //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                            // data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
                         }
                     }
                 }
@@ -874,25 +1071,6 @@ impl Sketch {
             }
         }
     }
-}
-
-pub fn test_svg() {
-    let data = Data::new()
-        .move_to((10, 10))
-        .line_by((0, 50))
-        .line_by((50, 0))
-        .line_by((0, -50))
-        .close();
-
-    let path = Path::new()
-        .set("fill", "none")
-        .set("stroke", "black")
-        .set("stroke-width", 3)
-        .set("d", data);
-
-    let document = Document::new().set("viewBox", (0, 0, 70, 70)).add(path);
-
-    svg::save("image.svg", &document).unwrap();
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1067,6 +1245,7 @@ pub struct Arc2 {
     center: u64,
     start: u64,
     end: u64,
+    clockwise: bool,
 }
 
 impl Arc2 {
@@ -1075,6 +1254,7 @@ impl Arc2 {
             center: self.center,
             start: self.end,
             end: self.start,
+            clockwise: !self.clockwise,
         }
     }
 }
@@ -1180,9 +1360,9 @@ pub fn min_angle_diff(a0: f64, a1: f64) -> f64 {
     let path_a = angle_difference(a0, a1);
     let path_b = angle_difference(a1, a0);
     if path_a < path_b {
-        return path_a;
+        path_a
     } else {
-        return path_b;
+        path_b
     }
 }
 
@@ -1209,5 +1389,66 @@ pub fn angle_difference(mut a0: f64, mut a1: f64) -> f64 {
         naive_diff += TAU;
     }
 
-    return naive_diff;
+    naive_diff
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn arc_to_points_90() {
+        let mut sketch = Sketch::new();
+        let center = sketch.add_point(0.0, 0.0);
+        let start = sketch.add_point(1.0, 0.0);
+        let end = sketch.add_point(0.0, 1.0);
+        let arc_id = sketch.add_arc(center, start, end, false);
+        let arc = sketch.arcs.get(&arc_id).unwrap();
+
+        let points = sketch.arc_to_points(&arc);
+        assert_eq!(points.len(), 9);
+    }
+
+    #[test]
+    fn arc_to_points_neg_90() {
+        let mut sketch = Sketch::new();
+        let center = sketch.add_point(0.0, 0.0);
+        let start = sketch.add_point(0.0, 1.0);
+        let end = sketch.add_point(1.0, 0.0);
+        let arc_id = sketch.add_arc(center, start, end, true);
+        let arc = sketch.arcs.get(&arc_id).unwrap();
+
+        let points = sketch.arc_to_points(&arc);
+        assert_eq!(points.len(), 9);
+
+        for point in points {
+            println!("Point: ({}, {})", point.x, point.y);
+        }
+    }
+
+    #[test]
+    fn arc_to_points_180() {
+        let mut sketch = Sketch::new();
+        let center = sketch.add_point(0.0, 0.0);
+        let start = sketch.add_point(1.0, 0.0);
+        let end = sketch.add_point(-1.0, 0.0);
+        let arc_id = sketch.add_arc(center, start, end, false);
+        let arc = sketch.arcs.get(&arc_id).unwrap();
+
+        let points = sketch.arc_to_points(&arc);
+        assert_eq!(points.len(), 18);
+    }
+
+    #[test]
+    fn arc_to_points_270() {
+        let mut sketch = Sketch::new();
+        let center = sketch.add_point(0.0, 0.0);
+        let start = sketch.add_point(1.0, 0.0);
+        let end = sketch.add_point(0.0, -1.0);
+        let arc_id = sketch.add_arc(center, start, end, false);
+        let arc = sketch.arcs.get(&arc_id).unwrap();
+
+        let points = sketch.arc_to_points(&arc);
+        assert_eq!(points.len(), 27);
+    }
 }
