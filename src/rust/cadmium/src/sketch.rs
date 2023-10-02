@@ -148,10 +148,23 @@ impl Sketch {
             Ring::Segments(segments) => {
                 let mut b: Vec<(f64, f64)> = vec![];
                 for segment in segments {
-                    let start = segment.get_start();
-                    let start_pt = self.points.get(&start).unwrap();
-                    let start_tuple = (start_pt.x, start_pt.y);
-                    b.push(start_tuple);
+                    match segment {
+                        Segment::Line(line) => {
+                            // we only ever push the start point. Imagine what happens for a closed
+                            // square--the final closing segment is inferred.
+                            let start = self.points.get(&segment.get_start()).unwrap();
+                            b.push((start.x, start.y));
+                        }
+                        Segment::Arc(arc) => {
+                            // similarly, we push all the points except the final one. The final
+                            // segment is inferred.
+                            let points = self.arc_to_points(arc);
+                            for point in points {
+                                b.push((point.x, point.y));
+                            }
+                            b.pop();
+                        }
+                    }
                 }
                 let polygon = Polygon::new(LineString::from(b), vec![]);
                 polygon
@@ -1053,17 +1066,30 @@ impl Sketch {
                             let arc_angle_degrees = self.arc_angle(arc) * 180.0 / PI;
                             println!("arc_angle: {}", arc_angle_degrees);
 
+                            // most small simple arcs should have this flag set to 0
+                            let mut large_arc_flag = 0;
+                            // most arcs are counterclockwise, so this flag is usually 0
+                            let mut sweep_flag = 0;
+
                             if arc_angle_degrees > 180.0 {
                                 println!("large arc flag!");
-                                //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-                                data = data.elliptical_arc_to((r, r, 0.0, 1, 0, end.x, -end.y));
-                            } else {
-                                //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-                                data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                                large_arc_flag = 1;
                             }
 
-                            // //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
-                            // data = data.elliptical_arc_to((r, r, 0.0, 0, 0, end.x, -end.y));
+                            if arc.clockwise {
+                                sweep_flag = 1;
+                            }
+
+                            //A rx ry x-axis-rotation large-arc-flag sweep-flag x y
+                            data = data.elliptical_arc_to((
+                                r,
+                                r,
+                                0.0,
+                                large_arc_flag,
+                                sweep_flag,
+                                end.x,
+                                -end.y,
+                            ));
                         }
                     }
                 }
