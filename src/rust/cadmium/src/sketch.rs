@@ -32,6 +32,8 @@ pub struct Sketch {
     highest_arc_id: u64,
     virtual_points: HashMap<u64, Point2>,
     highest_virtual_point_id: u64,
+    constraints: HashMap<u64, Constraint>,
+    highest_constraint_id: u64,
 }
 
 impl Sketch {
@@ -49,6 +51,8 @@ impl Sketch {
             highest_arc_id: 0,
             virtual_points: HashMap::new(),
             highest_virtual_point_id: 0,
+            constraints: HashMap::new(),
+            highest_constraint_id: 0,
         }
     }
 
@@ -267,9 +271,14 @@ impl Sketch {
     }
 
     pub fn add_circle(&mut self, point_id: u64, radius: f64) -> u64 {
+        let center_pt = self.points.get(&point_id).unwrap();
+        let top = self.add_point(center_pt.x, center_pt.y + radius);
+        let top_point = self.points.get_mut(&top).unwrap();
+        top_point.hidden = true; // sneaky!
         let c = Circle2 {
             center: point_id,
             radius,
+            top,
         };
         let id = self.highest_circle_id + 1;
         self.circles.insert(id, c);
@@ -301,6 +310,132 @@ impl Sketch {
         id
     }
 
+    pub fn add_segment_length_constraint(&mut self, segment_id: u64, length: f64) -> u64 {
+        let constraint = Constraint::SegmentLength {
+            segment_id,
+            length,
+            x_offset: 0.0,
+            y_offset: 0.0,
+        };
+
+        let segment = self.line_segments.get(&segment_id).unwrap();
+        self.add_spring(segment.start, segment.end, length);
+
+        let id = self.highest_constraint_id + 1;
+        self.constraints.insert(id, constraint);
+        self.highest_constraint_id += 1;
+        id
+    }
+
+    pub fn add_segment_angle_constraint(&mut self, segment_id: u64, angle: f64) -> u64 {
+        let constraint = Constraint::SegmentAngle {
+            segment_id,
+            angle,
+            x_offset: 0.0,
+            y_offset: 0.0,
+        };
+
+        let segment = self.line_segments.get(&segment_id).unwrap();
+        self.add_torsion(segment.start, segment.end, angle);
+
+        let id = self.highest_constraint_id + 1;
+        self.constraints.insert(id, constraint);
+        self.highest_constraint_id += 1;
+        id
+    }
+
+    pub fn add_circle_diameter_constraint(&mut self, circle_id: u64, diameter: f64) -> u64 {
+        let constraint = Constraint::CircleDiameter {
+            circle_id,
+            diameter,
+            angle_offset: PI / 4.0,
+            x_offset: 0.5,
+            y_offset: 0.5,
+        };
+
+        let circle = self.circles.get(&circle_id).unwrap();
+        self.add_spring(circle.center, circle.top, diameter / 2.0);
+
+        let id = self.highest_constraint_id + 1;
+        self.constraints.insert(id, constraint);
+        self.highest_constraint_id += 1;
+        id
+    }
+
+    pub fn constraint_error(&self, constraint_id: u64) -> f64 {
+        let constraint = self.constraints.get(&constraint_id).unwrap();
+        let value = self.constraint_value(constraint_id);
+        match constraint {
+            Constraint::SegmentLength { length, .. } => value - length,
+            Constraint::CircleDiameter { diameter, .. } => value - diameter,
+            Constraint::SegmentAngle { angle, .. } => value - angle,
+        }
+    }
+
+    pub fn constraint_value(&self, constraint_id: u64) -> f64 {
+        let constraint = self.constraints.get(&constraint_id).unwrap();
+        match constraint {
+            Constraint::SegmentLength {
+                segment_id, length, ..
+            } => {
+                let segment = self.line_segments.get(&segment_id).unwrap();
+                let start = self.points.get(&segment.start).unwrap();
+                let end = self.points.get(&segment.end).unwrap();
+                start.distance_to(end)
+            }
+
+            Constraint::CircleDiameter {
+                circle_id,
+                diameter,
+                ..
+            } => {
+                let circle = self.circles.get(&circle_id).unwrap();
+                circle.radius * 2.0
+            }
+
+            Constraint::SegmentAngle {
+                segment_id, angle, ..
+            } => {
+                let segment = self.line_segments.get(&segment_id).unwrap();
+                let start = self.points.get(&segment.start).unwrap();
+                let end = self.points.get(&segment.end).unwrap();
+                start.angle_to(end)
+            }
+        }
+    }
+
+    pub fn constraint_is_satisfied(&self, constraint_id: u64) -> bool {
+        let tolerance = 1e-10;
+        let constraint = self.constraints.get(&constraint_id).unwrap();
+        let error = self.constraint_error(constraint_id);
+        error.abs() < tolerance
+    }
+
+    pub fn all_constraints_are_satisfied(&self) -> bool {
+        for (constraint_id, _constraint) in self.constraints.iter() {
+            if !self.constraint_is_satisfied(*constraint_id) {
+                return false;
+            }
+        }
+        true
+    }
+
+    pub fn segment_length(&self, segment_id: u64) -> f64 {
+        let segment = self.line_segments.get(&segment_id).unwrap();
+        let start = self.points.get(&segment.start).unwrap();
+        let end = self.points.get(&segment.end).unwrap();
+        let dx = end.x - start.x;
+        let dy = end.y - start.y;
+        dx.hypot(dy)
+    }
+
+    pub fn segment_angle(&self, segment_id: u64) -> f64 {
+        let segment = self.line_segments.get(&segment_id).unwrap();
+        let start = self.points.get(&segment.start).unwrap();
+        let end = self.points.get(&segment.end).unwrap();
+        start.angle_to(end)
+    }
+
     pub fn add_spring(&mut self, start_id: u64, end_id: u64, length: f64) -> u64 {
         let id = self.highest_spring_id + 1;
         let s = Spring::new(start_id, end_id, length, SpringKind::Length);
@@ -319,16 +454,19 @@ impl Sketch {
         id
     }
 
-    pub fn solve(&mut self, steps: u64) {
-        // self.print_state();
+    pub fn solve(&mut self, steps: u64) -> bool {
+        let tolerance = 1e-12;
         for _ in 0..steps {
-            self.step();
-            // self.print_state();
+            if self.step() < tolerance {
+                return true;
+            }
         }
+        return false;
     }
 
-    pub fn step(&mut self) {
+    pub fn step(&mut self) -> f64 {
         let dt = 0.04;
+        let mut biggest_change = 0.0;
         for (_point_id, point) in self.points.iter_mut() {
             point.reset_forces();
         }
@@ -336,7 +474,6 @@ impl Sketch {
             let point_a = self.points.get(&spring.start_id).unwrap();
             let point_b = self.points.get(&spring.end_id).unwrap();
             let forces = spring.compute_forces(point_a, point_b);
-
             {
                 let mut point_a = self.points.get_mut(&spring.start_id).unwrap();
                 point_a.fx += forces[0];
@@ -348,7 +485,7 @@ impl Sketch {
                 point_b.fy += forces[3];
             }
         }
-        for (_point_id, point) in self.points.iter_mut() {
+        for (point_id, point) in self.points.iter_mut() {
             if point.fixed {
                 continue;
             }
@@ -356,9 +493,28 @@ impl Sketch {
             let ay = point.fy / point.m;
             point.dx += ax;
             point.dy += ay;
-            point.x += 0.5 * ax * dt * dt + point.dx * dt;
-            point.y += 0.5 * ay * dt * dt + point.dy * dt;
+            let delta_x = 0.5 * ax * dt * dt + point.dx * dt;
+            let delta_y = 0.5 * ay * dt * dt + point.dy * dt;
+
+            if delta_x.abs() > biggest_change {
+                biggest_change = delta_x.abs();
+            }
+            if delta_y.abs() > biggest_change {
+                biggest_change = delta_y.abs();
+            }
+
+            point.x += delta_x;
+            point.y += delta_y;
         }
+
+        // update any circles whose radii might have changed!
+        for (_circle_id, circle) in self.circles.iter_mut() {
+            let center = self.points.get(&circle.center).unwrap();
+            let top = self.points.get(&circle.top).unwrap();
+            circle.radius = center.distance_to(top);
+        }
+
+        biggest_change
     }
 
     pub fn print_state_minimal(&self) {
@@ -1100,6 +1256,29 @@ impl Sketch {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Constraint {
+    SegmentLength {
+        segment_id: u64,
+        length: f64,
+        x_offset: f64,
+        y_offset: f64,
+    },
+    SegmentAngle {
+        segment_id: u64,
+        angle: f64,
+        x_offset: f64,
+        y_offset: f64,
+    },
+    CircleDiameter {
+        circle_id: u64,
+        diameter: f64,
+        angle_offset: f64,
+        x_offset: f64,
+        y_offset: f64,
+    },
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum SpringKind {
     Torsion,
     Length,
@@ -1172,7 +1351,7 @@ impl Spring {
     fn compute_length_forces(&self, point_a: &Point2, point_b: &Point2) -> Vec<f64> {
         let dx = point_b.x - point_a.x;
         let dy = point_b.y - point_a.y;
-        let dist = (dx * dx + dy * dy).sqrt();
+        let dist = dx.hypot(dy);
         let err = dist - self.rest;
 
         let relative_dx = point_b.dx - point_a.dx;
@@ -1188,8 +1367,14 @@ impl Spring {
         let fx = f * dx / dist;
         let fy = f * dy / dist;
 
-        // [fx_a, fy_a, fx_b, fy_b]
-        vec![fx, fy, -fx, -fy]
+        // if a point is hidden, it feels forces but does not exert them
+        if point_a.hidden {
+            vec![fx, fy, 0.0, 0.0]
+        } else if point_b.hidden {
+            vec![0.0, 0.0, -fx, -fy]
+        } else {
+            vec![fx, fy, -fx, -fy]
+        }
     }
 }
 
@@ -1203,6 +1388,7 @@ pub struct Point2 {
     fx: f64,
     fy: f64,
     fixed: bool,
+    hidden: bool,
 }
 
 impl Point2 {
@@ -1216,6 +1402,7 @@ impl Point2 {
             fx: 0.0,
             fy: 0.0,
             fixed: false,
+            hidden: false,
         }
     }
 
@@ -1229,6 +1416,7 @@ impl Point2 {
             fx: 0.0,
             fy: 0.0,
             fixed: true,
+            hidden: false,
         }
     }
 
@@ -1245,6 +1433,10 @@ impl Point2 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         dx.hypot(dy)
+    }
+
+    fn angle_to(&self, other: &Point2) -> f64 {
+        (other.y - self.y).atan2(other.x - self.x)
     }
 }
 
@@ -1264,6 +1456,7 @@ impl Vector2 {
 pub struct Circle2 {
     center: u64,
     radius: f64,
+    top: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -1713,4 +1906,94 @@ mod tests {
 
         sketch.save_svg("test_svgs/two_arcs_in_a_circle_180.svg");
     }
+
+    #[test]
+    fn segment_length_constraint() {
+        let mut sketch = Sketch::new();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+
+        let segment_id = sketch.add_segment(a, b);
+
+        let constraint_id = sketch.add_segment_length_constraint(segment_id, 2.0);
+
+        assert!(sketch.solve(1000));
+        println!("Segment length: {}", sketch.segment_length(segment_id));
+        assert!(sketch.constraint_is_satisfied(constraint_id));
+    }
+
+    #[test]
+    fn triangle_constraint() {
+        let mut sketch = Sketch::new();
+
+        // initialized as a right triangle with right angle at origin
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+        let c = sketch.add_point(0.0, 1.0);
+
+        let segment_ab = sketch.add_segment(a, b);
+        let segment_bc = sketch.add_segment(b, c);
+        let segment_ca = sketch.add_segment(c, a);
+
+        let constraint_ab = sketch.add_segment_length_constraint(segment_ab, 2.0);
+        let constraint_bc = sketch.add_segment_length_constraint(segment_bc, 2.0);
+        let constraint_ca = sketch.add_segment_length_constraint(segment_ca, 2.0);
+
+        assert!(sketch.solve(1000));
+
+        assert!(sketch.all_constraints_are_satisfied());
+
+        sketch.save_svg("test_svgs/constraint_triangle.svg");
+    }
+
+    #[test]
+    fn segment_angle_constraint() {
+        let mut sketch = Sketch::new();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+
+        let segment_id = sketch.add_segment(a, b);
+
+        let constraint_id = sketch.add_segment_angle_constraint(segment_id, PI / 4.0);
+
+        sketch.solve(10000);
+
+        assert!(sketch.constraint_is_satisfied(constraint_id));
+    }
+
+    #[test]
+    fn circle_diameter() {
+        let mut sketch = Sketch::new();
+
+        let center = sketch.add_point(0.0, 0.0);
+        let circle_id = sketch.add_circle(center, 0.5);
+        let constraint_id = sketch.add_circle_diameter_constraint(circle_id, 4.0);
+
+        sketch.solve(200);
+
+        println!("Value: {}", sketch.constraint_value(constraint_id));
+        println!("Error: {}", sketch.constraint_error(constraint_id));
+        assert!(sketch.constraint_is_satisfied(constraint_id));
+
+        sketch.save_svg("test_svgs/constraint_circle_diameter.svg");
+    }
+
+    // #[test]
+    // fn segments_equal() {
+    //     let mut sketch = Sketch::new();
+
+    //     let center = sketch.add_point(0.0, 0.0);
+    //     let circle_id = sketch.add_circle(center, 0.5);
+    //     let constraint_id = sketch.add_circle_diameter_constraint(circle_id, 4.0);
+
+    //     sketch.solve(200);
+
+    //     println!("Value: {}", sketch.constraint_value(constraint_id));
+    //     println!("Error: {}", sketch.constraint_error(constraint_id));
+    //     assert!(sketch.constraint_is_satisfied(constraint_id));
+
+    //     sketch.save_svg("test_svgs/constraint_circle_diameter.svg");
+    // }
 }
