@@ -1,8 +1,27 @@
 <script>
 	import MainCanvas from './mainCanvas.svelte';
+	import { browser } from '$app/environment';
+	import { onMount } from 'svelte';
+	import { project } from './stores.js';
+	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
+	import { default as init, multiply } from 'cadmium';
+
+	if (browser) {
+		onMount(() => {
+			init().then((instance) => {
+				const result = multiply(2, 3);
+				console.log('result: ' + result);
+
+				// const p = new instance.exports.Person();
+				// console.log(p);
+			});
+		});
+	}
 
 	let project_name = 'First project';
 	let username = 'mattferraro.dev';
+
+	console.log($project);
 
 	let actions = [
 		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch' },

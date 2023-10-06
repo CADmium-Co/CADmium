@@ -14,6 +14,11 @@ echo "Building wasm-parser..."
 # Build wasm from rust 
 npm run build:wasm
 
+# Handle linking of cadmium package
+cd src/rust/cadmium/pkg
+npm link
+cd ../../../..
+npm link cadmium
 
 echo "Build static frontend client..."
 # Build static html for the react client

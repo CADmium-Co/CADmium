@@ -274,7 +274,14 @@ pub struct RealPlane {
     pub height: f64,
 }
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-// }
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn create_project() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+        println!("{:?}", p);
+    }
+}
