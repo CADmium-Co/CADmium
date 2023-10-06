@@ -9,14 +9,14 @@
 	if (browser) {
 		onMount(() => {
 			init().then((instance) => {
-				const p = new Project('P1');
-				console.log(p);
-				console.log(p.name);
+				const p = new Project('First Project');
+				// console.log(p);
+				// console.log(p.name);
+				project.set(p);
 			});
 		});
 	}
 
-	let project_name = 'First project';
 	let username = 'mattferraro.dev';
 
 	console.log($project);
@@ -38,7 +38,7 @@
 				<img class="object-cover h-10 w-10 ml-4" alt="logo" src="/cadmium_logo_min.svg" />
 			</div>
 			<div class="select-none">CADmium</div>
-			<div class="text-xl font-medium">{project_name}</div>
+			<div class="text-xl font-medium">{$project.name || ''}</div>
 
 			<div class="flex-grow flex flex-row-reverse gap-4 mr-4">
 				<div>
