@@ -4,16 +4,14 @@
 	import { onMount } from 'svelte';
 	import { project } from './stores.js';
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
-	import { default as init, multiply } from 'cadmium';
+	import { default as init, Project } from 'cadmium';
 
 	if (browser) {
 		onMount(() => {
 			init().then((instance) => {
-				const result = multiply(2, 3);
-				console.log('result: ' + result);
-
-				// const p = new instance.exports.Person();
-				// console.log(p);
+				const p = new Project('P1');
+				console.log(p);
+				console.log(p.name);
 			});
 		});
 	}
