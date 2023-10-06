@@ -10,9 +10,9 @@
 		onMount(() => {
 			init().then((instance) => {
 				const p = new Project('First Project');
-				// console.log(p);
-				// console.log(p.name);
+				console.log('p: ', p);
 				project.set(p);
+				console.log(p.json());
 			});
 		});
 	}

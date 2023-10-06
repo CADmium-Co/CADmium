@@ -25,6 +25,14 @@ impl Project {
         w.add_defaults();
         self.workbenches.push(w);
     }
+
+    pub fn json(&self) -> String {
+        let result = serde_json::to_string(self);
+        match result {
+            Ok(json) => json,
+            Err(e) => format!("Error: {}", e),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -282,6 +290,6 @@ mod tests {
     fn create_project() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
-        println!("{:?}", p);
+        println!("{}", p.json());
     }
 }

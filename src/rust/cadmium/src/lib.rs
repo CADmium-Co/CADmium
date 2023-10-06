@@ -43,6 +43,11 @@ impl Project {
         self.native.name = name;
     }
 
+    #[wasm_bindgen]
+    pub fn json(&self) -> String {
+        self.native.json()
+    }
+
     // #[wasm_bindgen(getter)]
     // pub fn sketch(&self) -> sketch::Sketch {
     //     sketch::Sketch::from(self.native.sketch.clone())
