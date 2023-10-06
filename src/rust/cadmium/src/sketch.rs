@@ -322,6 +322,26 @@ impl Sketch {
         id
     }
 
+    pub fn add_segment_vertical_constraint(&mut self, segment_id: u64) -> u64 {
+        let current_angle = self.segment_angle(segment_id);
+        if current_angle >= 0.0 {
+            // it roughly points up
+            self.add_segment_angle_constraint(segment_id, PI / 2.0)
+        } else {
+            self.add_segment_angle_constraint(segment_id, -PI / 2.0)
+        }
+    }
+
+    pub fn add_segment_horizontal_constraint(&mut self, segment_id: u64) -> u64 {
+        let current_angle = self.segment_angle(segment_id);
+        if current_angle.abs() <= PI / 2.0 {
+            // it roughly points right
+            self.add_segment_angle_constraint(segment_id, 0.0)
+        } else {
+            self.add_segment_angle_constraint(segment_id, PI)
+        }
+    }
+
     pub fn add_segment_angle_constraint(&mut self, segment_id: u64, angle: f64) -> u64 {
         let constraint = Constraint::SegmentAngle {
             segment_id,
@@ -355,26 +375,19 @@ impl Sketch {
         id
     }
 
-    // pub fn add_segments_equal_constraint(&mut self, segment_id0: u64, segment_id1: u64) -> u64 {
-    //     let constraint = Constraint::SegmentsEqual {
-    //         segment_id0,
-    //         segment_id1,
-    //     };
+    pub fn add_segments_equal_constraint(&mut self, segment_a_id: u64, segment_b_id: u64) -> u64 {
+        let constraint = Constraint::SegmentsEqual {
+            segment_a_id,
+            segment_b_id,
+            kp: 2.0,
+            kd: 0.3,
+        };
 
-    //     let segment0 = self.line_segments.get(&segment_id0).unwrap();
-    //     let segment1 = self.line_segments.get(&segment_id1).unwrap();
-
-    //     let length0 = self.segment_length(segment_id0);
-    //     let length1 = self.segment_length(segment_id1);
-
-    //     self.add_spring(segment0.start, segment0.end, length1);
-    //     self.add_spring(segment1.start, segment1.end, length0);
-
-    //     let id = self.highest_constraint_id + 1;
-    //     self.constraints.insert(id, constraint);
-    //     self.highest_constraint_id += 1;
-    //     id
-    // }
+        let id = self.highest_constraint_id + 1;
+        self.constraints.insert(id, constraint);
+        self.highest_constraint_id += 1;
+        id
+    }
 
     pub fn constraint_error(&self, constraint_id: u64) -> f64 {
         let constraint = self.constraints.get(&constraint_id).unwrap();
@@ -383,6 +396,7 @@ impl Sketch {
             Constraint::SegmentLength { length, .. } => value - length,
             Constraint::CircleDiameter { diameter, .. } => value - diameter,
             Constraint::SegmentAngle { angle, .. } => value - angle,
+            Constraint::SegmentsEqual { .. } => value,
         }
     }
 
@@ -414,6 +428,16 @@ impl Sketch {
                 let start = self.points.get(&segment.start).unwrap();
                 let end = self.points.get(&segment.end).unwrap();
                 start.angle_to(end)
+            }
+
+            Constraint::SegmentsEqual {
+                segment_a_id,
+                segment_b_id,
+                ..
+            } => {
+                let a = self.segment_length(*segment_a_id);
+                let b = self.segment_length(*segment_b_id);
+                a - b
             }
         }
     }
@@ -519,13 +543,30 @@ impl Sketch {
 
             let angle = (point_b.y - point_a.y).atan2(point_b.x - point_a.x);
 
-            let err = rest - angle;
+            let mut err = rest - angle;
+            // println!("Err: {}", err);
+            if err > PI {
+                err = err - PI * 2.0;
+            }
+            if err < -PI {
+                err = err + PI * 2.0;
+            }
 
             let point_a_stepped = point_a.step(dt);
             let point_b_stepped = point_b.step(dt);
             let angle_stepped = (point_b_stepped.1 - point_a_stepped.1)
                 .atan2(point_b_stepped.0 - point_a_stepped.0);
-            let d_angle = (angle_stepped - angle) / dt;
+            let mut angle_change = angle_stepped - angle;
+            // println!("Dangle: {}", angle_change);
+
+            if angle_change > PI {
+                angle_change = angle_change - PI * 2.0;
+            }
+            if angle_change < -PI {
+                angle_change = angle_change + PI * 2.0;
+            }
+
+            let d_angle = angle_change / dt;
             let torque = kp * err - kd * d_angle;
 
             let dx = point_b.x - point_a.x;
@@ -558,9 +599,36 @@ impl Sketch {
     }
 
     pub fn apply_forces(&mut self, constraint_id: u64) {
-        let constraint = self.constraints.get(&constraint_id).unwrap();
+        let constraint = self.constraints.get(&constraint_id).unwrap().clone();
 
         match constraint {
+            Constraint::SegmentsEqual {
+                segment_a_id,
+                segment_b_id,
+                kp,
+                kd,
+            } => {
+                let a = self.line_segments.get(&segment_a_id).unwrap();
+                let b = self.line_segments.get(&segment_b_id).unwrap();
+
+                // TODO: is there a better way to satisfy the borrow checker?
+                let mut average_length = 0.0;
+                let mut a_start = 0;
+                let mut b_start = 0;
+                let mut a_end = 0;
+                let mut b_end = 0;
+                {
+                    average_length = (self.segment_length(segment_a_id)
+                        + self.segment_length(segment_b_id))
+                        / 2.0;
+                    a_start = a.start;
+                    b_start = b.start;
+                    a_end = a.end;
+                    b_end = b.end;
+                }
+                self.apply_length_forces(a_start, a_end, average_length, kp, kd);
+                self.apply_length_forces(b_start, b_end, average_length, kp, kd);
+            }
             Constraint::SegmentLength {
                 segment_id,
                 length,
@@ -569,7 +637,7 @@ impl Sketch {
                 ..
             } => {
                 let segment = self.line_segments.get(&segment_id).unwrap();
-                self.apply_length_forces(segment.start, segment.end, *length, *kp, *kd)
+                self.apply_length_forces(segment.start, segment.end, length, kp, kd)
             }
             Constraint::CircleDiameter {
                 circle_id,
@@ -582,9 +650,8 @@ impl Sketch {
                 let center = self.points.get(&circle.center).unwrap();
                 let top = self.points.get(&circle.top).unwrap();
                 let radius = center.distance_to(top);
-                let length = *diameter / 2.0;
 
-                self.apply_length_forces(circle.center, circle.top, *diameter / 2.0, *kp, *kd)
+                self.apply_length_forces(circle.center, circle.top, diameter / 2.0, kp, kd)
             }
             Constraint::SegmentAngle {
                 segment_id,
@@ -594,13 +661,14 @@ impl Sketch {
                 ..
             } => {
                 let segment = self.line_segments.get(&segment_id).unwrap();
-                self.apply_torsion_forces(segment.start, segment.end, *angle, *kp, *kd);
+                self.apply_torsion_forces(segment.start, segment.end, angle, kp, kd);
             }
         }
     }
 
     pub fn step(&mut self) -> f64 {
-        let dt = 0.04;
+        let dt = 0.02; // at 0.04 the system can be unstable! especially manual_rectangle()
+                       // TODO: switch to RK4?
         let mut biggest_change = 0.0;
         for (_point_id, point) in self.points.iter_mut() {
             point.reset_forces();
@@ -615,6 +683,11 @@ impl Sketch {
         for constraint_id in constraint_keys {
             self.apply_forces(constraint_id);
         }
+
+        // for point in self.points.values_mut() {
+        //     point.apply_drag_force();
+        // }
+
         for (point_id, point) in self.points.iter_mut() {
             if point.fixed {
                 continue;
@@ -739,10 +812,10 @@ impl Sketch {
         // Start by creating shapes for each face
         let (faces, unused_segments) = self.find_faces();
 
-        println!("Making SVG. Faces:");
-        for face in faces.iter() {
-            println!("{:?}", face);
-        }
+        // println!("Making SVG. Faces:");
+        // for face in faces.iter() {
+        //     println!("{:?}", face);
+        // }
         for face in faces.iter() {
             let exterior = &face.exterior;
 
@@ -973,12 +1046,12 @@ impl Sketch {
             segments_overall.push(Segment::Arc(arc.clone()));
         }
 
-        let (rings, unused_segments) = self.find_rings(segments_overall, true);
-        println!("Found {} rings", rings.len());
-        for ring in &rings {
-            println!("{:?}", ring);
-        }
-        println!("Found {} unused segments", unused_segments.len());
+        let (rings, unused_segments) = self.find_rings(segments_overall, false);
+        // println!("Found {} rings", rings.len());
+        // for ring in &rings {
+        //     println!("{:?}", ring);
+        // }
+        // println!("Found {} unused segments", unused_segments.len());
         let mut faces: Vec<Face> = rings.iter().map(|r| Face::from_ring(r)).collect();
 
         if rings.len() == 0 {
@@ -1034,7 +1107,7 @@ impl Sketch {
 
         for (seg_idx, s) in segments_overall.iter().enumerate() {
             if debug {
-                println!("Starting a loop with segment: {:?}", s);
+                // println!("Starting a loop with segment: {:?}", s);
                 match s {
                     Segment::Line(line) => {
                         println!(
@@ -1133,7 +1206,7 @@ impl Sketch {
             all_rings.push(Ring::Segments(this_ring));
         }
 
-        println!("--Found {} rings", all_rings.len());
+        // println!("--Found {} rings", all_rings.len());
 
         // Circles are trivially rings!
         for (_circle_id, circle) in self.circles.iter() {
@@ -1154,7 +1227,7 @@ impl Sketch {
             .cloned()
             .collect();
 
-        println!("--Found {} rings", all_rings.len());
+        // println!("--Found {} rings", all_rings.len());
 
         (all_rings, unused_segments)
     }
@@ -1166,7 +1239,7 @@ impl Sketch {
         used_indices: &Vec<usize>,
         debug: bool,
     ) -> Option<usize> {
-        println!("Finding next segment index");
+        // println!("Finding next segment index");
         let mut matches: Vec<(usize, f64, f64)> = vec![];
         let mut this_segment_end_angle = match starting_segment {
             Segment::Line(line) => self.line_end_angle(line),
@@ -1204,17 +1277,17 @@ impl Sketch {
             let mut best_option = 0;
             let mut hardest_left_turn = 0.0;
             for o in matches.iter() {
-                println!("Option: {:?}", segments.get(o.0).unwrap());
-                println!("Option: {} angle {}", o.0, o.1 * 180.0 / PI);
-                println!("Option: {}", o.2 * 180.0 / PI);
-                println!();
+                // println!("Option: {:?}", segments.get(o.0).unwrap());
+                // println!("Option: {} angle {}", o.0, o.1 * 180.0 / PI);
+                // println!("Option: {}", o.2 * 180.0 / PI);
+                // println!();
 
                 if o.2 > hardest_left_turn {
                     hardest_left_turn = o.2;
                     best_option = o.0;
                 }
             }
-            println!("Best option: {}", best_option);
+            // println!("Best option: {}", best_option);
             Some(best_option)
         }
     }
@@ -1412,6 +1485,12 @@ pub enum Constraint {
         kp: f64,
         kd: f64,
     },
+    SegmentsEqual {
+        segment_a_id: u64,
+        segment_b_id: u64,
+        kp: f64,
+        kd: f64,
+    },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1459,6 +1538,14 @@ impl Point2 {
     fn reset_forces(&mut self) {
         self.fx = 0.0;
         self.fy = 0.0;
+    }
+
+    pub fn apply_drag_force(&mut self) {
+        let drag_coefficient = 0.1;
+        let drag_force = -drag_coefficient * self.dx;
+        self.fx += drag_force;
+        let drag_force = -drag_coefficient * self.dy;
+        self.fy += drag_force;
     }
 
     fn step(&self, dt: f64) -> (f64, f64) {
@@ -2007,7 +2094,7 @@ mod tests {
         let circle_id = sketch.add_circle(center, 0.5);
         let constraint_id = sketch.add_circle_diameter_constraint(circle_id, 4.0);
 
-        sketch.solve(200);
+        sketch.solve(4000);
 
         println!("Value: {}", sketch.constraint_value(constraint_id));
         println!("Error: {}", sketch.constraint_error(constraint_id));
@@ -2022,12 +2109,87 @@ mod tests {
 
         let a = sketch.add_point(0.0, 0.0);
         let b = sketch.add_point(0.5, 0.0);
+
         let c = sketch.add_point(0.0, 1.0);
         let d = sketch.add_point(1.0, 1.0);
 
         let segment_ab = sketch.add_segment(a, b); // length 0.5
         let segment_cd = sketch.add_segment(c, d); // length 1.0
 
-        // let constraint_id = sketch.add_segments_equal_constraint(segment_ab, segment_cd);
+        let constraint_id = sketch.add_segments_equal_constraint(segment_ab, segment_cd);
+
+        sketch.save_svg("test_svgs/equality_constraint_unsolved.svg");
+        assert!(sketch.solve(1000));
+        sketch.save_svg("test_svgs/equality_constraint_solved.svg");
+        println!("equality error: {}", sketch.constraint_error(constraint_id));
+    }
+
+    #[test]
+    fn manual_square() {
+        let mut sketch = Sketch::new();
+
+        let a = sketch.add_fixed_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, -0.1);
+        let c = sketch.add_point(1.1, 0.9);
+        let d = sketch.add_point(-0.1, 0.9);
+
+        let segment_ab = sketch.add_segment(a, b);
+        let segment_bc = sketch.add_segment(b, c);
+        let segment_cd = sketch.add_segment(c, d);
+        let segment_da = sketch.add_segment(d, a);
+
+        let length = 2.0;
+        sketch.add_segment_length_constraint(segment_ab, length);
+        sketch.add_segment_length_constraint(segment_bc, length);
+        sketch.add_segment_length_constraint(segment_cd, length);
+        sketch.add_segment_length_constraint(segment_da, length);
+
+        sketch.add_segment_horizontal_constraint(segment_ab);
+        sketch.add_segment_horizontal_constraint(segment_cd);
+        sketch.add_segment_vertical_constraint(segment_da);
+        sketch.add_segment_vertical_constraint(segment_bc);
+
+        // for i in 0..100 {
+        //     sketch.step();
+        //     sketch.save_svg(&format!("test_svgs/manual_square/{}.svg", i));
+        // }
+
+        sketch.solve(1000);
+        sketch.save_svg("test_svgs/manual_square_solved.svg");
+    }
+
+    #[test]
+    fn manual_rectangle() {
+        let mut sketch = Sketch::new();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, 0.0);
+        let c = sketch.add_point(1.0, 1.0);
+        let d = sketch.add_point(0.0, 1.0);
+
+        let segment_ab = sketch.add_segment(a, b);
+        let segment_bc = sketch.add_segment(b, c);
+        let segment_cd = sketch.add_segment(c, d);
+        let segment_da = sketch.add_segment(d, a);
+
+        sketch.add_segment_horizontal_constraint(segment_ab);
+        sketch.add_segment_horizontal_constraint(segment_cd);
+        sketch.add_segment_vertical_constraint(segment_da);
+        sketch.add_segment_vertical_constraint(segment_bc);
+
+        // fixed width of 1.0
+        sketch.add_segment_length_constraint(segment_ab, 1.0);
+        sketch.add_segment_length_constraint(segment_cd, 1.0);
+        // This should cause it to adjust!
+        sketch.add_segment_length_constraint(segment_da, 0.5);
+
+        // for i in 0..800 {
+        //     sketch.save_svg(&format!("test_svgs/manual_square/{}.svg", i));
+        //     sketch.step();
+        // }
+
+        let solved = sketch.solve(1000);
+        println!("did solve? {}", solved);
+        sketch.save_svg("test_svgs/manual_rectangle_solved.svg");
     }
 }
