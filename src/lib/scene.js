@@ -4,6 +4,7 @@ import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 // import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // import CameraControls from 'camera-controls';
 // CameraControls.install({ THREE: THREE });
+import { Text } from 'troika-three-text'
 
 let camera, scene, renderer, controls;
 const planes = {};
@@ -19,7 +20,7 @@ export const createScene = (el) => {
     const worldHeight = worldWidth / aspectRatio;
     camera = new THREE.OrthographicCamera(worldWidth / - 2, worldWidth / 2, worldHeight / 2, worldHeight / - 2, 0.1, 1000);
 
-    camera.position.z = -20;
+    camera.position.z = 20;
     camera.lookAt(0, 0, 0);
 
     // camera-controls
@@ -31,16 +32,6 @@ export const createScene = (el) => {
 
     // OrbitControls
     // const controls = new OrbitControls(camera, el);
-
-    const geometry = new THREE.BoxGeometry();
-
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x00ff00,
-        metalness: 0.13,
-    });
-
-    const cube = new THREE.Mesh(geometry, material);
-    // scene.add(cube);
 
     const directionalLight = new THREE.DirectionalLight(0x9090aa);
     directionalLight.position.set(-10, 10, -10).normalize();
@@ -84,10 +75,11 @@ export const createScene = (el) => {
 
     window.addEventListener('resize', resize);
 
+
     getStarted(el);
 }
 
-export const createPlane = (realized_plane) => {
+export const createPlane = (realized_plane, name) => {
     const { width, height, plane } = realized_plane;
     let { origin, primary, secondary, tertiary } = plane;
     origin = new THREE.Vector3(origin.x, origin.y, origin.z);
@@ -140,6 +132,29 @@ export const createPlane = (realized_plane) => {
     const edges = new THREE.EdgesGeometry(geometry);
     const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x42a7eb }));
 
+    const label = new Text()
+    scene.add(label)
+
+    // Set properties to configure:
+    label.text = " " + name
+    label.fontSize = 0.05
+    label.position.x = upper_left.x
+    label.position.y = upper_left.y
+    label.position.z = upper_left.z
+    label.color = 0x42a7eb
+
+    // Update the rendering:
+    label.sync()
+
+    // we need to rotate the text properly
+    const m = new THREE.Matrix4()
+    m.makeBasis(primary, secondary, tertiary)
+    const ea = new THREE.Euler(0, 0, 0, 'XYZ')
+    ea.setFromRotationMatrix(m, 'XYZ')
+    label.rotation.x = ea.x
+    label.rotation.y = ea.y
+    label.rotation.z = ea.z
+
     return { mesh, line };
 }
 
@@ -153,7 +168,7 @@ export const setRealization = (realization) => {
     // create a new plane for each plane in the realization
     for (const [key, value] of Object.entries(realization.planes)) {
         console.log("A plane: ", key, value);
-        planes[key] = createPlane(value);
+        planes[key] = createPlane(value, key);
 
         scene.add(planes[key].mesh);
         scene.add(planes[key].line);
