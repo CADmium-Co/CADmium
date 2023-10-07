@@ -9,6 +9,8 @@
 	let num_steps_applied = 1000;
 	let realization = {};
 
+	let current_step = 'none';
+
 	if (browser) {
 		onMount(() => {
 			init().then(() => {
@@ -29,14 +31,11 @@
 		console.log('Realization:', realization);
 	}
 
-	// $: realization = $project_rust.get_realization(0, num_steps_applied);
-	// $: console.log('realization: ', realization);
-
 	let actions = [
 		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch' },
 		{ alt: 'extrude', src: '/actions/extrude_min.svg' },
 		{ alt: 'plane', src: '/actions/plane_min.svg' }
-		// { alt: 'chamfer', src: '/actions/chamfer_min.svg' },
+		// { alt: 'point', src: '/actions/point_min.svg' },
 		// { alt: 'hole', src: '/actions/hole_min.svg' },
 		// { alt: 'fillet', src: '/actions/fillet_min.svg' },
 		// { alt: 'revolve', src: '/actions/revolve_min.svg' }
@@ -44,7 +43,8 @@
 
 	let icon_mapping = {
 		Sketch: '/actions/sketch_min.svg',
-		Plane: '/actions/plane_min.svg'
+		Plane: '/actions/plane_min.svg',
+		Point: '/actions/point_min.svg'
 	};
 </script>
 

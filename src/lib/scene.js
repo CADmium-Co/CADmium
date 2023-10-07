@@ -1,23 +1,212 @@
 // place files you want to import through the `$lib` alias in this folder.
 import * as THREE from 'three';
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
-// import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 // import CameraControls from 'camera-controls';
 // CameraControls.install({ THREE: THREE });
 import { Text } from 'troika-three-text'
 
 let camera, scene, renderer, controls;
 const planes = {};
+const points = {};
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2(-1.0, -1.0);
+const last_click = new THREE.Vector2(-1.0, -1.0);
 let element;
+let selectable = ['planes'];
+let selected = [];
+let moving_camera = false;
 
 const onPointerMove = (event) => {
     pointer.x = (event.offsetX / element.width) * 2 - 1;
     pointer.y = - (event.offsetY / element.height) * 2 + 1;
 }
 
+const onPointerClick = (event) => {
+    last_click.x = (event.offsetX / element.width) * 2 - 1;
+    last_click.y = - (event.offsetY / element.height) * 2 + 1;
+    console.log("Clicked!");
+
+    raycaster.setFromCamera(pointer, camera);
+    if (selectable.includes('planes')) {
+        let just_meshes = Object.values(planes).map((plane) => plane.mesh);
+        const intersections = raycaster.intersectObjects(just_meshes);
+        if (intersections.length > 0) {
+            let first_intersection = intersections[0];
+            let plane_name = first_intersection.object.name;
+            let plane = planes[plane_name];
+            plane.setSelectionStatus('selected');
+            selected.push({ type: 'plane', name: plane_name, object: plane });
+        }
+    }
+}
+
+class Point {
+    constructor(name, { x, y, z }) {
+        this.name = name;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+
+        let tex = new THREE.TextureLoader().load("/actions/point_min.svg");
+
+
+        // console.log("x: ", x, "y: ", y, "z: ", z);
+        const geom = new THREE.BufferGeometry();
+        const vertices = new Float32Array([x, y, z]);
+        geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        console.log(geom);
+        // const material = new THREE.PointsMaterial({ size: 0.05, sizeAttenuation: false, map: tex, alphaTest: 0.5, transparent: false });
+        const material = new THREE.PointsMaterial({ color: 0x888888, size: 20.0, map: tex, transparent: true, sizeAttenuation: false, });
+
+        const mesh = new THREE.Points(geom, material);
+        this.mesh = mesh;
+
+        // const geometry = new THREE.SphereGeometry(0.01, 32, 32);
+        // const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        // const sphere = new THREE.Mesh(geometry, material);
+        // sphere.position.x = x;
+        // sphere.position.y = y;
+        // sphere.position.z = z;
+
+        // this.sphere = sphere;
+    }
+
+    addToScene() {
+        scene.add(this.mesh);
+        console.log("added a point")
+    }
+}
+
+class Plane {
+    constructor(name, { plane, width, height }) {
+        let { origin, primary, secondary, tertiary } = plane;
+        this.origin = origin;
+        this.primary = primary;
+        this.secondary = secondary;
+        this.tertiary = tertiary;
+        this.width = width;
+        this.height = height;
+        this.name = name;
+
+        this.fillColor = "#525292";
+        this.strokeColor = "#42a7eb";
+
+        this.mouseOverFillColor = "#525292";
+        this.mouseOverStrokeColor = "#ffa500";
+
+        this.selectedFillColor = "#525292";
+        this.selectedStrokeColor = "#ff0000";
+
+        this.selectionStatus = 'unselected'; // could also be 'mouseOver' or 'selected'
+
+        origin = new THREE.Vector3(origin.x, origin.y, origin.z);
+        primary = new THREE.Vector3(primary.x, primary.y, primary.z);
+        secondary = new THREE.Vector3(secondary.x, secondary.y, secondary.z);
+        tertiary = new THREE.Vector3(tertiary.x, tertiary.y, tertiary.z);
+
+        let half_width = width / 2;
+        let half_height = height / 2;
+
+        const upper_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, half_height);
+        const upper_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, half_height);
+        const lower_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, -half_height);
+        const lower_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, -half_height);
+        const label_position = upper_left.clone().addScaledVector(tertiary, 0.001);
+
+        const geometry = new THREE.BufferGeometry();
+        const vertices = new Float32Array([
+            lower_left.x, lower_left.y, lower_left.z,
+            lower_right.x, lower_right.y, lower_right.z,
+            upper_right.x, upper_right.y, upper_right.z,
+            upper_right.x, upper_right.y, upper_right.z,
+            upper_left.x, upper_left.y, upper_left.z,
+            lower_left.x, lower_left.y, lower_left.z,
+        ]);
+
+        const normals = new Float32Array([
+            tertiary.x, tertiary.y, tertiary.z,
+            tertiary.x, tertiary.y, tertiary.z,
+            tertiary.x, tertiary.y, tertiary.z,
+            tertiary.x, tertiary.y, tertiary.z,
+            tertiary.x, tertiary.y, tertiary.z,
+            tertiary.x, tertiary.y, tertiary.z,
+        ]);
+
+        // itemSize = 3 because there are 3 values (components) per vertex
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+        geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
+
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x525292,
+            side: THREE.DoubleSide,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.05,
+            depthWrite: false,
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+
+        const edges = new THREE.EdgesGeometry(geometry);
+        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x42a7eb }));
+
+        const label = new Text()
+
+        // Set properties to configure:
+        label.text = " " + name
+        label.fontSize = 0.05
+        label.position.x = label_position.x
+        label.position.y = label_position.y
+        label.position.z = label_position.z
+        label.color = 0x42a7eb
+        label.depthOffset = -1
+
+        // Update the rendering:
+        label.sync()
+
+        // we need to rotate the text properly
+        const m = new THREE.Matrix4()
+        m.makeBasis(primary, secondary, tertiary)
+        const ea = new THREE.Euler(0, 0, 0, 'XYZ')
+        ea.setFromRotationMatrix(m, 'XYZ')
+        label.rotation.x = ea.x
+        label.rotation.y = ea.y
+        label.rotation.z = ea.z
+
+        label.renderOrder = 1
+
+        this.mesh = mesh;
+        this.line = line;
+        this.label = label;
+
+        this.mesh.name = name;
+    }
+
+    addToScene() {
+        scene.add(this.mesh);
+        scene.add(this.line);
+        scene.add(this.label);
+    }
+
+    setSelectionStatus(status) {
+        if (status === 'unselected') {
+            this.mesh.material.color.set(this.fillColor);
+            this.line.material.color.set(this.strokeColor);
+        } else if (status === 'mouseOver') {
+            this.mesh.material.color.set(this.mouseOverFillColor);
+            this.line.material.color.set(this.mouseOverStrokeColor);
+        } else if (status === 'selected') {
+            this.mesh.material.color.set(this.selectedFillColor);
+            this.line.material.color.set(this.selectedStrokeColor);
+        } else {
+            throw new Error("Invalid selection status: ", status);
+        }
+
+        this.selectionStatus = status;
+
+    }
+}
 
 export const createScene = (el) => {
     element = el;
@@ -39,8 +228,8 @@ export const createScene = (el) => {
     camera.up = new THREE.Vector3(0, 0, 1);
     camera.lookAt(0, 0, 0);
 
-    const axesHelper = new THREE.AxesHelper(5);
-    scene.add(axesHelper);
+    // const axesHelper = new THREE.AxesHelper(5);
+    // scene.add(axesHelper);
 
     // camera-controls
     // const cameraControls = new CameraControls(camera, el);
@@ -48,9 +237,6 @@ export const createScene = (el) => {
     // TrackballControls
     controls = new TrackballControls(camera, el);
     controls.rotateSpeed = 3.0;
-
-    // OrbitControls
-    // const controls = new OrbitControls(camera, el);
 
     const directionalLight = new THREE.DirectionalLight(0x9090aa);
     directionalLight.position.set(-10, 10, -10).normalize();
@@ -61,41 +247,50 @@ export const createScene = (el) => {
     scene.add(hemisphereLight);
     let count = 0;
 
+
+    const handleMouseover = () => {
+        // First just deselect everything. Start by deselecting all planes
+        for (let [plane_name, plane] of Object.entries(planes)) {
+            if (plane.selectionStatus === 'mouseOver') {
+                plane.setSelectionStatus('unselected');
+            }
+        }
+        // then deselect all solids, all lines, all points, etc
+
+
+        // Now check for intersections but only for things that should 
+        // be selectable right now
+        raycaster.setFromCamera(pointer, camera);
+        if (selectable.includes('planes')) {
+            let just_meshes = Object.values(planes).map((plane) => plane.mesh);
+            const intersections = raycaster.intersectObjects(just_meshes);
+            if (intersections.length > 0) {
+                let first_intersection = intersections[0];
+                let plane_name = first_intersection.object.name;
+                let plane = planes[plane_name];
+                plane.setSelectionStatus('mouseOver');
+            }
+        }
+    }
+
     const render = () => {
         const delta = clock.getDelta();
         controls.update(delta);
         // const hasControlsUpdated = cameraControls.update(delta);
-
-        raycaster.setFromCamera(pointer, camera);
-
-        const intersects = raycaster.intersectObjects(scene.children);
-
-        for (let i = 0; i < scene.children.length; i++) {
-            let child = scene.children[i];
-            if (child.type === "Mesh") {
-                child.material.color.set(0x525292);
-            }
-            // scene.children[i].material.color.set(0x525292);
-        }
-
-        for (let i = 0; i < intersects.length; i++) {
-            let thing = intersects[i].object;
-            if (thing.type === "Mesh") {
-                thing.material.color.set(0xffff00);
-                // intersects[i].object.material.color.set(0xff0000);
-            }
-        }
 
         requestAnimationFrame(render);
 
         // required if controls.enableDamping or controls.autoRotate are set to true
         // controls.update();
 
+        handleMouseover();
+
         count += 1
-        if (count === 100) {
-            console.log(intersects);
+        if (count === 60) {
             count = 0;
         }
+
+
 
         // you can skip this condition to render though
         // if (hasControlsUpdated) {    
@@ -103,6 +298,7 @@ export const createScene = (el) => {
         // }
 
     };
+
 
     const resize = () => {
         const { width, height } = el.getBoundingClientRect();
@@ -121,91 +317,9 @@ export const createScene = (el) => {
     window.addEventListener('resize', resize);
 
     el.addEventListener('pointermove', onPointerMove);
+    el.addEventListener('click', onPointerClick);
 
     getStarted(el);
-}
-
-export const createPlane = (realized_plane, name) => {
-    const { width, height, plane } = realized_plane;
-    let { origin, primary, secondary, tertiary } = plane;
-    origin = new THREE.Vector3(origin.x, origin.y, origin.z);
-    primary = new THREE.Vector3(primary.x, primary.y, primary.z);
-    secondary = new THREE.Vector3(secondary.x, secondary.y, secondary.z);
-    tertiary = new THREE.Vector3(tertiary.x, tertiary.y, tertiary.z);
-
-    let half_width = width / 2;
-    let half_height = height / 2;
-
-    const upper_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, half_height);
-    const upper_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, half_height);
-    const lower_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, -half_height);
-    const lower_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, -half_height);
-    const label_position = upper_left.clone().addScaledVector(tertiary, 0.001);
-
-    const geometry = new THREE.BufferGeometry();
-    const vertices = new Float32Array([
-        lower_left.x, lower_left.y, lower_left.z,
-        lower_right.x, lower_right.y, lower_right.z,
-        upper_right.x, upper_right.y, upper_right.z,
-        upper_right.x, upper_right.y, upper_right.z,
-        upper_left.x, upper_left.y, upper_left.z,
-        lower_left.x, lower_left.y, lower_left.z,
-    ]);
-
-    const normals = new Float32Array([
-        tertiary.x, tertiary.y, tertiary.z,
-        tertiary.x, tertiary.y, tertiary.z,
-        tertiary.x, tertiary.y, tertiary.z,
-        tertiary.x, tertiary.y, tertiary.z,
-        tertiary.x, tertiary.y, tertiary.z,
-        tertiary.x, tertiary.y, tertiary.z,
-    ]);
-
-    // itemSize = 3 because there are 3 values (components) per vertex
-    geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-    geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
-
-    const material = new THREE.MeshStandardMaterial({
-        color: 0x525292,
-        side: THREE.DoubleSide,
-        metalness: 0.0,
-        transparent: true,
-        opacity: 0.07,
-        depthWrite: false,
-    });
-
-    const mesh = new THREE.Mesh(geometry, material);
-
-    const edges = new THREE.EdgesGeometry(geometry);
-    const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x42a7eb }));
-
-    const label = new Text()
-    scene.add(label)
-
-    // Set properties to configure:
-    label.text = " " + name
-    label.fontSize = 0.05
-    label.position.x = label_position.x
-    label.position.y = label_position.y
-    label.position.z = label_position.z
-    label.color = 0x42a7eb
-    label.depthOffset = -1
-
-    // Update the rendering:
-    label.sync()
-
-    // we need to rotate the text properly
-    const m = new THREE.Matrix4()
-    m.makeBasis(primary, secondary, tertiary)
-    const ea = new THREE.Euler(0, 0, 0, 'XYZ')
-    ea.setFromRotationMatrix(m, 'XYZ')
-    label.rotation.x = ea.x
-    label.rotation.y = ea.y
-    label.rotation.z = ea.z
-
-    label.renderOrder = 1
-
-    return { mesh, line };
 }
 
 export const setRealization = (realization) => {
@@ -216,11 +330,14 @@ export const setRealization = (realization) => {
     // }
 
     // create a new plane for each plane in the realization
-    for (const [key, value] of Object.entries(realization.planes)) {
-        console.log("A plane: ", key, value);
-        planes[key] = createPlane(value, key);
+    for (const [name, plane] of Object.entries(realization.planes)) {
+        planes[name] = new Plane(name, plane);
+        planes[name].addToScene();
+    }
 
-        scene.add(planes[key].mesh);
-        scene.add(planes[key].line);
+    // create a new point for each point in the realization
+    for (const [name, point] of Object.entries(realization.points)) {
+        points[name] = new Point(name, point);
+        points[name].addToScene();
     }
 }

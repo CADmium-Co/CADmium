@@ -84,9 +84,12 @@ impl Workbench {
     }
 
     pub fn add_defaults(&mut self) {
+        self.history
+            .push(Step::new_point("Origin", Point3::new(0.0, 0.0, 0.0)));
         self.history.push(Step::new_plane("Top", Plane::top()));
         self.history.push(Step::new_plane("Front", Plane::front()));
         self.history.push(Step::new_plane("Right", Plane::right()));
+        self.history.push(Step::new_sketch("Sketch 1", "Top"));
     }
 
     pub fn add_sketch(&mut self, name: &str, plane_name: &str) {
@@ -113,6 +116,9 @@ impl Workbench {
             let step_data = &step.data;
             // println!("{:?}", step_data);
             match step_data {
+                StepData::Point { point } => {
+                    realized.points.insert(step.name.to_owned(), point.clone());
+                }
                 StepData::Plane {
                     plane,
                     width,
@@ -138,12 +144,14 @@ pub struct Realization {
     // a Realization is what you get if you apply the steps in a Workbench's
     // history and build a bunch of geometry
     pub planes: HashMap<String, RealPlane>,
+    pub points: HashMap<String, Point3>,
 }
 
 impl Realization {
     pub fn new() -> Self {
         Realization {
             planes: HashMap::new(),
+            points: HashMap::new(),
         }
     }
 }
@@ -156,6 +164,16 @@ pub struct Step {
 }
 
 impl Step {
+    pub fn new_point(name: &str, point: Point3) -> Self {
+        Step {
+            name: name.to_owned(),
+            suppressed: false,
+            data: StepData::Point {
+                point: point.clone(),
+            },
+        }
+    }
+
     pub fn new_plane(name: &str, plane: Plane) -> Self {
         Step {
             name: name.to_owned(),
@@ -174,8 +192,8 @@ impl Step {
             suppressed: false,
             data: StepData::Sketch {
                 plane_name: plane_name.to_owned(),
-                width: 0.5,
-                height: 0.5,
+                width: 1.25,
+                height: 0.75,
                 sketch: Sketch::new(),
             },
         }
@@ -185,6 +203,9 @@ impl Step {
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum StepData {
+    Point {
+        point: Point3,
+    },
     Plane {
         plane: Plane,
         width: f64,
