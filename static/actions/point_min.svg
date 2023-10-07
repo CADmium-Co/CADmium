@@ -34,15 +34,15 @@
   <defs
      id="defs830" />
   <circle
-     style="fill:none;stroke:#000000;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:bevel"
+     style="fill:#ffffff;stroke:#000000;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:bevel;fill-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
      id="path1116"
      cx="12.797542"
      cy="12.485406"
      r="4.1357908" />
   <circle
-     style="fill:#d2d1d2;stroke:#000000;stroke-width:0.529167;stroke-linecap:round;stroke-linejoin:bevel"
+     style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:0.789444;stroke-linecap:round;stroke-linejoin:bevel"
      id="path1118"
-     cx="12.739017"
-     cy="12.387864"
-     r="0.40967742" />
+     cx="12.758526"
+     cy="12.368355"
+     r="0.61118233" />
 </svg>

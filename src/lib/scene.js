@@ -4,6 +4,9 @@ import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 // import CameraControls from 'camera-controls';
 // CameraControls.install({ THREE: THREE });
 import { Text } from 'troika-three-text'
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 
 let camera, scene, renderer, controls;
 const planes = {};
@@ -18,8 +21,8 @@ let selected = [];
 let moving_camera = false;
 
 const onPointerMove = (event) => {
-    pointer.x = (event.offsetX / element.width) * 2 - 1;
-    pointer.y = - (event.offsetY / element.height) * 2 + 1;
+    pointer.x = (event.offsetX * window.devicePixelRatio / element.width) * 2 - 1;
+    pointer.y = - (event.offsetY * window.devicePixelRatio / element.height) * 2 + 1;
 }
 
 const onPointerClick = (event) => {
@@ -49,32 +52,18 @@ class Point {
         this.z = z;
 
         let tex = new THREE.TextureLoader().load("/actions/point_min.svg");
-
-
-        // console.log("x: ", x, "y: ", y, "z: ", z);
         const geom = new THREE.BufferGeometry();
         const vertices = new Float32Array([x, y, z]);
         geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
-        console.log(geom);
-        // const material = new THREE.PointsMaterial({ size: 0.05, sizeAttenuation: false, map: tex, alphaTest: 0.5, transparent: false });
-        const material = new THREE.PointsMaterial({ color: 0x888888, size: 20.0, map: tex, transparent: true, sizeAttenuation: false, });
-
+        const material = new THREE.PointsMaterial({ size: 27.0, map: tex, transparent: true, sizeAttenuation: false, });
+        material.depthTest = false;
         const mesh = new THREE.Points(geom, material);
         this.mesh = mesh;
-
-        // const geometry = new THREE.SphereGeometry(0.01, 32, 32);
-        // const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
-        // const sphere = new THREE.Mesh(geometry, material);
-        // sphere.position.x = x;
-        // sphere.position.y = y;
-        // sphere.position.z = z;
-
-        // this.sphere = sphere;
+        this.mesh.renderOrder = 2;
     }
 
     addToScene() {
         scene.add(this.mesh);
-        console.log("added a point")
     }
 }
 
@@ -91,12 +80,64 @@ class Plane {
 
         this.fillColor = "#525292";
         this.strokeColor = "#42a7eb";
+        this.lineWidth = 8.0;
+        this.material = new THREE.MeshStandardMaterial({
+            color: this.fillColor,
+            side: THREE.DoubleSide,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.05,
+            depthWrite: false,
+        });
+        this.lineMaterial = new LineMaterial({
+            color: this.strokeColor,
+            linewidth: this.lineWidth,
+            depthTest: false,
+            transparent: true,
+            dashed: false,
+            resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
+        })
 
         this.mouseOverFillColor = "#525292";
         this.mouseOverStrokeColor = "#ffa500";
+        this.mouseOverLineWidth = 2.0;
+        this.mouseOverMaterial = new THREE.MeshStandardMaterial({
+            color: this.mouseOverFillColor,
+            side: THREE.DoubleSide,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.05,
+            depthWrite: false,
+        });
+        this.mouseOverLineMaterial = new LineMaterial({
+            color: this.mouseOverStrokeColor,
+            linewidth: this.lineWidth,
+            depthTest: false,
+            transparent: true,
+            dashed: false,
+            resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
+        })
 
         this.selectedFillColor = "#525292";
         this.selectedStrokeColor = "#ff0000";
+        this.selectedLineWidth = 2.0;
+        this.selectedMaterial = new THREE.MeshStandardMaterial({
+            color: this.selectedFillColor,
+            side: THREE.DoubleSide,
+            metalness: 0.0,
+            transparent: true,
+            opacity: 0.05,
+            depthWrite: false,
+        });
+        this.selectedLineMaterial = new LineMaterial({
+            color: this.selectedStrokeColor,
+            linewidth: this.lineWidth,
+            depthTest: false,
+            transparent: true,
+            dashed: false,
+            resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
+        })
+
 
         this.selectionStatus = 'unselected'; // could also be 'mouseOver' or 'selected'
 
@@ -133,23 +174,24 @@ class Plane {
             tertiary.x, tertiary.y, tertiary.z,
         ]);
 
-        // itemSize = 3 because there are 3 values (components) per vertex
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3));
 
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x525292,
-            side: THREE.DoubleSide,
-            metalness: 0.0,
-            transparent: true,
-            opacity: 0.05,
-            depthWrite: false,
-        });
+        const mesh = new THREE.Mesh(geometry, this.material);
 
-        const mesh = new THREE.Mesh(geometry, material);
+        const line_vertices = [
+            lower_left.x, lower_left.y, lower_left.z,
+            lower_right.x, lower_right.y, lower_right.z,
+            upper_right.x, upper_right.y, upper_right.z,
+            upper_left.x, upper_left.y, upper_left.z,
+            lower_left.x, lower_left.y, lower_left.z,
+        ]
+        const line_geometry = new LineGeometry()
+        line_geometry.setPositions(line_vertices)
 
-        const edges = new THREE.EdgesGeometry(geometry);
-        const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x42a7eb }));
+        const fat_line = new Line2(line_geometry, this.lineMaterial);
+        fat_line.computeLineDistances();
+
 
         const label = new Text()
 
@@ -177,7 +219,7 @@ class Plane {
         label.renderOrder = 1
 
         this.mesh = mesh;
-        this.line = line;
+        this.line = fat_line;
         this.label = label;
 
         this.mesh.name = name;
@@ -192,19 +234,17 @@ class Plane {
     setSelectionStatus(status) {
         if (status === 'unselected') {
             this.mesh.material.color.set(this.fillColor);
-            this.line.material.color.set(this.strokeColor);
+            this.line.material = this.lineMaterial;
         } else if (status === 'mouseOver') {
             this.mesh.material.color.set(this.mouseOverFillColor);
-            this.line.material.color.set(this.mouseOverStrokeColor);
+            this.line.material = this.mouseOverLineMaterial;
         } else if (status === 'selected') {
             this.mesh.material.color.set(this.selectedFillColor);
-            this.line.material.color.set(this.selectedStrokeColor);
+            this.line.material = this.selectedLineMaterial;
         } else {
             throw new Error("Invalid selection status: ", status);
         }
-
         this.selectionStatus = status;
-
     }
 }
 
@@ -309,7 +349,8 @@ export const createScene = (el) => {
 
     const getStarted = (el) => {
         renderer = new THREE.WebGLRenderer({ antialias: true, canvas: el });
-        renderer.setClearColor("#EEEEEE");
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setClearColor("#F8F8F8");
         resize();
         render();
     };
