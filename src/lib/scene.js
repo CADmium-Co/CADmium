@@ -20,8 +20,14 @@ export const createScene = (el) => {
     const worldHeight = worldWidth / aspectRatio;
     camera = new THREE.OrthographicCamera(worldWidth / - 2, worldWidth / 2, worldHeight / 2, worldHeight / - 2, 0.1, 1000);
 
-    camera.position.z = 20;
+    camera.position.x = 7.8;
+    camera.position.y = -25.8;
+    camera.position.z = 8.55;
+    camera.up = new THREE.Vector3(0, 0, 1);
     camera.lookAt(0, 0, 0);
+
+    const axesHelper = new THREE.AxesHelper(5);
+    scene.add(axesHelper);
 
     // camera-controls
     // const cameraControls = new CameraControls(camera, el);
@@ -40,6 +46,7 @@ export const createScene = (el) => {
     const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444);
     hemisphereLight.position.set(1, 1, 1);
     scene.add(hemisphereLight);
+    // let count = 0;
 
     const animate = () => {
         const delta = clock.getDelta();
@@ -52,8 +59,14 @@ export const createScene = (el) => {
         // required if controls.enableDamping or controls.autoRotate are set to true
         // controls.update();
 
+        // count += 1
+        // if (count === 100) {
+        //     console.log(camera.position);
+        //     count = 0;
+        // }
+
         // you can skip this condition to render though
-        // if (hasControlsUpdated) {
+        // if (hasControlsUpdated) {    
         renderer.render(scene, camera);
         // }
 
@@ -94,6 +107,7 @@ export const createPlane = (realized_plane, name) => {
     const upper_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, half_height);
     const lower_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, -half_height);
     const lower_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, -half_height);
+    const label_position = upper_left.clone().addScaledVector(tertiary, 0.001);
 
     const geometry = new THREE.BufferGeometry();
     const vertices = new Float32Array([
@@ -123,7 +137,7 @@ export const createPlane = (realized_plane, name) => {
         side: THREE.DoubleSide,
         metalness: 0.0,
         transparent: true,
-        opacity: 0.15,
+        opacity: 0.10,
         depthWrite: false,
     });
 
@@ -138,10 +152,11 @@ export const createPlane = (realized_plane, name) => {
     // Set properties to configure:
     label.text = " " + name
     label.fontSize = 0.05
-    label.position.x = upper_left.x
-    label.position.y = upper_left.y
-    label.position.z = upper_left.z
+    label.position.x = label_position.x
+    label.position.y = label_position.y
+    label.position.z = label_position.z
     label.color = 0x42a7eb
+    label.depthOffset = -1
 
     // Update the rendering:
     label.sync()
@@ -154,6 +169,8 @@ export const createPlane = (realized_plane, name) => {
     label.rotation.x = ea.x
     label.rotation.y = ea.y
     label.rotation.z = ea.z
+
+    label.renderOrder = 1
 
     return { mesh, line };
 }
