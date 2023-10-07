@@ -1,20 +1,18 @@
 <script>
+	export let realization;
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { createScene } from '$lib/scene.js';
-
-	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
+	import { createScene, setRealization } from '$lib/scene.js';
 
 	let el;
 	if (browser) {
 		onMount(async () => {
-			// init().then((instance) => {
-			// 	const result = instance.exports.add(2, 3);
-			// 	console.log('result: ' + result);
-			// });
-
 			createScene(el);
 		});
+	}
+
+	$: if (realization && realization.planes) {
+		setRealization(realization);
 	}
 </script>
 

@@ -25,7 +25,7 @@
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index]);
 		console.log('WB: ', $workbench);
-		let realization = $project_rust.get_realization(0, 1000);
+		realization = JSON.parse($project_rust.get_realization(0, 1000));
 		console.log('Realization:', realization);
 	}
 
@@ -88,7 +88,7 @@
 		</div>
 	</aside>
 	<main class="h-[100%]">
-		<MainCanvas />
+		<MainCanvas {realization} />
 	</main>
 	<footer class="col-span-2">Footer</footer>
 </div>
