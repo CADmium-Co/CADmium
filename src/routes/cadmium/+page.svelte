@@ -32,6 +32,11 @@
 		{ alt: 'fillet', src: '/actions/fillet_min.svg' },
 		{ alt: 'revolve', src: '/actions/revolve_min.svg' }
 	];
+
+	let icon_mapping = {
+		Sketch: '/actions/sketch_min.svg',
+		Plane: '/actions/plane_min.svg'
+	};
 </script>
 
 <div id="container" class="bg-gray-50 grid grid-cols-editor grid-rows-editor h-[100vh]">
@@ -65,7 +70,10 @@
 			<div class="font-bold text-sm px-2 py-2">History ({$workbench.history.length})</div>
 			<div>
 				{#each $workbench.history as item}
-					<div>{item['name']}</div>
+					<div class="flex items-center">
+						<img class="h-8 w-8 px-1" src={icon_mapping[item.data.type]} alt={item.name} />
+						{item['name']}
+					</div>
 				{/each}
 			</div>
 		</div>
