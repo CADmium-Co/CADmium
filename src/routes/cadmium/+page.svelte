@@ -9,7 +9,7 @@
 	let num_steps_applied = 1000
 	let realization = {}
 
-	let current_step = 'none'
+	let current_step = {}
 
 	if (browser) {
 		onMount(() => {
@@ -26,18 +26,21 @@
 
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index])
-		console.log('WB: ', $workbench)
 		realization = JSON.parse($project_rust.get_realization(0, 1000))
-		console.log('Realization:', realization)
+		console.log($workbench)
+		// console.log('Realization:', realization)
 	}
 
 	const create_new_sketch = () => {
 		console.log('okay!')
 	}
+	const create_new_extrusion = () => {
+		console.log('okay!')
+	}
 
 	let actions = [
-		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch' },
-		{ alt: 'extrude', src: '/actions/extrude_min.svg' },
+		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch', handler: create_new_sketch },
+		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: create_new_extrusion },
 		{ alt: 'plane', src: '/actions/plane_min.svg' }
 		// { alt: 'point', src: '/actions/point_min.svg' },
 		// { alt: 'hole', src: '/actions/hole_min.svg' },
@@ -73,7 +76,7 @@
 	</header>
 	<toolbar class="col-span-2 flex items-center gap-1">
 		{#each actions as action}
-			<button class="inline-flex items-center hover:bg-gray-200 p-1">
+			<button class="inline-flex items-center hover:bg-gray-200 p-1" on:click={action.handler}>
 				<img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ''}
 			</button>
 		{/each}
