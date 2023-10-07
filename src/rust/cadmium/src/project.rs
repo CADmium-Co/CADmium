@@ -33,6 +33,16 @@ impl Project {
             Err(e) => format!("Error: {}", e),
         }
     }
+
+    pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> String {
+        let workbench = &self.workbenches[workbench_id as usize];
+        let realization = workbench.realize(max_steps);
+        let result = serde_json::to_string(&realization);
+        match result {
+            Ok(json) => json,
+            Err(e) => format!("Error: {}", e),
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -90,7 +100,7 @@ impl Workbench {
     //     // self.history.push(Step::new_plane(name, plane));
     // }
 
-    pub fn realize(&self, max_steps: u32) -> Realization {
+    pub fn realize(&self, max_steps: u64) -> Realization {
         let mut realized = Realization::new();
         let max_steps = max_steps as usize; // just coerce the type once
 

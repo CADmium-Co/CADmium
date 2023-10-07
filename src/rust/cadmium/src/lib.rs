@@ -41,6 +41,12 @@ impl Project {
         self.native.json()
     }
 
+    #[wasm_bindgen]
+    pub fn get_realization(&self, workbench_id: u32, max_steps: u32) -> String {
+        self.native
+            .get_realization(workbench_id as u64, 1000 as u64)
+    }
+
     // #[wasm_bindgen(getter)]
     // pub fn sketch(&self) -> sketch::Sketch {
     //     sketch::Sketch::from(self.native.sketch.clone())

@@ -6,6 +6,9 @@
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from 'cadmium';
 
+	let num_steps_applied = 1000;
+	let realization = {};
+
 	if (browser) {
 		onMount(() => {
 			init().then(() => {
@@ -22,15 +25,21 @@
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index]);
 		console.log('WB: ', $workbench);
+		let realization = $project_rust.get_realization(0, 1000);
+		console.log('Realization:', realization);
 	}
+
+	// $: realization = $project_rust.get_realization(0, num_steps_applied);
+	// $: console.log('realization: ', realization);
 
 	let actions = [
 		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch' },
 		{ alt: 'extrude', src: '/actions/extrude_min.svg' },
-		{ alt: 'chamfer', src: '/actions/chamfer_min.svg' },
-		{ alt: 'hole', src: '/actions/hole_min.svg' },
-		{ alt: 'fillet', src: '/actions/fillet_min.svg' },
-		{ alt: 'revolve', src: '/actions/revolve_min.svg' }
+		{ alt: 'plane', src: '/actions/plane_min.svg' }
+		// { alt: 'chamfer', src: '/actions/chamfer_min.svg' },
+		// { alt: 'hole', src: '/actions/hole_min.svg' },
+		// { alt: 'fillet', src: '/actions/fillet_min.svg' },
+		// { alt: 'revolve', src: '/actions/revolve_min.svg' }
 	];
 
 	let icon_mapping = {
@@ -66,11 +75,11 @@
 		{/each}
 	</toolbar>
 	<aside class="bg-gray-100">
-		<div class="flex flex-col">
+		<div class="flex flex-col select-none">
 			<div class="font-bold text-sm px-2 py-2">History ({$workbench.history.length})</div>
 			<div>
 				{#each $workbench.history as item}
-					<div class="flex items-center">
+					<div class="flex items-center text-sm">
 						<img class="h-8 w-8 px-1" src={icon_mapping[item.data.type]} alt={item.name} />
 						{item['name']}
 					</div>
