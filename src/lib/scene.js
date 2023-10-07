@@ -9,20 +9,33 @@ import { Text } from 'troika-three-text'
 let camera, scene, renderer, controls;
 const planes = {};
 
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2(-1.0, -1.0);
+let element;
+
+const onPointerMove = (event) => {
+    pointer.x = (event.offsetX / element.width) * 2 - 1;
+    pointer.y = - (event.offsetY / element.height) * 2 + 1;
+}
+
+
 export const createScene = (el) => {
+    element = el;
     const clock = new THREE.Clock();
     scene = new THREE.Scene();
 
     const { width, height } = el.getBoundingClientRect();
-    // const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
     const aspectRatio = width / height;
     const worldWidth = 3;
     const worldHeight = worldWidth / aspectRatio;
     camera = new THREE.OrthographicCamera(worldWidth / - 2, worldWidth / 2, worldHeight / 2, worldHeight / - 2, 0.1, 1000);
 
-    camera.position.x = 7.8;
+    // camera.position.x = 7.8;
+    // camera.position.y = -25.8;
+    // camera.position.z = 8.55;
+    camera.position.x = 16.8;
     camera.position.y = -25.8;
-    camera.position.z = 8.55;
+    camera.position.z = 20.55;
     camera.up = new THREE.Vector3(0, 0, 1);
     camera.lookAt(0, 0, 0);
 
@@ -46,24 +59,43 @@ export const createScene = (el) => {
     const hemisphereLight = new THREE.HemisphereLight(0xffffff, 0x444444);
     hemisphereLight.position.set(1, 1, 1);
     scene.add(hemisphereLight);
-    // let count = 0;
+    let count = 0;
 
-    const animate = () => {
+    const render = () => {
         const delta = clock.getDelta();
         controls.update(delta);
         // const hasControlsUpdated = cameraControls.update(delta);
 
+        raycaster.setFromCamera(pointer, camera);
 
-        requestAnimationFrame(animate);
+        const intersects = raycaster.intersectObjects(scene.children);
+
+        for (let i = 0; i < scene.children.length; i++) {
+            let child = scene.children[i];
+            if (child.type === "Mesh") {
+                child.material.color.set(0x525292);
+            }
+            // scene.children[i].material.color.set(0x525292);
+        }
+
+        for (let i = 0; i < intersects.length; i++) {
+            let thing = intersects[i].object;
+            if (thing.type === "Mesh") {
+                thing.material.color.set(0xffff00);
+                // intersects[i].object.material.color.set(0xff0000);
+            }
+        }
+
+        requestAnimationFrame(render);
 
         // required if controls.enableDamping or controls.autoRotate are set to true
         // controls.update();
 
-        // count += 1
-        // if (count === 100) {
-        //     console.log(camera.position);
-        //     count = 0;
-        // }
+        count += 1
+        if (count === 100) {
+            console.log(intersects);
+            count = 0;
+        }
 
         // you can skip this condition to render though
         // if (hasControlsUpdated) {    
@@ -83,11 +115,12 @@ export const createScene = (el) => {
         renderer = new THREE.WebGLRenderer({ antialias: true, canvas: el });
         renderer.setClearColor("#EEEEEE");
         resize();
-        animate();
+        render();
     };
 
     window.addEventListener('resize', resize);
 
+    el.addEventListener('pointermove', onPointerMove);
 
     getStarted(el);
 }
@@ -137,7 +170,7 @@ export const createPlane = (realized_plane, name) => {
         side: THREE.DoubleSide,
         metalness: 0.0,
         transparent: true,
-        opacity: 0.10,
+        opacity: 0.07,
         depthWrite: false,
     });
 
@@ -190,27 +223,4 @@ export const setRealization = (realization) => {
         scene.add(planes[key].mesh);
         scene.add(planes[key].line);
     }
-
-
-
-    // compute a diff
-    // for (const [key, value] of Object.entries(realization.planes)) {
-    //     console.log("A plane: ", key, value);
-
-
-
-    // if (planes.containsKey(key)) {
-    //     // update the plane
-    //     // achieve this by deleting and creating a new one for now,
-    //     // but in the future make this more efficient by just modifying the existing one
-    //     scene.remove(planes[key]);
-    //     planes[key] = createPlane(value);
-    //     scene.add(planes[key]);
-    // } else {
-
-    // }
-    // }
 }
-
-
-
