@@ -1,34 +1,38 @@
 <script>
-	import MainCanvas from './mainCanvas.svelte';
-	import { browser } from '$app/environment';
-	import { onMount } from 'svelte';
-	import { project_rust, project, active_workbench_index, workbench } from './stores.js';
+	import MainCanvas from './mainCanvas.svelte'
+	import { browser } from '$app/environment'
+	import { onMount } from 'svelte'
+	import { project_rust, project, active_workbench_index, workbench } from './stores.js'
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
-	import { default as init, Project } from 'cadmium';
+	import { default as init, Project } from 'cadmium'
 
-	let num_steps_applied = 1000;
-	let realization = {};
+	let num_steps_applied = 1000
+	let realization = {}
 
-	let current_step = 'none';
+	let current_step = 'none'
 
 	if (browser) {
 		onMount(() => {
 			init().then(() => {
-				let p = new Project('First Project');
-				project_rust.set(p);
-				project.set(JSON.parse(p.json));
-				active_workbench_index.set(0);
-			});
-		});
+				let p = new Project('First Project')
+				project_rust.set(p)
+				project.set(JSON.parse(p.json))
+				active_workbench_index.set(0)
+			})
+		})
 	}
 
-	let username = 'mattferraro.dev';
+	let username = 'mattferraro.dev'
 
 	$: if ($project && $project.workbenches) {
-		workbench.set($project.workbenches[$active_workbench_index]);
-		console.log('WB: ', $workbench);
-		realization = JSON.parse($project_rust.get_realization(0, 1000));
-		console.log('Realization:', realization);
+		workbench.set($project.workbenches[$active_workbench_index])
+		console.log('WB: ', $workbench)
+		realization = JSON.parse($project_rust.get_realization(0, 1000))
+		console.log('Realization:', realization)
+	}
+
+	const create_new_sketch = () => {
+		console.log('okay!')
 	}
 
 	let actions = [
@@ -39,13 +43,13 @@
 		// { alt: 'hole', src: '/actions/hole_min.svg' },
 		// { alt: 'fillet', src: '/actions/fillet_min.svg' },
 		// { alt: 'revolve', src: '/actions/revolve_min.svg' }
-	];
+	]
 
 	let icon_mapping = {
 		Sketch: '/actions/sketch_min.svg',
 		Plane: '/actions/plane_min.svg',
 		Point: '/actions/point_min.svg'
-	};
+	}
 </script>
 
 <div id="container" class="bg-gray-50 grid grid-cols-editor grid-rows-editor h-[100vh]">
@@ -69,7 +73,7 @@
 	</header>
 	<toolbar class="col-span-2 flex items-center gap-1">
 		{#each actions as action}
-			<button class="inline-flex items-center hover:shadow-md p-1 rounded focus:bg-gray-400">
+			<button class="inline-flex items-center hover:bg-gray-200 p-1">
 				<img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ''}
 			</button>
 		{/each}
