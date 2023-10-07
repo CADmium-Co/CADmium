@@ -173,6 +173,7 @@ impl Step {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum StepData {
     Plane {
         plane: Plane,

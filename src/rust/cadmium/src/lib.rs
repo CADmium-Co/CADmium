@@ -36,7 +36,7 @@ impl Project {
         self.native.name = name;
     }
 
-    #[wasm_bindgen]
+    #[wasm_bindgen(getter)]
     pub fn json(&self) -> String {
         self.native.json()
     }

@@ -1459,6 +1459,7 @@ impl Sketch {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum Constraint {
     SegmentLength {
         segment_id: u64,
@@ -1617,6 +1618,7 @@ impl Line2 {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(tag = "type")]
 pub enum Segment {
     Line(Line2),
     Arc(Arc2),
@@ -1655,6 +1657,7 @@ impl Segment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(tag = "type")]
 pub enum Ring {
     Circle(Circle2),
     Segments(Vec<Segment>),
