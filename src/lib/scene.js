@@ -1,11 +1,11 @@
 // place files you want to import through the `$lib` alias in this folder.
 import * as THREE from 'three';
-// import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
+import { TrackballControls } from 'three/addons/controls/TrackballControls.js';
 // import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-import CameraControls from 'camera-controls';
+// import CameraControls from 'camera-controls';
 
-CameraControls.install({ THREE: THREE });
+// CameraControls.install({ THREE: THREE });
 
 
 export const createScene = (el) => {
@@ -25,11 +25,11 @@ export const createScene = (el) => {
     // console.log("el:", el)
 
     // camera-controls
-    const cameraControls = new CameraControls(camera, el);
+    // const cameraControls = new CameraControls(camera, el);
 
     // TrackballControls
-    // const controls = new TrackballControls(camera, el);
-    // controls.rotateSpeed = 3.0;
+    const controls = new TrackballControls(camera, el);
+    controls.rotateSpeed = 3.0;
 
     // OrbitControls
     // const controls = new OrbitControls(camera, el);
@@ -57,7 +57,8 @@ export const createScene = (el) => {
     const animate = () => {
         // snip
         const delta = clock.getDelta();
-        const hasControlsUpdated = cameraControls.update(delta);
+        controls.update(delta);
+        // const hasControlsUpdated = cameraControls.update(delta);
 
 
         requestAnimationFrame(animate);
