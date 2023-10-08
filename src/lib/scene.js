@@ -57,8 +57,14 @@ class Sketch {
 		this.group = new THREE.Group()
 		for (let [point_id, point] of Object.entries(this.points)) {
 			let newPoint = new Point(point_id, point, (parent = name))
-			points[`{name}:{point_id}`] = newPoint
+			let extendedKey = `${name}:${point_id}`
+			points[extendedKey] = newPoint
 			newPoint.addTo(this.group)
+		}
+
+		for (let [line_segment_id, line_segment] of Object.entries(this.line_segments)) {
+			let newLineSegment = new LineSegment(line_segment_id, line_segment, (parent = name))
+			newLineSegment.addTo(this.group)
 		}
 	}
 
@@ -75,7 +81,12 @@ class Point {
 		this.z = z
 		this.parent = parent
 
-		let tex = new THREE.TextureLoader().load('/actions/point_min.svg')
+		let image = '/actions/point_min.svg'
+		if (parent) {
+			image = '/actions/simple_point_min.svg'
+		}
+
+		let tex = new THREE.TextureLoader().load(image)
 		const geom = new THREE.BufferGeometry()
 		const vertices = new Float32Array([x, y, z])
 		geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
@@ -89,6 +100,51 @@ class Point {
 		const mesh = new THREE.Points(geom, material)
 		this.mesh = mesh
 		this.mesh.renderOrder = 2
+	}
+
+	addTo(object) {
+		object.add(this.mesh)
+	}
+}
+
+class LineSegment {
+	constructor(name, { start, end }, parent = null) {
+		this.name = name
+		this.start = start
+		this.end = end
+		this.parent = parent
+
+		let start_point = points[`${parent}:${start}`]
+		let end_point = points[`${parent}:${end}`]
+
+		// console.log('Making line segment: ', start_point, end_point)
+
+		const line_vertices = [
+			start_point.x,
+			start_point.y,
+			start_point.z,
+			end_point.x,
+			end_point.y,
+			end_point.z
+		]
+		const line_geometry = new LineGeometry()
+		line_geometry.setPositions(line_vertices)
+
+		this.defaultMaterial = new LineMaterial({
+			color: '#000000',
+			linewidth: 5.0,
+			depthTest: false,
+			transparent: true,
+			dashed: false,
+			resolution: new THREE.Vector2(
+				element.width * window.devicePixelRatio,
+				element.height * window.devicePixelRatio
+			)
+		})
+
+		const fat_line = new Line2(line_geometry, this.defaultMaterial)
+		fat_line.computeLineDistances()
+		this.mesh = fat_line
 	}
 
 	addTo(object) {
