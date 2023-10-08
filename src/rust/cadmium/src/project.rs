@@ -89,10 +89,11 @@ impl Workbench {
         self.history.push(Step::new_plane("Top", Plane::top()));
         self.history.push(Step::new_plane("Front", Plane::front()));
         self.history.push(Step::new_plane("Right", Plane::right()));
-        self.history.push(Step::new_sketch("Sketch 1", "Top"));
+        self.history.push(Step::new_sketch("Sketch 1", "Front"));
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
+        // square in upper right
         let p0 = sketch.add_fixed_point(0.0, 0.00);
         let p1 = sketch.add_point(0.45, 0.0);
         let p2 = sketch.add_point(0.45, 0.25);
@@ -103,8 +104,35 @@ impl Workbench {
         sketch.add_segment(p2, p3);
         sketch.add_segment(p3, p0);
 
+        // Simple circle in lower left
         let p4 = sketch.add_point(-0.25, -0.25);
         sketch.add_circle(p4, 0.2);
+
+        // Rounded square in lower right
+        let shrink = 0.4;
+        let offset_x = 0.1;
+        let offset_y = -0.5;
+        let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
+        let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
+        let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let d = sketch.add_point(1.00 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let e = sketch.add_point(0.75 * shrink + offset_x, 1.00 * shrink + offset_y);
+        let f = sketch.add_point(0.25 * shrink + offset_x, 1.00 * shrink + offset_y);
+        let g = sketch.add_point(0.00 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let h = sketch.add_point(0.00 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let i = sketch.add_point(0.75 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let j = sketch.add_point(0.75 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
+
+        sketch.add_segment(a, b);
+        sketch.add_arc(i, b, c, false);
+        sketch.add_segment(c, d);
+        sketch.add_arc(j, d, e, false);
+        sketch.add_segment(e, f);
+        sketch.add_arc(k, f, g, false);
+        sketch.add_segment(g, h);
+        sketch.add_arc(l, h, a, false);
     }
 
     pub fn add_sketch(&mut self, name: &str, plane_name: &str) {

@@ -23,6 +23,9 @@ let selectable = []
 let selected = []
 let moving_camera = false
 
+const ARC_TOLERANCE = 0.0001
+const CIRCLE_TOLERANCE = 0.0001
+
 const onPointerMove = (event) => {
 	pointer.x = ((event.offsetX * window.devicePixelRatio) / element.width) * 2 - 1
 	pointer.y = -((event.offsetY * window.devicePixelRatio) / element.height) * 2 + 1
@@ -55,6 +58,7 @@ class Sketch {
 		this.points = real_sketch.points
 		this.line_segments = real_sketch.line_segments
 		this.circles = real_sketch.circles
+		this.arcs = real_sketch.arcs
 
 		this.group = new THREE.Group()
 		for (let [point_id, point] of Object.entries(this.points)) {
@@ -75,6 +79,11 @@ class Sketch {
 		for (let [circle_id, circle] of Object.entries(this.circles)) {
 			let newCircle = new Circle(circle_id, circle, this.real_plane, (parent = name))
 			newCircle.addTo(this.group)
+		}
+
+		for (let [arc_id, arc] of Object.entries(this.arcs)) {
+			let newArc = new Arc(arc_id, arc, this.real_plane, (parent = name))
+			newArc.addTo(this.group)
 		}
 	}
 
@@ -165,19 +174,16 @@ class LineSegment {
 class Circle {
 	constructor(name, { center, radius }, real_plane) {
 		this.name = name
-		console.log('Uh, a circle', name, center, radius)
 		this.real_plane = real_plane
 		let plane = real_plane.plane
 
 		let o = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
 		let x = new THREE.Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
 		let y = new THREE.Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
-		console.log('o, x, y: ', o, x, y)
 		let center_point = points[`${parent}:${center}`]
-		console.log('center', center_point)
 
 		// see https://math.stackexchange.com/a/4132095/816177
-		const tolerance = 0.0001 // in meters
+		const tolerance = CIRCLE_TOLERANCE // in meters
 		const k = tolerance / radius
 		// more precise but slower to calculate:
 		// const n = Math.ceil(Math.PI / Math.acos(1 - k))
@@ -193,6 +199,84 @@ class Circle {
 			let point = o.clone().add(x_component).add(y_component)
 			point.add(center_point)
 			line_vertices.push(point.x, point.y, point.z)
+		}
+		const line_geometry = new LineGeometry()
+		line_geometry.setPositions(line_vertices)
+
+		this.defaultMaterial = new LineMaterial({
+			color: '#000000',
+			linewidth: 5.0,
+			depthTest: false,
+			transparent: true,
+			dashed: false,
+			resolution: new THREE.Vector2(
+				element.width * window.devicePixelRatio,
+				element.height * window.devicePixelRatio
+			)
+		})
+
+		const fat_line = new Line2(line_geometry, this.defaultMaterial)
+		fat_line.computeLineDistances()
+		this.mesh = fat_line
+	}
+
+	addTo(object) {
+		object.add(this.mesh)
+	}
+}
+
+class Arc {
+	constructor(name, { center, start, end, clockwise }, real_plane) {
+		this.name = name
+		this.real_plane = real_plane
+		let plane = real_plane.plane
+
+		let o = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
+		let x = new THREE.Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
+		let y = new THREE.Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
+		let z = new THREE.Vector3(plane.tertiary.x, plane.tertiary.y, plane.tertiary.z)
+
+		let center_point = points[`${parent}:${center}`]
+		center_point = new THREE.Vector3(center_point.x, center_point.y, center_point.z)
+		let center_proj = center_point.clone().projectOnPlane(z)
+		let center_2d = new THREE.Vector2(center_proj.clone().dot(x), center_proj.clone().dot(y))
+
+		let start_point = points[`${parent}:${start}`]
+		start_point = new THREE.Vector3(start_point.x, start_point.y, start_point.z)
+		let start_proj = start_point.clone().projectOnPlane(z)
+		let start_2d = new THREE.Vector2(start_proj.clone().dot(x), start_proj.clone().dot(y))
+
+		let end_point = points[`${parent}:${end}`]
+		end_point = new THREE.Vector3(end_point.x, end_point.y, end_point.z)
+		let end_proj = end_point.clone().projectOnPlane(z)
+		let end_2d = new THREE.Vector2(end_proj.clone().dot(x), end_proj.clone().dot(y))
+
+		let start_angle = Math.atan2(start_2d.y - center_2d.y, start_2d.x - center_2d.x)
+
+		// see https://math.stackexchange.com/a/4132095/816177
+		const tolerance = ARC_TOLERANCE // in meters
+		const radius = center_point.distanceTo(start_point)
+		const k = tolerance / radius
+		const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+		const segment_angle = (2 * Math.PI) / n
+		const segment_length = radius * segment_angle
+		// console.log('n: ', n, segment_angle, segment_length)
+
+		const line_vertices = []
+		line_vertices.push(start_point.x, start_point.y, start_point.z)
+		for (let i = 1; i <= n; i++) {
+			let theta = ((2 * Math.PI) / n) * i + start_angle
+			let x_component = x.clone().multiplyScalar(radius * Math.cos(theta))
+			let y_component = y.clone().multiplyScalar(radius * Math.sin(theta))
+			let point = o.clone().add(x_component).add(y_component)
+			point.add(center_point)
+			line_vertices.push(point.x, point.y, point.z)
+
+			let distance_to_end = point.distanceTo(end_point)
+			if (distance_to_end <= segment_length) {
+				line_vertices.push(end_point.x, end_point.y, end_point.z)
+				break
+			}
 		}
 		const line_geometry = new LineGeometry()
 		line_geometry.setPositions(line_vertices)
