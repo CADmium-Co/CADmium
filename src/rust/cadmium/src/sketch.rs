@@ -1502,7 +1502,7 @@ pub struct Point2 {
     fx: f64,
     fy: f64,
     fixed: bool,
-    hidden: bool,
+    pub hidden: bool,
 }
 
 impl Point2 {

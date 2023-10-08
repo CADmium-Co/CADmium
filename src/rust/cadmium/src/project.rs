@@ -103,7 +103,8 @@ impl Workbench {
         sketch.add_segment(p2, p3);
         sketch.add_segment(p3, p0);
 
-        // sketch.add_point("Point 2", Point3::new(.25, 0.0, 0.0));
+        let p4 = sketch.add_point(-0.25, -0.25);
+        sketch.add_circle(p4, 0.2);
     }
 
     pub fn add_sketch(&mut self, name: &str, plane_name: &str) {
@@ -152,9 +153,10 @@ impl Workbench {
                     sketch,
                 } => {
                     let plane = &realized.planes[plane_name];
-                    realized
-                        .sketches
-                        .insert(step.name.to_owned(), RealSketch::new(plane, sketch));
+                    realized.sketches.insert(
+                        step.name.to_owned(),
+                        RealSketch::new(plane_name, plane, sketch),
+                    );
                 }
                 _ => println!("Unknown step type"),
             }
@@ -342,11 +344,17 @@ pub struct Point3 {
     x: f64,
     y: f64,
     z: f64,
+    hidden: bool,
 }
 
 impl Point3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Point3 { x, y, z }
+        Point3 {
+            x,
+            y,
+            z,
+            hidden: false,
+        }
     }
 
     pub fn plus(&self, v: Vector3) -> Vector3 {
@@ -381,6 +389,7 @@ pub struct Circle3 {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RealSketch {
+    plane_name: String,
     points: HashMap<u64, Point3>,
     highest_point_id: u64,
     line_segments: HashMap<u64, Line3>,
@@ -394,8 +403,9 @@ pub struct RealSketch {
 }
 
 impl RealSketch {
-    pub fn new(plane: &RealPlane, sketch: &Sketch) -> Self {
+    pub fn new(plane_name: &str, plane: &RealPlane, sketch: &Sketch) -> Self {
         let mut real_sketch = RealSketch {
+            plane_name: plane_name.to_owned(),
             points: HashMap::new(),
             highest_point_id: 0,
             line_segments: HashMap::new(),
@@ -414,7 +424,10 @@ impl RealSketch {
 
         for (point_id, point) in sketch.points.iter() {
             let pt3 = o.plus(x.times(point.x)).plus(y.times(point.y));
-            let real_point = Point3::new(pt3.x, pt3.y, pt3.z);
+            let mut real_point = Point3::new(pt3.x, pt3.y, pt3.z);
+            if point.hidden {
+                real_point.hidden = true;
+            }
             real_sketch.points.insert(*point_id, real_point);
         }
         real_sketch.highest_point_id = sketch.highest_point_id;

@@ -48,23 +48,33 @@ const onPointerClick = (event) => {
 }
 
 class Sketch {
-	constructor(name, real_sketch) {
+	constructor(name, real_sketch, real_plane) {
 		this.name = name
+		this.real_plane = real_plane
 
 		this.points = real_sketch.points
 		this.line_segments = real_sketch.line_segments
+		this.circles = real_sketch.circles
 
 		this.group = new THREE.Group()
 		for (let [point_id, point] of Object.entries(this.points)) {
 			let newPoint = new Point(point_id, point, (parent = name))
 			let extendedKey = `${name}:${point_id}`
 			points[extendedKey] = newPoint
+			if (point.hidden) {
+				continue
+			}
 			newPoint.addTo(this.group)
 		}
 
 		for (let [line_segment_id, line_segment] of Object.entries(this.line_segments)) {
 			let newLineSegment = new LineSegment(line_segment_id, line_segment, (parent = name))
 			newLineSegment.addTo(this.group)
+		}
+
+		for (let [circle_id, circle] of Object.entries(this.circles)) {
+			let newCircle = new Circle(circle_id, circle, this.real_plane, (parent = name))
+			newCircle.addTo(this.group)
 		}
 	}
 
@@ -127,6 +137,63 @@ class LineSegment {
 			end_point.y,
 			end_point.z
 		]
+		const line_geometry = new LineGeometry()
+		line_geometry.setPositions(line_vertices)
+
+		this.defaultMaterial = new LineMaterial({
+			color: '#000000',
+			linewidth: 5.0,
+			depthTest: false,
+			transparent: true,
+			dashed: false,
+			resolution: new THREE.Vector2(
+				element.width * window.devicePixelRatio,
+				element.height * window.devicePixelRatio
+			)
+		})
+
+		const fat_line = new Line2(line_geometry, this.defaultMaterial)
+		fat_line.computeLineDistances()
+		this.mesh = fat_line
+	}
+
+	addTo(object) {
+		object.add(this.mesh)
+	}
+}
+
+class Circle {
+	constructor(name, { center, radius }, real_plane) {
+		this.name = name
+		console.log('Uh, a circle', name, center, radius)
+		this.real_plane = real_plane
+		let plane = real_plane.plane
+
+		let o = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
+		let x = new THREE.Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
+		let y = new THREE.Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
+		console.log('o, x, y: ', o, x, y)
+		let center_point = points[`${parent}:${center}`]
+		console.log('center', center_point)
+
+		// see https://math.stackexchange.com/a/4132095/816177
+		const tolerance = 0.0001 // in meters
+		const k = tolerance / radius
+		// more precise but slower to calculate:
+		// const n = Math.ceil(Math.PI / Math.acos(1 - k))
+		// faster to calculate, at most only overestimates by 1:
+		const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+		console.log('n: ', n)
+
+		const line_vertices = []
+		for (let i = 0; i <= n; i++) {
+			let theta = ((2 * Math.PI) / n) * i
+			let x_component = x.clone().multiplyScalar(radius * Math.cos(theta))
+			let y_component = y.clone().multiplyScalar(radius * Math.sin(theta))
+			let point = o.clone().add(x_component).add(y_component)
+			point.add(center_point)
+			line_vertices.push(point.x, point.y, point.z)
+		}
 		const line_geometry = new LineGeometry()
 		line_geometry.setPositions(line_vertices)
 
@@ -524,7 +591,9 @@ export const setRealization = (realization) => {
 	}
 
 	for (const [name, sketch] of Object.entries(realization.sketches)) {
-		sketches[name] = new Sketch(name, sketch)
+		let plane_name = sketch.plane_name
+		let real_plane = realization.planes[plane_name]
+		sketches[name] = new Sketch(name, sketch, real_plane)
 		sketches[name].addTo(scene)
 	}
 }
