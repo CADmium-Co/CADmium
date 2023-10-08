@@ -717,9 +717,9 @@ impl Sketch {
             self.apply_forces(constraint_id);
         }
 
-        // for point in self.points.values_mut() {
-        //     point.apply_drag_force();
-        // }
+        for point in self.points.values_mut() {
+            point.apply_drag_force();
+        }
 
         for (point_id, point) in self.points.iter_mut() {
             if point.fixed {

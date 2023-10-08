@@ -73,6 +73,28 @@ impl Project {
                 let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
                 sketch.add_line_with_id(*start_point_id, *end_point_id, *line_id)
             }
+            Message::StepSketch {
+                workbench_id,
+                sketch_name,
+                steps,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                for _ in 0..*steps {
+                    sketch.step();
+                }
+                Ok(())
+            }
+            Message::SolveSketch {
+                workbench_id,
+                sketch_name,
+                max_steps,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                sketch.solve(*max_steps);
+                Ok(())
+            }
         }
     }
 }
@@ -126,7 +148,7 @@ impl Workbench {
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
         // square in upper right
-        let p0 = sketch.add_fixed_point(0.0, 0.00);
+        let p0 = sketch.add_fixed_point(0.1, 0.00);
         let p1 = sketch.add_point(0.45, 0.0);
         let p2 = sketch.add_point(0.45, 0.25);
         let p3 = sketch.add_point(0.0, 0.25);
@@ -134,7 +156,9 @@ impl Workbench {
         sketch.add_segment(p0, p1);
         sketch.add_segment(p1, p2);
         sketch.add_segment(p2, p3);
-        sketch.add_segment(p3, p0);
+        let non_vertical_segment_id = sketch.add_segment(p3, p0);
+
+        sketch.add_segment_vertical_constraint(non_vertical_segment_id);
 
         // Simple circle in lower left
         let p4 = sketch.add_point(-0.25, -0.25);
@@ -570,6 +594,16 @@ pub enum Message {
         line_id: u64,
         start_point_id: u64,
         end_point_id: u64,
+    },
+    StepSketch {
+        workbench_id: u64,
+        sketch_name: String,
+        steps: u64,
+    },
+    SolveSketch {
+        workbench_id: u64,
+        sketch_name: String,
+        max_steps: u64,
     },
 }
 

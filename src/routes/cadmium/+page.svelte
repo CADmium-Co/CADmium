@@ -31,28 +31,32 @@
 	}
 
 	const create_new_sketch = () => {
-		let messages = [
-			{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":100,"x":-0.6,"y":0.5}},
-			{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":101,"x":-0.2,"y":0.4}},
-			{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":102,"x":-0.2,"y":0.1}},
-			{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":103,"x":-0.6,"y":0.1}},
-			{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":100,"start_point_id":100,"end_point_id":101}},
-			{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":101,"start_point_id":101,"end_point_id":102}},
-			{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":102,"start_point_id":102,"end_point_id":103}},
-			{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":103,"start_point_id":103,"end_point_id":100}},
-		]
+		// let messages = [
+		// 	{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":100,"x":-0.6,"y":0.5}},
+		// 	{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":101,"x":-0.2,"y":0.4}},
+		// 	{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":102,"x":-0.2,"y":0.1}},
+		// 	{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":103,"x":-0.6,"y":0.1}},
+		// 	{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":100,"start_point_id":100,"end_point_id":101}},
+		// 	{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":101,"start_point_id":101,"end_point_id":102}},
+		// 	{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":102,"start_point_id":102,"end_point_id":103}},
+		// 	{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":103,"start_point_id":103,"end_point_id":100}},
+		// ]
 
-		let overall_success = true
-		for (let message_obj of messages) {
-			let result = $project_rust.send_message(JSON.stringify(message_obj))
-			if (result === "success") {
-				console.log("success of message: ", result)
-			} else {
-				console.log("failure of message: ", result)
-				overall_success = false
-				break
-			}
-		}
+		// let overall_success = true
+		// for (let message_obj of messages) {
+		// 	let result = $project_rust.send_message(JSON.stringify(message_obj))
+		// 	if (result === "success") {
+		// 		console.log("success of message: ", result)
+		// 	} else {
+		// 		console.log("failure of message: ", result)
+		// 		overall_success = false
+		// 		break
+		// 	}
+		// }
+
+		let message_obj = {"StepSketch": {"workbench_id": 0, "sketch_name": "Sketch 1", "steps": 1}}
+		let result = $project_rust.send_message(JSON.stringify(message_obj))
+		console.log("result of message: ", result)
 		
 		project.set(JSON.parse($project_rust.json))
 		
