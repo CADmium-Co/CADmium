@@ -1,4 +1,4 @@
-use crate::sketch::Sketch;
+use crate::sketch::{Constraint, Sketch};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -90,6 +90,20 @@ impl Workbench {
         self.history.push(Step::new_plane("Front", Plane::front()));
         self.history.push(Step::new_plane("Right", Plane::right()));
         self.history.push(Step::new_sketch("Sketch 1", "Top"));
+
+        let sketch = self.get_sketch_mut("Sketch 1").unwrap();
+
+        let p0 = sketch.add_fixed_point(0.0, 0.00);
+        let p1 = sketch.add_point(0.45, 0.0);
+        let p2 = sketch.add_point(0.45, 0.25);
+        let p3 = sketch.add_point(0.0, 0.25);
+
+        sketch.add_segment(p0, p1);
+        sketch.add_segment(p1, p2);
+        sketch.add_segment(p2, p3);
+        sketch.add_segment(p3, p0);
+
+        // sketch.add_point("Point 2", Point3::new(.25, 0.0, 0.0));
     }
 
     pub fn add_sketch(&mut self, name: &str, plane_name: &str) {
@@ -131,6 +145,17 @@ impl Workbench {
                     };
                     realized.planes.insert(step.name.to_owned(), rp);
                 }
+                StepData::Sketch {
+                    width,
+                    height,
+                    plane_name,
+                    sketch,
+                } => {
+                    let plane = &realized.planes[plane_name];
+                    realized
+                        .sketches
+                        .insert(step.name.to_owned(), RealSketch::new(plane, sketch));
+                }
                 _ => println!("Unknown step type"),
             }
         }
@@ -145,6 +170,7 @@ pub struct Realization {
     // history and build a bunch of geometry
     pub planes: HashMap<String, RealPlane>,
     pub points: HashMap<String, Point3>,
+    pub sketches: HashMap<String, RealSketch>,
 }
 
 impl Realization {
@@ -152,6 +178,7 @@ impl Realization {
         Realization {
             planes: HashMap::new(),
             points: HashMap::new(),
+            sketches: HashMap::new(),
         }
     }
 }
@@ -292,6 +319,22 @@ impl Vector3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vector3 { x, y, z }
     }
+
+    pub fn times(&self, s: f64) -> Self {
+        Self {
+            x: self.x * s,
+            y: self.y * s,
+            z: self.z * s,
+        }
+    }
+
+    pub fn plus(&self, v: Self) -> Self {
+        Self {
+            x: self.x + v.x,
+            y: self.y + v.y,
+            z: self.z + v.z,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -304,6 +347,113 @@ pub struct Point3 {
 impl Point3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Point3 { x, y, z }
+    }
+
+    pub fn plus(&self, v: Vector3) -> Vector3 {
+        Vector3 {
+            x: self.x + v.x,
+            y: self.y + v.y,
+            z: self.z + v.z,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Line3 {
+    pub start: u64,
+    pub end: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Arc3 {
+    center: u64,
+    start: u64,
+    end: u64,
+    clockwise: bool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Circle3 {
+    center: u64,
+    radius: f64,
+    top: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct RealSketch {
+    points: HashMap<u64, Point3>,
+    highest_point_id: u64,
+    line_segments: HashMap<u64, Line3>,
+    highest_line_segment_id: u64,
+    circles: HashMap<u64, Circle3>,
+    highest_circle_id: u64,
+    arcs: HashMap<u64, Arc3>,
+    highest_arc_id: u64,
+    constraints: HashMap<u64, Constraint>,
+    highest_constraint_id: u64,
+}
+
+impl RealSketch {
+    pub fn new(plane: &RealPlane, sketch: &Sketch) -> Self {
+        let mut real_sketch = RealSketch {
+            points: HashMap::new(),
+            highest_point_id: 0,
+            line_segments: HashMap::new(),
+            highest_line_segment_id: 0,
+            circles: HashMap::new(),
+            highest_circle_id: 0,
+            arcs: HashMap::new(),
+            highest_arc_id: 0,
+            constraints: HashMap::new(),
+            highest_constraint_id: 0,
+        };
+
+        let o = plane.plane.origin.clone();
+        let x = plane.plane.primary.clone();
+        let y = plane.plane.secondary.clone();
+
+        for (point_id, point) in sketch.points.iter() {
+            let pt3 = o.plus(x.times(point.x)).plus(y.times(point.y));
+            let real_point = Point3::new(pt3.x, pt3.y, pt3.z);
+            real_sketch.points.insert(*point_id, real_point);
+        }
+        real_sketch.highest_point_id = sketch.highest_point_id;
+
+        for (line_id, line) in sketch.line_segments.iter() {
+            let real_line = Line3 {
+                start: line.start,
+                end: line.end,
+            };
+            real_sketch.line_segments.insert(*line_id, real_line);
+        }
+
+        for (circle_id, circle) in sketch.circles.iter() {
+            let real_circle = Circle3 {
+                center: circle.center,
+                radius: circle.radius,
+                top: circle.top,
+            };
+            real_sketch.circles.insert(*circle_id, real_circle);
+        }
+
+        for (arc_id, arc) in sketch.arcs.iter() {
+            let real_arc = Arc3 {
+                center: arc.center,
+                start: arc.start,
+                end: arc.end,
+                clockwise: arc.clockwise,
+            };
+            real_sketch.arcs.insert(*arc_id, real_arc);
+        }
+
+        for (constraint_id, constraint) in sketch.constraints.iter() {
+            let real_constraint = constraint.clone();
+            real_sketch
+                .constraints
+                .insert(*constraint_id, real_constraint);
+        }
+
+        real_sketch
     }
 }
 

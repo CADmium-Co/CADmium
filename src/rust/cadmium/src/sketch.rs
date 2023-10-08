@@ -18,20 +18,20 @@ use svg::node::element::path::Data;
 use svg::node::element::Path;
 use svg::Document;
 
+use crate::project::{Plane, RealSketch};
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sketch {
-    points: HashMap<u64, Point2>,
-    highest_point_id: u64,
-    line_segments: HashMap<u64, Line2>,
-    highest_line_segment_id: u64,
-    circles: HashMap<u64, Circle2>,
-    highest_circle_id: u64,
-    arcs: HashMap<u64, Arc2>,
-    highest_arc_id: u64,
-    virtual_points: HashMap<u64, Point2>,
-    highest_virtual_point_id: u64,
-    constraints: HashMap<u64, Constraint>,
-    highest_constraint_id: u64,
+    pub points: HashMap<u64, Point2>,
+    pub highest_point_id: u64,
+    pub line_segments: HashMap<u64, Line2>,
+    pub highest_line_segment_id: u64,
+    pub circles: HashMap<u64, Circle2>,
+    pub highest_circle_id: u64,
+    pub arcs: HashMap<u64, Arc2>,
+    pub highest_arc_id: u64,
+    pub constraints: HashMap<u64, Constraint>,
+    pub highest_constraint_id: u64,
 }
 
 impl Sketch {
@@ -45,8 +45,6 @@ impl Sketch {
             highest_circle_id: 0,
             arcs: HashMap::new(),
             highest_arc_id: 0,
-            virtual_points: HashMap::new(),
-            highest_virtual_point_id: 0,
             constraints: HashMap::new(),
             highest_constraint_id: 0,
         }
@@ -1496,8 +1494,8 @@ pub enum Constraint {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Point2 {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
     m: f64,
     dx: f64,
     dy: f64,
@@ -1578,17 +1576,17 @@ impl Vector2 {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Circle2 {
-    center: u64,
-    radius: f64,
-    top: u64,
+    pub center: u64,
+    pub radius: f64,
+    pub top: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Arc2 {
-    center: u64,
-    start: u64,
-    end: u64,
-    clockwise: bool,
+    pub center: u64,
+    pub start: u64,
+    pub end: u64,
+    pub clockwise: bool,
 }
 
 impl Arc2 {
@@ -1604,8 +1602,8 @@ impl Arc2 {
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Line2 {
-    start: u64,
-    end: u64,
+    pub start: u64,
+    pub end: u64,
 }
 
 impl Line2 {

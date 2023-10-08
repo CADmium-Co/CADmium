@@ -11,6 +11,7 @@ import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 let camera, scene, renderer, controls
 const planes = {}
 const points = {}
+const sketches = {}
 
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2(-1.0, -1.0)
@@ -46,12 +47,33 @@ const onPointerClick = (event) => {
 	}
 }
 
+class Sketch {
+	constructor(name, real_sketch) {
+		this.name = name
+
+		this.points = real_sketch.points
+		this.line_segments = real_sketch.line_segments
+
+		this.group = new THREE.Group()
+		for (let [point_id, point] of Object.entries(this.points)) {
+			let newPoint = new Point(point_id, point, (parent = name))
+			points[`{name}:{point_id}`] = newPoint
+			newPoint.addTo(this.group)
+		}
+	}
+
+	addTo(object) {
+		object.add(this.group)
+	}
+}
+
 class Point {
-	constructor(name, { x, y, z }) {
+	constructor(name, { x, y, z }, parent = null) {
 		this.name = name
 		this.x = x
 		this.y = y
 		this.z = z
+		this.parent = parent
 
 		let tex = new THREE.TextureLoader().load('/actions/point_min.svg')
 		const geom = new THREE.BufferGeometry()
@@ -69,8 +91,8 @@ class Point {
 		this.mesh.renderOrder = 2
 	}
 
-	addToScene() {
-		scene.add(this.mesh)
+	addTo(object) {
+		object.add(this.mesh)
 	}
 }
 
@@ -285,10 +307,10 @@ class Plane {
 		this.mesh.name = name
 	}
 
-	addToScene() {
-		scene.add(this.mesh)
-		scene.add(this.line)
-		scene.add(this.label)
+	addTo(object) {
+		object.add(this.mesh)
+		object.add(this.line)
+		object.add(this.label)
 	}
 
 	setSelectionStatus(status) {
@@ -431,15 +453,22 @@ export const setRealization = (realization) => {
 	//     scene.remove(value);
 	// }
 
+	console.log('Realization: ', realization)
+
 	// create a new plane for each plane in the realization
 	for (const [name, plane] of Object.entries(realization.planes)) {
 		planes[name] = new Plane(name, plane)
-		planes[name].addToScene()
+		planes[name].addTo(scene)
 	}
 
 	// create a new point for each point in the realization
 	for (const [name, point] of Object.entries(realization.points)) {
-		points[name] = new Point(name, point)
-		points[name].addToScene()
+		points[name] = new Point(name, point, (parent = null))
+		points[name].addTo(scene)
+	}
+
+	for (const [name, sketch] of Object.entries(realization.sketches)) {
+		sketches[name] = new Sketch(name, sketch)
+		sketches[name].addTo(scene)
 	}
 }
