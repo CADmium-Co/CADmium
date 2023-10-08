@@ -268,7 +268,6 @@ class Face {
 					shape_points.push(end_point_2d)
 				} else if (segment.type === 'Arc') {
 					// console.log('Segment arc:', segment.center, segment.start, segment.end)
-
 					let center_point = points[`${parent}:${segment.center}`]
 					let start_point = points[`${parent}:${segment.start}`]
 					let end_point = points[`${parent}:${segment.end}`]
@@ -348,20 +347,19 @@ const arcToPoints = (center_point, start_point, end_point, clockwise) => {
 	const tolerance = ARC_TOLERANCE // in meters
 	const radius = center_point.distanceTo(start_point)
 	const k = tolerance / radius
-	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+	let n = Math.ceil(Math.PI / Math.sqrt(2 * k))
 	const segment_angle = (2 * Math.PI) / n
 	const segment_length = radius * segment_angle
+	if (clockwise) {
+		n = -n
+	}
 
 	let start_angle = Math.atan2(start_point.y - center_point.y, start_point.x - center_point.x)
 
 	const shape_points = []
 	shape_points.push(start_point)
 
-	if (clockwise) {
-		n = -n
-	}
-
-	for (let i = 1; i <= n; i++) {
+	for (let i = 1; i <= Math.abs(n); i++) {
 		let theta = ((2 * Math.PI) / n) * i + start_angle
 		let x_component = radius * Math.cos(theta)
 		let y_component = radius * Math.sin(theta)
@@ -382,7 +380,6 @@ const circleToPoints = (center_point, radius) => {
 	const k = tolerance / radius
 	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
 	const segment_angle = (2 * Math.PI) / n
-	const segment_length = radius * segment_angle
 
 	const shape_points = []
 
@@ -852,7 +849,7 @@ export const setRealization = (realization) => {
 
 		let plane_name = sketch[0].plane_name
 		let real_plane = realization.planes[plane_name]
-		sketches[name] = new Sketch(name, unsplit, real_plane)
+		sketches[name] = new Sketch(name, split, real_plane)
 		sketches[name].addTo(scene)
 	}
 }
