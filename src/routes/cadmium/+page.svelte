@@ -51,7 +51,7 @@
 	let icon_mapping = {
 		Sketch: '/actions/sketch_min.svg',
 		Plane: '/actions/plane_min.svg',
-		Point: '/actions/point_min.svg'
+		Point: '/actions/point_min_icon.svg'
 	}
 </script>
 

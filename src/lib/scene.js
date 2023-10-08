@@ -118,7 +118,7 @@ class Point {
 		const vertices = new Float32Array([x, y, z])
 		geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
 		const material = new THREE.PointsMaterial({
-			size: 27.0,
+			size: parent ? 6.0 : 12.0,
 			map: tex,
 			transparent: true,
 			sizeAttenuation: false
@@ -143,8 +143,6 @@ class LineSegment {
 
 		let start_point = points[`${parent}:${start}`]
 		let end_point = points[`${parent}:${end}`]
-
-		// console.log('Making line segment: ', start_point, end_point)
 
 		const line_vertices = [
 			start_point.x,
@@ -197,7 +195,6 @@ class Circle {
 		// const n = Math.ceil(Math.PI / Math.acos(1 - k))
 		// faster to calculate, at most only overestimates by 1:
 		const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
-		// console.log('n: ', n)
 
 		const line_vertices = []
 		for (let i = 0; i <= n; i++) {
@@ -400,8 +397,6 @@ class Arc {
 		let center_point = points[`${parent}:${center}`]
 		let center_2d = new THREE.Vector2(center_point.x_2d, center_point.y_2d)
 		center_point = new THREE.Vector3(center_point.x, center_point.y, center_point.z)
-		// let center_proj = center_point.clone().projectOnPlane(z)
-		// let center_2d = new THREE.Vector2(center_proj.clone().dot(x), center_proj.clone().dot(y))
 
 		let start_point = points[`${parent}:${start}`]
 		let start_2d = new THREE.Vector2(start_point.x_2d, start_point.y_2d)
@@ -419,7 +414,6 @@ class Arc {
 		const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
 		const segment_angle = (2 * Math.PI) / n
 		const segment_length = radius * segment_angle
-		// console.log('n: ', n, segment_angle, segment_length)
 
 		const line_vertices = []
 		line_vertices.push(start_point.x, start_point.y, start_point.z)
