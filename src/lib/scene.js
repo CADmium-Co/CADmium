@@ -59,10 +59,11 @@ class Sketch {
 		this.line_segments = real_sketch.line_segments
 		this.circles = real_sketch.circles
 		this.arcs = real_sketch.arcs
-
+		console.log('A whole new sketch!', real_sketch)
 		this.group = new THREE.Group()
 		for (let [point_id, point] of Object.entries(this.points)) {
-			let newPoint = new Point(point_id, point, (parent = name))
+			let point_2d = real_sketch.points_2d[point_id]
+			let newPoint = new Point(point_id, point, point_2d, (parent = name))
 			let extendedKey = `${name}:${point_id}`
 			points[extendedKey] = newPoint
 			if (point.hidden) {
@@ -72,18 +73,23 @@ class Sketch {
 		}
 
 		for (let [line_segment_id, line_segment] of Object.entries(this.line_segments)) {
-			let newLineSegment = new LineSegment(line_segment_id, line_segment, (parent = name))
+			let newLineSegment = new LineSegment(line_segment_id, line_segment, name)
 			newLineSegment.addTo(this.group)
 		}
 
 		for (let [circle_id, circle] of Object.entries(this.circles)) {
-			let newCircle = new Circle(circle_id, circle, this.real_plane, (parent = name))
+			let newCircle = new Circle(circle_id, circle, this.real_plane, name)
 			newCircle.addTo(this.group)
 		}
 
 		for (let [arc_id, arc] of Object.entries(this.arcs)) {
-			let newArc = new Arc(arc_id, arc, this.real_plane, (parent = name))
+			let newArc = new Arc(arc_id, arc, this.real_plane, name)
 			newArc.addTo(this.group)
+		}
+
+		for (let face of real_sketch.faces) {
+			let newFace = new Face(face, this.real_plane, name)
+			newFace.addTo(this.group)
 		}
 	}
 
@@ -93,11 +99,13 @@ class Sketch {
 }
 
 class Point {
-	constructor(name, { x, y, z }, parent = null) {
+	constructor(name, { x, y, z }, point_2d, parent = null) {
 		this.name = name
 		this.x = x
 		this.y = y
 		this.z = z
+		this.x_2d = point_2d.x
+		this.y_2d = point_2d.y
 		this.parent = parent
 
 		let image = '/actions/point_min.svg'
@@ -127,7 +135,7 @@ class Point {
 }
 
 class LineSegment {
-	constructor(name, { start, end }, parent = null) {
+	constructor(name, { start, end }, parent) {
 		this.name = name
 		this.start = start
 		this.end = end
@@ -172,7 +180,7 @@ class LineSegment {
 }
 
 class Circle {
-	constructor(name, { center, radius }, real_plane) {
+	constructor(name, { center, radius }, real_plane, parent) {
 		this.name = name
 		this.real_plane = real_plane
 		let plane = real_plane.plane
@@ -189,7 +197,7 @@ class Circle {
 		// const n = Math.ceil(Math.PI / Math.acos(1 - k))
 		// faster to calculate, at most only overestimates by 1:
 		const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
-		console.log('n: ', n)
+		// console.log('n: ', n)
 
 		const line_vertices = []
 		for (let i = 0; i <= n; i++) {
@@ -225,6 +233,169 @@ class Circle {
 	}
 }
 
+class Face {
+	constructor(face, real_plane, parent) {
+		// console.log('Okay making a face:', face)
+		this.real_plane = real_plane
+
+		const shape = new THREE.Shape()
+
+		let exterior = face.exterior
+		console.log('ext', exterior)
+		let shape_points = []
+		if (exterior.Circle) {
+			// TODO: Handle circles!
+			let center_point = points[`${parent}:${exterior.Circle.center}`]
+			let center_2d = new THREE.Vector2(center_point.x_2d, center_point.y_2d)
+
+			let as_points = circleToPoints(center_2d, exterior.Circle.radius)
+
+			for (let point of as_points) {
+				shape_points.push([point.x, point.y])
+			}
+		} else {
+			for (let segment of exterior.Segments) {
+				if (segment.type === 'Line') {
+					let start_point = points[`${parent}:${segment.start}`]
+					let end_point = points[`${parent}:${segment.end}`]
+
+					let start_point_2d = [start_point.x_2d, start_point.y_2d]
+					let end_point_2d = [end_point.x_2d, end_point.y_2d]
+
+					if (shape_points.length === 0) {
+						shape_points.push(start_point_2d)
+					}
+					shape_points.push(end_point_2d)
+				} else if (segment.type === 'Arc') {
+					// console.log('Segment arc:', segment.center, segment.start, segment.end)
+
+					let center_point = points[`${parent}:${segment.center}`]
+					let start_point = points[`${parent}:${segment.start}`]
+					let end_point = points[`${parent}:${segment.end}`]
+					// console.log(center_point, start_point, end_point)
+
+					let center_point_2d = new THREE.Vector2(center_point.x_2d, center_point.y_2d)
+					let start_point_2d = new THREE.Vector2(start_point.x_2d, start_point.y_2d)
+					let end_point_2d = new THREE.Vector2(end_point.x_2d, end_point.y_2d)
+
+					let as_points = arcToPoints(
+						center_point_2d,
+						start_point_2d,
+						end_point_2d,
+						segment.clockwise
+					)
+
+					if (shape_points.length !== 0) {
+						as_points.shift()
+					}
+
+					for (let point of as_points) {
+						shape_points.push([point.x, point.y])
+					}
+				}
+			}
+		}
+
+		// console.log('shape points', shape_points)
+
+		if (shape_points.length > 0) {
+			shape.moveTo(shape_points[0][0], shape_points[0][1])
+			for (let i = 1; i < shape_points.length; i++) {
+				shape.lineTo(shape_points[i][0], shape_points[i][1])
+			}
+		}
+
+		const geometry = new THREE.ShapeGeometry(shape)
+		const material = new THREE.MeshBasicMaterial({
+			color: 0x00af00,
+			side: THREE.DoubleSide,
+			transparent: true,
+			opacity: 0.5,
+			depthWrite: false,
+			depthTest: false,
+			polygonOffset: true,
+			polygonOffsetFactor: 1,
+			polygonOffsetUnits: 1
+		})
+
+		let { origin, primary, secondary, tertiary } = this.real_plane.plane
+		origin = new THREE.Vector3(origin.x, origin.y, origin.z)
+		primary = new THREE.Vector3(primary.x, primary.y, primary.z)
+		secondary = new THREE.Vector3(secondary.x, secondary.y, secondary.z)
+		tertiary = new THREE.Vector3(tertiary.x, tertiary.y, tertiary.z)
+		// console.log('origin', origin, primary, secondary)
+
+		// we need to rotate properly
+		const m = new THREE.Matrix4()
+		m.makeBasis(primary, secondary, tertiary)
+		const ea = new THREE.Euler(0, 0, 0, 'XYZ')
+		ea.setFromRotationMatrix(m, 'XYZ')
+		this.mesh = new THREE.Mesh(geometry, material)
+		this.mesh.rotation.x = ea.x
+		this.mesh.rotation.y = ea.y
+		this.mesh.rotation.z = ea.z
+		this.mesh.position.x = origin.x
+		this.mesh.position.y = origin.y
+		this.mesh.position.z = origin.z
+	}
+	addTo(object) {
+		object.add(this.mesh)
+	}
+}
+
+const arcToPoints = (center_point, start_point, end_point, clockwise) => {
+	// these points are THREE.Vector2's
+	const tolerance = ARC_TOLERANCE // in meters
+	const radius = center_point.distanceTo(start_point)
+	const k = tolerance / radius
+	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+	const segment_angle = (2 * Math.PI) / n
+	const segment_length = radius * segment_angle
+
+	let start_angle = Math.atan2(start_point.y - center_point.y, start_point.x - center_point.x)
+
+	const shape_points = []
+	shape_points.push(start_point)
+
+	if (clockwise) {
+		n = -n
+	}
+
+	for (let i = 1; i <= n; i++) {
+		let theta = ((2 * Math.PI) / n) * i + start_angle
+		let x_component = radius * Math.cos(theta)
+		let y_component = radius * Math.sin(theta)
+		let point = new THREE.Vector2(x_component, y_component).add(center_point)
+		shape_points.push(point)
+
+		let distance_to_end = point.distanceTo(end_point)
+		if (distance_to_end <= segment_length) {
+			shape_points.push(end_point)
+			break
+		}
+	}
+	return shape_points
+}
+
+const circleToPoints = (center_point, radius) => {
+	const tolerance = ARC_TOLERANCE // in meters
+	const k = tolerance / radius
+	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+	const segment_angle = (2 * Math.PI) / n
+	const segment_length = radius * segment_angle
+
+	const shape_points = []
+
+	for (let i = 1; i <= n; i++) {
+		let theta = ((2 * Math.PI) / n) * i
+		let x_component = radius * Math.cos(theta)
+		let y_component = radius * Math.sin(theta)
+		let point = new THREE.Vector2(x_component, y_component).add(center_point)
+		shape_points.push(point)
+	}
+	return shape_points
+}
+
 class Arc {
 	constructor(name, { center, start, end, clockwise }, real_plane) {
 		this.name = name
@@ -237,19 +408,17 @@ class Arc {
 		let z = new THREE.Vector3(plane.tertiary.x, plane.tertiary.y, plane.tertiary.z)
 
 		let center_point = points[`${parent}:${center}`]
+		let center_2d = new THREE.Vector2(center_point.x_2d, center_point.y_2d)
 		center_point = new THREE.Vector3(center_point.x, center_point.y, center_point.z)
-		let center_proj = center_point.clone().projectOnPlane(z)
-		let center_2d = new THREE.Vector2(center_proj.clone().dot(x), center_proj.clone().dot(y))
+		// let center_proj = center_point.clone().projectOnPlane(z)
+		// let center_2d = new THREE.Vector2(center_proj.clone().dot(x), center_proj.clone().dot(y))
 
 		let start_point = points[`${parent}:${start}`]
+		let start_2d = new THREE.Vector2(start_point.x_2d, start_point.y_2d)
 		start_point = new THREE.Vector3(start_point.x, start_point.y, start_point.z)
-		let start_proj = start_point.clone().projectOnPlane(z)
-		let start_2d = new THREE.Vector2(start_proj.clone().dot(x), start_proj.clone().dot(y))
 
 		let end_point = points[`${parent}:${end}`]
 		end_point = new THREE.Vector3(end_point.x, end_point.y, end_point.z)
-		let end_proj = end_point.clone().projectOnPlane(z)
-		let end_2d = new THREE.Vector2(end_proj.clone().dot(x), end_proj.clone().dot(y))
 
 		let start_angle = Math.atan2(start_2d.y - center_2d.y, start_2d.x - center_2d.x)
 
@@ -669,15 +838,21 @@ export const setRealization = (realization) => {
 	}
 
 	// create a new point for each point in the realization
+	console.log('P2D', realization.points_2d)
 	for (const [name, point] of Object.entries(realization.points)) {
-		points[name] = new Point(name, point, (parent = null))
+		// let p2d = realization.points[name]
+		points[name] = new Point(name, point, {}, (parent = null))
 		points[name].addTo(scene)
 	}
 
 	for (const [name, sketch] of Object.entries(realization.sketches)) {
-		let plane_name = sketch.plane_name
+		let unsplit = sketch[0]
+		let split = sketch[1]
+		// console.log('Name', name, 'sketch', split.points, unsplit.points)
+
+		let plane_name = sketch[0].plane_name
 		let real_plane = realization.planes[plane_name]
-		sketches[name] = new Sketch(name, sketch, real_plane)
+		sketches[name] = new Sketch(name, unsplit, real_plane)
 		sketches[name].addTo(scene)
 	}
 }

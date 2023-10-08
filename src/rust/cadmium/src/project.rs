@@ -1,4 +1,4 @@
-use crate::sketch::{Constraint, Sketch};
+use crate::sketch::{Constraint, Face, Point2, Sketch};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -108,6 +108,10 @@ impl Workbench {
         let p4 = sketch.add_point(-0.25, -0.25);
         sketch.add_circle(p4, 0.2);
 
+        // intersecting circle!
+        let p4 = sketch.add_point(-0.5, -0.25);
+        sketch.add_circle(p4, 0.2);
+
         // Rounded square in lower right
         let shrink = 0.4;
         let offset_x = 0.1;
@@ -183,7 +187,10 @@ impl Workbench {
                     let plane = &realized.planes[plane_name];
                     realized.sketches.insert(
                         step.name.to_owned(),
-                        RealSketch::new(plane_name, plane, sketch),
+                        (
+                            RealSketch::new(plane_name, plane, sketch),
+                            RealSketch::new(plane_name, plane, &sketch.split_intersections()),
+                        ),
                     );
                 }
                 _ => println!("Unknown step type"),
@@ -200,7 +207,7 @@ pub struct Realization {
     // history and build a bunch of geometry
     pub planes: HashMap<String, RealPlane>,
     pub points: HashMap<String, Point3>,
-    pub sketches: HashMap<String, RealSketch>,
+    pub sketches: HashMap<String, (RealSketch, RealSketch)>,
 }
 
 impl Realization {
@@ -419,6 +426,7 @@ pub struct Circle3 {
 pub struct RealSketch {
     plane_name: String,
     points: HashMap<u64, Point3>,
+    points_2d: HashMap<u64, Point2>,
     highest_point_id: u64,
     line_segments: HashMap<u64, Line3>,
     highest_line_segment_id: u64,
@@ -428,12 +436,14 @@ pub struct RealSketch {
     highest_arc_id: u64,
     constraints: HashMap<u64, Constraint>,
     highest_constraint_id: u64,
+    faces: Vec<Face>,
 }
 
 impl RealSketch {
     pub fn new(plane_name: &str, plane: &RealPlane, sketch: &Sketch) -> Self {
         let mut real_sketch = RealSketch {
             plane_name: plane_name.to_owned(),
+            points_2d: HashMap::new(),
             points: HashMap::new(),
             highest_point_id: 0,
             line_segments: HashMap::new(),
@@ -444,6 +454,7 @@ impl RealSketch {
             highest_arc_id: 0,
             constraints: HashMap::new(),
             highest_constraint_id: 0,
+            faces: vec![],
         };
 
         let o = plane.plane.origin.clone();
@@ -457,6 +468,9 @@ impl RealSketch {
                 real_point.hidden = true;
             }
             real_sketch.points.insert(*point_id, real_point);
+
+            let pt2 = point.clone();
+            real_sketch.points_2d.insert(*point_id, pt2);
         }
         real_sketch.highest_point_id = sketch.highest_point_id;
 
@@ -494,6 +508,10 @@ impl RealSketch {
                 .insert(*constraint_id, real_constraint);
         }
 
+        // Always break intersections
+        let (faces, unused_segments) = sketch.find_faces();
+        real_sketch.faces = faces;
+
         real_sketch
     }
 }
@@ -513,6 +531,7 @@ mod tests {
     fn create_project() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
-        println!("{}", p.json());
+        let r = p.get_realization(0, 1000);
+        println!("{}", r);
     }
 }

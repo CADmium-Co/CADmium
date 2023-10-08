@@ -1655,7 +1655,6 @@ impl Segment {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(tag = "type")]
 pub enum Ring {
     Circle(Circle2),
     Segments(Vec<Segment>),
