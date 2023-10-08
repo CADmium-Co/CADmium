@@ -156,20 +156,27 @@ impl Workbench {
         let p2 = sketch.add_point(0.45, 0.25);
         let p3 = sketch.add_point(0.0, 0.25);
 
-        sketch.add_segment(p0, p1);
-        sketch.add_segment(p1, p2);
-        sketch.add_segment(p2, p3);
-        let non_vertical_segment_id = sketch.add_segment(p3, p0);
+        let seg_0 = sketch.add_segment(p0, p1);
+        let seg_1 = sketch.add_segment(p1, p2);
+        let seg_2 = sketch.add_segment(p2, p3);
+        let seg_3 = sketch.add_segment(p3, p0);
 
-        sketch.add_segment_vertical_constraint(non_vertical_segment_id);
+        sketch.add_segment_vertical_constraint(seg_3);
+        sketch.add_segment_horizontal_constraint(seg_0);
+        sketch.add_segment_length_constraint(seg_0, 0.52);
+        sketch.add_segment_length_constraint(seg_1, 0.52);
+        sketch.add_segment_length_constraint(seg_2, 0.52);
+        sketch.add_segment_length_constraint(seg_3, 0.52);
 
         // Simple circle in lower left
         let p4 = sketch.add_point(-0.25, -0.25);
         sketch.add_circle(p4, 0.2);
 
         // intersecting circle!
-        let p4 = sketch.add_point(-0.5, -0.25);
-        sketch.add_circle(p4, 0.2);
+        let p5 = sketch.add_point(-0.5, -0.25);
+        let c2 = sketch.add_circle(p5, 0.2);
+
+        sketch.add_circle_diameter_constraint(c2, 0.6);
 
         // Rounded square in lower right
         let shrink = 0.4;
