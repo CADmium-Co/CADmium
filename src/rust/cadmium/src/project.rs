@@ -44,12 +44,12 @@ impl Project {
         }
     }
 
-    pub fn handle_message_string(&mut self, message_string: &str) -> Result<(), String> {
+    pub fn handle_message_string(&mut self, message_string: &str) -> Result<String, String> {
         let message = Message::from_json(message_string)?;
         self.handle_message(&message)
     }
 
-    pub fn handle_message(&mut self, message: &Message) -> Result<(), String> {
+    pub fn handle_message(&mut self, message: &Message) -> Result<String, String> {
         match message {
             Message::NewPointOnSketch {
                 workbench_id,
@@ -60,7 +60,8 @@ impl Project {
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
-                sketch.add_point_with_id(*x, *y, *point_id)
+                sketch.add_point_with_id(*x, *y, *point_id);
+                Ok("".to_owned())
             }
             Message::NewLineOnSketch {
                 workbench_id,
@@ -71,7 +72,8 @@ impl Project {
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
-                sketch.add_line_with_id(*start_point_id, *end_point_id, *line_id)
+                sketch.add_line_with_id(*start_point_id, *end_point_id, *line_id);
+                Ok("".to_owned())
             }
             Message::StepSketch {
                 workbench_id,
@@ -80,10 +82,11 @@ impl Project {
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                let mut max_change = 0.0;
                 for _ in 0..*steps {
-                    sketch.step();
+                    max_change = sketch.step();
                 }
-                Ok(())
+                Ok(format!("{}", max_change))
             }
             Message::SolveSketch {
                 workbench_id,
@@ -93,7 +96,7 @@ impl Project {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
                 sketch.solve(*max_steps);
-                Ok(())
+                Ok(("".to_owned()))
             }
         }
     }

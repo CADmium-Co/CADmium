@@ -821,8 +821,8 @@ export const createScene = (el) => {
 }
 
 export const setRealization = (realization) => {
-	console.log('Inside Set Realization: ', realization)
-	console.log('Points: ', realization.sketches['Sketch 1'][0])
+	// console.log('Inside Set Realization: ', realization)
+	// console.log('Points: ', realization.sketches['Sketch 1'][0])
 
 	// for now just delete every old plane and create a new one each time
 	// in the future, we can make this more efficient by updating the existing planes

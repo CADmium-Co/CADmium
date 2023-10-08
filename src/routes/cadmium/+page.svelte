@@ -27,7 +27,6 @@
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index])
 		realization = JSON.parse($project_rust.get_realization(0, 1000))
-		
 	}
 
 	const create_new_sketch = () => {
@@ -41,7 +40,6 @@
 		// 	{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":102,"start_point_id":102,"end_point_id":103}},
 		// 	{"NewLineOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","line_id":103,"start_point_id":103,"end_point_id":100}},
 		// ]
-
 		// let overall_success = true
 		// for (let message_obj of messages) {
 		// 	let result = $project_rust.send_message(JSON.stringify(message_obj))
@@ -55,22 +53,53 @@
 		// }
 	}
 
+	let solving = false
+
 	const step_sketch = () => {
-		let message_obj = {"StepSketch": {"workbench_id": 0, "sketch_name": "Sketch 1", "steps": 1}}
+		// console.log('Step sketch')
+		let message_obj = { StepSketch: { workbench_id: 0, sketch_name: 'Sketch 1', steps: 1 } }
 		let result = $project_rust.send_message(JSON.stringify(message_obj))
-		console.log("result of message: ", result)
-		
+		let max_change = parseFloat(result)
+
 		project.set(JSON.parse($project_rust.json))
+
+		return max_change < 0.000001
+	}
+
+	function call(fn, every, times, fn2) {
+		var repeater = function () {
+			let stop_early = fn()
+			if (!stop_early && --times) {
+				window.setTimeout(repeater, every)
+			} else {
+				console.log('done!')
+				fn2()
+			}
+		}
+		repeater() // start loop
+	}
+
+	const solve_sketch = () => {
+		solving = true
+		call(step_sketch, 20, 100, () => {
+			solving = false
+		})
 	}
 	const create_new_extrusion = () => {
 		console.log('okay!')
 	}
 
 	let actions = [
-		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch', handler: create_new_sketch },
+		{
+			alt: 'new sketch',
+			src: '/actions/sketch_min.svg',
+			text: 'New Sketch',
+			handler: create_new_sketch
+		},
 		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: create_new_extrusion },
 		{ alt: 'plane', src: '/actions/plane_min.svg' },
-		{ alt: 'step', src: '/actions/step_min.svg', text: "Step", handler: step_sketch },
+		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: step_sketch },
+		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solve_sketch }
 		// { alt: 'hole', src: '/actions/hole_min.svg' },
 		// { alt: 'fillet', src: '/actions/fillet_min.svg' },
 		// { alt: 'revolve', src: '/actions/revolve_min.svg' }
@@ -104,7 +133,12 @@
 	</header>
 	<toolbar class="col-span-2 flex items-center gap-1">
 		{#each actions as action}
-			<button class="inline-flex items-center hover:bg-gray-200 p-1" on:click={action.handler}>
+			<button
+				class="inline-flex items-center {action.text === 'Solve' && solving
+					? 'bg-gray-400'
+					: ''} hover:bg-gray-200 p-1"
+				on:click={action.handler}
+			>
 				<img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ''}
 			</button>
 		{/each}
