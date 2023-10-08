@@ -53,13 +53,14 @@
 		// 		break
 		// 	}
 		// }
+	}
 
+	const step_sketch = () => {
 		let message_obj = {"StepSketch": {"workbench_id": 0, "sketch_name": "Sketch 1", "steps": 1}}
 		let result = $project_rust.send_message(JSON.stringify(message_obj))
 		console.log("result of message: ", result)
 		
 		project.set(JSON.parse($project_rust.json))
-		
 	}
 	const create_new_extrusion = () => {
 		console.log('okay!')
@@ -68,8 +69,8 @@
 	let actions = [
 		{ alt: 'new sketch', src: '/actions/sketch_min.svg', text: 'New Sketch', handler: create_new_sketch },
 		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: create_new_extrusion },
-		{ alt: 'plane', src: '/actions/plane_min.svg' }
-		// { alt: 'point', src: '/actions/point_min.svg' },
+		{ alt: 'plane', src: '/actions/plane_min.svg' },
+		{ alt: 'step', src: '/actions/step_min.svg', text: "Step", handler: step_sketch },
 		// { alt: 'hole', src: '/actions/hole_min.svg' },
 		// { alt: 'fillet', src: '/actions/fillet_min.svg' },
 		// { alt: 'revolve', src: '/actions/revolve_min.svg' }
