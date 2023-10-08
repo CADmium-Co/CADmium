@@ -244,6 +244,18 @@ impl Sketch {
         id
     }
 
+    pub fn add_point_with_id(&mut self, x: f64, y: f64, id0: u64) -> Result<(), String> {
+        if self.points.contains_key(&id0) {
+            return Err("Point already exists".to_string());
+        }
+        if self.highest_point_id >= id0 {
+            return Err("Point ID too low".to_string());
+        }
+        self.points.insert(id0, Point2::new(x, y));
+        self.highest_point_id = id0;
+        Ok(())
+    }
+
     pub fn add_fixed_point(&mut self, x: f64, y: f64) -> u64 {
         let id = self.highest_point_id + 1;
         self.points.insert(id, Point2::new_fixed(x, y));
@@ -302,6 +314,29 @@ impl Sketch {
         self.line_segments.insert(id, l);
         self.highest_line_segment_id += 1;
         id
+    }
+
+    pub fn add_line_with_id(&mut self, start_id: u64, end_id: u64, id: u64) -> Result<(), String> {
+        if self.line_segments.contains_key(&id) {
+            return Err("Line already exists".to_string());
+        }
+        if self.highest_line_segment_id >= id {
+            return Err("Line ID too low".to_string());
+        }
+        if !self.points.contains_key(&start_id) {
+            return Err("Start point does not exist".to_string());
+        }
+        if !self.points.contains_key(&end_id) {
+            return Err("End point does not exist".to_string());
+        }
+
+        let l = Line2 {
+            start: start_id,
+            end: end_id,
+        };
+        self.line_segments.insert(id, l);
+        self.highest_line_segment_id = id;
+        Ok(())
     }
 
     pub fn add_segment_length_constraint(&mut self, segment_id: u64, length: f64) -> u64 {

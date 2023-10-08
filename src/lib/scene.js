@@ -59,7 +59,7 @@ class Sketch {
 		this.line_segments = real_sketch.line_segments
 		this.circles = real_sketch.circles
 		this.arcs = real_sketch.arcs
-		console.log('A whole new sketch!', real_sketch)
+		// console.log('A whole new sketch!', real_sketch)
 		this.group = new THREE.Group()
 		for (let [point_id, point] of Object.entries(this.points)) {
 			let point_2d = real_sketch.points_2d[point_id]
@@ -96,6 +96,10 @@ class Sketch {
 	addTo(object) {
 		object.add(this.group)
 	}
+
+	removeFrom(object) {
+		object.remove(this.group)
+	}
 }
 
 class Point {
@@ -131,6 +135,10 @@ class Point {
 
 	addTo(object) {
 		object.add(this.mesh)
+	}
+
+	removeFrom(object) {
+		object.remove(this.mesh)
 	}
 }
 
@@ -237,7 +245,7 @@ class Face {
 		const shape = new THREE.Shape()
 
 		let exterior = face.exterior
-		console.log('ext', exterior)
+		// console.log('ext', exterior)
 		let shape_points = []
 		if (exterior.Circle) {
 			let center_point = points[`${parent}:${exterior.Circle.center}`]
@@ -673,6 +681,12 @@ class Plane {
 		object.add(this.label)
 	}
 
+	removeFrom(object) {
+		object.remove(this.mesh)
+		object.remove(this.line)
+		object.remove(this.label)
+	}
+
 	setSelectionStatus(status) {
 		if (status === 'unselected') {
 			this.mesh.material.color.set(this.fillColor)
@@ -807,13 +821,20 @@ export const createScene = (el) => {
 }
 
 export const setRealization = (realization) => {
+	console.log('Inside Set Realization: ', realization)
+	console.log('Points: ', realization.sketches['Sketch 1'][0])
+
 	// for now just delete every old plane and create a new one each time
 	// in the future, we can make this more efficient by updating the existing planes
-	// for (const [key, value] of Object.entries(planes)) {
-	//     scene.remove(value);
-	// }
-
-	console.log('Realization: ', realization)
+	for (const [name, value] of Object.entries(planes)) {
+		planes[name].removeFrom(scene)
+	}
+	for (const [name, value] of Object.entries(points)) {
+		points[name].removeFrom(scene)
+	}
+	for (const [name, value] of Object.entries(sketches)) {
+		sketches[name].removeFrom(scene)
+	}
 
 	// create a new plane for each plane in the realization
 	for (const [name, plane] of Object.entries(realization.planes)) {
@@ -822,7 +843,6 @@ export const setRealization = (realization) => {
 	}
 
 	// create a new point for each point in the realization
-	console.log('P2D', realization.points_2d)
 	for (const [name, point] of Object.entries(realization.points)) {
 		// let p2d = realization.points[name]
 		points[name] = new Point(name, point, {}, (parent = null))

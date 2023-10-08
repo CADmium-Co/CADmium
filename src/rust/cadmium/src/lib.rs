@@ -47,6 +47,15 @@ impl Project {
             .get_realization(workbench_id as u64, 1000 as u64)
     }
 
+    #[wasm_bindgen]
+    pub fn send_message(&mut self, message: String) -> String {
+        let result = self.native.handle_message_string(&message);
+        match result {
+            Ok(s) => "success".to_owned(),
+            Err(e) => e,
+        }
+    }
+
     // #[wasm_bindgen(getter)]
     // pub fn sketch(&self) -> sketch::Sketch {
     //     sketch::Sketch::from(self.native.sketch.clone())

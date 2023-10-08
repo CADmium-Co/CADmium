@@ -43,6 +43,38 @@ impl Project {
             Err(e) => format!("Error: {}", e),
         }
     }
+
+    pub fn handle_message_string(&mut self, message_string: &str) -> Result<(), String> {
+        let message = Message::from_json(message_string)?;
+        self.handle_message(&message)
+    }
+
+    pub fn handle_message(&mut self, message: &Message) -> Result<(), String> {
+        match message {
+            Message::NewPointOnSketch {
+                workbench_id,
+                sketch_name,
+                point_id,
+                x,
+                y,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                sketch.add_point_with_id(*x, *y, *point_id)
+            }
+            Message::NewLineOnSketch {
+                workbench_id,
+                sketch_name,
+                line_id,
+                start_point_id,
+                end_point_id,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                sketch.add_line_with_id(*start_point_id, *end_point_id, *line_id)
+            }
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -523,6 +555,42 @@ pub struct RealPlane {
     pub height: f64,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+pub enum Message {
+    NewPointOnSketch {
+        workbench_id: u64,
+        sketch_name: String,
+        point_id: u64,
+        x: f64,
+        y: f64,
+    },
+    NewLineOnSketch {
+        workbench_id: u64,
+        sketch_name: String,
+        line_id: u64,
+        start_point_id: u64,
+        end_point_id: u64,
+    },
+}
+
+impl Message {
+    pub fn as_json(&self) -> String {
+        let result = serde_json::to_string(self);
+        match result {
+            Ok(json) => json,
+            Err(e) => format!("Error: {}", e),
+        }
+    }
+
+    pub fn from_json(json: &str) -> Result<Message, String> {
+        let result = serde_json::from_str(json);
+        match result {
+            Ok(msg) => Ok(msg),
+            Err(e) => Err(format!("Error: {}", e)),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -531,7 +599,22 @@ mod tests {
     fn create_project() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
-        let r = p.get_realization(0, 1000);
-        println!("{}", r);
+        // let r = p.get_realization(0, 1000);
+
+        // let msg = &Message::NewPointOnSketch {
+        //     workbench_id: 0,
+        //     sketch_name: "Sketch 1".to_owned(),
+        //     point_id: 100,
+        //     x: -1.0,
+        //     y: -1.0,
+        // };
+
+        let json = r#"{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":100,"x":-1.0,"y":-1.0}}"#;
+        let msg = Message::from_json(json).unwrap();
+        let res = p.handle_message(&msg);
+
+        println!("As json: {}", msg.as_json());
+
+        // println!("{:?}", res);
     }
 }
