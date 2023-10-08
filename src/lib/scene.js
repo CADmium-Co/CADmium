@@ -159,7 +159,7 @@ class LineSegment {
 
 		this.defaultMaterial = new LineMaterial({
 			color: '#000000',
-			linewidth: 5.0,
+			linewidth: (this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio),
 			depthTest: false,
 			transparent: true,
 			dashed: false,
@@ -235,7 +235,6 @@ class Circle {
 
 class Face {
 	constructor(face, real_plane, parent) {
-		// console.log('Okay making a face:', face)
 		this.real_plane = real_plane
 
 		const shape = new THREE.Shape()
@@ -244,7 +243,6 @@ class Face {
 		console.log('ext', exterior)
 		let shape_points = []
 		if (exterior.Circle) {
-			// TODO: Handle circles!
 			let center_point = points[`${parent}:${exterior.Circle.center}`]
 			let center_2d = new THREE.Vector2(center_point.x_2d, center_point.y_2d)
 
@@ -267,11 +265,9 @@ class Face {
 					}
 					shape_points.push(end_point_2d)
 				} else if (segment.type === 'Arc') {
-					// console.log('Segment arc:', segment.center, segment.start, segment.end)
 					let center_point = points[`${parent}:${segment.center}`]
 					let start_point = points[`${parent}:${segment.start}`]
 					let end_point = points[`${parent}:${segment.end}`]
-					// console.log(center_point, start_point, end_point)
 
 					let center_point_2d = new THREE.Vector2(center_point.x_2d, center_point.y_2d)
 					let start_point_2d = new THREE.Vector2(start_point.x_2d, start_point.y_2d)
@@ -295,8 +291,6 @@ class Face {
 			}
 		}
 
-		// console.log('shape points', shape_points)
-
 		if (shape_points.length > 0) {
 			shape.moveTo(shape_points[0][0], shape_points[0][1])
 			for (let i = 1; i < shape_points.length; i++) {
@@ -305,16 +299,16 @@ class Face {
 		}
 
 		const geometry = new THREE.ShapeGeometry(shape)
-		const material = new THREE.MeshBasicMaterial({
-			color: 0x00af00,
+		const material = new THREE.MeshStandardMaterial({
+			color: 0xc0c0c0,
 			side: THREE.DoubleSide,
 			transparent: true,
-			opacity: 0.5,
+			opacity: 0.3,
 			depthWrite: false,
-			depthTest: false,
-			polygonOffset: true,
-			polygonOffsetFactor: 1,
-			polygonOffsetUnits: 1
+			depthTest: false
+			// polygonOffset: true,
+			// polygonOffsetFactor: 2,
+			// polygonOffsetUnits: 1
 		})
 
 		let { origin, primary, secondary, tertiary } = this.real_plane.plane
@@ -322,7 +316,6 @@ class Face {
 		primary = new THREE.Vector3(primary.x, primary.y, primary.z)
 		secondary = new THREE.Vector3(secondary.x, secondary.y, secondary.z)
 		tertiary = new THREE.Vector3(tertiary.x, tertiary.y, tertiary.z)
-		// console.log('origin', origin, primary, secondary)
 
 		// we need to rotate properly
 		const m = new THREE.Matrix4()
@@ -449,7 +442,7 @@ class Arc {
 
 		this.defaultMaterial = new LineMaterial({
 			color: '#000000',
-			linewidth: 5.0,
+			linewidth: (this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio),
 			depthTest: false,
 			transparent: true,
 			dashed: false,
@@ -482,7 +475,7 @@ class Plane {
 
 		this.fillColor = '#525292'
 		this.strokeColor = '#42a7eb'
-		this.lineWidth = 8.0
+		this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio
 		this.material = new THREE.MeshStandardMaterial({
 			color: this.fillColor,
 			side: THREE.DoubleSide,
