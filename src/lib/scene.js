@@ -91,6 +91,12 @@ class Sketch {
 			let newFace = new Face(face, this.real_plane, name)
 			newFace.addTo(this.group)
 		}
+
+		console.log('constraints:', real_sketch.constraints)
+		for (let [id, constraint] of Object.entries(real_sketch.constraints)) {
+			let constraint2 = new Constraint(name, constraint, name)
+			constraint2.addTo(this.group)
+		}
 	}
 
 	addTo(object) {
@@ -139,6 +145,23 @@ class Point {
 
 	removeFrom(object) {
 		object.remove(this.mesh)
+	}
+}
+
+class Constraint {
+	constructor(name, original_constraint, parent) {
+		this.parent = parent
+		this.original_constraint = original_constraint
+		this.name = name
+
+		// console.log('A constraint:', name, original_constraint)
+
+		if (original_constraint.type === 'CircleDiameter') {
+			console.log('Circ diam')
+		}
+	}
+	addTo(object) {
+		// object.add(this.mesh)
 	}
 }
 
@@ -705,6 +728,8 @@ class Plane {
 }
 
 export const createScene = (el) => {
+	console.log('in create scene', el)
+
 	element = el
 	const clock = new THREE.Clock()
 	scene = new THREE.Scene()
@@ -821,6 +846,11 @@ export const createScene = (el) => {
 }
 
 export const setRealization = (realization) => {
+	if (!element) {
+		console.log('element is not set!', element, renderer)
+		return
+	}
+
 	// console.log('Inside Set Realization: ', realization)
 	// console.log('Points: ', realization.sketches['Sketch 1'][0])
 
@@ -841,19 +871,13 @@ export const setRealization = (realization) => {
 		planes[name] = new Plane(name, plane)
 		planes[name].addTo(scene)
 	}
-
-	// create a new point for each point in the realization
 	for (const [name, point] of Object.entries(realization.points)) {
-		// let p2d = realization.points[name]
 		points[name] = new Point(name, point, {}, (parent = null))
 		points[name].addTo(scene)
 	}
-
 	for (const [name, sketch] of Object.entries(realization.sketches)) {
 		let unsplit = sketch[0]
 		let split = sketch[1]
-		// console.log('Name', name, 'sketch', split.points, unsplit.points)
-
 		let plane_name = sketch[0].plane_name
 		let real_plane = realization.planes[plane_name]
 		sketches[name] = new Sketch(name, split, real_plane)

@@ -340,18 +340,26 @@ impl Sketch {
     }
 
     pub fn add_segment_length_constraint(&mut self, segment_id: u64, length: f64) -> u64 {
-        let constraint = Constraint::SegmentLength {
+        let mut constraint = Constraint::SegmentLength {
             segment_id,
             length,
             x_offset: 0.0,
             y_offset: 0.0,
             kp: 2.0,
             kd: 0.3,
+            error: 0.0,
         };
 
         let id = self.highest_constraint_id + 1;
         self.constraints.insert(id, constraint);
         self.highest_constraint_id += 1;
+
+        let err = self.constraint_error(id);
+        let c = self.constraints.get_mut(&id).unwrap();
+        if let Constraint::SegmentLength { error, .. } = c {
+            *error = err;
+        }
+
         id
     }
 
@@ -383,11 +391,19 @@ impl Sketch {
             y_offset: 0.0,
             kp: 2.0,
             kd: 0.3,
+            error: 0.0,
         };
 
         let id = self.highest_constraint_id + 1;
         self.constraints.insert(id, constraint);
         self.highest_constraint_id += 1;
+
+        let err = self.constraint_error(id);
+        let c = self.constraints.get_mut(&id).unwrap();
+        if let Constraint::SegmentAngle { error, .. } = c {
+            *error = err;
+        }
+
         id
     }
 
@@ -400,11 +416,19 @@ impl Sketch {
             y_offset: 0.5,
             kp: 2.0,
             kd: 0.3,
+            error: 0.0,
         };
 
         let id = self.highest_constraint_id + 1;
         self.constraints.insert(id, constraint);
         self.highest_constraint_id += 1;
+
+        let err = self.constraint_error(id);
+        let c = self.constraints.get_mut(&id).unwrap();
+        if let Constraint::CircleDiameter { error, .. } = c {
+            *error = err;
+        }
+
         id
     }
 
@@ -414,11 +438,19 @@ impl Sketch {
             segment_b_id,
             kp: 2.0,
             kd: 0.3,
+            error: 0.0,
         };
 
         let id = self.highest_constraint_id + 1;
         self.constraints.insert(id, constraint);
         self.highest_constraint_id += 1;
+
+        let err = self.constraint_error(id);
+        let c = self.constraints.get_mut(&id).unwrap();
+        if let Constraint::SegmentsEqual { error, .. } = c {
+            *error = err;
+        }
+
         id
     }
 
@@ -640,6 +672,7 @@ impl Sketch {
                 segment_b_id,
                 kp,
                 kd,
+                ..
             } => {
                 let a = self.line_segments.get(&segment_a_id).unwrap();
                 let b = self.line_segments.get(&segment_b_id).unwrap();
@@ -1501,6 +1534,7 @@ pub enum Constraint {
         y_offset: f64,
         kp: f64, // kp is the proportional gain, the spring constant
         kd: f64, // kd is the derivative gain, the damping constant
+        error: f64,
     },
     SegmentAngle {
         segment_id: u64,
@@ -1509,6 +1543,7 @@ pub enum Constraint {
         y_offset: f64,
         kp: f64,
         kd: f64,
+        error: f64,
     },
     CircleDiameter {
         circle_id: u64,
@@ -1518,12 +1553,14 @@ pub enum Constraint {
         y_offset: f64,
         kp: f64,
         kd: f64,
+        error: f64,
     },
     SegmentsEqual {
         segment_a_id: u64,
         segment_b_id: u64,
         kp: f64,
         kd: f64,
+        error: f64,
     },
 }
 

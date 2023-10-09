@@ -1,18 +1,19 @@
 <script>
-	export let realization;
-	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
-	import { createScene, setRealization } from '$lib/scene.js';
+	export let realization
+	import { onMount } from 'svelte'
+	import { browser } from '$app/environment'
+	import { createScene, setRealization } from '$lib/scene.js'
 
-	let el;
+	let el
 	if (browser) {
 		onMount(async () => {
-			createScene(el);
-		});
+			console.log('onMount', el)
+			createScene(el)
+		})
 	}
 
-	$: if (realization && realization.planes) {
-		setRealization(realization);
+	$: if (realization && realization.planes && el) {
+		setRealization(realization)
 	}
 </script>
 
