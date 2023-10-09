@@ -12,6 +12,9 @@ let camera, scene, renderer, controls
 const planes = {}
 const points = {}
 const sketches = {}
+const circles = {}
+const arcs = {}
+const faces = {}
 
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2(-1.0, -1.0)
@@ -79,16 +82,21 @@ class Sketch {
 
 		for (let [circle_id, circle] of Object.entries(this.circles)) {
 			let newCircle = new Circle(circle_id, circle, this.real_plane, name)
+			let extendedKey = `${name}:${circle_id}`
+			circles[extendedKey] = newCircle
 			newCircle.addTo(this.group)
 		}
 
 		for (let [arc_id, arc] of Object.entries(this.arcs)) {
 			let newArc = new Arc(arc_id, arc, this.real_plane, name)
+			let extendedKey = `${name}:${arc_id}`
+			arcs[extendedKey] = newArc
 			newArc.addTo(this.group)
 		}
 
 		for (let face of real_sketch.faces) {
 			let newFace = new Face(face, this.real_plane, name)
+			// TODO: add to faces dict?
 			newFace.addTo(this.group)
 		}
 
@@ -154,14 +162,69 @@ class Constraint {
 		this.original_constraint = original_constraint
 		this.name = name
 
-		// console.log('A constraint:', name, original_constraint)
-
 		if (original_constraint.type === 'CircleDiameter') {
-			console.log('Circ diam')
+			// console.log('Circ diam', original_constraint)
+
+			// we need an arrow that points to the center of the circle
+			// with a text label that says the diameter
+			// colored so that bigger error = more red
+
+			let extendedKey = `${parent}:${original_constraint.circle_id}`
+			let circle = circles[extendedKey]
+			let plane = circle.real_plane.plane
+			// console.log('circle', circle)
+			// console.log('plane', plane)
+
+			let center_point = points[`${parent}:${circle.original_circle.center}`]
+			// console.log(center_point)
+
+			let x_component =
+				Math.cos(original_constraint.angle_offset) *
+				(circle.original_circle.radius + original_constraint.r_offset)
+			let y_component =
+				Math.sin(original_constraint.angle_offset) *
+				(circle.original_circle.radius + original_constraint.r_offset)
+
+			let end_point = new THREE.Vector3(center_point.x, center_point.y, center_point.z)
+			let primary = new THREE.Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
+			let secondary = new THREE.Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
+			let tertiary = new THREE.Vector3(plane.tertiary.x, plane.tertiary.y, plane.tertiary.z)
+
+			end_point.addScaledVector(primary, x_component)
+			end_point.addScaledVector(secondary, y_component)
+			// console.log('end_point', end_point, original_constraint.diameter)
+
+			const label = new Text()
+			label.text = original_constraint.diameter.toFixed(2)
+			label.fontSize = 0.05
+			label.position.x = end_point.x
+			label.position.y = end_point.y
+			label.position.z = end_point.z
+
+			let r_val = Math.min(1, Math.abs(original_constraint.error) * 4)
+			console.log('r val', r_val)
+			label.color = new THREE.Color(r_val, 0, 0)
+
+			label.anchorX = 'center'
+			label.anchorY = 'middle'
+			label.depthOffset = -1
+			label.sync()
+			this.label = label
+
+			// we need to rotate the text properly
+			const m = new THREE.Matrix4()
+			m.makeBasis(primary, secondary, tertiary)
+			const ea = new THREE.Euler(0, 0, 0, 'XYZ')
+			ea.setFromRotationMatrix(m, 'XYZ')
+			this.label.rotation.x = ea.x
+			this.label.rotation.y = ea.y
+			this.label.rotation.z = ea.z
 		}
 	}
 	addTo(object) {
-		// object.add(this.mesh)
+		if (this.label) {
+			object.add(this.label)
+		}
 	}
 }
 
@@ -209,7 +272,9 @@ class LineSegment {
 }
 
 class Circle {
-	constructor(name, { center, radius }, real_plane, parent) {
+	constructor(name, original_circle, real_plane, parent) {
+		this.original_circle = original_circle
+		let { radius, center } = original_circle
 		this.name = name
 		this.real_plane = real_plane
 		let plane = real_plane.plane
@@ -685,6 +750,7 @@ class Plane {
 		m.makeBasis(primary, secondary, tertiary)
 		const ea = new THREE.Euler(0, 0, 0, 'XYZ')
 		ea.setFromRotationMatrix(m, 'XYZ')
+		this.ea = ea
 		label.rotation.x = ea.x
 		label.rotation.y = ea.y
 		label.rotation.z = ea.z
@@ -728,7 +794,7 @@ class Plane {
 }
 
 export const createScene = (el) => {
-	console.log('in create scene', el)
+	// console.log('in create scene', el)
 
 	element = el
 	const clock = new THREE.Clock()
@@ -880,7 +946,7 @@ export const setRealization = (realization) => {
 		let split = sketch[1]
 		let plane_name = sketch[0].plane_name
 		let real_plane = realization.planes[plane_name]
-		sketches[name] = new Sketch(name, split, real_plane)
+		sketches[name] = new Sketch(name, unsplit, real_plane)
 		sketches[name].addTo(scene)
 	}
 }

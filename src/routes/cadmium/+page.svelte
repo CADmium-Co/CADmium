@@ -26,6 +26,7 @@
 
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index])
+		$project_rust.compute_constraint_errors()
 		realization = JSON.parse($project_rust.get_realization(0, 1000))
 	}
 

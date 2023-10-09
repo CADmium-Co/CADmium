@@ -7,7 +7,7 @@
 	let el
 	if (browser) {
 		onMount(async () => {
-			console.log('onMount', el)
+			// console.log('onMount', el)
 			createScene(el)
 		})
 	}

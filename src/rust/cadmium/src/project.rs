@@ -34,6 +34,19 @@ impl Project {
         }
     }
 
+    pub fn compute_constraint_errors(&mut self) {
+        for workbench in self.workbenches.iter_mut() {
+            for step in workbench.history.iter_mut() {
+                match &mut step.data {
+                    StepData::Sketch { sketch, .. } => {
+                        sketch.compute_constraint_errors();
+                    }
+                    _ => {}
+                }
+            }
+        }
+    }
+
     pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> String {
         let workbench = &self.workbenches[workbench_id as usize];
         let realization = workbench.realize(max_steps);

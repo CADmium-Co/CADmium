@@ -411,9 +411,8 @@ impl Sketch {
         let constraint = Constraint::CircleDiameter {
             circle_id,
             diameter,
-            angle_offset: PI / 4.0,
-            x_offset: 0.5,
-            y_offset: 0.5,
+            angle_offset: 3.0 * PI / 4.0,
+            r_offset: 0.10,
             kp: 2.0,
             kd: 0.3,
             error: 0.0,
@@ -452,6 +451,31 @@ impl Sketch {
         }
 
         id
+    }
+
+    pub fn compute_constraint_errors(&mut self) {
+        let key_to_errors = self
+            .constraints
+            .iter()
+            .map(|(k, _v)| (*k, self.constraint_error(*k)))
+            .collect::<HashMap<_, _>>();
+        for (constraint_id, err) in key_to_errors.iter() {
+            let constraint = self.constraints.get_mut(constraint_id).unwrap();
+            match constraint {
+                Constraint::SegmentLength { error, .. } => {
+                    *error = *err;
+                }
+                Constraint::CircleDiameter { error, .. } => {
+                    *error = *err;
+                }
+                Constraint::SegmentAngle { error, .. } => {
+                    *error = *err;
+                }
+                Constraint::SegmentsEqual { error, .. } => {
+                    *error = *err;
+                }
+            }
+        }
     }
 
     pub fn constraint_error(&self, constraint_id: u64) -> f64 {
@@ -1549,8 +1573,7 @@ pub enum Constraint {
         circle_id: u64,
         diameter: f64,
         angle_offset: f64,
-        x_offset: f64,
-        y_offset: f64,
+        r_offset: f64,
         kp: f64,
         kd: f64,
         error: f64,
