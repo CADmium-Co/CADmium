@@ -4,12 +4,15 @@ import { Line2 } from 'three/addons/lines/Line2.js'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
+import { SKETCH_LINE_WIDTH } from './utils'
+
 class LineSegment {
-	constructor(name, { start, end }, parent, points, element) {
+	constructor(name, { start, end }, real_plane, parent, points, element) {
 		this.name = name
 		this.start = start
 		this.end = end
 		this.parent = parent
+		this.real_plane = real_plane
 
 		let start_point = points[`${parent}:${start}`]
 		let end_point = points[`${parent}:${end}`]
@@ -27,7 +30,8 @@ class LineSegment {
 
 		this.defaultMaterial = new LineMaterial({
 			color: '#000000',
-			linewidth: (this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio),
+			linewidth: (this.lineWidth =
+				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
 			depthTest: false,
 			transparent: true,
 			dashed: false,

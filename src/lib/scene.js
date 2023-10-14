@@ -10,12 +10,13 @@ import { Plane } from './plane.js'
 import { Sketch } from './sketch.js'
 
 let camera, scene, renderer, controls
+const sketches = {}
 const planes = {}
 const points = {}
-const sketches = {}
 const circles = {}
 const arcs = {}
 const faces = {}
+const lines = {}
 
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2(-1.0, -1.0)
@@ -52,8 +53,6 @@ const onPointerClick = (event) => {
 }
 
 export const createScene = (el) => {
-	// console.log('in create scene', el)
-
 	element = el
 	const clock = new THREE.Clock()
 	scene = new THREE.Scene()
@@ -71,17 +70,14 @@ export const createScene = (el) => {
 		1000
 	)
 
-	// camera.position.x = 7.8;
-	// camera.position.y = -25.8;
-	// camera.position.z = 8.55;
 	camera.position.x = 16.8
 	camera.position.y = -25.8
 	camera.position.z = 20.55
 	camera.up = new THREE.Vector3(0, 0, 1)
 	camera.lookAt(0, 0, 0)
 
-	// const axesHelper = new THREE.AxesHelper(5);
-	// scene.add(axesHelper);
+	// const axesHelper = new THREE.AxesHelper(5)
+	// scene.add(axesHelper)
 
 	// camera-controls
 	// const cameraControls = new CameraControls(camera, el);
@@ -204,7 +200,17 @@ export const setRealization = (realization) => {
 		let split = sketch[1]
 		let plane_name = sketch[0].plane_name
 		let real_plane = realization.planes[plane_name]
-		sketches[name] = new Sketch(name, unsplit, real_plane, points, circles, arcs, element)
+		sketches[name] = new Sketch(
+			name,
+			unsplit,
+			real_plane,
+			points,
+			lines,
+			arcs,
+			circles,
+			faces,
+			element
+		)
 		sketches[name].addTo(scene)
 	}
 }

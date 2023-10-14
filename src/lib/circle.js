@@ -4,7 +4,7 @@ import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 import { Line2 } from 'three/addons/lines/Line2.js'
 
-import { CIRCLE_TOLERANCE } from './utils'
+import { CIRCLE_TOLERANCE, SKETCH_LINE_WIDTH } from './utils'
 
 class Circle {
 	constructor(name, original_circle, real_plane, parent, points, element) {
@@ -41,7 +41,8 @@ class Circle {
 
 		this.defaultMaterial = new LineMaterial({
 			color: '#000000',
-			linewidth: 5.0,
+			linewidth: (this.lineWidth =
+				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
 			depthTest: false,
 			transparent: true,
 			dashed: false,

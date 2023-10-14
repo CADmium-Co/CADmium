@@ -343,8 +343,8 @@ impl Sketch {
         let mut constraint = Constraint::SegmentLength {
             segment_id,
             length,
-            x_offset: 0.0,
-            y_offset: 0.0,
+            normal_offset: 0.2,
+            parallel_offset: 0.0,
             kp: 2.0,
             kd: 0.3,
             error: 0.0,
@@ -412,7 +412,7 @@ impl Sketch {
             circle_id,
             diameter,
             angle_offset: 3.0 * PI / 4.0,
-            r_offset: 0.10,
+            r_offset: 0.20,
             kp: 2.0,
             kd: 0.3,
             error: 0.0,
@@ -1554,8 +1554,8 @@ pub enum Constraint {
     SegmentLength {
         segment_id: u64,
         length: f64,
-        x_offset: f64,
-        y_offset: f64,
+        normal_offset: f64,
+        parallel_offset: f64,
         kp: f64, // kp is the proportional gain, the spring constant
         kd: f64, // kd is the derivative gain, the damping constant
         error: f64,

@@ -2,6 +2,7 @@ import * as THREE from 'three'
 
 const ARC_TOLERANCE = 0.0001
 const CIRCLE_TOLERANCE = 0.0001
+const SKETCH_LINE_WIDTH = 1.0
 
 const circleToPoints = (center_point, radius) => {
 	const tolerance = ARC_TOLERANCE // in meters
@@ -54,4 +55,4 @@ const arcToPoints = (center_point, start_point, end_point, clockwise) => {
 	return shape_points
 }
 
-export { circleToPoints, arcToPoints, CIRCLE_TOLERANCE, ARC_TOLERANCE }
+export { circleToPoints, arcToPoints, CIRCLE_TOLERANCE, ARC_TOLERANCE, SKETCH_LINE_WIDTH }

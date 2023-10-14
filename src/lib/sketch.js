@@ -7,15 +7,13 @@ import { Face } from './face.js'
 import { Constraint } from './constraint.js'
 
 class Sketch {
-	constructor(name, real_sketch, real_plane, points, circles, arcs, element) {
+	constructor(name, real_sketch, real_plane, points, lines, arcs, circles, faces, element) {
 		this.name = name
 		this.real_plane = real_plane
-
 		this.points = real_sketch.points
 		this.line_segments = real_sketch.line_segments
 		this.circles = real_sketch.circles
 		this.arcs = real_sketch.arcs
-		// console.log('A whole new sketch!', real_sketch)
 		this.group = new THREE.Group()
 		for (let [point_id, point] of Object.entries(this.points)) {
 			let point_2d = real_sketch.points_2d[point_id]
@@ -29,7 +27,16 @@ class Sketch {
 		}
 
 		for (let [line_segment_id, line_segment] of Object.entries(this.line_segments)) {
-			let newLineSegment = new LineSegment(line_segment_id, line_segment, name, points, element)
+			let newLineSegment = new LineSegment(
+				line_segment_id,
+				line_segment,
+				this.real_plane,
+				name,
+				points,
+				element
+			)
+			let extendedKey = `${name}:${line_segment_id}`
+			lines[extendedKey] = newLineSegment
 			newLineSegment.addTo(this.group)
 		}
 
@@ -53,9 +60,17 @@ class Sketch {
 			newFace.addTo(this.group)
 		}
 
-		console.log('constraints:', real_sketch.constraints)
+		// console.log('constraints:', real_sketch.constraints)
 		for (let [id, constraint] of Object.entries(real_sketch.constraints)) {
-			let constraint2 = new Constraint(name, constraint, name, points, circles)
+			let constraint2 = new Constraint(
+				name,
+				constraint,
+				this.real_plane,
+				name,
+				points,
+				lines,
+				circles
+			)
 			constraint2.addTo(this.group)
 		}
 	}

@@ -4,7 +4,7 @@ import { Line2 } from 'three/addons/lines/Line2.js'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
-import { ARC_TOLERANCE } from './utils'
+import { ARC_TOLERANCE, SKETCH_LINE_WIDTH } from './utils'
 
 class Arc {
 	constructor(name, { center, start, end, clockwise }, real_plane, parent, points, element) {
@@ -59,7 +59,8 @@ class Arc {
 
 		this.defaultMaterial = new LineMaterial({
 			color: '#000000',
-			linewidth: (this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio),
+			linewidth: (this.lineWidth =
+				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
 			depthTest: false,
 			transparent: true,
 			dashed: false,
