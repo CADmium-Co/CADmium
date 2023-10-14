@@ -77,11 +77,15 @@ class Constraint {
 			const dir = difference.clone().normalize()
 			const normal = dir.clone().cross(this.tertiary)
 
+			const edge_buffer = 0.01
+
 			const offset_midpoint = midpoint
 				.clone()
 				.addScaledVector(normal, original_constraint.normal_offset)
 
-			const edge_0_end = start.clone().addScaledVector(normal, original_constraint.normal_offset)
+			const edge_0_end = start
+				.clone()
+				.addScaledVector(normal, original_constraint.normal_offset + edge_buffer)
 			const geometry_edge_0 = new THREE.BufferGeometry().setFromPoints([start, edge_0_end])
 			const edge_0 = new THREE.Line(
 				geometry_edge_0,
@@ -89,7 +93,9 @@ class Constraint {
 			)
 			this.group.add(edge_0)
 
-			const edge_1_end = end.clone().addScaledVector(normal, original_constraint.normal_offset)
+			const edge_1_end = end
+				.clone()
+				.addScaledVector(normal, original_constraint.normal_offset + edge_buffer)
 			const geometry_edge_1 = new THREE.BufferGeometry().setFromPoints([end, edge_1_end])
 			const edge_1 = new THREE.Line(
 				geometry_edge_1,
@@ -111,10 +117,12 @@ class Constraint {
 			this.group.add(this.label)
 
 			// const arrow_len = end_point.distanceTo(start_point)
+			let tiny_delta_size = 0.05
+			let tiny_delta = dir.clone().multiplyScalar(tiny_delta_size)
 			const arrow_0 = new THREE.ArrowHelper(
 				dir.clone().negate(),
-				offset_midpoint,
-				difference.length() / 2,
+				offset_midpoint.clone().sub(tiny_delta),
+				difference.length() / 2 - tiny_delta_size,
 				0x000000,
 				0.05,
 				0.025
@@ -123,8 +131,8 @@ class Constraint {
 
 			const arrow_1 = new THREE.ArrowHelper(
 				dir,
-				offset_midpoint,
-				difference.length() / 2,
+				offset_midpoint.clone().add(tiny_delta),
+				difference.length() / 2 - tiny_delta_size,
 				0x000000,
 				0.05,
 				0.025
