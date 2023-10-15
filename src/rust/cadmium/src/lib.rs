@@ -1,6 +1,7 @@
 #![allow(dead_code, unused)]
 use wasm_bindgen::prelude::*;
 
+pub mod extrusion;
 pub mod project;
 pub mod sketch;
 

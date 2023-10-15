@@ -1,4 +1,7 @@
-use crate::sketch::{Constraint, Face, Point2, Sketch};
+use crate::{
+    extrusion::Extrusion,
+    sketch::{Constraint, Face, Point2, Sketch},
+};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -45,6 +48,15 @@ impl Project {
                 }
             }
         }
+    }
+
+    pub fn get_workbench_mut(&mut self, name: &str) -> Option<&mut Workbench> {
+        for workbench in self.workbenches.iter_mut() {
+            if workbench.name == name {
+                return Some(workbench);
+            }
+        }
+        None
     }
 
     pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> String {
@@ -222,12 +234,9 @@ impl Workbench {
         self.history.push(Step::new_sketch(name, plane_name));
     }
 
-    // pub fn add_extrusion(&mut self, name: &str, sketch_name: &str, height: f64) {
-    //     let sketch = self.get_sketch_mut(sketch_name).unwrap();
-    //     // let mut plane = Plane::top();
-    //     // plane.origin.z = height;
-    //     // self.history.push(Step::new_plane(name, plane));
-    // }
+    pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) {
+        self.history.push(Step::new_extrusion(name, extrusion));
+    }
 
     pub fn realize(&self, max_steps: u64) -> Realization {
         let mut realized = Realization::new();
@@ -341,6 +350,14 @@ impl Step {
             },
         }
     }
+
+    pub fn new_extrusion(name: &str, extrusion: Extrusion) -> Self {
+        Step {
+            name: name.to_owned(),
+            suppressed: false,
+            data: StepData::Extrusion { extrusion },
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -359,6 +376,9 @@ pub enum StepData {
         width: f64,
         height: f64,
         sketch: Sketch,
+    },
+    Extrusion {
+        extrusion: Extrusion,
     },
 }
 
@@ -673,5 +693,11 @@ mod tests {
         println!("As json: {}", msg.as_json());
 
         // println!("{:?}", res);
+    }
+
+    #[test]
+    fn one_extrusion() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
     }
 }
