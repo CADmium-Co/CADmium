@@ -343,7 +343,7 @@ impl Sketch {
         let mut constraint = Constraint::SegmentLength {
             segment_id,
             length,
-            normal_offset: 0.2,
+            normal_offset: 0.15,
             parallel_offset: 0.0,
             kp: 2.0,
             kd: 0.3,

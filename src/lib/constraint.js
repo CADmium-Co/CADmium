@@ -63,7 +63,7 @@ class Constraint {
 		}
 
 		if (original_constraint.type === 'SegmentLength') {
-			console.log('og', original_constraint)
+			// console.log('og', original_constraint)
 			const extendedKey = `${name}:${original_constraint.segment_id}`
 			const line = lines[extendedKey]
 			const start_point = points[`${name}:${line.start}`]

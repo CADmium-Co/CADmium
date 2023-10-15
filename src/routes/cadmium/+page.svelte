@@ -10,6 +10,7 @@
 	let realization = {}
 
 	let current_step = {}
+	let main_canvas
 
 	if (browser) {
 		onMount(() => {
@@ -165,15 +166,18 @@
 		{ alt: 'plane', src: '/actions/plane_min.svg' },
 		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: step_sketch },
 		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solve_sketch }
-		// { alt: 'hole', src: '/actions/hole_min.svg' },
-		// { alt: 'fillet', src: '/actions/fillet_min.svg' },
-		// { alt: 'revolve', src: '/actions/revolve_min.svg' }
 	]
 
 	let icon_mapping = {
 		Sketch: '/actions/sketch_min.svg',
 		Plane: '/actions/plane_min.svg',
 		Point: '/actions/point_min_icon.svg'
+	}
+
+	const history_item_onclick = (item) => {
+		if (item?.data?.type === 'Plane') {
+			main_canvas.setCameraViewPlane2(item)
+		}
 	}
 </script>
 
@@ -213,7 +217,17 @@
 			<div class="font-bold text-sm px-2 py-2">History ({$workbench.history.length})</div>
 			<div>
 				{#each $workbench.history as item}
-					<div class="flex items-center text-sm">
+					<div
+						class="flex items-center text-sm hover:bg-sky-200"
+						on:click={() => {
+							history_item_onclick(item)
+						}}
+						on:keypress={() => {
+							history_item_onclick(item)
+						}}
+						role="button"
+						tabindex="0"
+					>
 						<img class="h-8 w-8 px-1" src={icon_mapping[item.data.type]} alt={item.name} />
 						{item['name']}
 					</div>
@@ -222,7 +236,7 @@
 		</div>
 	</aside>
 	<main class="h-[100%]">
-		<MainCanvas {realization} />
+		<MainCanvas {realization} bind:this={main_canvas} />
 	</main>
 	<footer class="col-span-2">Footer</footer>
 </div>

@@ -2,7 +2,7 @@
 	export let realization
 	import { onMount } from 'svelte'
 	import { browser } from '$app/environment'
-	import { createScene, setRealization } from '$lib/scene.js'
+	import { createScene, setRealization, setCameraViewPlane } from '$lib/scene.js'
 
 	let el
 	if (browser) {
@@ -14,6 +14,11 @@
 
 	$: if (realization && realization.planes && el) {
 		setRealization(realization)
+	}
+
+	export function setCameraViewPlane2(plane) {
+		console.log('Setting view plane: ', plane)
+		setCameraViewPlane(plane)
 	}
 </script>
 

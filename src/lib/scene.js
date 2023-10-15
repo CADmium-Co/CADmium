@@ -4,6 +4,7 @@ import { TrackballControls } from 'three/addons/controls/TrackballControls.js'
 // import CameraControls from 'camera-controls';
 // CameraControls.install({ THREE: THREE });
 import { Text } from 'troika-three-text'
+import gsap from 'gsap'
 
 import { Point } from './point.js'
 import { Plane } from './plane.js'
@@ -50,6 +51,36 @@ const onPointerClick = (event) => {
 			selected.push({ type: 'plane', name: plane_name, object: plane })
 		}
 	}
+}
+
+export const setCameraViewPlane = (plane) => {
+	const secondary = plane.data.plane.secondary
+	let normal = plane.data.plane.tertiary
+	normal = new THREE.Vector3(normal.x, normal.y, normal.z)
+	normal.multiplyScalar(20)
+
+	// camera.position.x = normal.x
+	// camera.position.y = normal.y
+	// camera.position.z = normal.z
+	// camera.lookAt(0, 0, 0)
+	// camera.up = new THREE.Vector3(secondary.x, secondary.y, secondary.z)
+
+	gsap.to(camera.position, {
+		x: normal.x,
+		y: normal.y,
+		z: normal.z,
+		duration: 1,
+		onUpdate: function () {
+			camera.lookAt(0, 0, 0)
+		}
+	})
+
+	gsap.to(camera.up, {
+		x: secondary.x,
+		y: secondary.y,
+		z: secondary.z,
+		duration: 1
+	})
 }
 
 export const createScene = (el) => {

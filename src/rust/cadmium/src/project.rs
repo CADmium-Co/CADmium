@@ -194,7 +194,7 @@ impl Workbench {
         // Rounded square in lower right
         let shrink = 0.4;
         let offset_x = 0.1;
-        let offset_y = -0.5;
+        let offset_y = -0.70;
         let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
         let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
         let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
