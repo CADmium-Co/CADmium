@@ -60,9 +60,7 @@ class Constraint {
 
 			this.group.add(this.label)
 			this.group.add(arrow)
-		}
-
-		if (original_constraint.type === 'SegmentLength') {
+		} else if (original_constraint.type === 'SegmentLength') {
 			// console.log('og', original_constraint)
 			const extendedKey = `${name}:${original_constraint.segment_id}`
 			const line = lines[extendedKey]
@@ -138,6 +136,41 @@ class Constraint {
 				0.025
 			)
 			this.group.add(arrow_1)
+		} else if (original_constraint.type === 'SegmentAngle') {
+			console.log('SA', original_constraint)
+			const extendedKey = `${name}:${original_constraint.segment_id}`
+			const line = lines[extendedKey]
+			const start_point = points[`${name}:${line.start}`]
+			const end_point = points[`${name}:${line.end}`]
+
+			const start = new THREE.Vector3(start_point.x, start_point.y, start_point.z)
+			const end = new THREE.Vector3(end_point.x, end_point.y, end_point.z)
+			const difference = end.clone().sub(start)
+			const midpoint = start.clone().addScaledVector(difference, 0.5)
+
+			let image = '/actions/horizontal.svg'
+
+			let tex = new THREE.TextureLoader().load(image)
+			tex.center = new THREE.Vector2(0.5, 0.5)
+			tex.rotation = original_constraint.angle
+
+			const geom = new THREE.BufferGeometry()
+			const vertices = new Float32Array([midpoint.x, midpoint.y, midpoint.z])
+			geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+			const material = new THREE.PointsMaterial({
+				size: 40.0,
+				map: tex,
+				color: 0xffffff,
+				// opacity: 1.0,
+				transparent: false,
+				alphaTest: 0.5
+			})
+			// material.depthTest = true
+			const mesh = new THREE.Points(geom, material)
+			mesh.renderOrder = 0
+			// mesh.setRotationFromAxisAngle(this.tertiary, original_constraint.angle_offset)
+
+			this.group.add(mesh)
 		}
 
 		// console.log(original_constraint.type)
