@@ -31,7 +31,7 @@ class Plane {
 		this.lineMaterial = new LineMaterial({
 			color: this.strokeColor,
 			linewidth: this.lineWidth,
-			depthTest: false,
+			depthTest: true,
 			transparent: true,
 			dashed: false,
 			resolution: new THREE.Vector2(
@@ -54,7 +54,7 @@ class Plane {
 		this.mouseOverLineMaterial = new LineMaterial({
 			color: this.mouseOverStrokeColor,
 			linewidth: this.lineWidth,
-			depthTest: false,
+			depthTest: true,
 			transparent: true,
 			dashed: false,
 			resolution: new THREE.Vector2(
@@ -77,7 +77,7 @@ class Plane {
 		this.selectedLineMaterial = new LineMaterial({
 			color: this.selectedStrokeColor,
 			linewidth: this.lineWidth,
-			depthTest: false,
+			depthTest: true,
 			transparent: true,
 			dashed: false,
 			resolution: new THREE.Vector2(

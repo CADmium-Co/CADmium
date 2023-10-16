@@ -38,6 +38,7 @@ class Arc {
 		const segment_angle = (2 * Math.PI) / n
 		const segment_length = radius * segment_angle
 
+		// TODO: doesn't this only work with clockwise arcs?!
 		const line_vertices = []
 		line_vertices.push(start_point.x, start_point.y, start_point.z)
 		for (let i = 1; i <= n; i++) {
@@ -61,7 +62,7 @@ class Arc {
 			color: '#000000',
 			linewidth: (this.lineWidth =
 				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
-			depthTest: false,
+			depthTest: true,
 			transparent: true,
 			dashed: false,
 			resolution: new THREE.Vector2(

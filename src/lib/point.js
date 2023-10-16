@@ -25,7 +25,7 @@ class Point {
 			transparent: true,
 			sizeAttenuation: false
 		})
-		material.depthTest = false
+		material.depthTest = parent ? true : false
 		const mesh = new THREE.Points(geom, material)
 		this.mesh = mesh
 		this.mesh.renderOrder = 2

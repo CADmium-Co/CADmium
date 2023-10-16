@@ -43,7 +43,7 @@ class Circle {
 			color: '#000000',
 			linewidth: (this.lineWidth =
 				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
-			depthTest: false,
+			depthTest: true,
 			transparent: true,
 			dashed: false,
 			resolution: new THREE.Vector2(

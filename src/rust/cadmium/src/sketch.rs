@@ -171,42 +171,13 @@ impl Sketch {
     }
 
     pub fn arc_to_points(&self, arc: &Arc2) -> Vec<Point2> {
+        // println!("An arc to points: {:?}", arc);
         let center = self.points.get(&arc.center).unwrap();
         let start = self.points.get(&arc.start).unwrap();
         let end = self.points.get(&arc.end).unwrap();
+        let clockwise = arc.clockwise;
 
-        let r = (center.x - start.x).hypot(center.y - start.y);
-
-        let start_angle = (start.y - center.y).atan2(start.x - center.x);
-        let end_angle = (end.y - center.y).atan2(end.x - center.x);
-
-        let angle_increment = match arc.clockwise {
-            false => 10.0 * PI / 180.0,
-            true => -10.0 * PI / 180.0,
-        };
-
-        let mut lines: Vec<Point2> = vec![];
-        lines.push(start.clone());
-
-        for i in 1..100 {
-            let current_angle = i as f64 * angle_increment + start_angle;
-            let x = center.x + r * current_angle.cos();
-            let y = center.y + r * current_angle.sin();
-            let new_point = Point2::new(x, y);
-
-            let prev_point = lines.last().unwrap();
-
-            let completion_angle = angle(prev_point, &new_point, end);
-
-            if completion_angle <= 190.0 * PI / 180.0 && completion_angle >= 170.0 * PI / 180.0 {
-                lines.push(end.clone());
-                break;
-            } else {
-                lines.push(new_point);
-            }
-        }
-
-        lines
+        arc_to_points(start, end, center, clockwise)
     }
 
     pub fn signed_area(&self, ring: &Ring) -> f64 {
@@ -1548,6 +1519,45 @@ impl Sketch {
     }
 }
 
+pub fn arc_to_points(
+    start: &Point2,
+    end: &Point2,
+    center: &Point2,
+    clockwise: bool,
+) -> Vec<Point2> {
+    let r = (center.x - start.x).hypot(center.y - start.y);
+    let circle_tolerance: f64 = 0.001; // in meters
+    let k = circle_tolerance / r;
+    let mut n = (PI / (2.0 * k).sqrt()).ceil() as i64;
+
+    let segment_angle = (2.0 * PI) / n as f64;
+    let segment_length = r * segment_angle;
+    let start_angle = (start.y - center.y).atan2(start.x - center.x);
+
+    let mut line_vertices: Vec<Point2> = vec![];
+    line_vertices.push(Point2::new(start.x, start.y));
+
+    if clockwise {
+        n = -n;
+    }
+
+    for i in 1..n.abs() {
+        let theta = ((2.0 * PI) / n as f64) * i as f64 + start_angle;
+        let x_component = r * theta.cos();
+        let y_component = r * theta.sin();
+        let point = Point2::new(x_component + center.x, y_component + center.y);
+        line_vertices.push(point.clone());
+
+        let distance_to_end = point.distance_to(end);
+        if (distance_to_end <= segment_length) {
+            line_vertices.push(Point2::new(end.x, end.y));
+            break;
+        }
+    }
+
+    line_vertices
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Constraint {
@@ -1659,8 +1669,8 @@ impl Point2 {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Vector2 {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl Vector2 {
@@ -1759,8 +1769,8 @@ impl Ring {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Face {
-    exterior: Ring,
-    holes: Vec<Ring>,
+    pub exterior: Ring,
+    pub holes: Vec<Ring>,
 }
 
 impl Face {
@@ -1843,7 +1853,7 @@ mod tests {
         let arc = sketch.arcs.get(&arc_id).unwrap();
 
         let points = sketch.arc_to_points(&arc);
-        assert_eq!(points.len(), 9);
+        assert_eq!(points.len(), 19);
     }
 
     #[test]
@@ -1856,7 +1866,7 @@ mod tests {
         let arc = sketch.arcs.get(&arc_id).unwrap();
 
         let points = sketch.arc_to_points(&arc);
-        assert_eq!(points.len(), 9);
+        assert_eq!(points.len(), 19);
 
         for point in points {
             println!("Point: ({}, {})", point.x, point.y);
@@ -1873,11 +1883,11 @@ mod tests {
         let arc = sketch.arcs.get(&arc_id).unwrap();
 
         let points = sketch.arc_to_points(&arc);
-        assert_eq!(points.len(), 18);
+        assert_eq!(points.len(), 37);
     }
 
     #[test]
-    fn arc_to_points_270() {
+    fn arc_to_points70() {
         let mut sketch = Sketch::new();
         let center = sketch.add_point(0.0, 0.0);
         let start = sketch.add_point(1.0, 0.0);
@@ -1886,7 +1896,7 @@ mod tests {
         let arc = sketch.arcs.get(&arc_id).unwrap();
 
         let points = sketch.arc_to_points(&arc);
-        assert_eq!(points.len(), 27);
+        assert_eq!(points.len(), 55);
     }
 
     #[test]

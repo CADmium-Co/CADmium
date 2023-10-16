@@ -137,7 +137,7 @@ class Constraint {
 			)
 			this.group.add(arrow_1)
 		} else if (original_constraint.type === 'SegmentAngle') {
-			console.log('SA', original_constraint)
+			// console.log('SA', original_constraint)
 			const extendedKey = `${name}:${original_constraint.segment_id}`
 			const line = lines[extendedKey]
 			const start_point = points[`${name}:${line.start}`]
@@ -196,7 +196,7 @@ class Constraint {
 		this.label.fontSize = 0.05
 		this.label.anchorX = 'center'
 		this.label.anchorY = 'middle'
-		this.label.depthOffset = -1
+		// this.label.depthOffset = -1
 		this.label.rotation.x = this.ea.x
 		this.label.rotation.y = this.ea.y
 		this.label.rotation.z = this.ea.z

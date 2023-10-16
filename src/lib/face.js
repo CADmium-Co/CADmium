@@ -74,7 +74,7 @@ class Face {
 			transparent: true,
 			opacity: 0.3,
 			depthWrite: false,
-			depthTest: false
+			depthTest: true
 			// polygonOffset: true,
 			// polygonOffsetFactor: 2,
 			// polygonOffsetUnits: 1

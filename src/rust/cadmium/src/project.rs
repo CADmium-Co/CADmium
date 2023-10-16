@@ -1,9 +1,9 @@
 use crate::{
-    extrusion::Extrusion,
+    extrusion::{Extrusion, Solid},
     sketch::{Constraint, Face, Point2, Sketch},
 };
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{collections::HashMap, hash::Hash};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Project {
@@ -171,7 +171,7 @@ impl Workbench {
         self.history.push(Step::new_plane("Top", Plane::top()));
         self.history.push(Step::new_plane("Front", Plane::front()));
         self.history.push(Step::new_plane("Right", Plane::right()));
-        self.history.push(Step::new_sketch("Sketch 1", "Front"));
+        self.history.push(Step::new_sketch("Sketch 1", "Top"));
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
@@ -194,14 +194,14 @@ impl Workbench {
         sketch.add_segment_length_constraint(seg_3, 0.52);
 
         // Simple circle in lower left
-        let p4 = sketch.add_point(-0.25, -0.25);
-        sketch.add_circle(p4, 0.2);
+        // let p4 = sketch.add_point(-0.25, -0.25);
+        // sketch.add_circle(p4, 0.2);
 
-        // intersecting circle!
-        let p5 = sketch.add_point(-0.5, -0.25);
-        let c2 = sketch.add_circle(p5, 0.2);
+        // // intersecting circle!
+        // let p5 = sketch.add_point(-0.5, -0.25);
+        // let c2 = sketch.add_circle(p5, 0.2);
 
-        sketch.add_circle_diameter_constraint(c2, 0.6);
+        // sketch.add_circle_diameter_constraint(c2, 0.6);
 
         // Rounded square in lower right
         let shrink = 0.4;
@@ -228,6 +228,17 @@ impl Workbench {
         sketch.add_arc(k, f, g, false);
         sketch.add_segment(g, h);
         sketch.add_arc(l, h, a, false);
+
+        self.add_extrusion(
+            "Ext 1",
+            Extrusion {
+                sketch_name: "Sketch 1".to_owned(),
+                face_ids: vec![0, 1],
+                length: 0.25,
+                offset: 0.0,
+                direction: Vector3::new(0.0, 0.0, 1.0),
+            },
+        );
     }
 
     pub fn add_sketch(&mut self, name: &str, plane_name: &str) {
@@ -243,7 +254,7 @@ impl Workbench {
         let max_steps = max_steps as usize; // just coerce the type once
 
         for (step_n, step) in self.history.iter().enumerate() {
-            // println!("{:?}", step);
+            // println!("{:?}", step.name);
             if step_n >= max_steps {
                 break;
             }
@@ -281,6 +292,15 @@ impl Workbench {
                         ),
                     );
                 }
+                StepData::Extrusion { extrusion } => {
+                    let (_sketch, split_sketch) = &realized.sketches[&extrusion.sketch_name];
+                    let plane = &realized.planes[&split_sketch.plane_name];
+                    let solids =
+                        Solid::from_extrusion(step.name.clone(), plane, split_sketch, extrusion);
+                    for (name, solid) in solids {
+                        realized.solids.insert(name, solid);
+                    }
+                }
                 _ => println!("Unknown step type"),
             }
         }
@@ -296,6 +316,7 @@ pub struct Realization {
     pub planes: HashMap<String, RealPlane>,
     pub points: HashMap<String, Point3>,
     pub sketches: HashMap<String, (RealSketch, RealSketch)>,
+    pub solids: HashMap<String, Solid>,
 }
 
 impl Realization {
@@ -304,6 +325,7 @@ impl Realization {
             planes: HashMap::new(),
             points: HashMap::new(),
             sketches: HashMap::new(),
+            solids: HashMap::new(),
         }
     }
 }
@@ -442,18 +464,35 @@ impl Plane {
             tertiary: Vector3::new(1.0, 0.0, 0.0),
         }
     }
+
+    pub fn project(&self, point: &Point3) -> Point2 {
+        let minus_origin = point.minus(&self.origin);
+        let x = minus_origin.dot(&self.primary);
+        let y = minus_origin.dot(&self.secondary);
+        Point2::new(x, y)
+    }
+
+    pub fn unproject(&self, point: &Point2) -> Point3 {
+        let x = self.origin.plus(self.primary.times(point.x));
+        let y = self.origin.plus(self.secondary.times(point.y));
+        x.plus(y).to_point3()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Vector3 {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl Vector3 {
     pub fn new(x: f64, y: f64, z: f64) -> Self {
         Vector3 { x, y, z }
+    }
+
+    pub fn to_point3(&self) -> Point3 {
+        Point3::new(self.x, self.y, self.z)
     }
 
     pub fn times(&self, s: f64) -> Self {
@@ -471,14 +510,18 @@ impl Vector3 {
             z: self.z + v.z,
         }
     }
+
+    pub fn dot(&self, other: &Vector3) -> f64 {
+        self.x * other.x + self.y * other.y + self.z * other.z
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Point3 {
-    x: f64,
-    y: f64,
-    z: f64,
-    hidden: bool,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
+    pub hidden: bool,
 }
 
 impl Point3 {
@@ -497,6 +540,21 @@ impl Point3 {
             y: self.y + v.y,
             z: self.z + v.z,
         }
+    }
+
+    pub fn minus(&self, other: &Point3) -> Vector3 {
+        Vector3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+        }
+    }
+
+    pub fn distance_to(&self, other: &Point3) -> f64 {
+        let dx = self.x - other.x;
+        let dy = self.y - other.y;
+        let dz = self.z - other.z;
+        (dx * dx + dy * dy + dz * dz).sqrt()
     }
 }
 
@@ -523,23 +581,26 @@ pub struct Circle3 {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RealSketch {
-    plane_name: String,
-    points: HashMap<u64, Point3>,
-    points_2d: HashMap<u64, Point2>,
-    highest_point_id: u64,
-    line_segments: HashMap<u64, Line3>,
-    highest_line_segment_id: u64,
-    circles: HashMap<u64, Circle3>,
-    highest_circle_id: u64,
-    arcs: HashMap<u64, Arc3>,
-    highest_arc_id: u64,
-    constraints: HashMap<u64, Constraint>,
-    highest_constraint_id: u64,
-    faces: Vec<Face>,
+    pub plane_name: String,
+    pub points: HashMap<u64, Point3>,
+    pub points_2d: HashMap<u64, Point2>,
+    pub highest_point_id: u64,
+    pub line_segments: HashMap<u64, Line3>,
+    pub highest_line_segment_id: u64,
+    pub circles: HashMap<u64, Circle3>,
+    pub highest_circle_id: u64,
+    pub arcs: HashMap<u64, Arc3>,
+    pub highest_arc_id: u64,
+    pub constraints: HashMap<u64, Constraint>,
+    pub highest_constraint_id: u64,
+    pub faces: Vec<Face>,
 }
 
 impl RealSketch {
     pub fn new(plane_name: &str, plane: &RealPlane, sketch: &Sketch) -> Self {
+        // The key difference between Sketch and RealSketch is that Sketch lives
+        // in 2D and RealSketch lives in 3D. So we need to convert the points
+
         let mut real_sketch = RealSketch {
             plane_name: plane_name.to_owned(),
             points_2d: HashMap::new(),
@@ -590,14 +651,31 @@ impl RealSketch {
             real_sketch.circles.insert(*circle_id, real_circle);
         }
 
+        let mut arc3_lookup: HashMap<(u64, u64, u64), Arc3> = HashMap::new();
         for (arc_id, arc) in sketch.arcs.iter() {
+            // println!("\nConverting arc to points");
+            let as_points = sketch.arc_to_points(arc);
+            // println!("How many points? {}", as_points.len());
+            let transit = as_points[as_points.len() / 2].clone();
+
+            let transit_3d = o.plus(x.times(transit.x)).plus(y.times(transit.y));
+            let mut real_point = Point3::new(transit_3d.x, transit_3d.y, transit_3d.z);
+            // real_point.hidden = true;
+
+            // let point_id = real_sketch.highest_point_id + 1;
+            // real_sketch.points.insert(point_id, real_point);
+            // real_sketch.points_2d.insert(point_id, transit);
+            // real_sketch.highest_point_id += 1;
+
             let real_arc = Arc3 {
                 center: arc.center,
                 start: arc.start,
                 end: arc.end,
+                // transit: point_id,
                 clockwise: arc.clockwise,
             };
             real_sketch.arcs.insert(*arc_id, real_arc);
+            // arc3_lookup.insert((arc.start, arc.end, arc.center), real_arc);
         }
 
         for (constraint_id, constraint) in sketch.constraints.iter() {
@@ -607,7 +685,7 @@ impl RealSketch {
                 .insert(*constraint_id, real_constraint);
         }
 
-        // Always break intersections
+        println!("Finding faces?");
         let (faces, unused_segments) = sketch.find_faces();
         real_sketch.faces = faces;
 

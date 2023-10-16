@@ -9,6 +9,7 @@ import gsap from 'gsap'
 import { Point } from './point.js'
 import { Plane } from './plane.js'
 import { Sketch } from './sketch.js'
+import { Solid } from './solid.js'
 
 let camera, scene, renderer, controls
 const sketches = {}
@@ -18,6 +19,7 @@ const circles = {}
 const arcs = {}
 const faces = {}
 const lines = {}
+const solids = {}
 
 const raycaster = new THREE.Raycaster()
 const pointer = new THREE.Vector2(-1.0, -1.0)
@@ -216,6 +218,9 @@ export const setRealization = (realization) => {
 	for (const [name, value] of Object.entries(sketches)) {
 		sketches[name].removeFrom(scene)
 	}
+	for (const [name, value] of Object.entries(solids)) {
+		solids[name].removeFrom(scene)
+	}
 
 	// create a new plane for each plane in the realization
 	for (const [name, plane] of Object.entries(realization.planes)) {
@@ -243,5 +248,10 @@ export const setRealization = (realization) => {
 			element
 		)
 		sketches[name].addTo(scene)
+	}
+
+	for (const [name, solid] of Object.entries(realization.solids)) {
+		solids[name] = new Solid(name, solid, element)
+		solids[name].addTo(scene)
 	}
 }
