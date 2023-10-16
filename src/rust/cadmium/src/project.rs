@@ -194,14 +194,14 @@ impl Workbench {
         sketch.add_segment_length_constraint(seg_3, 0.52);
 
         // Simple circle in lower left
-        // let p4 = sketch.add_point(-0.25, -0.25);
-        // sketch.add_circle(p4, 0.2);
+        let p4 = sketch.add_point(-0.25, -0.25);
+        sketch.add_circle(p4, 0.2);
 
         // // intersecting circle!
-        // let p5 = sketch.add_point(-0.5, -0.25);
-        // let c2 = sketch.add_circle(p5, 0.2);
+        let p5 = sketch.add_point(-0.5, -0.25);
+        let c2 = sketch.add_circle(p5, 0.2);
 
-        // sketch.add_circle_diameter_constraint(c2, 0.6);
+        sketch.add_circle_diameter_constraint(c2, 0.6);
 
         // Rounded square in lower right
         let shrink = 0.4;
@@ -233,7 +233,7 @@ impl Workbench {
             "Ext 1",
             Extrusion {
                 sketch_name: "Sketch 1".to_owned(),
-                face_ids: vec![0, 1],
+                face_ids: vec![0, 1, 2, 3, 4],
                 length: 0.25,
                 offset: 0.0,
                 direction: Vector3::new(0.0, 0.0, 1.0),
@@ -406,10 +406,10 @@ pub enum StepData {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Plane {
-    origin: Point3,
-    primary: Vector3,
-    secondary: Vector3,
-    tertiary: Vector3, // aka Normal
+    pub origin: Point3,
+    pub primary: Vector3,
+    pub secondary: Vector3,
+    pub tertiary: Vector3, // aka Normal
 }
 
 impl Plane {

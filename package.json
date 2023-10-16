@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
+		"build:wasm:dev": "wasm-pack build --target web src/rust/cadmium --dev --no-typescript",
 		"build:wasm": "wasm-pack build --target web src/rust/cadmium",
 		"dev": "vite dev",
 		"build": "vite build",

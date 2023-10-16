@@ -1,9 +1,11 @@
 use std::collections::HashMap;
+use std::f64::consts::PI;
 
 use serde::{Deserialize, Serialize};
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
+use truck_polymesh::Rad;
 // use truck_polymesh::cgmath::Point3 as TruckPoint3;
 
 use crate::project::Point3;
@@ -132,10 +134,21 @@ impl Solid {
                 println!("circle: {:?}", circle);
 
                 let center = sketch.points.get(&circle.center).unwrap();
-                let center_vertex = builder::vertex(TruckPoint3::new(center.x, center.y, center.z));
+                let center_point = TruckPoint3::new(center.x, center.y, center.z);
 
-                let wire = Wire::new();
-                wire
+                let top = sketch.points.get(&circle.top).unwrap();
+                let top_point = TruckPoint3::new(top.x, top.y, top.z);
+
+                let vector = TruckVector3::new(
+                    plane.plane.tertiary.x,
+                    plane.plane.tertiary.y,
+                    plane.plane.tertiary.z,
+                );
+
+                // we actually achieve this with an rsweep!
+                let vertex = builder::vertex(top_point);
+                let circle = builder::rsweep(&vertex, center_point, vector, Rad(2.0 * PI));
+                circle
             }
             Ring::Segments(segments) => {
                 println!("segments: {:?}", segments);

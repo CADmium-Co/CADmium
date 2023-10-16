@@ -119,6 +119,9 @@ export const createScene = (el) => {
 	controls = new TrackballControls(camera, el)
 	controls.rotateSpeed = 3.0
 
+	const ambientLight = new THREE.AmbientLight(0xb0b0b0) // soft white ambientLight
+	scene.add(ambientLight)
+
 	const directionalLight = new THREE.DirectionalLight(0x9090aa)
 	directionalLight.position.set(-10, 10, -10).normalize()
 	scene.add(directionalLight)
