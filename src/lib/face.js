@@ -7,9 +7,49 @@ class Face {
 		this.real_plane = real_plane
 
 		const shape = new THREE.Shape()
-
 		let exterior = face.exterior
-		// console.log('ext', exterior)
+		this.writeWireToShape(parent, points, exterior, shape)
+
+		for (let interior of face.holes) {
+			const path = new THREE.Path()
+			this.writeWireToShape(parent, points, interior, path)
+			shape.holes.push(path)
+		}
+
+		const geometry = new THREE.ShapeGeometry(shape)
+		const material = new THREE.MeshStandardMaterial({
+			color: 0xc0c0c0,
+			side: THREE.DoubleSide,
+			transparent: true,
+			opacity: 0.3,
+			depthWrite: false,
+			depthTest: true
+			// polygonOffset: true,
+			// polygonOffsetFactor: 2,
+			// polygonOffsetUnits: 1
+		})
+
+		let { origin, primary, secondary, tertiary } = this.real_plane.plane
+		origin = new THREE.Vector3(origin.x, origin.y, origin.z)
+		primary = new THREE.Vector3(primary.x, primary.y, primary.z)
+		secondary = new THREE.Vector3(secondary.x, secondary.y, secondary.z)
+		tertiary = new THREE.Vector3(tertiary.x, tertiary.y, tertiary.z)
+
+		// we need to rotate properly
+		const m = new THREE.Matrix4()
+		m.makeBasis(primary, secondary, tertiary)
+		const ea = new THREE.Euler(0, 0, 0, 'XYZ')
+		ea.setFromRotationMatrix(m, 'XYZ')
+		this.mesh = new THREE.Mesh(geometry, material)
+		this.mesh.rotation.x = ea.x
+		this.mesh.rotation.y = ea.y
+		this.mesh.rotation.z = ea.z
+		this.mesh.position.x = origin.x
+		this.mesh.position.y = origin.y
+		this.mesh.position.z = origin.z
+	}
+
+	writeWireToShape(parent, points, exterior, shape) {
 		let shape_points = []
 		if (exterior.Circle) {
 			let center_point = points[`${parent}:${exterior.Circle.center}`]
@@ -66,39 +106,8 @@ class Face {
 				shape.lineTo(shape_points[i][0], shape_points[i][1])
 			}
 		}
-
-		const geometry = new THREE.ShapeGeometry(shape)
-		const material = new THREE.MeshStandardMaterial({
-			color: 0xc0c0c0,
-			side: THREE.DoubleSide,
-			transparent: true,
-			opacity: 0.3,
-			depthWrite: false,
-			depthTest: true
-			// polygonOffset: true,
-			// polygonOffsetFactor: 2,
-			// polygonOffsetUnits: 1
-		})
-
-		let { origin, primary, secondary, tertiary } = this.real_plane.plane
-		origin = new THREE.Vector3(origin.x, origin.y, origin.z)
-		primary = new THREE.Vector3(primary.x, primary.y, primary.z)
-		secondary = new THREE.Vector3(secondary.x, secondary.y, secondary.z)
-		tertiary = new THREE.Vector3(tertiary.x, tertiary.y, tertiary.z)
-
-		// we need to rotate properly
-		const m = new THREE.Matrix4()
-		m.makeBasis(primary, secondary, tertiary)
-		const ea = new THREE.Euler(0, 0, 0, 'XYZ')
-		ea.setFromRotationMatrix(m, 'XYZ')
-		this.mesh = new THREE.Mesh(geometry, material)
-		this.mesh.rotation.x = ea.x
-		this.mesh.rotation.y = ea.y
-		this.mesh.rotation.z = ea.z
-		this.mesh.position.x = origin.x
-		this.mesh.position.y = origin.y
-		this.mesh.position.z = origin.z
 	}
+
 	addTo(object) {
 		object.add(this.mesh)
 	}

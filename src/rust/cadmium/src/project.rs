@@ -180,28 +180,36 @@ impl Workbench {
         let p1 = sketch.add_point(0.45, 0.0);
         let p2 = sketch.add_point(0.45, 0.25);
         let p3 = sketch.add_point(0.0, 0.25);
-
         let seg_0 = sketch.add_segment(p0, p1);
         let seg_1 = sketch.add_segment(p1, p2);
         let seg_2 = sketch.add_segment(p2, p3);
         let seg_3 = sketch.add_segment(p3, p0);
 
-        sketch.add_segment_vertical_constraint(seg_3);
-        sketch.add_segment_horizontal_constraint(seg_0);
-        sketch.add_segment_length_constraint(seg_0, 0.52);
-        sketch.add_segment_length_constraint(seg_1, 0.52);
-        sketch.add_segment_length_constraint(seg_2, 0.52);
-        sketch.add_segment_length_constraint(seg_3, 0.52);
+        let big_p0 = sketch.add_point(-0.1, -0.1);
+        let big_p1 = sketch.add_point(0.55, -0.1);
+        let big_p2 = sketch.add_point(0.55, 0.55);
+        let big_p3 = sketch.add_point(-0.1, 0.55);
+        let big_seg_0 = sketch.add_segment(big_p0, big_p1);
+        let big_seg_1 = sketch.add_segment(big_p1, big_p2);
+        let big_seg_2 = sketch.add_segment(big_p2, big_p3);
+        let big_seg_3 = sketch.add_segment(big_p3, big_p0);
+
+        // sketch.add_segment_vertical_constraint(seg_3);
+        // sketch.add_segment_horizontal_constraint(seg_0);
+        // sketch.add_segment_length_constraint(seg_0, 0.52);
+        // sketch.add_segment_length_constraint(seg_1, 0.52);
+        // sketch.add_segment_length_constraint(seg_2, 0.52);
+        // sketch.add_segment_length_constraint(seg_3, 0.52);
 
         // Simple circle in lower left
-        let p4 = sketch.add_point(-0.25, -0.25);
+        let p4 = sketch.add_point(-0.5, -0.25);
         sketch.add_circle(p4, 0.2);
 
         // // intersecting circle!
-        let p5 = sketch.add_point(-0.5, -0.25);
-        let c2 = sketch.add_circle(p5, 0.2);
+        // let p5 = sketch.add_point(-0.5, -0.25);
+        let c2 = sketch.add_circle(p4, 0.3);
 
-        sketch.add_circle_diameter_constraint(c2, 0.6);
+        // sketch.add_circle_diameter_constraint(c2, 0.6);
 
         // Rounded square in lower right
         let shrink = 0.4;
@@ -220,25 +228,25 @@ impl Workbench {
         let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
         let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
 
-        sketch.add_segment(a, b);
-        sketch.add_arc(i, b, c, false);
-        sketch.add_segment(c, d);
-        sketch.add_arc(j, d, e, false);
-        sketch.add_segment(e, f);
-        sketch.add_arc(k, f, g, false);
-        sketch.add_segment(g, h);
-        sketch.add_arc(l, h, a, false);
+        // sketch.add_segment(a, b);
+        // sketch.add_arc(i, b, c, false);
+        // sketch.add_segment(c, d);
+        // sketch.add_arc(j, d, e, false);
+        // sketch.add_segment(e, f);
+        // sketch.add_arc(k, f, g, false);
+        // sketch.add_segment(g, h);
+        // sketch.add_arc(l, h, a, false);
 
-        self.add_extrusion(
-            "Ext 1",
-            Extrusion {
-                sketch_name: "Sketch 1".to_owned(),
-                face_ids: vec![0, 1, 2, 3, 4],
-                length: 0.25,
-                offset: 0.0,
-                direction: Vector3::new(0.0, 0.0, 1.0),
-            },
-        );
+        // self.add_extrusion(
+        //     "Ext 1",
+        //     Extrusion {
+        //         sketch_name: "Sketch 1".to_owned(),
+        //         face_ids: vec![3],
+        //         length: 0.25,
+        //         offset: 0.0,
+        //         direction: Vector3::new(0.0, 0.0, 1.0),
+        //     },
+        // );
     }
 
     pub fn add_sketch(&mut self, name: &str, plane_name: &str) {

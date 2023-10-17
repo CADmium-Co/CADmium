@@ -241,7 +241,7 @@ export const setRealization = (realization) => {
 		let real_plane = realization.planes[plane_name]
 		sketches[name] = new Sketch(
 			name,
-			unsplit,
+			split,
 			real_plane,
 			points,
 			lines,
