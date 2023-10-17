@@ -70,7 +70,7 @@ impl Solid {
 
             // then the interior wires
             for interior in &face.holes {
-                wires.push(Self::to_wire(plane, sketch, extrusion, interior));
+                wires.push(Self::to_wire(plane, sketch, extrusion, interior).inverse());
             }
 
             let face = builder::try_attach_plane(&wires).unwrap();
@@ -151,7 +151,7 @@ impl Solid {
                 circle
             }
             Ring::Segments(segments) => {
-                println!("segments: {:?}", segments);
+                // println!("segments: {:?}", segments);
                 // let mut builder = builder::FaceBuilder::new();
                 let mut vertices: HashMap<u64, Vertex> = HashMap::new();
 
