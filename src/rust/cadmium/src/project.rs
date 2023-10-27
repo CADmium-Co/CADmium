@@ -123,6 +123,55 @@ impl Project {
                 sketch.solve(*max_steps);
                 Ok(("".to_owned()))
             }
+            Message::NewSketch {
+                workbench_id,
+                sketch_name,
+                plane_name,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                workbench.add_sketch(sketch_name, plane_name);
+                Ok("".to_owned())
+            }
+            Message::DeleteSketch {
+                workbench_id,
+                sketch_name,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let mut index = 0;
+                for step in workbench.history.iter() {
+                    match &step.data {
+                        StepData::Sketch { .. } => {
+                            if step.name == *sketch_name {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                    index += 1;
+                }
+                workbench.history.remove(index);
+                Ok("".to_owned())
+            }
+            Message::NewExtrusion {
+                workbench_id,
+                extrusion_name,
+                sketch_name,
+                face_ids,
+                length,
+                offset,
+                direction,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let extrusion = Extrusion {
+                    sketch_name: sketch_name.to_owned(),
+                    face_ids: face_ids.to_owned(),
+                    length: *length,
+                    offset: *offset,
+                    direction: direction.to_owned(),
+                };
+                workbench.add_extrusion(extrusion_name, extrusion);
+                Ok("".to_owned())
+            }
         }
     }
 }
@@ -744,6 +793,24 @@ pub enum Message {
         workbench_id: u64,
         sketch_name: String,
         max_steps: u64,
+    },
+    NewSketch {
+        workbench_id: u64,
+        sketch_name: String,
+        plane_name: String,
+    },
+    DeleteSketch {
+        workbench_id: u64,
+        sketch_name: String,
+    },
+    NewExtrusion {
+        workbench_id: u64,
+        extrusion_name: String,
+        sketch_name: String,
+        face_ids: Vec<u64>,
+        length: f64,
+        offset: f64,
+        direction: Vector3,
     },
 }
 
