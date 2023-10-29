@@ -313,15 +313,22 @@
 		</div>
 		{#if showMenu}
 			<nav use:getContextMenuDimension style="position: absolute; top:{pos.y}px; left:{pos.x}px">
-				<div class="navbar" id="navbar">
-					<ul>
+				<div
+					class="navbar inline-flex border w-[170px] bg-white overflow-hidden flex-col rounded-[10px] border-[solid]"
+					id="navbar"
+				>
+					<ul class="m-1.5">
 						{#each menuItems as item}
 							{#if item.name == 'hr'}
-								<hr />
+								<hr class="mx-0 my-[5px]" />
 							{:else}
-								<li>
-									<button on:click={item.onClick}><i class={item.class} />{item.displayText}</button
+								<li class="block list-none w-[1fr]">
+									<button
+										class="text-base text-[#222] w-full h-[30px] text-left bg-white border-0 hover:text-black hover:text-left hover:bg-[#eee] hover:rounded-[5px]"
+										on:click={item.onClick}
 									>
+										<i class="pl-2.5 pr-[15px] py-0 {item.class}" />{item.displayText}
+									</button>
 								</li>
 							{/if}
 						{/each}
@@ -349,55 +356,3 @@
 </svelte:head>
 
 <svelte:window on:click={onPageClick} />
-
-<style>
-	.navbar {
-		display: inline-flex;
-		border: 1px #999 solid;
-		width: 170px;
-		background-color: #fff;
-		border-radius: 10px;
-		overflow: hidden;
-		flex-direction: column;
-	}
-	.navbar ul {
-		margin: 6px;
-	}
-	ul li {
-		display: block;
-		list-style-type: none;
-		width: 1fr;
-	}
-	ul li button {
-		font-size: 1rem;
-		color: #222;
-		width: 100%;
-		height: 30px;
-		text-align: left;
-		border: 0px;
-		background-color: #fff;
-	}
-	ul li button:hover {
-		color: #000;
-		text-align: left;
-		border-radius: 5px;
-		background-color: #eee;
-	}
-	ul li button i {
-		padding: 0px 15px 0px 10px;
-	}
-	ul li button i.fa-square {
-		color: #fff;
-	}
-	ul li button:hover > i.fa-square {
-		color: #eee;
-	}
-	ul li button:hover > i.warning {
-		color: crimson;
-	}
-	hr {
-		border: none;
-		border-bottom: 1px solid #ccc;
-		margin: 5px 0px;
-	}
-</style>
