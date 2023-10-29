@@ -100,7 +100,8 @@
 		workbench.set($project.workbenches[$active_workbench_index])
 		$project_rust.compute_constraint_errors()
 		realization = JSON.parse($project_rust.get_realization(0, 1000))
-		// console.log('Realization:', realization)
+		// console.log('Realization:', Object.keys(realization.solids).length)
+		// console.log('WB:', $workbench)
 	}
 
 	const create_new_sketch = () => {
@@ -309,6 +310,21 @@
 						{item['name']}
 					</div>
 				{/each}
+			</div>
+		</div>
+		<div class="flex flex-col select-none">
+			<div class="font-bold text-sm px-2 py-2">
+				Solids ({realization.solids ? Object.keys(realization.solids).length : 0})
+			</div>
+			<div>
+				{#if realization.solids}
+					{#each Object.keys(realization.solids) as solid_id}
+						<div class="flex items-center text-sm hover:bg-sky-200">
+							<img class="h-8 w-8 px-1" src="/actions/part.svg" alt="solid" />
+							{solid_id}
+						</div>
+					{/each}
+				{/if}
 			</div>
 		</div>
 		{#if showMenu}

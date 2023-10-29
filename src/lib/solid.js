@@ -6,7 +6,7 @@ class Solid {
 		this.name = name
 		this.element = element
 
-		console.log('Original solid', original_solid.vertices.length)
+		// console.log('Original solid', original_solid.vertices.length)
 		const geometry = new THREE.BufferGeometry()
 
 		const normals = new Float32Array(original_solid.normals.flatMap((v) => [v.x, v.y, v.z]))
