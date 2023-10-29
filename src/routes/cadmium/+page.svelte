@@ -5,6 +5,8 @@
 	import { project_rust, project, active_workbench_index, workbench } from './stores.js'
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from 'cadmium'
+	import StepContextMenu from './stepContextMenu.svelte'
+	import SolidContextMenu from './solidContextMenu.svelte'
 
 	let num_steps_applied = 1000
 	let realization = {}
@@ -12,76 +14,15 @@
 	let current_step = {}
 	let main_canvas
 
-	let showMenu = false
-	// pos is cursor position when right click occur
-	let pos = { x: 0, y: 0 }
-	// menu is dimension (height and width) of context menu
-	let menu = { h: 0, y: 0 }
-	// browser/window dimension (height and width)
-	let browser_size = { h: 0, y: 0 }
+	let stepContextMenu
+	let solidContextMenu
 
-	function rightClickContextMenu(e) {
-		showMenu = true
-		browser_size = {
-			w: window.innerWidth,
-			h: window.innerHeight
-		}
-		pos = {
-			x: e.clientX,
-			y: e.clientY
-		}
-		// If bottom part of context menu will be displayed
-		// after right-click, then change the position of the
-		// context menu. This position is controlled by `top` and `left`
-		// at inline style.
-		// Instead of context menu is displayed from top left of cursor position
-		// when right-click occur, it will be displayed from bottom left.
-		if (browser_size.h - pos.y < menu.h) pos.y = pos.y - menu.h
-		if (browser_size.w - pos.x < menu.w) pos.x = pos.x - menu.w
-	}
-
-	function onPageClick(e) {
+	const onPageClick = (e) => {
 		// To make context menu disappear when
 		// mouse is clicked outside context menu
-		showMenu = false
+		stepContextMenu.hide()
+		solidContextMenu.hide()
 	}
-
-	function getContextMenuDimension(node) {
-		// This function will get context menu dimension
-		// when navigation is shown => showMenu = true
-		let height = node.offsetHeight
-		let width = node.offsetWidth
-		menu = {
-			h: height,
-			w: width
-		}
-	}
-
-	function addItem() {
-		console.log('Add item')
-	}
-
-	function remove() {
-		console.log('remove item')
-	}
-
-	let menuItems = [
-		{
-			name: 'addItem',
-			onClick: addItem,
-			displayText: 'Add Item',
-			class: 'fa-solid fa-plus'
-		},
-		{
-			name: 'hr'
-		},
-		{
-			name: 'trash',
-			onClick: remove,
-			displayText: 'Delete',
-			class: 'fa-solid fa-trash-can'
-		}
-	]
 
 	if (browser) {
 		onMount(() => {
@@ -301,7 +242,8 @@
 						}}
 						on:contextmenu|preventDefault={(e) => {
 							console.log('right click', e)
-							rightClickContextMenu(e)
+							console.log('what is step context menu?', stepContextMenu)
+							stepContextMenu.rightClickContextMenu(e)
 						}}
 						role="button"
 						tabindex="0"
@@ -319,7 +261,13 @@
 			<div>
 				{#if realization.solids}
 					{#each Object.keys(realization.solids) as solid_id}
-						<div class="flex items-center text-sm hover:bg-sky-200">
+						<!-- svelte-ignore a11y-no-static-element-interactions -->
+						<div
+							class="flex items-center text-sm hover:bg-sky-200"
+							on:contextmenu|preventDefault={(e) => {
+								solidContextMenu.rightClickContextMenu(e)
+							}}
+						>
 							<img class="h-8 w-8 px-1" src="/actions/part.svg" alt="solid" />
 							{solid_id}
 						</div>
@@ -327,31 +275,9 @@
 				{/if}
 			</div>
 		</div>
-		{#if showMenu}
-			<nav use:getContextMenuDimension style="position: absolute; top:{pos.y}px; left:{pos.x}px">
-				<div
-					class="navbar inline-flex border w-[170px] bg-white overflow-hidden flex-col rounded-[10px] border-[solid]"
-					id="navbar"
-				>
-					<ul class="m-1.5">
-						{#each menuItems as item}
-							{#if item.name == 'hr'}
-								<hr class="mx-0 my-[5px]" />
-							{:else}
-								<li class="block list-none w-[1fr]">
-									<button
-										class="text-base text-[#222] w-full h-[30px] text-left bg-white border-0 hover:text-black hover:text-left hover:bg-[#eee] hover:rounded-[5px]"
-										on:click={item.onClick}
-									>
-										<i class="pl-2.5 pr-[15px] py-0 {item.class}" />{item.displayText}
-									</button>
-								</li>
-							{/if}
-						{/each}
-					</ul>
-				</div>
-			</nav>
-		{/if}
+
+		<StepContextMenu bind:this={stepContextMenu} />
+		<SolidContextMenu bind:this={solidContextMenu} />
 	</aside>
 	<main class="h-[100%]">
 		<MainCanvas {realization} bind:this={main_canvas} />
