@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
+use truck_polymesh::obj;
 use truck_polymesh::Rad;
 use truck_stepio::out;
 // use truck_polymesh::cgmath::Point3 as TruckPoint3;
@@ -232,12 +233,28 @@ impl Solid {
         }
     }
 
+    pub fn to_obj_string(&self, tolerance: f64) -> String {
+        let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
+        mesh.put_together_same_attrs();
+        let mut buf = Vec::new();
+        obj::write(&mesh, &mut buf).unwrap();
+        let string = String::from_utf8(buf).unwrap();
+        string
+    }
+
+    pub fn save_as_obj(&self, filename: &str, tolerance: f64) {
+        let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
+        mesh.put_together_same_attrs();
+        let file = std::fs::File::create(filename).unwrap();
+        obj::write(&mesh, file).unwrap();
+    }
+
     pub fn to_step_string(&self) -> String {
         let compressed = self.truck_solid.compress();
         let step_string = out::CompleteStepDisplay::new(
             out::StepModel::from(&compressed),
             out::StepHeaderDescriptor {
-                origination_system: "shape-to-step".to_owned(),
+                origination_system: "cadmium-shape-to-step".to_owned(),
                 ..Default::default()
             },
         )
@@ -287,5 +304,21 @@ mod tests {
         let realization = workbench.realize(100);
         let solids = realization.solids;
         // println!("solids: {:?}", solids);
+    }
+
+    #[test]
+    fn step_export() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+        let workbench = &p.workbenches[0 as usize];
+        let realization = workbench.realize(1000);
+        // let solids = realization.solids;
+        let keys = Vec::from_iter(realization.solids.keys());
+        let key = keys[0 as usize];
+        let step_file = realization.solid_to_step(keys[0]);
+
+        realization.save_solid_as_step_file(keys[0], "test.step");
+        realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001)
+        // println!("{:?}", step_file);
     }
 }

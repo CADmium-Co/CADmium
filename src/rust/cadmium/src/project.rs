@@ -409,6 +409,17 @@ impl Realization {
         }
     }
 
+    pub fn solid_to_obj(&self, solid_name: &str, tolerance: f64) -> String {
+        let solid = &self.solids[solid_name];
+        let obj_text = solid.to_obj_string(tolerance);
+        obj_text
+    }
+
+    pub fn save_solid_as_obj_file(&self, solid_name: &str, filename: &str, tolerance: f64) {
+        let solid = &self.solids[solid_name];
+        solid.save_as_obj(filename, tolerance);
+    }
+
     pub fn solid_to_step(&self, solid_name: &str) -> String {
         let solid = &self.solids[solid_name];
         let step_text = solid.to_step_string();
@@ -890,20 +901,5 @@ mod tests {
     fn one_extrusion() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
-    }
-
-    #[test]
-    fn step_export() {
-        let mut p = Project::new("Test Project");
-        p.add_defaults();
-        let workbench = &p.workbenches[0 as usize];
-        let realization = workbench.realize(1000);
-        // let solids = realization.solids;
-        let keys = Vec::from_iter(realization.solids.keys());
-        let key = keys[0 as usize];
-        let step_file = realization.solid_to_step(keys[0]);
-
-        realization.save_solid_as_step_file(keys[0], "test.step");
-        // println!("{:?}", step_file);
     }
 }

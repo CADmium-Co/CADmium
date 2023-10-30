@@ -72,3 +72,7 @@ impl Project {
     //     self.native.sketch = sketch.native;
     // }
 }
+
+pub struct Realization {
+    native: project::Realization,
+}
