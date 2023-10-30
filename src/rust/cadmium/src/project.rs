@@ -172,6 +172,18 @@ impl Project {
                 workbench.add_extrusion(extrusion_name, extrusion);
                 Ok("".to_owned())
             }
+            Message::ExportSTEP {
+                workbench_id,
+                solid_name,
+            } => {
+                let workbench = &self.workbenches[*workbench_id as usize];
+                let solid = &workbench.history[workbench.history.len() - 1];
+                let result = serde_json::to_string(solid);
+                match result {
+                    Ok(json) => Ok(json),
+                    Err(e) => Err(format!("Error: {}", e)),
+                }
+            }
         }
     }
 }
@@ -395,6 +407,17 @@ impl Realization {
             sketches: HashMap::new(),
             solids: HashMap::new(),
         }
+    }
+
+    pub fn solid_to_step(&self, solid_name: &str) -> String {
+        let solid = &self.solids[solid_name];
+        let step_text = solid.to_step_string();
+        step_text
+    }
+
+    pub fn save_solid_as_step_file(&self, solid_name: &str, filename: &str) {
+        let solid = &self.solids[solid_name];
+        solid.save_as_step(filename)
     }
 }
 
@@ -812,6 +835,10 @@ pub enum Message {
         offset: f64,
         direction: Vector3,
     },
+    ExportSTEP {
+        workbench_id: u64,
+        solid_name: String,
+    },
 }
 
 impl Message {
@@ -863,5 +890,20 @@ mod tests {
     fn one_extrusion() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
+    }
+
+    #[test]
+    fn step_export() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+        let workbench = &p.workbenches[0 as usize];
+        let realization = workbench.realize(1000);
+        // let solids = realization.solids;
+        let keys = Vec::from_iter(realization.solids.keys());
+        let key = keys[0 as usize];
+        let step_file = realization.solid_to_step(keys[0]);
+
+        realization.save_solid_as_step_file(keys[0], "test.step");
+        // println!("{:?}", step_file);
     }
 }

@@ -6,6 +6,7 @@ use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
 use truck_polymesh::Rad;
+use truck_stepio::out;
 // use truck_polymesh::cgmath::Point3 as TruckPoint3;
 
 use crate::project::Point3;
@@ -44,6 +45,11 @@ pub struct Solid {
     pub uvs: Vec<Vector2>,
     pub indices: Vec<usize>,
     pub triangles: Vec<Vec<u64>>,
+    pub truck_solid: truck_topology::Solid<
+        truck_polymesh::cgmath::Point3<f64>,
+        truck_modeling::Curve,
+        truck_modeling::Surface,
+    >,
 }
 
 impl Solid {
@@ -86,9 +92,10 @@ impl Solid {
                 triangles: vec![],
                 uvs: vec![],
                 indices: vec![],
+                truck_solid,
             };
 
-            let mut mesh = truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
+            let mut mesh = solid.truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
             mesh.put_together_same_attrs();
 
             // the mesh is prepared for obj export, but we need to convert it
@@ -223,6 +230,25 @@ impl Solid {
                 wire
             }
         }
+    }
+
+    pub fn to_step_string(&self) -> String {
+        let compressed = self.truck_solid.compress();
+        let step_string = out::CompleteStepDisplay::new(
+            out::StepModel::from(&compressed),
+            out::StepHeaderDescriptor {
+                origination_system: "shape-to-step".to_owned(),
+                ..Default::default()
+            },
+        )
+        .to_string();
+        step_string
+    }
+
+    pub fn save_as_step(&self, filename: &str) {
+        let step_text = self.to_step_string();
+        let mut step_file = std::fs::File::create(filename).unwrap();
+        std::io::Write::write_all(&mut step_file, step_text.as_ref()).unwrap();
     }
 }
 

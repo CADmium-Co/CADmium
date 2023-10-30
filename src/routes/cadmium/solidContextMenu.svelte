@@ -42,7 +42,10 @@
 		}
 	}
 
-	function exportSolid() {
+	function exportSolidSTL() {
+		console.log('Add item')
+	}
+	function exportSolidSTEP() {
 		console.log('Add item')
 	}
 
@@ -53,9 +56,15 @@
 	let menuItems = [
 		{
 			name: 'export',
-			onClick: exportSolid,
-			displayText: 'Export',
-			class: 'fa-solid fa-plus'
+			onClick: exportSolidSTL,
+			displayText: 'Download as STL',
+			class: 'fa-solid fa-download'
+		},
+		{
+			name: 'export',
+			onClick: exportSolidSTEP,
+			displayText: 'Download as STEP',
+			class: 'fa-solid fa-download'
 		},
 		{
 			name: 'hr'
@@ -72,7 +81,7 @@
 {#if showMenu}
 	<nav use:getContextMenuDimension style="position: absolute; top:{pos.y}px; left:{pos.x}px">
 		<div
-			class="navbar inline-flex border w-[170px] bg-white overflow-hidden flex-col rounded-[10px] border-[solid]"
+			class="navbar inline-flex border w-[210px] bg-white overflow-hidden flex-col rounded-[10px] border-[solid]"
 			id="navbar"
 		>
 			<ul class="m-1.5">
