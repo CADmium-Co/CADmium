@@ -2,14 +2,21 @@
 	import MainCanvas from './mainCanvas.svelte'
 	import { browser } from '$app/environment'
 	import { onMount } from 'svelte'
-	import { project_rust, project, active_workbench_index, workbench } from './stores.js'
+	import {
+		project_rust,
+		project,
+		realization_rust,
+		realization,
+		active_workbench_index,
+		workbench
+	} from './stores.js'
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from 'cadmium'
 	import StepContextMenu from './stepContextMenu.svelte'
 	import SolidContextMenu from './solidContextMenu.svelte'
 
 	let num_steps_applied = 1000
-	let realization = {}
+	// let realization = {}
 
 	let current_step = {}
 	let main_canvas
@@ -40,9 +47,11 @@
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index])
 		$project_rust.compute_constraint_errors()
-		realization = JSON.parse($project_rust.get_realization(0, 1000))
-		// console.log('Realization:', Object.keys(realization.solids).length)
-		// console.log('WB:', $workbench)
+		// realization = JSON.parse($project_rust.get_realization(0, 1000))
+		realization_rust.set($project_rust.get_realization(0, 1000))
+		// let as_json = realization_rust.to_json()
+		// console.log("as json:", as_json)
+		realization.set(JSON.parse($realization_rust.to_json()))
 	}
 
 	const create_new_sketch = () => {
@@ -256,16 +265,16 @@
 		</div>
 		<div class="flex flex-col select-none">
 			<div class="font-bold text-sm px-2 py-2">
-				Solids ({realization.solids ? Object.keys(realization.solids).length : 0})
+				Solids ({$realization.solids ? Object.keys($realization.solids).length : 0})
 			</div>
 			<div>
-				{#if realization.solids}
-					{#each Object.keys(realization.solids) as solid_id}
+				{#if $realization.solids}
+					{#each Object.keys($realization.solids) as solid_id}
 						<!-- svelte-ignore a11y-no-static-element-interactions -->
 						<div
 							class="flex items-center text-sm hover:bg-sky-200"
 							on:contextmenu|preventDefault={(e) => {
-								solidContextMenu.rightClickContextMenu(e)
+								solidContextMenu.rightClickContextMenu(e, solid_id)
 							}}
 						>
 							<img class="h-8 w-8 px-1" src="/actions/part.svg" alt="solid" />
@@ -280,7 +289,7 @@
 		<SolidContextMenu bind:this={solidContextMenu} />
 	</aside>
 	<main class="h-[100%]">
-		<MainCanvas {realization} bind:this={main_canvas} />
+		<MainCanvas realization={$realization} bind:this={main_canvas} />
 	</main>
 	<footer class="col-span-2">Footer</footer>
 </div>

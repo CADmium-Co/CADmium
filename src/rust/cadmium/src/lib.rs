@@ -48,9 +48,15 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn get_realization(&self, workbench_id: u32, max_steps: u32) -> String {
-        self.native
-            .get_realization(workbench_id as u64, 1000 as u64)
+    pub fn get_realization(&self, workbench_id: u32, max_steps: u32) -> Realization {
+        let realized = self
+            .native
+            .get_realization(workbench_id as u64, 1000 as u64);
+
+        Realization { native: realized }
+
+        // self.native
+        //     .get_realization(workbench_id as u64, 1000 as u64)
     }
 
     #[wasm_bindgen]
@@ -73,6 +79,29 @@ impl Project {
     // }
 }
 
+#[wasm_bindgen]
 pub struct Realization {
     native: project::Realization,
+}
+
+#[wasm_bindgen]
+impl Realization {
+    #[wasm_bindgen]
+    pub fn to_json(&self) -> String {
+        let result = serde_json::to_string(&self.native);
+        match result {
+            Ok(json) => json,
+            Err(e) => format!("Error: {}", e),
+        }
+    }
+
+    #[wasm_bindgen]
+    pub fn solid_to_obj(&self, solid_name: String, tolerance: f64) -> String {
+        self.native.solid_to_obj(&solid_name, tolerance)
+    }
+
+    #[wasm_bindgen]
+    pub fn solid_to_step(&self, solid_name: String) -> String {
+        self.native.solid_to_step(&solid_name)
+    }
 }

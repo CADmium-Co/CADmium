@@ -1,4 +1,7 @@
 <script>
+	import fileDownload from 'js-file-download'
+	import { realization, realization_rust } from './stores'
+
 	let showMenu = false
 	// pos is cursor position when right click occur
 	let pos = { x: 0, y: 0 }
@@ -7,11 +10,14 @@
 	// browser/window dimension (height and width)
 	let browser_size = { h: 0, y: 0 }
 
+	let solid_name
+
 	export function hide() {
 		showMenu = false
 	}
 
-	export function rightClickContextMenu(e) {
+	export function rightClickContextMenu(e, solid_id) {
+		solid_name = solid_id
 		showMenu = true
 		browser_size = {
 			w: window.innerWidth,
@@ -42,11 +48,14 @@
 		}
 	}
 
-	function exportSolidSTL() {
-		console.log('Add item')
+	function exportSolidOBJ() {
+		let obj_string = $realization_rust.solid_to_obj(solid_name, 0.001)
+		fileDownload(obj_string, solid_name + '.obj')
 	}
-	function exportSolidSTEP() {
-		console.log('Add item')
+	const exportSolidSTEP = () => {
+		let step_string = $realization_rust.solid_to_step(solid_name, 0.001)
+		console.log(step_string)
+		fileDownload(step_string, solid_name + '.obj')
 	}
 
 	function remove() {
@@ -56,8 +65,8 @@
 	let menuItems = [
 		{
 			name: 'export',
-			onClick: exportSolidSTL,
-			displayText: 'Download as STL',
+			onClick: exportSolidOBJ,
+			displayText: 'Download as OBJ',
 			class: 'fa-solid fa-download'
 		},
 		{

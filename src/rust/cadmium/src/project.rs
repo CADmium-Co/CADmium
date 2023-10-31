@@ -59,14 +59,15 @@ impl Project {
         None
     }
 
-    pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> String {
+    pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Realization {
         let workbench = &self.workbenches[workbench_id as usize];
         let realization = workbench.realize(max_steps);
-        let result = serde_json::to_string(&realization);
-        match result {
-            Ok(json) => json,
-            Err(e) => format!("Error: {}", e),
-        }
+        realization
+        // let result = serde_json::to_string(&realization);
+        // match result {
+        //     Ok(json) => json,
+        //     Err(e) => format!("Error: {}", e),
+        // }
     }
 
     pub fn handle_message_string(&mut self, message_string: &str) -> Result<String, String> {
