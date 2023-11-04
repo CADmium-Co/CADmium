@@ -11,7 +11,14 @@ import { Plane } from './plane.js'
 import { Sketch } from './sketch.js'
 import { Solid } from './solid.js'
 
-let camera, scene, renderer, controls
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
+import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js'
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js'
+
+let camera, scene, renderer, controls, outlinePass
 const sketches = {}
 const planes = {}
 const points = {}
@@ -89,6 +96,18 @@ export const createScene = (el) => {
 	element = el
 	const clock = new THREE.Clock()
 	scene = new THREE.Scene()
+	let composer
+
+	const params = {
+		edgeStrength: 10.0,
+		edgeGlow: 0.0,
+		edgeThickness: 3.0,
+		pulsePeriod: 0,
+		rotate: false,
+		usePatternTexture: false,
+		visibleEdgeColor: '#ffffff',
+		hiddenEdgeColor: '#ffffff'
+	}
 
 	const { width, height } = el.getBoundingClientRect()
 	const aspectRatio = width / height
@@ -172,9 +191,11 @@ export const createScene = (el) => {
 			count = 0
 		}
 
+		composer.render()
+
 		// you can skip this condition to render though
 		// if (hasControlsUpdated) {
-		renderer.render(scene, camera)
+		// renderer.render(scene, camera)
 		// }
 	}
 
@@ -186,9 +207,35 @@ export const createScene = (el) => {
 	}
 
 	const getStarted = (el) => {
+		const { width, height } = el.getBoundingClientRect()
 		renderer = new THREE.WebGLRenderer({ antialias: true, canvas: el })
 		renderer.setPixelRatio(window.devicePixelRatio)
+		renderer.setSize(width, height)
 		renderer.setClearColor('#F8F8F8')
+
+		composer = new EffectComposer(renderer)
+		const renderPass = new RenderPass(scene, camera)
+		composer.addPass(renderPass)
+
+		outlinePass = new OutlinePass(new THREE.Vector2(width, height), scene, camera)
+		composer.addPass(outlinePass)
+		outlinePass.edgeStrength = Number(params.edgeStrength)
+		outlinePass.edgeGlow = Number(params.edgeGlow)
+		outlinePass.edgeThickness = Number(params.edgeThickness)
+		outlinePass.pulsePeriod = Number(params.pulsePeriod)
+		outlinePass.rotate = Boolean(params.rotate)
+		outlinePass.usePatternTexture = Boolean(params.usePatternTexture)
+		outlinePass.visibleEdgeColor.set(params.visibleEdgeColor)
+		outlinePass.hiddenEdgeColor.set(params.hiddenEdgeColor)
+		outlinePass.overlayMaterial.blending = THREE.SubtractiveBlending
+
+		const outputPass = new OutputPass()
+		composer.addPass(outputPass)
+
+		const effectFXAA = new ShaderPass(FXAAShader)
+		effectFXAA.uniforms['resolution'].value.set(1 / width, 1 / height)
+		composer.addPass(effectFXAA)
+
 		resize()
 		render()
 	}
@@ -256,5 +303,12 @@ export const setRealization = (realization) => {
 	for (const [name, solid] of Object.entries(realization.solids)) {
 		solids[name] = new Solid(name, solid, element)
 		solids[name].addTo(scene)
+	}
+}
+
+export const setOutlined = (outlined) => {
+	const to_be_outlined = outlined.map((solid) => solids[solid].group)
+	if (outlinePass) {
+		outlinePass.selectedObjects = to_be_outlined
 	}
 }

@@ -8,7 +8,8 @@
 		realization_rust,
 		realization,
 		active_workbench_index,
-		workbench
+		workbench,
+		outlined_solids
 	} from './stores.js'
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from 'cadmium'
@@ -178,6 +179,16 @@
 		console.log('okay!')
 	}
 
+	const highlightSolid = (solid_id) => {
+		// console.log('highlight solid', solid_id)
+		outlined_solids.set([...$outlined_solids, solid_id])
+	}
+
+	const unhighlightSolid = (solid_id) => {
+		// console.log('unhighlight solid', solid_id)
+		outlined_solids.set($outlined_solids.filter((id) => id !== solid_id))
+	}
+
 	let actions = [
 		{
 			alt: 'new sketch',
@@ -275,6 +286,12 @@
 							class="flex items-center text-sm hover:bg-sky-200"
 							on:contextmenu|preventDefault={(e) => {
 								solidContextMenu.rightClickContextMenu(e, solid_id)
+							}}
+							on:pointerenter={() => {
+								highlightSolid(solid_id)
+							}}
+							on:pointerleave={() => {
+								unhighlightSolid(solid_id)
 							}}
 						>
 							<img class="h-8 w-8 px-1" src="/actions/part.svg" alt="solid" />
