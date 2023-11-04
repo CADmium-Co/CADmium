@@ -26,8 +26,13 @@
 	$: if (outlined_solids) {
 		setOutlined($outlined_solids)
 	}
+
+	const onResize = (e) => {
+		// TODO: for some reason the canvas itself never gets resized...gotta fix this
+		console.log('Resized:', e)
+	}
 </script>
 
 <div class="h-[100%]">
-	<canvas class="w-[100%]" bind:this={el} />
+	<canvas class="w-[100%]" bind:this={el} on:resize={(e) => onResize(e)} />
 </div>

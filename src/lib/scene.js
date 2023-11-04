@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js'
 // import CameraControls from 'camera-controls';
 // CameraControls.install({ THREE: THREE });
-import { Text } from 'troika-three-text'
 import gsap from 'gsap'
 
 import { Point } from './point.js'
@@ -105,8 +104,8 @@ export const createScene = (el) => {
 		pulsePeriod: 0,
 		rotate: false,
 		usePatternTexture: false,
-		visibleEdgeColor: '#ffffff',
-		hiddenEdgeColor: '#ffffff'
+		visibleEdgeColor: '#00a7ff',
+		hiddenEdgeColor: '#00a7ff'
 	}
 
 	const { width, height } = el.getBoundingClientRect()
@@ -208,7 +207,7 @@ export const createScene = (el) => {
 
 	const getStarted = (el) => {
 		const { width, height } = el.getBoundingClientRect()
-		renderer = new THREE.WebGLRenderer({ antialias: true, canvas: el })
+		renderer = new THREE.WebGLRenderer({ antialias: false, canvas: el })
 		renderer.setPixelRatio(window.devicePixelRatio)
 		renderer.setSize(width, height)
 		renderer.setClearColor('#F8F8F8')
@@ -217,7 +216,8 @@ export const createScene = (el) => {
 		const renderPass = new RenderPass(scene, camera)
 		composer.addPass(renderPass)
 
-		outlinePass = new OutlinePass(new THREE.Vector2(width, height), scene, camera)
+		// outlinePass = new OutlinePass(new THREE.Vector2(width / 2, height * 2), scene, camera)
+		outlinePass = new OutlinePass(undefined, scene, camera)
 		composer.addPass(outlinePass)
 		outlinePass.edgeStrength = Number(params.edgeStrength)
 		outlinePass.edgeGlow = Number(params.edgeGlow)
@@ -229,12 +229,15 @@ export const createScene = (el) => {
 		outlinePass.hiddenEdgeColor.set(params.hiddenEdgeColor)
 		outlinePass.overlayMaterial.blending = THREE.SubtractiveBlending
 
+		const effectFXAA = new ShaderPass(FXAAShader)
+		effectFXAA.uniforms['resolution'].value.set(
+			1 / width / window.devicePixelRatio,
+			1 / height / window.devicePixelRatio
+		)
+		composer.addPass(effectFXAA)
+
 		const outputPass = new OutputPass()
 		composer.addPass(outputPass)
-
-		const effectFXAA = new ShaderPass(FXAAShader)
-		effectFXAA.uniforms['resolution'].value.set(1 / width, 1 / height)
-		composer.addPass(effectFXAA)
 
 		resize()
 		render()
