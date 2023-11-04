@@ -53,9 +53,9 @@
 		fileDownload(obj_string, solid_name + '.obj')
 	}
 	const exportSolidSTEP = () => {
-		let step_string = $realization_rust.solid_to_step(solid_name, 0.001)
+		let step_string = $realization_rust.solid_to_step(solid_name)
 		console.log(step_string)
-		fileDownload(step_string, solid_name + '.obj')
+		fileDownload(step_string, solid_name + '.step')
 	}
 
 	function remove() {
