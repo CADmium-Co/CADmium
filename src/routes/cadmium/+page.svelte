@@ -2,6 +2,8 @@
 	import MainCanvas from './mainCanvas.svelte'
 	import { browser } from '$app/environment'
 	import { onMount } from 'svelte'
+	import { slide } from 'svelte/transition'
+	import { quintOut } from 'svelte/easing'
 	import {
 		project_rust,
 		project,
@@ -9,12 +11,17 @@
 		realization,
 		active_workbench_index,
 		workbench,
-		outlined_solids
+		outlined_solids,
+		step_being_edited,
+		new_realization_needed
 	} from './stores.js'
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from 'cadmium'
 	import StepContextMenu from './stepContextMenu.svelte'
 	import SolidContextMenu from './solidContextMenu.svelte'
+	import ExtrudeForm from './extrudeForm.svelte'
+	import SketchForm from './sketchForm.svelte'
+	import PlaneForm from './planeForm.svelte'
 
 	let num_steps_applied = 1000
 	// let realization = {}
@@ -48,11 +55,17 @@
 	$: if ($project && $project.workbenches) {
 		workbench.set($project.workbenches[$active_workbench_index])
 		$project_rust.compute_constraint_errors()
-		// realization = JSON.parse($project_rust.get_realization(0, 1000))
-		realization_rust.set($project_rust.get_realization(0, 1000))
-		// let as_json = realization_rust.to_json()
-		// console.log("as json:", as_json)
-		realization.set(JSON.parse($realization_rust.to_json()))
+
+		new_realization_needed.set(true)
+	}
+
+	$: if ($new_realization_needed) {
+		const max_step = $step_being_edited >= 0 ? $step_being_edited + 1 : 1000
+		realization_rust.set($project_rust.get_realization(0, max_step))
+
+		const realization_as_json = JSON.parse($realization_rust.to_json())
+		realization.set(realization_as_json)
+		new_realization_needed.set(false)
 	}
 
 	const create_new_sketch = () => {
@@ -180,12 +193,10 @@
 	}
 
 	const highlightSolid = (solid_id) => {
-		// console.log('highlight solid', solid_id)
 		outlined_solids.set([...$outlined_solids, solid_id])
 	}
 
 	const unhighlightSolid = (solid_id) => {
-		// console.log('unhighlight solid', solid_id)
 		outlined_solids.set($outlined_solids.filter((id) => id !== solid_id))
 	}
 
@@ -212,6 +223,14 @@
 	const history_item_onclick = (item) => {
 		if (item?.data?.type === 'Plane') {
 			main_canvas.setCameraViewPlane2(item)
+		}
+	}
+
+	const history_item_on_dblclick = (item, item_index) => {
+		if ($step_being_edited === item_index) {
+			step_being_edited.set(-1)
+		} else {
+			step_being_edited.set(item_index)
 		}
 	}
 </script>
@@ -251,7 +270,7 @@
 		<div class="flex flex-col select-none">
 			<div class="font-bold text-sm px-2 py-2">History ({$workbench.history.length})</div>
 			<div>
-				{#each $workbench.history as item}
+				{#each $workbench.history as item, item_index}
 					<div
 						class="flex items-center text-sm hover:bg-sky-200"
 						on:click={() => {
@@ -260,9 +279,10 @@
 						on:keypress={() => {
 							history_item_onclick(item)
 						}}
+						on:dblclick={() => {
+							history_item_on_dblclick(item, item_index)
+						}}
 						on:contextmenu|preventDefault={(e) => {
-							console.log('right click', e)
-							console.log('what is step context menu?', stepContextMenu)
 							stepContextMenu.rightClickContextMenu(e)
 						}}
 						role="button"
@@ -271,6 +291,19 @@
 						<img class="h-8 w-8 px-1" src={icon_mapping[item.data.type]} alt={item.name} />
 						{item['name']}
 					</div>
+					{#if item_index === $step_being_edited}
+						<div transition:slide={{ delay: 0, duration: 300, easing: quintOut, axis: 'y' }}>
+							{#if item.data.type === 'Extrusion'}
+								<ExtrudeForm {item} />
+							{/if}
+							{#if item.data.type === 'Sketch'}
+								<SketchForm {item} />
+							{/if}
+							{#if item.data.type === 'Plane'}
+								<PlaneForm {item} />
+							{/if}
+						</div>
+					{/if}
 				{/each}
 			</div>
 		</div>

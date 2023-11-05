@@ -300,7 +300,7 @@ export const setRealization = (realization) => {
 			faces,
 			element
 		)
-		sketches[name].addTo(scene)
+		// sketches[name].addTo(scene)
 	}
 
 	for (const [name, solid] of Object.entries(realization.solids)) {

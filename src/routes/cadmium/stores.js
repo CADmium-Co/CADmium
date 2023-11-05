@@ -10,3 +10,6 @@ export const active_workbench_index = writable(-1)
 export const workbench = writable({ history: [] })
 
 export const outlined_solids = writable([])
+
+export const step_being_edited = writable(-1)
+export const new_realization_needed = writable(false)

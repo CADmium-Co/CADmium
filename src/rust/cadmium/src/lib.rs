@@ -51,7 +51,7 @@ impl Project {
     pub fn get_realization(&self, workbench_id: u32, max_steps: u32) -> Realization {
         let realized = self
             .native
-            .get_realization(workbench_id as u64, 1000 as u64);
+            .get_realization(workbench_id as u64, max_steps as u64);
 
         Realization { native: realized }
 

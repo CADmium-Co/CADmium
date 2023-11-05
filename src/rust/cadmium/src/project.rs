@@ -173,17 +173,24 @@ impl Project {
                 workbench.add_extrusion(extrusion_name, extrusion);
                 Ok("".to_owned())
             }
-            Message::ExportSTEP {
+            Message::UpdateExtrusionLength {
                 workbench_id,
-                solid_name,
+                extrusion_name,
+                length,
             } => {
-                let workbench = &self.workbenches[*workbench_id as usize];
-                let solid = &workbench.history[workbench.history.len() - 1];
-                let result = serde_json::to_string(solid);
-                match result {
-                    Ok(json) => Ok(json),
-                    Err(e) => Err(format!("Error: {}", e)),
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                for step in workbench.history.iter_mut() {
+                    match &mut step.data {
+                        StepData::Extrusion { extrusion } => {
+                            if step.name == *extrusion_name {
+                                extrusion.length = *length;
+                                return Ok("Done".to_owned());
+                            }
+                        }
+                        _ => {}
+                    }
                 }
+                Err(format!("Extrusion {} not found", extrusion_name))
             }
         }
     }
@@ -847,9 +854,10 @@ pub enum Message {
         offset: f64,
         direction: Vector3,
     },
-    ExportSTEP {
+    UpdateExtrusionLength {
         workbench_id: u64,
-        solid_name: String,
+        extrusion_name: String,
+        length: f64,
     },
 }
 
