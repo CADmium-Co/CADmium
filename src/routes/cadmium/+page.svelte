@@ -13,7 +13,8 @@
 		workbench,
 		outlined_solids,
 		step_being_edited,
-		new_realization_needed
+		new_realization_needed,
+		sketch_being_edited
 	} from './stores.js'
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from 'cadmium'
@@ -44,22 +45,20 @@
 			init().then(() => {
 				let p = new Project('First Project')
 				project_rust.set(p)
-				project.set(JSON.parse(p.json))
 				active_workbench_index.set(0)
+
+				new_realization_needed.set(true)
 			})
 		})
 	}
 
 	let username = 'mattferraro.dev'
 
-	$: if ($project && $project.workbenches) {
-		workbench.set($project.workbenches[$active_workbench_index])
-		$project_rust.compute_constraint_errors()
-
-		new_realization_needed.set(true)
-	}
-
 	$: if ($new_realization_needed) {
+		console.log('getting new realization')
+		project.set(JSON.parse($project_rust.json))
+		workbench.set($project.workbenches[$active_workbench_index])
+
 		const max_step = $step_being_edited >= 0 ? $step_being_edited + 1 : 1000
 		realization_rust.set($project_rust.get_realization(0, max_step))
 
@@ -229,8 +228,11 @@
 	const history_item_on_dblclick = (item, item_index) => {
 		if ($step_being_edited === item_index) {
 			step_being_edited.set(-1)
+			sketch_being_edited.set(null)
+			new_realization_needed.set(true)
 		} else {
 			step_being_edited.set(item_index)
+			new_realization_needed.set(true)
 		}
 	}
 </script>

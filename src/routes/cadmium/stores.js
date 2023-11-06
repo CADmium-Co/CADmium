@@ -13,3 +13,4 @@ export const outlined_solids = writable([])
 
 export const step_being_edited = writable(-1)
 export const new_realization_needed = writable(false)
+export const sketch_being_edited = writable(null)

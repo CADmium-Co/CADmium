@@ -16,7 +16,11 @@ class Solid {
 		geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
 		geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normals, 3))
 
-		const material = new THREE.MeshStandardMaterial({ color: 0xaaaaaa })
+		const material = new THREE.MeshStandardMaterial({
+			color: 0xbbbbbb,
+			side: THREE.DoubleSide,
+			wireframe: false
+		})
 		this.mesh = new THREE.Mesh(geometry, material)
 
 		this.group = new THREE.Group()
@@ -24,9 +28,9 @@ class Solid {
 
 		// add edges!
 		let edges = new THREE.EdgesGeometry(geometry, 15)
-		let mat = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 })
+		let mat = new THREE.LineBasicMaterial({ color: 0x000000 })
 		let wireframe = new THREE.LineSegments(edges, mat)
-		wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
+		// wireframe.renderOrder = 1 // make sure wireframes are rendered 2nd
 
 		this.group.add(wireframe)
 	}

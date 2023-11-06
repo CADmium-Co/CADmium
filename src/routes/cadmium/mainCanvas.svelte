@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment'
 	import { createScene, setRealization, setCameraViewPlane, setOutlined } from '$lib/scene.js'
 
-	import { outlined_solids } from './stores'
+	import { outlined_solids, sketch_being_edited } from './stores'
 
 	let el
 	if (browser) {
@@ -15,7 +15,7 @@
 	}
 
 	$: if (realization && realization.planes && el) {
-		setRealization(realization)
+		setRealization(realization, $sketch_being_edited)
 	}
 
 	export function setCameraViewPlane2(plane) {

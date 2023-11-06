@@ -58,10 +58,6 @@
 		fileDownload(step_string, solid_name + '.step')
 	}
 
-	function remove() {
-		console.log('remove item')
-	}
-
 	let menuItems = [
 		{
 			name: 'export',
@@ -74,16 +70,10 @@
 			onClick: exportSolidSTEP,
 			displayText: 'Download as STEP',
 			class: 'fa-solid fa-download'
-		},
-		{
-			name: 'hr'
-		},
-		{
-			name: 'trash',
-			onClick: remove,
-			displayText: 'Delete',
-			class: 'fa-solid fa-trash-can'
 		}
+		// {
+		// 	name: 'hr'
+		// }
 	]
 </script>
 

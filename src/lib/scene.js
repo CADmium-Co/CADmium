@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { TrackballControls } from 'three/addons/controls/TrackballControls.js'
 // import CameraControls from 'camera-controls';
 // CameraControls.install({ THREE: THREE });
+
 import gsap from 'gsap'
 
 import { Point } from './point.js'
@@ -207,7 +208,11 @@ export const createScene = (el) => {
 
 	const getStarted = (el) => {
 		const { width, height } = el.getBoundingClientRect()
-		renderer = new THREE.WebGLRenderer({ antialias: false, canvas: el })
+		renderer = new THREE.WebGLRenderer({
+			antialias: false,
+			canvas: el
+			// logarithmicDepthBuffer: true
+		})
 		renderer.setPixelRatio(window.devicePixelRatio)
 		renderer.setSize(width, height)
 		renderer.setClearColor('#F8F8F8')
@@ -251,7 +256,8 @@ export const createScene = (el) => {
 	getStarted(el)
 }
 
-export const setRealization = (realization) => {
+export const setRealization = (realization, sketch_being_edited) => {
+	console.log('setting realization')
 	if (!element) {
 		console.log('element is not set!', element, renderer)
 		return
@@ -300,7 +306,11 @@ export const setRealization = (realization) => {
 			faces,
 			element
 		)
-		// sketches[name].addTo(scene)
+		sketches[name].addTo(scene)
+
+		if (sketch_being_edited === name) {
+			sketches[name].setEditing(true)
+		}
 	}
 
 	for (const [name, solid] of Object.entries(realization.solids)) {

@@ -22,11 +22,17 @@ class Plane {
 		this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio
 		this.material = new THREE.MeshStandardMaterial({
 			color: this.fillColor,
+			// color: '#ffff00',
 			side: THREE.DoubleSide,
 			metalness: 0.0,
 			transparent: true,
-			opacity: 0.05,
-			depthWrite: false
+			opacity: 0.1,
+			depthWrite: false,
+			depthTest: true,
+			wireframe: false
+			// polygonOffset: true,
+			// polygonOffsetFactor: 4.0,
+			// polygonOffsetUnits: 4.0
 		})
 		this.lineMaterial = new LineMaterial({
 			color: this.strokeColor,

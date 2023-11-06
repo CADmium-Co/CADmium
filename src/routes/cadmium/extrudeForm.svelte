@@ -45,6 +45,7 @@
 		class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-1 rounded shadow"
 		on:click={() => {
 			step_being_edited.set(-1)
+			new_realization_needed.set(true)
 		}}>Done</button
 	>
 </div>

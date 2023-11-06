@@ -5,9 +5,12 @@ import { Arc } from './arc.js'
 import { Circle } from './circle.js'
 import { Face } from './face.js'
 import { Constraint } from './constraint.js'
+import { sketch_being_edited } from '../routes/cadmium/stores.js'
 
 class Sketch {
 	constructor(name, real_sketch, real_plane, points, lines, arcs, circles, faces, element) {
+		this.being_edited = false
+		this.always_visible = false
 		this.name = name
 		this.real_plane = real_plane
 		this.points = real_sketch.points
@@ -72,6 +75,20 @@ class Sketch {
 				circles
 			)
 			constraint2.addTo(this.group)
+		}
+
+		// by default, hide the sketch
+		this.group.visible = false
+	}
+
+	setEditing(editing) {
+		console.log('sketch set editing:', editing)
+		// sketch_being_edited.set(editing)
+		this.being_edited = editing
+		if (this.always_visible || this.being_edited) {
+			this.group.visible = true
+		} else {
+			this.group.visible = false
 		}
 	}
 
