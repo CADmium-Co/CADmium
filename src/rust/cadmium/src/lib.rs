@@ -63,8 +63,8 @@ impl Project {
     pub fn send_message(&mut self, message: String) -> String {
         let result = self.native.handle_message_string(&message);
         match result {
-            Ok(s) => s,
-            Err(e) => e,
+            Ok(s) => format!("{{ \"success\": {{ {} }} }}", s),
+            Err(e) => format!("{{ \"error\": {{ {} }} }}", e),
         }
     }
 

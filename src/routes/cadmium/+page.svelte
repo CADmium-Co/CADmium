@@ -68,6 +68,25 @@
 	}
 
 	const create_new_sketch = () => {
+		console.log('Create new sketch')
+		let message_obj = {
+			NewSketch: {
+				workbench_id: $active_workbench_index,
+				sketch_name: '',
+				plane_name: ''
+			}
+		}
+		console.log('Using this message:', message_obj)
+
+		let result = $project_rust.send_message(JSON.stringify(message_obj))
+		console.log('result as string: ', result)
+		console.log('result parsed: ', JSON.parse(result))
+
+		new_realization_needed.set(true)
+		// sketch_being_edited.set(result)
+	}
+
+	const create_new_sketch_old_example = () => {
 		let messages = [
 			{
 				NewPointOnSketch: {

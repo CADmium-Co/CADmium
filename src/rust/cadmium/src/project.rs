@@ -71,8 +71,18 @@ impl Project {
     }
 
     pub fn handle_message_string(&mut self, message_string: &str) -> Result<String, String> {
-        let message = Message::from_json(message_string)?;
-        self.handle_message(&message)
+        let message = Message::from_json(message_string);
+        match message {
+            Err(e) => Err(format!("parsing_error: \"{}\"", e)),
+            Ok(msg) => {
+                let result = self.handle_message(&msg);
+
+                match result {
+                    Ok(res) => Ok(res),
+                    Err(e) => Err(format!("message_handling_error: \"{}\"", e)),
+                }
+            }
+        }
     }
 
     pub fn handle_message(&mut self, message: &Message) -> Result<String, String> {
@@ -130,8 +140,23 @@ impl Project {
                 plane_name,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
-                workbench.add_sketch(sketch_name, plane_name);
-                Ok("".to_owned())
+                // If the sketch name is empty string, then we need to generate a new name
+                // Let's use "Sketch n" where n is the number of sketches
+                let sketch_name = if sketch_name == "" {
+                    format!("Sketch {}", workbench.history.len())
+                } else {
+                    sketch_name.to_owned()
+                };
+
+                // if the plane name is empty string, default to "Top"
+                let plane_name = if plane_name == "" {
+                    "Top".to_owned()
+                } else {
+                    plane_name.to_owned()
+                };
+
+                workbench.add_sketch(&sketch_name, &plane_name);
+                Ok(format!("\"sketch_name\": \"{}\"", sketch_name))
             }
             Message::DeleteSketch {
                 workbench_id,
@@ -184,7 +209,7 @@ impl Project {
                         StepData::Extrusion { extrusion } => {
                             if step.name == *extrusion_name {
                                 extrusion.length = *length;
-                                return Ok("Done".to_owned());
+                                return Ok(format!("\"length\": {}", length));
                             }
                         }
                         _ => {}
@@ -910,5 +935,16 @@ mod tests {
     fn one_extrusion() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
+
+        let message = &Message::NewSketch {
+            workbench_id: 0,
+            sketch_name: "".to_owned(),
+            plane_name: "".to_owned(),
+        };
+
+        let result = p.handle_message(message);
+        println!("{:?}", result);
+
+        let realization = p.get_realization(0, 1000);
     }
 }

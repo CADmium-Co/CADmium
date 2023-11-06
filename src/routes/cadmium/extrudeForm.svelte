@@ -20,7 +20,7 @@
 		console.log('message:', message)
 
 		let result = $project_rust.send_message(JSON.stringify(message))
-		console.log(result)
+		console.log('updating extrusion length result: ', result)
 		new_realization_needed.set(true)
 	}
 </script>
