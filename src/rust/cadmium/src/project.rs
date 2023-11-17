@@ -158,6 +158,38 @@ impl Project {
                 workbench.add_sketch(&sketch_name, &plane_name);
                 Ok(format!("\"sketch_name\": \"{}\"", sketch_name))
             }
+            Message::UpdateSketchPlane {
+                workbench_id,
+                sketch_name,
+                plane_name: pn,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+
+                for step in workbench.history.iter_mut() {
+                    if step.name == *sketch_name {
+                        match &mut step.data {
+                            StepData::Sketch {
+                                plane_name: pn2,
+                                width,
+                                height,
+                                sketch,
+                            } => {
+                                step.data = StepData::Sketch {
+                                    plane_name: pn.to_owned(),
+                                    width: *width,
+                                    height: *height,
+                                    sketch: sketch.clone(),
+                                };
+
+                                return Ok(format!("\"plane_name\": \"{}\"", pn));
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+
+                Ok("".to_owned())
+            }
             Message::DeleteSketch {
                 workbench_id,
                 sketch_name,
@@ -866,6 +898,11 @@ pub enum Message {
         sketch_name: String,
         plane_name: String,
     },
+    UpdateSketchPlane {
+        workbench_id: u64,
+        sketch_name: String,
+        plane_name: String,
+    },
     DeleteSketch {
         workbench_id: u64,
         sketch_name: String,
@@ -944,6 +981,27 @@ mod tests {
 
         let result = p.handle_message(message);
         println!("{:?}", result);
+
+        let realization = p.get_realization(0, 1000);
+    }
+
+    #[test]
+    fn move_sketch() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+
+        let message = &Message::UpdateSketchPlane {
+            workbench_id: 0,
+            sketch_name: "Sketch 1".to_owned(),
+            plane_name: "Right".to_owned(),
+        };
+
+        let result = p.handle_message(message);
+        match result {
+            Ok(res) => println!("{}", res),
+            Err(e) => println!("{}", e),
+        }
+        // println!("{:?}", result);
 
         let realization = p.get_realization(0, 1000);
     }

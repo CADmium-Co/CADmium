@@ -1,13 +1,48 @@
 <script>
 	export let item
-	import { new_realization_needed, step_being_edited, sketch_being_edited } from './stores'
+	import {
+		new_realization_needed,
+		step_being_edited,
+		sketch_being_edited,
+		looking_for,
+		found,
+		project_rust
+	} from './stores'
 	sketch_being_edited.set(item.name)
-	// console.log('Sketch form item:', item.data.plane_name)
+
+	const on_looking_for_plane = () => {
+		console.log('looking for plane')
+		looking_for.set(['plane'])
+	}
+
+	const on_no_longer_looking_for_plane = () => {
+		console.log('no longer looking for plane')
+		looking_for.set([])
+
+		$project_rust.send_message({
+			type: 'SetSketchPlane'
+		})
+	}
+
+	found.subscribe((val) => {
+		if (val && val.length > 0) {
+			let new_plane = val[0]
+			console.log('Found a plane: ', new_plane)
+			item.data.plane_name = new_plane.name
+			looking_for.set([])
+		}
+	})
 </script>
 
 <div class="px-3 py-2 bg-gray-300 flex flex-col space-y-2">
 	<div class="text-sm">Plane</div>
-	<div class="bg-gray-50 rounded flex shadow border">
+	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<div
+		tabindex="0"
+		class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500"
+		on:focus={on_looking_for_plane}
+		on:blur={on_no_longer_looking_for_plane}
+	>
 		<div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
 			{item.data.plane_name}
 			<button class="rounded px-1 hover:bg-sky-400"><i class="fa-solid fa-x fa-xs" /></button>

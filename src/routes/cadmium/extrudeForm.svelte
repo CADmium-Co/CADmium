@@ -27,7 +27,8 @@
 
 <div class="px-3 py-2 bg-gray-300 flex flex-col space-y-2">
 	<div class="text-sm">Faces</div>
-	<div class="bg-gray-50 rounded flex shadow border">
+	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+	<div tabindex="0" class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500">
 		{#each item.data.extrusion.face_ids as face_id}
 			<div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
 				{item.data.extrusion.sketch_name}:{face_id}
@@ -37,7 +38,7 @@
 	</div>
 	<div class="text-sm">Depth (m)</div>
 	<input
-		class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+		class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:border focus:border-blue-500"
 		value={item.data.extrusion.length}
 		on:change={update_extrusion_length}
 	/>

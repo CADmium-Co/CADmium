@@ -34,32 +34,47 @@ const last_click = new THREE.Vector2(-1.0, -1.0)
 
 let element
 
-let selectable = []
 let selected = []
 let moving_camera = false
+let looking_for = []
+let onFound = () => {}
 
 const onPointerMove = (event) => {
 	pointer.x = ((event.offsetX * window.devicePixelRatio) / element.width) * 2 - 1
 	pointer.y = -((event.offsetY * window.devicePixelRatio) / element.height) * 2 + 1
 }
 
+export const setOnFound = (foundHandler) => {
+	onFound = foundHandler
+	// console.log('Have a new on found handler')
+}
+
 const onPointerClick = (event) => {
+	event.preventDefault()
+	event.stopImmediatePropagation()
 	last_click.x = (event.offsetX / element.width) * 2 - 1
 	last_click.y = -(event.offsetY / element.height) * 2 + 1
-	console.log('Clicked!')
+	console.log('Clicked! Could be looking for anything:', looking_for)
 
 	raycaster.setFromCamera(pointer, camera)
-	if (selectable.includes('planes')) {
+	if (looking_for.includes('plane')) {
+		console.log('okay looking for a plane...')
 		let just_meshes = Object.values(planes).map((plane) => plane.mesh)
 		const intersections = raycaster.intersectObjects(just_meshes)
 		if (intersections.length > 0) {
+			console.log('OH I FOUND A PLANE')
 			let first_intersection = intersections[0]
 			let plane_name = first_intersection.object.name
 			let plane = planes[plane_name]
 			plane.setSelectionStatus('selected')
 			selected.push({ type: 'plane', name: plane_name, object: plane })
+			onFound({ type: 'plane', name: plane_name, object: plane })
 		}
 	}
+}
+
+export const set_looking_for = (lf) => {
+	looking_for = lf
 }
 
 export const setCameraViewPlane = (plane) => {
@@ -67,12 +82,6 @@ export const setCameraViewPlane = (plane) => {
 	let normal = plane.data.plane.tertiary
 	normal = new THREE.Vector3(normal.x, normal.y, normal.z)
 	normal.multiplyScalar(20)
-
-	// camera.position.x = normal.x
-	// camera.position.y = normal.y
-	// camera.position.z = normal.z
-	// camera.lookAt(0, 0, 0)
-	// camera.up = new THREE.Vector3(secondary.x, secondary.y, secondary.z)
 
 	gsap.to(camera.position, {
 		x: normal.x,
@@ -159,10 +168,9 @@ export const createScene = (el) => {
 		}
 		// then deselect all solids, all lines, all points, etc
 
-		// Now check for intersections but only for things that should
-		// be selectable right now
+		// Now check for intersections but only for things that we are looking_for
 		raycaster.setFromCamera(pointer, camera)
-		if (selectable.includes('planes')) {
+		if (looking_for.includes('plane')) {
 			let just_meshes = Object.values(planes).map((plane) => plane.mesh)
 			const intersections = raycaster.intersectObjects(just_meshes)
 			if (intersections.length > 0) {
@@ -251,6 +259,10 @@ export const createScene = (el) => {
 	window.addEventListener('resize', resize)
 
 	el.addEventListener('pointermove', onPointerMove)
+	el.addEventListener('pointerdown', (event) => {
+		event.preventDefault()
+		// event.stopImmediatePropagation()
+	})
 	el.addEventListener('click', onPointerClick)
 
 	getStarted(el)
