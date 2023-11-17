@@ -10,6 +10,8 @@
 	} from './stores'
 	sketch_being_edited.set(item.name)
 
+	let plane_name = item.data.plane_name
+
 	const on_looking_for_plane = () => {
 		console.log('looking for plane')
 		looking_for.set(['plane'])
@@ -19,9 +21,16 @@
 		console.log('no longer looking for plane')
 		looking_for.set([])
 
-		$project_rust.send_message({
-			type: 'SetSketchPlane'
-		})
+		let message_obj = {
+			UpdateSketchPlane: {
+				workbench_id: 0,
+				sketch_name: $sketch_being_edited,
+				plane_name: plane_name
+			}
+		}
+
+		console.log('sending message:', message_obj)
+		$project_rust.send_message(JSON.stringify(message_obj))
 	}
 
 	found.subscribe((val) => {
@@ -29,6 +38,7 @@
 			let new_plane = val[0]
 			console.log('Found a plane: ', new_plane)
 			item.data.plane_name = new_plane.name
+			plane_name = new_plane.name
 			looking_for.set([])
 		}
 	})
