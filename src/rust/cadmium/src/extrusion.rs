@@ -34,8 +34,14 @@ pub struct Extrusion {
     pub face_ids: Vec<u64>,
     pub length: f64,
     pub offset: f64,
-    pub direction: Vector3,
+    pub direction: Direction,
     // TODO: add a "mode" field for "new" vs "add" vs "remove"
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum Direction {
+    Normal,
+    Specified(Vector3),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -62,7 +68,12 @@ impl Solid {
     ) -> HashMap<String, Self> {
         let mut retval = HashMap::new();
 
-        let extrusion_vector = extrusion.direction.times(extrusion.length);
+        let extrusion_direction = match &extrusion.direction {
+            Direction::Normal => plane.plane.tertiary.clone(),
+            Direction::Specified(vector) => vector.clone(),
+        };
+
+        let extrusion_vector = extrusion_direction.times(extrusion.length);
         let vector = TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
 
         for face_id in &extrusion.face_ids {

@@ -1,5 +1,5 @@
 use crate::{
-    extrusion::{Extrusion, Solid},
+    extrusion::{Direction, Extrusion, Solid},
     sketch::{Constraint, Face, Point2, Sketch},
 };
 use serde::{Deserialize, Serialize};
@@ -370,7 +370,7 @@ impl Workbench {
                 face_ids: vec![2, 3],
                 length: 0.25,
                 offset: 0.0,
-                direction: Vector3::new(0.0, 0.0, 1.0),
+                direction: Direction::Normal,
             },
         );
 
@@ -914,7 +914,7 @@ pub enum Message {
         face_ids: Vec<u64>,
         length: f64,
         offset: f64,
-        direction: Vector3,
+        direction: Direction,
     },
     UpdateExtrusionLength {
         workbench_id: u64,

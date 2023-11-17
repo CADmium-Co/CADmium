@@ -1,5 +1,4 @@
 <script>
-	export let realization
 	import { onMount } from 'svelte'
 	import { browser } from '$app/environment'
 	import {
@@ -11,7 +10,7 @@
 		setOnFound
 	} from '$lib/scene.js'
 
-	import { looking_for, found, outlined_solids, sketch_being_edited } from './stores'
+	import { realization, looking_for, found, outlined_solids, sketch_being_edited } from './stores'
 
 	const on_found = (item) => {
 		console.log('found:', item)
@@ -27,8 +26,8 @@
 		})
 	}
 
-	$: if (realization && realization.planes && el) {
-		setRealization(realization, $sketch_being_edited)
+	$: if ($realization && $realization.planes && el) {
+		setRealization($realization, $sketch_being_edited)
 	}
 
 	export function setCameraViewPlane2(plane) {
