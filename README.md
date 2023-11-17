@@ -3,6 +3,7 @@
 This is an attempt to create a new CAD program from scratch. Legacy CAD programs have taken many thousands of years of collective engineering time to get where they are so this program will never be able to compete on breadth of features. CADmium is intended to capture 80% of the most common CAD use cases while doing less than 20% of the work.
 
 Features:
+
 - Simple, modern parametric CAD UI
 - Runs in a browser
 - Export as STEP, STL, or OBJ
@@ -26,14 +27,14 @@ The entire project is available under the MIT license.
 
 Before the project is minimally viable, I believe the following features are needed from the API:
 
-- A system for creating and solving 2D constraints
+- ~~A system for creating and solving 2D constraints~~
 - DXF export for sketches
-- Extrusion support
+- ~~Extrusion support~~
 - Revolution support
 - Save/load entire projects to/from local json files
-- Get a list of solids from the workbench
-- Export solids as .step
-- Export solids as .obj
+- ~~Get a list of solids from the workbench~~
+- ~~Export solids as .step~~
+- ~~Export solids as .obj~~
 - Create new plane on a face of a solid. Create a sketch on that plane
 
 And from the UI:
@@ -42,9 +43,9 @@ And from the UI:
 - Ability to create/delete extrusions and revolutions
 - Ability to save/load entire projects
 - Natural UX for sketching and modifying sketches
-    - A system for viewing and modifying sketch constraints, and seeing how well they are satisfied
-    - "Smart Constraints" which can be toggled on or off as you draw
+  - A system for viewing and modifying sketch constraints, and seeing how well they are satisfied
+  - "Smart Constraints" which can be toggled on or off as you draw
 - Natural UX for when the history breaks, like when you delete a face that gets extruded later
-- Export solids as .step or .obj
+- ~~Export solids as .step or .obj~~
 - Orientation cube in upper right
 - Modify controls to be interoperable with either Fusion260, Onshape, Solidworks, or whatever the user prefers
