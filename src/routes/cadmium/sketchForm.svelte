@@ -10,6 +10,8 @@
 	} from './stores'
 	sketch_being_edited.set(item.name)
 
+	let mode = 'Select'
+	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
 	let plane_name = item.data.plane_name
 
 	const on_looking_for_plane = () => {
@@ -58,6 +60,31 @@
 			<button class="rounded px-1 hover:bg-sky-400"><i class="fa-solid fa-x fa-xs" /></button>
 		</div>
 	</div>
+
+	<div class="text-sm">Mode</div>
+	<div class="flex">
+		{#each sketch_modes as sketch_mode}
+			{#if sketch_mode.name === mode}
+				<div
+					class="text-sm py-1 bg-white flex-grow border-solid border-2 rounded border-sky-500 text-center"
+				>
+					{sketch_mode.name}
+				</div>
+			{:else}
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<div
+					class="text-sm py-1 bg-gray-200 flex-grow rounded border-solid border-2 border-gray-500 text-center hover:bg-gray-300"
+					on:click={() => {
+						mode = sketch_mode.name
+					}}
+				>
+					{sketch_mode.name}
+				</div>
+			{/if}
+		{/each}
+	</div>
+
 	<button
 		class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-1 rounded shadow"
 		on:click={() => {
