@@ -54,7 +54,7 @@ const onPointerClick = (event) => {
 	event.stopImmediatePropagation()
 	last_click.x = (event.offsetX / element.width) * 2 - 1
 	last_click.y = -(event.offsetY / element.height) * 2 + 1
-	console.log('Clicked! Could be looking for anything:', looking_for)
+	// console.log('Clicked! Could be looking for anything:', looking_for)
 
 	raycaster.setFromCamera(pointer, camera)
 	if (looking_for.includes('plane')) {
@@ -69,6 +69,21 @@ const onPointerClick = (event) => {
 			plane.setSelectionStatus('selected')
 			selected.push({ type: 'plane', name: plane_name, object: plane })
 			onFound({ type: 'plane', name: plane_name, object: plane })
+		}
+	}
+
+	if (looking_for.includes('line')) {
+		console.log('okay looking for a line...')
+		let just_meshes = Object.values(lines).map((line) => line.mesh)
+		const intersections = raycaster.intersectObjects(just_meshes)
+		if (intersections.length > 0) {
+			console.log('OH I FOUND A LINE')
+			let first_intersection = intersections[0]
+			let line_name = first_intersection.object.name
+			let line = lines[line_name]
+			line.setSelectionStatus('selected')
+			selected.push({ type: 'line', name: line_name, object: line })
+			// onFound({ type: 'line', name: line_name, object: line })
 		}
 	}
 }
@@ -137,6 +152,11 @@ const handleMouseover = () => {
 			// console.log('line name', line_name)
 			let line = lines[line_name]
 			// console.log('line', line)
+
+			if (line.selectionStatus === 'selected') {
+				return
+			}
+
 			line.setSelectionStatus('mouseOver')
 		}
 	}

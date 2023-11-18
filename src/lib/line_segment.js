@@ -50,7 +50,7 @@ class LineSegment {
 		})
 
 		this.selectedMaterial = new LineMaterial({
-			color: '#0000FF',
+			color: '#ffa500',
 			linewidth: line_w,
 			resolution: resolution_vector
 		})
@@ -66,6 +66,7 @@ class LineSegment {
 	}
 
 	setSelectionStatus(status) {
+		console.log('setting selection status to', status)
 		if (status === 'unselected') {
 			this.mesh.material = this.defaultMaterial
 		} else if (status === 'mouseOver') {
