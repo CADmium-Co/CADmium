@@ -49,45 +49,6 @@ export const setOnFound = (foundHandler) => {
 	// console.log('Have a new on found handler')
 }
 
-const onPointerClick = (event) => {
-	event.preventDefault()
-	event.stopImmediatePropagation()
-	last_click.x = (event.offsetX / element.width) * 2 - 1
-	last_click.y = -(event.offsetY / element.height) * 2 + 1
-	// console.log('Clicked! Could be looking for anything:', looking_for)
-
-	raycaster.setFromCamera(pointer, camera)
-	if (looking_for.includes('plane')) {
-		console.log('okay looking for a plane...')
-		let just_meshes = Object.values(planes).map((plane) => plane.mesh)
-		const intersections = raycaster.intersectObjects(just_meshes)
-		if (intersections.length > 0) {
-			console.log('OH I FOUND A PLANE')
-			let first_intersection = intersections[0]
-			let plane_name = first_intersection.object.name
-			let plane = planes[plane_name]
-			plane.setSelectionStatus('selected')
-			selected.push({ type: 'plane', name: plane_name, object: plane })
-			onFound({ type: 'plane', name: plane_name, object: plane })
-		}
-	}
-
-	if (looking_for.includes('line')) {
-		console.log('okay looking for a line...')
-		let just_meshes = Object.values(lines).map((line) => line.mesh)
-		const intersections = raycaster.intersectObjects(just_meshes)
-		if (intersections.length > 0) {
-			console.log('OH I FOUND A LINE')
-			let first_intersection = intersections[0]
-			let line_name = first_intersection.object.name
-			let line = lines[line_name]
-			line.setSelectionStatus('selected')
-			selected.push({ type: 'line', name: line_name, object: line })
-			// onFound({ type: 'line', name: line_name, object: line })
-		}
-	}
-}
-
 export const set_looking_for = (lf) => {
 	looking_for = lf
 }
@@ -158,6 +119,46 @@ const handleMouseover = () => {
 			}
 
 			line.setSelectionStatus('mouseOver')
+		}
+	}
+}
+
+const onPointerClick = (event) => {
+	event.preventDefault()
+	event.stopImmediatePropagation()
+	last_click.x = (event.offsetX / element.width) * 2 - 1
+	last_click.y = -(event.offsetY / element.height) * 2 + 1
+	// console.log('Clicked! Could be looking for anything:', looking_for)
+
+	raycaster.setFromCamera(pointer, camera)
+	if (looking_for.includes('plane')) {
+		let just_meshes = Object.values(planes).map((plane) => plane.mesh)
+		const intersections = raycaster.intersectObjects(just_meshes)
+		if (intersections.length > 0) {
+			let first_intersection = intersections[0]
+			let plane_name = first_intersection.object.name
+			let plane = planes[plane_name]
+			plane.setSelectionStatus('selected')
+			selected.push({ type: 'plane', name: plane_name, object: plane })
+			onFound({ type: 'plane', name: plane_name, object: plane })
+		}
+	}
+
+	if (looking_for.includes('line')) {
+		let just_meshes = Object.values(lines).map((line) => line.mesh)
+		const intersections = raycaster.intersectObjects(just_meshes)
+		if (intersections.length > 0) {
+			let first_intersection = intersections[0]
+			let line_name = first_intersection.object.name
+			let line = lines[line_name]
+
+			if (line.selectionStatus === 'selected') {
+				line.setSelectionStatus('unselected')
+			} else {
+				line.setSelectionStatus('selected')
+			}
+			selected.push({ type: 'line', name: line_name, object: line })
+			// onFound({ type: 'line', name: line_name, object: line })
 		}
 	}
 }

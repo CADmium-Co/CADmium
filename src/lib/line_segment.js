@@ -44,7 +44,7 @@ class LineSegment {
 		})
 
 		this.mouseOverMaterial = new LineMaterial({
-			color: '#ffa500',
+			color: '#ffc966',
 			linewidth: line_w,
 			resolution: resolution_vector
 		})
