@@ -28,26 +28,54 @@ class LineSegment {
 		const line_geometry = new LineGeometry()
 		line_geometry.setPositions(line_vertices)
 
+		let resolution_vector = new THREE.Vector2(
+			element.width * window.devicePixelRatio,
+			element.height * window.devicePixelRatio
+		)
+		let line_w = (this.lineWidth =
+			SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio)
+
+		this.selectionStatus = 'unselected' // could also be 'mouseOver' or 'selected'
+
 		this.defaultMaterial = new LineMaterial({
 			color: '#000000',
-			linewidth: (this.lineWidth =
-				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
-			depthTest: true,
-			transparent: true,
-			dashed: false,
-			resolution: new THREE.Vector2(
-				element.width * window.devicePixelRatio,
-				element.height * window.devicePixelRatio
-			)
+			linewidth: line_w,
+			resolution: resolution_vector
+		})
+
+		this.mouseOverMaterial = new LineMaterial({
+			color: '#ffa500',
+			linewidth: line_w,
+			resolution: resolution_vector
+		})
+
+		this.selectedMaterial = new LineMaterial({
+			color: '#0000FF',
+			linewidth: line_w,
+			resolution: resolution_vector
 		})
 
 		const fat_line = new Line2(line_geometry, this.defaultMaterial)
 		fat_line.computeLineDistances()
 		this.mesh = fat_line
+		this.mesh.name = name
 	}
 
 	addTo(object) {
 		object.add(this.mesh)
+	}
+
+	setSelectionStatus(status) {
+		if (status === 'unselected') {
+			this.mesh.material = this.defaultMaterial
+		} else if (status === 'mouseOver') {
+			this.mesh.material = this.mouseOverMaterial
+		} else if (status === 'selected') {
+			this.mesh.material = this.selectedMaterial
+		} else {
+			throw new Error('Invalid selection status: ', status)
+		}
+		this.selectionStatus = status
 	}
 }
 

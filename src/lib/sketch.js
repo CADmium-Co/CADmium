@@ -30,15 +30,15 @@ class Sketch {
 		}
 
 		for (let [line_segment_id, line_segment] of Object.entries(this.line_segments)) {
+			let extendedKey = `${name}:${line_segment_id}`
 			let newLineSegment = new LineSegment(
-				line_segment_id,
+				extendedKey,
 				line_segment,
 				this.real_plane,
 				name,
 				points,
 				element
 			)
-			let extendedKey = `${name}:${line_segment_id}`
 			lines[extendedKey] = newLineSegment
 			newLineSegment.addTo(this.group)
 		}

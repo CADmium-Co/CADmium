@@ -14,6 +14,8 @@
 	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
 	let plane_name = item.data.plane_name
 
+	looking_for.set(['line', 'circle'])
+
 	const on_looking_for_plane = () => {
 		console.log('looking for plane')
 		looking_for.set(['plane'])

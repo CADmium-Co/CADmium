@@ -17,4 +17,5 @@ export const sketch_being_edited = writable(null)
 
 // could be ["plane"] or ["point", "line"], that kind of thing
 export const looking_for = writable([])
+export const selected = writable([])
 export const found = writable([])

@@ -101,6 +101,47 @@ export const setCameraViewPlane = (plane) => {
 	})
 }
 
+const handleMouseover = () => {
+	// First just deselect everything. Start by deselecting all planes
+	for (let [plane_name, plane] of Object.entries(planes)) {
+		if (plane.selectionStatus === 'mouseOver') {
+			plane.setSelectionStatus('unselected')
+		}
+	}
+	// then deselect all solids, all lines, all points, etc
+	for (let [line_name, line] of Object.entries(lines)) {
+		if (line.selectionStatus === 'mouseOver') {
+			line.setSelectionStatus('unselected')
+		}
+	}
+
+	// Now check for intersections but only for things that we are looking_for
+	raycaster.setFromCamera(pointer, camera)
+	if (looking_for.includes('plane')) {
+		let just_meshes = Object.values(planes).map((plane) => plane.mesh)
+		const intersections = raycaster.intersectObjects(just_meshes)
+		if (intersections.length > 0) {
+			let first_intersection = intersections[0]
+			let plane_name = first_intersection.object.name
+			let plane = planes[plane_name]
+			plane.setSelectionStatus('mouseOver')
+		}
+	}
+	if (looking_for.includes('line')) {
+		let just_meshes = Object.values(lines).map((line) => line.mesh)
+		const intersections = raycaster.intersectObjects(just_meshes)
+		if (intersections.length > 0) {
+			let first_intersection = intersections[0]
+			// console.log('first_intersection: ', first_intersection)
+			let line_name = first_intersection.object.name
+			// console.log('line name', line_name)
+			let line = lines[line_name]
+			// console.log('line', line)
+			line.setSelectionStatus('mouseOver')
+		}
+	}
+}
+
 export const createScene = (el) => {
 	element = el
 	const clock = new THREE.Clock()
@@ -158,29 +199,6 @@ export const createScene = (el) => {
 	hemisphereLight.position.set(1, 1, 1)
 	scene.add(hemisphereLight)
 	let count = 0
-
-	const handleMouseover = () => {
-		// First just deselect everything. Start by deselecting all planes
-		for (let [plane_name, plane] of Object.entries(planes)) {
-			if (plane.selectionStatus === 'mouseOver') {
-				plane.setSelectionStatus('unselected')
-			}
-		}
-		// then deselect all solids, all lines, all points, etc
-
-		// Now check for intersections but only for things that we are looking_for
-		raycaster.setFromCamera(pointer, camera)
-		if (looking_for.includes('plane')) {
-			let just_meshes = Object.values(planes).map((plane) => plane.mesh)
-			const intersections = raycaster.intersectObjects(just_meshes)
-			if (intersections.length > 0) {
-				let first_intersection = intersections[0]
-				let plane_name = first_intersection.object.name
-				let plane = planes[plane_name]
-				plane.setSelectionStatus('mouseOver')
-			}
-		}
-	}
 
 	const render = () => {
 		const delta = clock.getDelta()
