@@ -56,6 +56,7 @@
 
 	$: if ($new_realization_needed) {
 		console.log('getting new realization')
+		//console.log('raw form:', $project_rust.json)
 		project.set(JSON.parse($project_rust.json))
 		workbench.set($project.workbenches[$active_workbench_index])
 

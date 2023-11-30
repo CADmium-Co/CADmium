@@ -287,6 +287,16 @@ impl Sketch {
         id
     }
 
+    pub fn delete_line_segment(&mut self, id: u64) {
+        // TODO: maybe return a result instead of crashing if
+        // the line segment doesn't exist?
+
+        // TODO: remove any constraints that reference this line segment
+
+        // TODO: remove any points which would be left stranded without this line segment
+        self.line_segments.remove(&id);
+    }
+
     pub fn add_line_with_id(&mut self, start_id: u64, end_id: u64, id: u64) -> Result<(), String> {
         if self.line_segments.contains_key(&id) {
             return Err("Line already exists".to_string());

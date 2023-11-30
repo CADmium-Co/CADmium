@@ -3,7 +3,6 @@ import * as THREE from 'three'
 import { Line2 } from 'three/addons/lines/Line2.js'
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-
 import { SKETCH_LINE_WIDTH } from './utils'
 
 class LineSegment {
@@ -66,7 +65,7 @@ class LineSegment {
 	}
 
 	setSelectionStatus(status) {
-		console.log('setting selection status to', status)
+		// console.log('setting selection status to', status)
 		if (status === 'unselected') {
 			this.mesh.material = this.defaultMaterial
 		} else if (status === 'mouseOver') {

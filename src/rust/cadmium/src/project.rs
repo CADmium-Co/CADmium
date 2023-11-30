@@ -111,6 +111,16 @@ impl Project {
                 sketch.add_line_with_id(*start_point_id, *end_point_id, *line_id);
                 Ok("".to_owned())
             }
+            Message::DeleteLineSegment {
+                workbench_id,
+                sketch_name,
+                line_segment_id,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                sketch.delete_line_segment(*line_segment_id);
+                Ok("".to_owned())
+            }
             Message::StepSketch {
                 workbench_id,
                 sketch_name,
@@ -882,6 +892,11 @@ pub enum Message {
         line_id: u64,
         start_point_id: u64,
         end_point_id: u64,
+    },
+    DeleteLineSegment {
+        workbench_id: u64,
+        sketch_name: String,
+        line_segment_id: u64,
     },
     StepSketch {
         workbench_id: u64,

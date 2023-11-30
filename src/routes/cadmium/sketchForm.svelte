@@ -14,7 +14,11 @@
 	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
 	let plane_name = item.data.plane_name
 
-	looking_for.set(['line', 'circle'])
+	$: if (mode === 'Select') {
+		looking_for.set(['line', 'circle'])
+	} else {
+		looking_for.set([])
+	}
 
 	const on_looking_for_plane = () => {
 		console.log('looking for plane')
@@ -86,6 +90,39 @@
 			{/if}
 		{/each}
 	</div>
+
+	{#if mode === 'Select'}
+		<button
+			class="bg-gray-200 hover:bg-gray-100 py-1 px-1 rounded shadow"
+			on:click={() => {
+				console.log('deleting')
+				const message_objs = []
+				console.log('item.data.line_segments', item.data.sketch.line_segments)
+				for (const [segment_id, line_segment] of Object.entries(item.data.sketch.line_segments)) {
+					console.log('a segment:', line_segment)
+				}
+
+				for (let i = 0; i < item.data.sketch.line_segments.length; i++) {
+					let line_segment = item.data.sketch.line_segments[i]
+					// console.log('a segment:', line_segment)
+					if (line_segment.selected) {
+						let message_obj = {
+							DeleteLineSegment: {
+								workbench_id: 0,
+								sketch_name: $sketch_being_edited,
+								line_segment_id: line_segment.id
+							}
+						}
+						console.log('sending message:', message_obj)
+						message_objs.push(message_obj)
+						// $project_rust.send_message(JSON.stringify(message_obj))
+					}
+				}
+			}}
+			><div class="fa-solid fa-trash" />
+			Delete</button
+		>
+	{/if}
 
 	<button
 		class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-1 rounded shadow"
