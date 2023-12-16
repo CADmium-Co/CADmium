@@ -34,10 +34,13 @@
 	"type": "module",
 	"dependencies": {
 		"@fontsource-variable/manrope": "^5.0.8",
+		"@threlte/core": "^7.0.10",
+		"@threlte/extras": "^8.0.8",
+		"@types/three": "^0.159.0",
 		"camera-controls": "^2.7.2",
 		"gsap": "^3.12.2",
 		"js-file-download": "^0.4.12",
-		"three": "^0.156.0",
+		"three": "^0.156.1",
 		"troika-three-text": "^0.48.1",
 		"vite-plugin-top-level-await": "^1.3.1",
 		"vite-plugin-wasm": "^3.2.2"
