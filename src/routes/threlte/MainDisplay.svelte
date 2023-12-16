@@ -13,7 +13,7 @@
 	let innerWidth = 0
 	let innerHeight = 0
 	$: vp_width = innerWidth - width - 10
-	$: height = innerHeight > 135 ? innerHeight - 45 * 3 : 200
+	$: height = innerHeight > 135 ? innerHeight - 45 * 3 : 300
 	$: console.log(height)
 
 	function onMouseDown(event) {
@@ -37,28 +37,20 @@
 
 		event.preventDefault()
 	}
-
-	function onResize(event) {
-		// console.log('resize', event)
-	}
 </script>
 
-<div class="bg-green-100" style="width:{width}px" />
+<div style="width:{width}px">
+	<FeatureHistory />
+</div>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="w-[10px] cursor-col-resize bg-green-100 flex justify-end" on:mousedown={onMouseDown}>
+<div class="w-[10px] cursor-col-resize flex justify-end" on:mousedown={onMouseDown}>
 	<div class="w-[2px] bg-gray-700" />
 </div>
 
-<div class="bg-white" style="width:{vp_width}px">
-	<!-- <Canvas>
+<div class="bg-white" style="width:{vp_width}px; height:{height}px">
+	<Canvas>
 		<Scene />
-	</Canvas> -->
+	</Canvas>
 </div>
 
-<svelte:window
-	on:resize={onResize}
-	on:mousemove={onMouseMove}
-	on:mouseup={onMouseUp}
-	bind:innerWidth
-	bind:innerHeight
-/>
+<svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} bind:innerWidth bind:innerHeight />

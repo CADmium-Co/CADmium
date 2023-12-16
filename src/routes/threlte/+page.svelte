@@ -1,5 +1,6 @@
 <script>
 	import AppBar from './AppBar.svelte'
+	import BottomBar from './BottomBar.svelte'
 	import FeatureHistory from './FeatureHistory.svelte'
 	import MainDisplay from './MainDisplay.svelte'
 	import ToolBar from './ToolBar.svelte'
@@ -9,11 +10,11 @@
 	let project = { name: 'Threlte Project' }
 </script>
 
-<div class="w-[100vw] h-[100vh] bg-slate-500 flex flex-col">
+<div class="w-[100vw] h-[100vh] block">
 	<AppBar {username} {project} />
 	<ToolBar />
-	<div class="flex flex-1">
+	<div class="flex">
 		<MainDisplay />
 	</div>
-	<div class="bg-gray-500 h-[45px] flex-none">Bottom Bar</div>
+	<BottomBar />
 </div>

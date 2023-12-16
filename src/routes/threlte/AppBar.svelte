@@ -3,8 +3,8 @@
 	export let project = {}
 </script>
 
-<div class="bg-gray-100 h-[45px] flex-none">
-	<div class="flex items-center gap-4">
+<div class="bg-gray-200 h-[45px]">
+	<div class="flex items-center gap-4 bg-gray-">
 		<div class="shrink-0 select-none">
 			<img class="object-cover h-10 w-10 ml-4" alt="logo" src="/cadmium_logo_min.svg" />
 		</div>
