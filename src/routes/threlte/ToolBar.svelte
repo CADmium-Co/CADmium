@@ -21,7 +21,7 @@
 	]
 </script>
 
-<div class="col-span-2 flex items-center gap-1 bg-gray-50 h-[45px]">
+<div class="col-span-2 flex flex-none items-center gap-1 bg-gray-50 h-[45px] select-none">
 	{#each actions as action}
 		<button
 			class="inline-flex items-center {action.text === 'Solve' && solving
