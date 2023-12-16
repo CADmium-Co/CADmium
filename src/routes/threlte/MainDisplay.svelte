@@ -39,13 +39,11 @@
 	}
 </script>
 
-<div style="width:{width}px">
+<div style="width:{width}px; height:{height}px">
 	<FeatureHistory />
 </div>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="w-[10px] cursor-col-resize flex justify-end" on:mousedown={onMouseDown}>
-	<div class="w-[2px] bg-gray-700" />
-</div>
+<div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
 
 <div class="bg-white" style="width:{vp_width}px; height:{height}px">
 	<Canvas>
