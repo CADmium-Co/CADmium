@@ -5,19 +5,19 @@
 	import Scene from './Scene.svelte'
 
 	let width = 250 // px
-	let min_width = 150
-	let max_width = 600
+	let minWidth = 150
+	let maxWidth = 600
 	let initialWidth = width
-	let initialPos
+	let initialPosition
 	let resizing = false
 	let innerWidth = 0
 	let innerHeight = 0
-	$: vp_width = innerWidth - width - 10
+	$: viewportWidth = innerWidth - width - 10
 	$: height = innerHeight > 135 ? innerHeight - 45 * 3 : 300
 	$: console.log(height)
 
 	function onMouseDown(event) {
-		initialPos = { x: event.pageX, y: event.pageY }
+		initialPosition = { x: event.pageX, y: event.pageY }
 		initialWidth = width
 		resizing = true
 	}
@@ -29,11 +29,11 @@
 	function onMouseMove(event) {
 		if (!resizing) return
 
-		let delta = event.pageX - initialPos.x
+		let delta = event.pageX - initialPosition.x
 		width = initialWidth + delta
 
-		if (width < min_width) width = min_width
-		if (width > max_width) width = max_width
+		if (width < minWidth) width = minWidth
+		if (width > maxWidth) width = maxWidth
 
 		event.preventDefault()
 	}
@@ -45,7 +45,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
 
-<div class="bg-white" style="width:{vp_width}px; height:{height}px">
+<div class="bg-white" style="width:{viewportWidth}px; height:{height}px">
 	<Canvas>
 		<Scene />
 	</Canvas>

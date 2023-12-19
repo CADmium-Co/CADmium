@@ -1,5 +1,5 @@
 <script>
-	export let username = 'mattferraro.dev'
+	export let userName = 'mattferraro.dev'
 	export let project = {}
 </script>
 
@@ -17,7 +17,7 @@
 					><img class="h-6 w-6" src="/github-mark.svg" alt="github logo" /></a
 				>
 			</div>
-			<div>{username}</div>
+			<div>{userName}</div>
 		</div>
 	</div>
 </div>

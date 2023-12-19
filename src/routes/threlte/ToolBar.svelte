@@ -1,23 +1,21 @@
 <script>
 	let solving = false
-	const solve_sketch = () => {}
-	const create_new_extrusion = () => {}
-	const highlightSolid = (solid_id) => {}
-	const unhighlightSolid = (solid_id) => {}
-	const create_new_sketch = () => {}
-	const step_sketch = () => {}
+	const solveSketch = () => {}
+	const createNewExtrusion = () => {}
+	const createNewSketch = () => {}
+	const stepSketch = () => {}
 
 	let actions = [
 		{
 			alt: 'new sketch',
 			src: '/actions/sketch_min.svg',
 			text: 'New Sketch',
-			handler: create_new_sketch
+			handler: createNewSketch
 		},
-		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: create_new_extrusion },
+		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: createNewExtrusion },
 		{ alt: 'plane', src: '/actions/plane_min.svg' },
-		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: step_sketch },
-		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solve_sketch }
+		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: stepSketch },
+		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solveSketch }
 	]
 </script>
 
