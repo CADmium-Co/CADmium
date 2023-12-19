@@ -34,13 +34,13 @@
 </script>
 
 <div class="flex flex-col">
-	<div style="height:{Math.min(height, overall_height - 12)}px" class="overflow-scroll">
+	<div style="height:{Math.min(height, overall_height - 12)}px" class="overflow-y-auto">
 		Feature History that is maybe a little longer than the line is supposed to be<br />a<br />c<br
 		/>c<br />c<br />c<br />c<br />c<br />c<br />c<br />c
 	</div>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div class="h-[12px] cursor-row-resize border-b-2 border-b-gray-300" on:mousedown={onMouseDown} />
-	<div style="height:{parts_height}px" class="overflow-scroll">
+	<div style="height:{parts_height}px" class="overflow-y-auto">
 		Parts <br /> and <br /> stuff <br />a<br />a<br />a<br />a
 	</div>
 </div>
