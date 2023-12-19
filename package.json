@@ -34,8 +34,8 @@
 	"type": "module",
 	"dependencies": {
 		"@fontsource-variable/manrope": "^5.0.8",
-		"@threlte/core": "^7.0.10",
-		"@threlte/extras": "^8.0.8",
+		"@threlte/core": "^7.0.12",
+		"@threlte/extras": "^8.1.0",
 		"@types/three": "^0.159.0",
 		"camera-controls": "^2.7.2",
 		"gsap": "^3.12.2",

@@ -35,13 +35,13 @@
 
 <div class="flex flex-col">
 	<div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
-		Feature History that is maybe a little longer than the line is supposed to be<br />a<br />c<br
-		/>c<br />c<br />c<br />c<br />c<br />c<br />c<br />c
+		Feature History that is very long so that the line runs over the width limit<br />and<br
+		/>also<br />the<br />height<br />limit<br />z<br />z<br />z<br />z<br />z
 	</div>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div class="h-[12px] cursor-row-resize border-b-2 border-b-gray-300" on:mousedown={onMouseDown} />
 	<div style="height:{partsHeight}px" class="overflow-y-auto">
-		Parts <br /> and <br /> stuff <br />a<br />a<br />a<br />a
+		Parts <br /> and <br /> stuff <br />will<br />go<br />here<br />a<br />a<br />a<br />a<br />
 	</div>
 </div>
 
