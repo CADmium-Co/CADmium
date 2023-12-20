@@ -28,7 +28,7 @@
 <T.DirectionalLight position.x={-15} position.y={-10} position.z={10} />
 <T.AmbientLight intensity={0.3} />
 
-<T.GridHelper args={[2, 2]} rotation.x={Math.PI / 2} />
+<!-- <T.GridHelper args={[2, 2]} rotation.x={Math.PI / 2} /> -->
 
 <!-- <T.Mesh position.z={1} geometry={new BoxGeometry(2, 2, 2)}>
 	<T.MeshStandardMaterial />

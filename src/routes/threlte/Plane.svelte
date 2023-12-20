@@ -1,6 +1,7 @@
 <script>
-	import { MeshStandardMaterial, DoubleSide, BufferGeometry, BufferAttribute, Vector3 } from 'three'
+	import { Matrix4, Euler, MeshStandardMaterial, DoubleSide, Vector3 } from 'three'
 	import { T } from '@threlte/core'
+	import { Text, Suspense } from '@threlte/extras'
 
 	export let name
 	export let width
@@ -15,74 +16,14 @@
 	primary = new Vector3(primary.x, primary.y, primary.z)
 	secondary = new Vector3(secondary.x, secondary.y, secondary.z)
 	tertiary = new Vector3(tertiary.x, tertiary.y, tertiary.z)
-	const half_width = width / 2
-	const half_height = height / 2
 
-	// Use them to compute the four corners of the plane
-	const upper_right = origin
-		.clone()
-		.addScaledVector(primary, half_width)
-		.addScaledVector(secondary, half_height)
-	const upper_left = origin
-		.clone()
-		.addScaledVector(primary, -half_width)
-		.addScaledVector(secondary, half_height)
-	const lower_right = origin
-		.clone()
-		.addScaledVector(primary, half_width)
-		.addScaledVector(secondary, -half_height)
-	const lower_left = origin
-		.clone()
-		.addScaledVector(primary, -half_width)
-		.addScaledVector(secondary, -half_height)
-	const label_position = upper_left.clone().addScaledVector(tertiary, 0.001)
+	// Use those to make the rotation matrix and euler angles
+	const rotationMatrix = new Matrix4()
+	rotationMatrix.makeBasis(primary, secondary, tertiary)
+	const eulerAngles = new Euler(0, 0, 0, 'XYZ')
+	eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
 
-	// Now build the BufferGeometry
-	const geometry = new BufferGeometry()
-	const vertices = new Float32Array([
-		lower_left.x,
-		lower_left.y,
-		lower_left.z,
-		lower_right.x,
-		lower_right.y,
-		lower_right.z,
-		upper_right.x,
-		upper_right.y,
-		upper_right.z,
-		upper_right.x,
-		upper_right.y,
-		upper_right.z,
-		upper_left.x,
-		upper_left.y,
-		upper_left.z,
-		lower_left.x,
-		lower_left.y,
-		lower_left.z
-	])
-	geometry.setAttribute('position', new BufferAttribute(vertices, 3))
-	const normals = new Float32Array([
-		tertiary.x,
-		tertiary.y,
-		tertiary.z,
-		tertiary.x,
-		tertiary.y,
-		tertiary.z,
-		tertiary.x,
-		tertiary.y,
-		tertiary.z,
-		tertiary.x,
-		tertiary.y,
-		tertiary.z,
-		tertiary.x,
-		tertiary.y,
-		tertiary.z,
-		tertiary.x,
-		tertiary.y,
-		tertiary.z
-	])
-	geometry.setAttribute('normal', new BufferAttribute(normals, 3))
-
-	// And lastly the Material
+	// Lastly, make the Plane Material
 	const material = new MeshStandardMaterial({
 		color: '#525292',
 		side: DoubleSide,
@@ -93,8 +34,16 @@
 		depthTest: true,
 		wireframe: false
 	})
-
-	// const mesh = new Mesh(geometry, material)
 </script>
 
-<T.Mesh {geometry} {material} />
+<T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
+	<T.Mesh {material}>
+		<T.PlaneGeometry args={[width, height]} />
+	</T.Mesh>
+
+	<T.Group position.x={-0.5} position.y={0.5} position.z={0}>
+		<Suspense>
+			<Text text={name} color="black" fontSize={0.1} anchorX="0%" anchorY="0%" />
+		</Suspense>
+	</T.Group>
+</T.Group>
