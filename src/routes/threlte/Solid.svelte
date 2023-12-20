@@ -17,14 +17,15 @@
 	geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalsArray, 3))
 
 	const material = new THREE.MeshStandardMaterial({
-		color: 0xbbbbbb,
+		color: '#999999',
 		side: THREE.DoubleSide,
-		wireframe: false
+		wireframe: false,
+		metalness: 1.0,
+		roughness: 0.6
 	})
 
 	let edges = new THREE.EdgesGeometry(geometry, 15)
 	let mat = new THREE.LineBasicMaterial({ color: 0x000000 })
-	// let wireframe = new THREE.LineSegments(edges, mat)
 </script>
 
 <T.Group>

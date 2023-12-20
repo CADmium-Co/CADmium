@@ -1,6 +1,6 @@
 <script>
 	import { T } from '@threlte/core'
-	import { TrackballControls, Gizmo } from '@threlte/extras'
+	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
 	import { Vector3 } from 'three'
 
 	import { realization } from './stores.js'
@@ -24,9 +24,24 @@
 	/>
 </T.OrthographicCamera>
 
-<T.DirectionalLight position.x={10} position.y={10} position.z={10} />
-<T.DirectionalLight position.x={-15} position.y={-10} position.z={10} />
-<T.AmbientLight intensity={0.4} />
+<!-- <T.DirectionalLight args={['#ff8888', 50.0]} position.x={-10} position.y={0} position.z={0} />
+<T.DirectionalLight args={['#88ff88', 50.0]} position.x={10} position.y={0} position.z={0} />
+<T.DirectionalLight args={['#8888ff', 50.0]} position.x={0} position.y={0} position.z={10} /> -->
+<!-- <T.DirectionalLight position.x={10} position.y={0} position.z={0} /> -->
+
+<!-- <T.PointLight args={['#ffffff', 5000.0]} position.x={3} position.y={3} position.z={15} />
+<T.PointLight args={['#ffffff', 3000.0]} position.x={3} position.y={-3} position.z={-15} />
+<T.PointLight args={['#ffffff', 3000.0]} position.x={10} position.y={-13} position.z={1.1} />
+<T.PointLight args={['#ffffff', 3000.0]} position.x={-10.5} position.y={11} position.z={0.86} /> -->
+
+<!-- <T.AmbientLight intensity={0.6} /> -->
+
+<Environment
+	path="/envmap/hdr/"
+	files="kloofendal_28d_misty_puresky_1k.hdr"
+	isBackground={false}
+	format="hdr"
+/>
 
 {#each points as [pointName, point]}
 	<Point3D name={pointName} x={point.x} y={point.y} z={point.z} hidden={point.hidden} />
