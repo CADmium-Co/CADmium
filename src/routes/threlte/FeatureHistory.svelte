@@ -1,5 +1,11 @@
 <script>
-	let height = 200
+	import { workbench, realization } from './stores'
+	import PointFeature from './PointFeature.svelte'
+	import PlaneFeature from './PlaneFeature.svelte'
+	import SketchFeature from './SketchFeature.svelte'
+	import ExtrusionFeature from './ExtrusionFeature.svelte'
+
+	let height = 300
 	let minHeight = 100
 	let maxHeight = 1200
 	let initialHeight = height
@@ -10,13 +16,16 @@
 	$: overallHeight = innerHeight > 10 ? innerHeight - 45 * 3 : 300
 	$: partsHeight = overallHeight - height - 12
 
+	$: history = $workbench.history ?? []
+	$: solids = $realization.solids ?? {}
+
 	function onMouseDown(event) {
 		initialPosition = { x: event.pageX, y: event.pageY }
 		initialHeight = height
 		resizing = true
 	}
 
-	function onMouseUp(event) {
+	function onMouseUp() {
 		resizing = false
 	}
 
@@ -33,15 +42,31 @@
 	}
 </script>
 
-<div class="flex flex-col">
+<div class="flex flex-col select-none">
 	<div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
-		Feature History that is very long so that the line runs over the width limit<br />and<br
-		/>also<br />the<br />height<br />limit<br />z<br />z<br />z<br />z<br />z
+		<div class="font-bold text-sm px-2 py-2">History ({history.length})</div>
+		{#each history as feature}
+			<div>
+				{#if feature.data.type === 'Point'}
+					<PointFeature name={feature.name} />
+				{:else if feature.data.type === 'Plane'}
+					<PlaneFeature name={feature.name} />
+				{:else if feature.data.type === 'Sketch'}
+					<SketchFeature name={feature.name} />
+				{:else if feature.data.type === 'Extrusion'}
+					<ExtrusionFeature name={feature.name} />
+				{:else}
+					TODO: {feature.name} {feature.data.type}
+				{/if}
+			</div>
+		{/each}
 	</div>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div class="h-[12px] cursor-row-resize border-b-2 border-b-gray-300" on:mousedown={onMouseDown} />
 	<div style="height:{partsHeight}px" class="overflow-y-auto">
-		Parts <br /> and <br /> stuff <br />will<br />go<br />here<br />a<br />a<br />a<br />a<br />
+		<div class="font-bold text-sm px-2 py-2">
+			Solids ({solids ? Object.keys(solids).length : 0})
+		</div>
 	</div>
 </div>
 

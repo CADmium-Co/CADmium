@@ -1,7 +1,7 @@
 <script>
 	export let name
 
-	let source = '/actions/plane_min.svg'
+	let source = '/actions/extrude_min.svg'
 </script>
 
 <div class="flex items-center text-sm hover:bg-sky-200" role="button" tabindex="0">

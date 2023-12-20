@@ -7,7 +7,7 @@ export const realization = writable({})
 export const wasmRealization = writable({})
 
 export const workbenchIndex = writable(-1)
-export const workbench = writable({ history: [] })
+export const workbench = writable({})
 
 // stores the index of the feature being edited
 export const featureIndex = writable(null)
