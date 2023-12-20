@@ -10,5 +10,5 @@ export const workbenchIndex = writable(-1)
 export const workbench = writable({})
 
 // stores the index of the feature being edited
-export const featureIndex = writable(null)
+export const featureIndex = writable(-1)
 export const realizationIsStale = writable(false)

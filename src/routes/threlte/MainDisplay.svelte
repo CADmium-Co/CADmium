@@ -16,7 +16,6 @@
 	let innerHeight = 0
 	$: viewportWidth = innerWidth - width - 10
 	$: height = innerHeight > 135 ? innerHeight - 45 * 3 : 300
-	$: console.log(height)
 
 	function onMouseDown(event) {
 		initialPosition = { x: event.pageX, y: event.pageY }

@@ -4,9 +4,10 @@
 	import PlaneFeature from './PlaneFeature.svelte'
 	import SketchFeature from './SketchFeature.svelte'
 	import ExtrusionFeature from './ExtrusionFeature.svelte'
+	import SolidItem from './SolidItem.svelte'
 
 	let height = 300
-	let minHeight = 100
+	let minHeight = 30
 	let maxHeight = 1200
 	let initialHeight = height
 	let resizing = false
@@ -67,6 +68,9 @@
 		<div class="font-bold text-sm px-2 py-2">
 			Solids ({solids ? Object.keys(solids).length : 0})
 		</div>
+		{#each Object.keys(solids) as name}
+			<SolidItem {name} />
+		{/each}
 	</div>
 </div>
 
