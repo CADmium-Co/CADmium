@@ -19,7 +19,6 @@
 	extend({ Line2 })
 
 	const { size, dpr } = useThrelte()
-	$: console.log('size and dpr:', $size, $dpr)
 
 	// Build some Three.js vectors from the props
 	origin = new Vector3(origin.x, origin.y, origin.z)
