@@ -41,7 +41,9 @@
 		opacity: 0.05,
 		depthWrite: false,
 		depthTest: true,
-		wireframe: false
+		wireframe: false,
+		polygonOffset: true,
+		polygonOffsetFactor: -4
 	})
 
 	const s = 0.5
