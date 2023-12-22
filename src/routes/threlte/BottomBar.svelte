@@ -1,15 +1,20 @@
 <script>
-	import { project, workbenchIndex } from './stores'
+	import { project, workbenchIndex, workbenchIsStale } from './stores'
 	$: workbenches = $project.workbenches ?? []
 </script>
 
 <div class="bg-gray-100 h-[45px] flex">
-	{#each workbenches as wb, i}
+	{#each workbenches as wb, i (wb.name)}
 		<button
 			class="{$workbenchIndex === i
 				? 'bg-gray-300'
 				: 'bg-gray-200'} hover:bg-sky-300 text-gray-700 py-2 px-4"
-			type="button">{wb.name}</button
+			type="button"
+			on:click={() => {
+				console.log('Setting new workbench index:', i)
+				workbenchIndex.set(i)
+				workbenchIsStale.set(true)
+			}}>{wb.name}</button
 		>
 	{/each}
 </div>

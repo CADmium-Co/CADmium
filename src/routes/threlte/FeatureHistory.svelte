@@ -68,7 +68,7 @@
 		<div class="font-bold text-sm px-2 py-2">
 			Solids ({solids ? Object.keys(solids).length : 0})
 		</div>
-		{#each Object.keys(solids) as name}
+		{#each Object.keys(solids) as name (name)}
 			<SolidItem {name} />
 		{/each}
 	</div>

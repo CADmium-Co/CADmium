@@ -50,7 +50,7 @@
 {#each planes as [planeName, plane] (planeName)}
 	<Plane
 		name={plane.name}
-		uniqueID={planeName}
+		uniqueId={planeName}
 		height={plane.height}
 		width={plane.width}
 		origin={plane.plane.origin}

@@ -9,6 +9,7 @@
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
 	export let name
+	export let uniqueId
 	export let width
 	export let height
 	export let origin
