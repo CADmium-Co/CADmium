@@ -6,7 +6,7 @@
 	import ExtrusionFeature from './ExtrusionFeature.svelte'
 	import SolidItem from './SolidItem.svelte'
 
-	let height = 300
+	let height = 400
 	let minHeight = 30
 	let maxHeight = 1200
 	let initialHeight = height

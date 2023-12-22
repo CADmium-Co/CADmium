@@ -65,7 +65,6 @@ realizationIsStale.subscribe((value) => {
 		const maxStep = 1000
 		let wasmProj = get(wasmProject)
 		let workbenchIdx = get(workbenchIndex)
-		console.log('trying to get realization: ', workbenchIdx, wasmProj)
 		let wasmReal = wasmProj.get_realization(workbenchIdx, maxStep)
 		wasmRealization.set(wasmReal)
 		realization.set(JSON.parse(wasmReal.to_json()))

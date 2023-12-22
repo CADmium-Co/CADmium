@@ -69,7 +69,13 @@
 		<T.PlaneGeometry args={[width, height]} />
 	</T.Mesh>
 
-	<T.Line2 geometry={lineGeometry} material={lineMaterial} />
+	<T.Line2
+		geometry={lineGeometry}
+		material={lineMaterial}
+		on:create={({ ref }) => {
+			ref.computeLineDistances()
+		}}
+	/>
 
 	<T.Group position.x={-0.49} position.y={0.49}>
 		<Suspense>
