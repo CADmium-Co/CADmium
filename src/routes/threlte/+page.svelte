@@ -8,16 +8,7 @@
 	import BottomBar from './BottomBar.svelte'
 	import MainDisplay from './MainDisplay.svelte'
 	import ToolBar from './ToolBar.svelte'
-	import {
-		wasmProject,
-		project,
-		realization,
-		wasmRealization,
-		workbench,
-		workbenchIndex,
-		featureIndex,
-		realizationIsStale
-	} from './stores.js'
+	import { wasmProject, project, projectIsStale, workbenchIndex } from './stores.js'
 
 	let userName = 'mattferraro.dev'
 
@@ -26,21 +17,9 @@
 			init().then(() => {
 				let p = new Project('First Project')
 				wasmProject.set(p)
-				realizationIsStale.set(true)
+				projectIsStale.set(true)
 			})
 		})
-	}
-
-	$: if ($realizationIsStale) {
-		console.log('getting new realization')
-		project.set(JSON.parse($wasmProject.json))
-		workbenchIndex.set(0)
-		workbench.set($project.workbenches[$workbenchIndex])
-
-		const maxStep = $featureIndex >= 0 ? $featureIndex + 1 : 1000
-		wasmRealization.set($wasmProject.get_realization(0, maxStep))
-		realization.set(JSON.parse($wasmRealization.to_json()))
-		realizationIsStale.set(false)
 	}
 </script>
 

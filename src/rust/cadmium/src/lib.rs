@@ -43,6 +43,11 @@ impl Project {
     }
 
     #[wasm_bindgen]
+    pub fn to_json(&self) -> String {
+        self.native.json()
+    }
+
+    #[wasm_bindgen]
     pub fn compute_constraint_errors(&mut self) {
         self.native.compute_constraint_errors();
     }
@@ -54,9 +59,12 @@ impl Project {
             .get_realization(workbench_id as u64, max_steps as u64);
 
         Realization { native: realized }
+    }
 
-        // self.native
-        //     .get_realization(workbench_id as u64, 1000 as u64)
+    #[wasm_bindgen]
+    pub fn get_workbench(&self, workbench_index: u32) -> String {
+        let wb = &self.native.workbenches[workbench_index as usize];
+        wb.json()
     }
 
     #[wasm_bindgen]

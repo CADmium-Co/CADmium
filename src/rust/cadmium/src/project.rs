@@ -27,6 +27,10 @@ impl Project {
         let mut w = Workbench::new("Workbench 1");
         w.add_defaults();
         self.workbenches.push(w);
+
+        let mut w2 = Workbench::new("Workbench 2");
+        w2.add_defaults_2();
+        self.workbenches.push(w2);
     }
 
     pub fn json(&self) -> String {
@@ -59,6 +63,14 @@ impl Project {
         None
     }
 
+    // pub fn get_workbench_mut_by_index(&mut self, index: usize) -> Option<&mut Workbench> {
+    //     let index = index as usize;
+    //     if index < self.workbenches.len() {
+    //         return Some(&mut self.workbenches[index]);
+    //     }
+    //     None
+    // }
+
     pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Realization {
         let workbench = &self.workbenches[workbench_id as usize];
         let realization = workbench.realize(max_steps);
@@ -87,6 +99,29 @@ impl Project {
 
     pub fn handle_message(&mut self, message: &Message) -> Result<String, String> {
         match message {
+            Message::RenameProject { new_name } => {
+                self.name = new_name.to_owned();
+                Ok(format!("\"name\": \"{}\"", new_name))
+            }
+            Message::RenameWorkbench {
+                workbench_id,
+                new_name,
+            } => {
+                self.workbenches[*workbench_id as usize].name = new_name.to_owned();
+                Ok(format!("\"name\": \"{}\"", new_name))
+            }
+            Message::RenameStep {
+                workbench_id,
+                step_id,
+                new_name,
+            } => {
+                self.workbenches[*workbench_id as usize]
+                    .history
+                    .get_mut(*step_id as usize)
+                    .unwrap()
+                    .name = new_name.to_owned();
+                Ok(format!("\"name\": \"{}\"", new_name))
+            }
             Message::NewPointOnSketch {
                 workbench_id,
                 sketch_name,
@@ -282,6 +317,14 @@ impl Workbench {
         }
     }
 
+    pub fn json(&self) -> String {
+        let result = serde_json::to_string(self);
+        match result {
+            Ok(json) => json,
+            Err(e) => format!("Error: {}", e),
+        }
+    }
+
     pub fn get_sketch_mut(&mut self, name: &str) -> Option<&mut Sketch> {
         for step in self.history.iter_mut() {
             match &mut step.data {
@@ -299,6 +342,101 @@ impl Workbench {
             }
         }
         None
+    }
+
+    pub fn add_defaults_2(&mut self) {
+        self.history
+            .push(Step::new_point("Origin", Point3::new(0.0, 0.0, 0.0)));
+        self.history.push(Step::new_plane("Top", Plane::top()));
+        self.history.push(Step::new_plane("Front", Plane::front()));
+        self.history.push(Step::new_plane("Right", Plane::right()));
+        self.history.push(Step::new_sketch("Sketch 1", "Front"));
+
+        let sketch = self.get_sketch_mut("Sketch 1").unwrap();
+
+        // square in upper right
+        let p0 = sketch.add_fixed_point(0.1, 0.00);
+        let p1 = sketch.add_point(0.45, 0.0);
+        let p2 = sketch.add_point(0.45, 0.25);
+        let p3 = sketch.add_point(0.0, 0.25);
+        let seg_0 = sketch.add_segment(p0, p1);
+        let seg_1 = sketch.add_segment(p1, p2);
+        let seg_2 = sketch.add_segment(p2, p3);
+        let seg_3 = sketch.add_segment(p3, p0);
+
+        let big_p0 = sketch.add_point(-0.1, -0.1);
+        let big_p1 = sketch.add_point(0.55, -0.1);
+        let big_p2 = sketch.add_point(0.55, 0.55);
+        let big_p3 = sketch.add_point(-0.1, 0.55);
+        let big_seg_0 = sketch.add_segment(big_p0, big_p1);
+        let big_seg_1 = sketch.add_segment(big_p1, big_p2);
+        let big_seg_2 = sketch.add_segment(big_p2, big_p3);
+        let big_seg_3 = sketch.add_segment(big_p3, big_p0);
+
+        // sketch.add_segment_vertical_constraint(seg_3);
+        // sketch.add_segment_horizontal_constraint(seg_0);
+        // sketch.add_segment_length_constraint(seg_0, 0.52);
+        // sketch.add_segment_length_constraint(seg_1, 0.52);
+        // sketch.add_segment_length_constraint(seg_2, 0.52);
+        // sketch.add_segment_length_constraint(seg_3, 0.52);
+
+        // Simple circle in lower left
+        // let p4 = sketch.add_point(-0.5, -0.25);
+        // sketch.add_circle(p4, 0.2);
+
+        // // intersecting circle!
+        // let p5 = sketch.add_point(-0.5, -0.25);
+        // let c2 = sketch.add_circle(p4, 0.3);
+
+        // sketch.add_circle_diameter_constraint(c2, 0.6);
+
+        // Rounded square in lower right
+        // let shrink = 0.4;
+        // let offset_x = 0.1;
+        // let offset_y = -0.70;
+        // let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
+        // let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
+        // let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
+        // let d = sketch.add_point(1.00 * shrink + offset_x, 0.75 * shrink + offset_y);
+        // let e = sketch.add_point(0.75 * shrink + offset_x, 1.00 * shrink + offset_y);
+        // let f = sketch.add_point(0.25 * shrink + offset_x, 1.00 * shrink + offset_y);
+        // let g = sketch.add_point(0.00 * shrink + offset_x, 0.75 * shrink + offset_y);
+        // let h = sketch.add_point(0.00 * shrink + offset_x, 0.25 * shrink + offset_y);
+        // let i = sketch.add_point(0.75 * shrink + offset_x, 0.25 * shrink + offset_y);
+        // let j = sketch.add_point(0.75 * shrink + offset_x, 0.75 * shrink + offset_y);
+        // let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
+        // let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
+
+        // sketch.add_segment(a, b);
+        // sketch.add_arc(i, b, c, false);
+        // sketch.add_segment(c, d);
+        // sketch.add_arc(j, d, e, false);
+        // sketch.add_segment(e, f);
+        // sketch.add_arc(k, f, g, false);
+        // sketch.add_segment(g, h);
+        // sketch.add_arc(l, h, a, false);
+
+        self.add_extrusion(
+            "Ext 1",
+            Extrusion {
+                sketch_name: "Sketch 1".to_owned(),
+                face_ids: vec![0],
+                length: 0.15,
+                offset: 0.0,
+                direction: Direction::Normal,
+            },
+        );
+
+        // self.add_extrusion(
+        //     "Ext 2",
+        //     Extrusion {
+        //         sketch_name: "Sketch 1".to_owned(),
+        //         face_ids: vec![0, 1],
+        //         length: 0.15,
+        //         offset: 0.0,
+        //         direction: Vector3::new(0.0, 0.0, 1.0),
+        //     },
+        // );
     }
 
     pub fn add_defaults(&mut self) {
@@ -879,6 +1017,18 @@ pub struct RealPlane {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum Message {
+    RenameWorkbench {
+        workbench_id: u64,
+        new_name: String,
+    },
+    RenameStep {
+        workbench_id: u64,
+        step_id: u64,
+        new_name: String,
+    },
+    RenameProject {
+        new_name: String,
+    },
     NewPointOnSketch {
         workbench_id: u64,
         sketch_name: String,
