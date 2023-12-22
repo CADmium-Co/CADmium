@@ -49,7 +49,8 @@
 
 {#each planes as [planeName, plane] (planeName)}
 	<Plane
-		name={planeName}
+		name={plane.name}
+		uniqueID={planeName}
 		height={plane.height}
 		width={plane.width}
 		origin={plane.plane.origin}

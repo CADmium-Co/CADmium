@@ -30,7 +30,7 @@ const MESH_TOLERANCE: f64 = 0.001;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Extrusion {
-    pub sketch_name: String,
+    pub sketch_id: String,
     pub face_ids: Vec<u64>,
     pub length: f64,
     pub offset: f64,
@@ -329,7 +329,11 @@ mod tests {
         let step_file = realization.solid_to_step(keys[0]);
 
         realization.save_solid_as_step_file(keys[0], "test.step");
-        realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001)
-        // println!("{:?}", step_file);
+        // now delete that file
+        // std::fs::remove_file("test.step").unwrap();
+
+        realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001);
+        // now delete that file
+        // std::fs::remove_file("test.obj").unwrap();
     }
 }

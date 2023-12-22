@@ -125,38 +125,7 @@ impl Project {
                 // TODO!
 
                 // Second, fix any downstream references to the old name
-                match &current_step.data {
-                    StepData::Plane {
-                        plane,
-                        width,
-                        height,
-                    } => {
-                        // If the step being renamed is a plane, then check any existing
-                        // sketches to make sure they don't reference the old plane name
-                        for step in workbench.history.iter_mut() {
-                            match &step.data {
-                                StepData::Sketch {
-                                    plane_name,
-                                    width,
-                                    height,
-                                    sketch,
-                                } => {
-                                    if plane_name == &current_step_name {
-                                        // change the plane name to the new name
-                                        step.data = StepData::Sketch {
-                                            plane_name: new_name.to_owned(),
-                                            width: *width,
-                                            height: *height,
-                                            sketch: sketch.clone(),
-                                        };
-                                    }
-                                }
-                                _ => {}
-                            }
-                        }
-                    }
-                    _ => {}
-                }
+                // NO LONGER NEEDED!
 
                 // Third, actually rename the step
                 self.workbenches[*workbench_id as usize]
@@ -230,20 +199,6 @@ impl Project {
                 plane_name,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
-                // If the sketch name is empty string, then we need to generate a new name
-                // Let's use "Sketch n" where n is the number of sketches
-                let sketch_name = if sketch_name == "" {
-                    format!("Sketch {}", workbench.history.len())
-                } else {
-                    sketch_name.to_owned()
-                };
-
-                // if the plane name is empty string, default to "Top"
-                let plane_name = if plane_name == "" {
-                    "Top".to_owned()
-                } else {
-                    plane_name.to_owned()
-                };
 
                 workbench.add_sketch(&sketch_name, &plane_name);
                 Ok(format!("\"sketch_name\": \"{}\"", sketch_name))
@@ -251,7 +206,7 @@ impl Project {
             Message::UpdateSketchPlane {
                 workbench_id,
                 sketch_name,
-                plane_name: pn,
+                plane_id: pid,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
 
@@ -259,19 +214,14 @@ impl Project {
                     if step.name == *sketch_name {
                         match &mut step.data {
                             StepData::Sketch {
-                                plane_name: pn2,
+                                plane_id: pn2,
                                 width,
                                 height,
                                 sketch,
                             } => {
-                                step.data = StepData::Sketch {
-                                    plane_name: pn.to_owned(),
-                                    width: *width,
-                                    height: *height,
-                                    sketch: sketch.clone(),
-                                };
+                                *pn2 = pid.to_owned();
 
-                                return Ok(format!("\"plane_name\": \"{}\"", pn));
+                                return Ok(format!("\"plane_name\": \"{}\"", pid));
                             }
                             _ => {}
                         }
@@ -303,7 +253,7 @@ impl Project {
             Message::NewExtrusion {
                 workbench_id,
                 extrusion_name,
-                sketch_name,
+                sketch_id,
                 face_ids,
                 length,
                 offset,
@@ -311,7 +261,7 @@ impl Project {
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let extrusion = Extrusion {
-                    sketch_name: sketch_name.to_owned(),
+                    sketch_id: sketch_id.to_owned(),
                     face_ids: face_ids.to_owned(),
                     length: *length,
                     offset: *offset,
@@ -352,6 +302,7 @@ pub struct Assembly {
 pub struct Workbench {
     name: String,
     history: Vec<Step>,
+    step_counters: HashMap<String, u64>,
 }
 
 impl Workbench {
@@ -359,7 +310,46 @@ impl Workbench {
         Workbench {
             name: name.to_owned(),
             history: vec![],
+            step_counters: HashMap::from([
+                ("Point".to_owned(), 0),
+                ("Plane".to_owned(), 0),
+                ("Sketch".to_owned(), 0),
+                ("Extrusion".to_owned(), 0),
+            ]),
         }
+    }
+
+    pub fn get_first_plane_id(&self) -> Option<String> {
+        for step in self.history.iter() {
+            match &step.data {
+                StepData::Plane {
+                    plane,
+                    width,
+                    height,
+                } => {
+                    return Some(step.unique_id.clone());
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    pub fn last_plane_id(&self) -> Option<String> {
+        let mut last_plane_id = None;
+        for step in self.history.iter() {
+            match &step.data {
+                StepData::Plane {
+                    plane,
+                    width,
+                    height,
+                } => {
+                    last_plane_id = Some(step.unique_id.clone());
+                }
+                _ => {}
+            }
+        }
+        last_plane_id
     }
 
     pub fn json(&self) -> String {
@@ -374,7 +364,7 @@ impl Workbench {
         for step in self.history.iter_mut() {
             match &mut step.data {
                 StepData::Sketch {
-                    plane_name: _,
+                    plane_id: _,
                     width: _,
                     height: _,
                     sketch,
@@ -390,12 +380,12 @@ impl Workbench {
     }
 
     pub fn add_defaults_2(&mut self) {
-        self.history
-            .push(Step::new_point("Origin", Point3::new(0.0, 0.0, 0.0)));
-        self.history.push(Step::new_plane("Top", Plane::top()));
-        self.history.push(Step::new_plane("Front", Plane::front()));
-        self.history.push(Step::new_plane("Right", Plane::right()));
-        self.history.push(Step::new_sketch("Sketch 1", "Front"));
+        self.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
+        self.add_plane("Top", Plane::top());
+        self.add_plane("Front", Plane::front());
+        self.add_plane("Right", Plane::right());
+
+        let sketch_id = self.add_sketch("Sketch 1", "Top");
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
@@ -418,79 +408,25 @@ impl Workbench {
         let big_seg_2 = sketch.add_segment(big_p2, big_p3);
         let big_seg_3 = sketch.add_segment(big_p3, big_p0);
 
-        // sketch.add_segment_vertical_constraint(seg_3);
-        // sketch.add_segment_horizontal_constraint(seg_0);
-        // sketch.add_segment_length_constraint(seg_0, 0.52);
-        // sketch.add_segment_length_constraint(seg_1, 0.52);
-        // sketch.add_segment_length_constraint(seg_2, 0.52);
-        // sketch.add_segment_length_constraint(seg_3, 0.52);
-
-        // Simple circle in lower left
-        // let p4 = sketch.add_point(-0.5, -0.25);
-        // sketch.add_circle(p4, 0.2);
-
-        // // intersecting circle!
-        // let p5 = sketch.add_point(-0.5, -0.25);
-        // let c2 = sketch.add_circle(p4, 0.3);
-
-        // sketch.add_circle_diameter_constraint(c2, 0.6);
-
-        // Rounded square in lower right
-        // let shrink = 0.4;
-        // let offset_x = 0.1;
-        // let offset_y = -0.70;
-        // let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
-        // let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
-        // let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let d = sketch.add_point(1.00 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let e = sketch.add_point(0.75 * shrink + offset_x, 1.00 * shrink + offset_y);
-        // let f = sketch.add_point(0.25 * shrink + offset_x, 1.00 * shrink + offset_y);
-        // let g = sketch.add_point(0.00 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let h = sketch.add_point(0.00 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let i = sketch.add_point(0.75 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let j = sketch.add_point(0.75 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
-
-        // sketch.add_segment(a, b);
-        // sketch.add_arc(i, b, c, false);
-        // sketch.add_segment(c, d);
-        // sketch.add_arc(j, d, e, false);
-        // sketch.add_segment(e, f);
-        // sketch.add_arc(k, f, g, false);
-        // sketch.add_segment(g, h);
-        // sketch.add_arc(l, h, a, false);
-
         self.add_extrusion(
             "Ext 1",
             Extrusion {
-                sketch_name: "Sketch 1".to_owned(),
+                sketch_id,
                 face_ids: vec![0],
                 length: 0.15,
                 offset: 0.0,
                 direction: Direction::Normal,
             },
         );
-
-        // self.add_extrusion(
-        //     "Ext 2",
-        //     Extrusion {
-        //         sketch_name: "Sketch 1".to_owned(),
-        //         face_ids: vec![0, 1],
-        //         length: 0.15,
-        //         offset: 0.0,
-        //         direction: Vector3::new(0.0, 0.0, 1.0),
-        //     },
-        // );
     }
 
     pub fn add_defaults(&mut self) {
-        self.history
-            .push(Step::new_point("Origin", Point3::new(0.0, 0.0, 0.0)));
-        self.history.push(Step::new_plane("Top", Plane::top()));
-        self.history.push(Step::new_plane("Front", Plane::front()));
-        self.history.push(Step::new_plane("Right", Plane::right()));
-        self.history.push(Step::new_sketch("Sketch 1", "Top"));
+        self.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
+        self.add_plane("Top", Plane::top());
+        self.add_plane("Front", Plane::front());
+        self.add_plane("Right", Plane::right());
+
+        let sketch_id = self.add_sketch("Sketch 1", "Top");
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
@@ -559,7 +495,7 @@ impl Workbench {
         self.add_extrusion(
             "Ext 1",
             Extrusion {
-                sketch_name: "Sketch 1".to_owned(),
+                sketch_id,
                 face_ids: vec![2, 3],
                 length: 0.25,
                 offset: 0.0,
@@ -579,12 +515,67 @@ impl Workbench {
         // );
     }
 
-    pub fn add_sketch(&mut self, name: &str, plane_name: &str) {
-        self.history.push(Step::new_sketch(name, plane_name));
+    pub fn add_point(&mut self, name: &str, point: Point3) {
+        let counter = self.step_counters.get_mut("Point").unwrap();
+        self.history.push(Step::new_point(name, point, *counter));
+        *counter += 1;
+    }
+
+    pub fn add_plane(&mut self, name: &str, plane: Plane) {
+        let counter = self.step_counters.get_mut("Plane").unwrap();
+        self.history.push(Step::new_plane(name, plane, *counter));
+        *counter += 1;
+    }
+
+    pub fn plane_name_to_id(&self, plane_name: &str) -> Option<String> {
+        for step in self.history.iter() {
+            if step.name == plane_name {
+                match &step.data {
+                    StepData::Plane {
+                        plane,
+                        width,
+                        height,
+                    } => {
+                        return Some(step.unique_id.clone());
+                    }
+                    _ => {}
+                }
+            }
+        }
+        None
+    }
+
+    pub fn add_sketch(&mut self, name: &str, plane_name: &str) -> String {
+        // if the plane name is empty string, default to whichever plane is currently first
+        // in the feature history
+        let plane_id = if plane_name == "" {
+            self.get_first_plane_id().unwrap()
+        } else {
+            self.plane_name_to_id(plane_name).unwrap()
+        };
+
+        // If the sketch name is empty string, then we need to generate a new name
+        // Let's use "Sketch n" where n is the number of sketches
+        let counter = self.step_counters.get_mut("Sketch").unwrap();
+        let sketch_name = if name == "" {
+            format!("Sketch {}", counter)
+        } else {
+            name.to_owned()
+        };
+
+        let new_step = Step::new_sketch(name, &plane_id, *counter);
+        let new_step_id = new_step.unique_id.clone();
+        self.history.push(new_step);
+        *counter += 1;
+
+        new_step_id
     }
 
     pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) {
-        self.history.push(Step::new_extrusion(name, extrusion));
+        let counter = self.step_counters.get_mut("Extrusion").unwrap();
+        self.history
+            .push(Step::new_extrusion(name, extrusion, *counter));
+        *counter += 1;
     }
 
     pub fn realize(&self, max_steps: u64) -> Realization {
@@ -601,7 +592,9 @@ impl Workbench {
             // println!("{:?}", step_data);
             match step_data {
                 StepData::Point { point } => {
-                    realized.points.insert(step.name.to_owned(), point.clone());
+                    realized
+                        .points
+                        .insert(step.unique_id.to_owned(), point.clone());
                 }
                 StepData::Plane {
                     plane,
@@ -612,27 +605,34 @@ impl Workbench {
                         plane: plane.clone(),
                         width: *width,
                         height: *height,
+                        name: step.name.clone(),
                     };
-                    realized.planes.insert(step.name.to_owned(), rp);
+                    realized.planes.insert(step.unique_id.to_owned(), rp);
                 }
                 StepData::Sketch {
                     width,
                     height,
-                    plane_name,
+                    plane_id,
                     sketch,
                 } => {
-                    let plane = &realized.planes[plane_name];
+                    let plane = &realized.planes[plane_id];
+
                     realized.sketches.insert(
-                        step.name.to_owned(),
+                        step.unique_id.to_owned(),
                         (
-                            RealSketch::new(plane_name, plane, sketch),
-                            RealSketch::new(plane_name, plane, &sketch.split_intersections()),
+                            RealSketch::new(&plane.name, plane_id, plane, sketch),
+                            RealSketch::new(
+                                &plane.name,
+                                plane_id,
+                                plane,
+                                &sketch.split_intersections(),
+                            ),
                         ),
                     );
                 }
                 StepData::Extrusion { extrusion } => {
-                    let (_sketch, split_sketch) = &realized.sketches[&extrusion.sketch_name];
-                    let plane = &realized.planes[&split_sketch.plane_name];
+                    let (_sketch, split_sketch) = &realized.sketches[&extrusion.sketch_id];
+                    let plane = &realized.planes[&split_sketch.plane_id];
                     let solids =
                         Solid::from_extrusion(step.name.clone(), plane, split_sketch, extrusion);
                     for (name, solid) in solids {
@@ -693,14 +693,16 @@ impl Realization {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Step {
     name: String,
+    unique_id: String,
     suppressed: bool,
     data: StepData,
 }
 
 impl Step {
-    pub fn new_point(name: &str, point: Point3) -> Self {
+    pub fn new_point(name: &str, point: Point3, point_id: u64) -> Self {
         Step {
             name: name.to_owned(),
+            unique_id: format!("Point-{}", point_id),
             suppressed: false,
             data: StepData::Point {
                 point: point.clone(),
@@ -708,9 +710,10 @@ impl Step {
         }
     }
 
-    pub fn new_plane(name: &str, plane: Plane) -> Self {
+    pub fn new_plane(name: &str, plane: Plane, plane_id: u64) -> Self {
         Step {
             name: name.to_owned(),
+            unique_id: format!("Plane-{}", plane_id),
             suppressed: false,
             data: StepData::Plane {
                 plane,
@@ -720,12 +723,13 @@ impl Step {
         }
     }
 
-    pub fn new_sketch(name: &str, plane_name: &str) -> Self {
+    pub fn new_sketch(name: &str, plane_id: &str, sketch_id: u64) -> Self {
         Step {
             name: name.to_owned(),
+            unique_id: format!("Sketch-{}", sketch_id),
             suppressed: false,
             data: StepData::Sketch {
-                plane_name: plane_name.to_owned(),
+                plane_id: plane_id.to_owned(),
                 width: 1.25,
                 height: 0.75,
                 sketch: Sketch::new(),
@@ -733,9 +737,10 @@ impl Step {
         }
     }
 
-    pub fn new_extrusion(name: &str, extrusion: Extrusion) -> Self {
+    pub fn new_extrusion(name: &str, extrusion: Extrusion, extrusion_id: u64) -> Self {
         Step {
             name: name.to_owned(),
+            unique_id: format!("Extrusion-{}", extrusion_id),
             suppressed: false,
             data: StepData::Extrusion { extrusion },
         }
@@ -754,7 +759,7 @@ pub enum StepData {
         height: f64,
     },
     Sketch {
-        plane_name: String,
+        plane_id: String,
         width: f64,
         height: f64,
         sketch: Sketch,
@@ -941,6 +946,7 @@ pub struct Circle3 {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RealSketch {
+    pub plane_id: String,
     pub plane_name: String,
     pub points: HashMap<u64, Point3>,
     pub points_2d: HashMap<u64, Point2>,
@@ -957,12 +963,13 @@ pub struct RealSketch {
 }
 
 impl RealSketch {
-    pub fn new(plane_name: &str, plane: &RealPlane, sketch: &Sketch) -> Self {
+    pub fn new(plane_name: &str, plane_id: &str, plane: &RealPlane, sketch: &Sketch) -> Self {
         // The key difference between Sketch and RealSketch is that Sketch lives
         // in 2D and RealSketch lives in 3D. So we need to convert the points
 
         let mut real_sketch = RealSketch {
             plane_name: plane_name.to_owned(),
+            plane_id: plane_id.to_owned(),
             points_2d: HashMap::new(),
             points: HashMap::new(),
             highest_point_id: 0,
@@ -1056,6 +1063,7 @@ impl RealSketch {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RealPlane {
     pub plane: Plane,
+    pub name: String,
     pub width: f64,
     pub height: f64,
 }
@@ -1111,7 +1119,7 @@ pub enum Message {
     UpdateSketchPlane {
         workbench_id: u64,
         sketch_name: String,
-        plane_name: String,
+        plane_id: String,
     },
     DeleteSketch {
         workbench_id: u64,
@@ -1120,7 +1128,7 @@ pub enum Message {
     NewExtrusion {
         workbench_id: u64,
         extrusion_name: String,
-        sketch_name: String,
+        sketch_id: String,
         face_ids: Vec<u64>,
         length: f64,
         offset: f64,
@@ -1200,10 +1208,12 @@ mod tests {
         let mut p = Project::new("Test Project");
         p.add_defaults();
 
+        let right_plane_id = p.workbenches[0].plane_name_to_id("Right").unwrap();
+
         let message = &Message::UpdateSketchPlane {
             workbench_id: 0,
             sketch_name: "Sketch 1".to_owned(),
-            plane_name: "Right".to_owned(),
+            plane_id: right_plane_id,
         };
 
         let result = p.handle_message(message);
@@ -1213,6 +1223,25 @@ mod tests {
         }
         // println!("{:?}", result);
 
+        let realization = p.get_realization(0, 1000);
+    }
+
+    #[test]
+    fn rename_plane() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+
+        let message = &Message::RenameStep {
+            workbench_id: 0,
+            step_id: 1,
+            new_name: "Top-2".to_owned(),
+        };
+
+        let result = p.handle_message(message);
+        match result {
+            Ok(res) => println!("{}", res),
+            Err(e) => println!("{}", e),
+        }
         let realization = p.get_realization(0, 1000);
     }
 }
