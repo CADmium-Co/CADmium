@@ -53,9 +53,9 @@
 				{:else if feature.data.type === 'Plane'}
 					<PlaneFeature name={feature.name} index={featureIdx} />
 				{:else if feature.data.type === 'Sketch'}
-					<SketchFeature name={feature.name} />
+					<SketchFeature name={feature.name} index={featureIdx} />
 				{:else if feature.data.type === 'Extrusion'}
-					<ExtrusionFeature name={feature.name} />
+					<ExtrusionFeature name={feature.name} index={featureIdx} />
 				{:else}
 					TODO: {feature.name} {feature.data.type}
 				{/if}
