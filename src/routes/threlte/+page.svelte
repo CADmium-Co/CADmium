@@ -8,7 +8,7 @@
 	import BottomBar from './BottomBar.svelte'
 	import MainDisplay from './MainDisplay.svelte'
 	import ToolBar from './ToolBar.svelte'
-	import { wasmProject, project, projectIsStale, workbenchIndex } from './stores.js'
+	import { wasmProject, project, projectIsStale } from './stores.js'
 
 	let userName = 'mattferraro.dev'
 

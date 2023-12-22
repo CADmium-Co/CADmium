@@ -13,6 +13,5 @@ export const featureIndex = writable(1000)
 export const wasmRealization = writable()
 export const realization = writable({})
 export const realizationIsStale = writable(false)
-// export const wasmRealization = writable({})
 
 // stores the index of the feature being edited
