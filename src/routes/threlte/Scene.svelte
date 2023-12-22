@@ -12,9 +12,9 @@
 
 	$: points = $realization.points ? Object.entries($realization.points) : []
 	$: planes = $realization.planes ? Object.entries($realization.planes) : []
+	$: planes_by_id = planes ? Object.fromEntries(planes) : {}
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
-	$: console.log("Recomputed the Scene. Here's sketches: ", $workbench.name, sketches)
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={400} up={[0, 0, 1]}>
@@ -73,7 +73,12 @@
 {/each}
 
 {#each sketches as [sketchName, sketchTuple] (`${$workbench.name}-${sketchName}`)}
-	<Sketch name={sketchName} {sketchTuple} editing={false} />
+	<Sketch
+		name={sketchName}
+		{sketchTuple}
+		editing={false}
+		plane={planes_by_id[sketchTuple[0].plane_id]}
+	/>
 {/each}
 
 <Gizmo verticalPlacement={top} size={110} paddingX={10} paddingY={10} />

@@ -1,9 +1,11 @@
 <script>
 	import Point2D from './Point2D.svelte'
 	import Line from './Line.svelte'
+	import Circle from './Circle.svelte'
 
 	export let name
 	export let sketch
+	export let plane
 
 	const pointIds = Object.keys(sketch.points)
 	const pointTuples = []
@@ -24,13 +26,23 @@
 		lineTuples.push({ id: lineId, start, end })
 	}
 
-	console.log('lineTuples', lineTuples)
+	const circleTuples = []
+	for (let circleId of Object.keys(sketch.circles)) {
+		const circle = sketch.circles[circleId]
+		const center = pointsById[circle.center]
+		const radius = circle.radius
+		circleTuples.push({ id: circleId, center, radius })
+	}
 </script>
 
 {#each pointTuples as { id, twoD, threeD } (id)}
-	<Point2D {name} x={threeD.x} y={threeD.y} z={threeD.z} hidden={false} />
+	<Point2D {name} x={threeD.x} y={threeD.y} z={threeD.z} hidden={threeD.hidden} />
 {/each}
 
 {#each lineTuples as line (line.id)}
 	<Line start={line.start} end={line.end} />
+{/each}
+
+{#each circleTuples as circle (circle.id)}
+	<Circle center={circle.center} radius={circle.radius} {plane} id={circle.id} />
 {/each}
