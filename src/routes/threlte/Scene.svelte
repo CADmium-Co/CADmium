@@ -43,11 +43,11 @@
 	format="hdr"
 />
 
-{#each points as [pointName, point]}
+{#each points as [pointName, point] (pointName)}
 	<Point3D name={pointName} x={point.x} y={point.y} z={point.z} hidden={point.hidden} />
 {/each}
 
-{#each planes as [planeName, plane]}
+{#each planes as [planeName, plane] (planeName)}
 	<Plane
 		name={planeName}
 		height={plane.height}
@@ -59,7 +59,7 @@
 	/>
 {/each}
 
-{#each solids as [solidName, solid]}
+{#each solids as [solidName, solid] (solidName)}
 	<Solid
 		name={solidName}
 		indices={solid.indices}
