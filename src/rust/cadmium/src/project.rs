@@ -115,11 +115,56 @@ impl Project {
                 step_id,
                 new_name,
             } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let current_step_name = workbench.history[*step_id as usize].name.clone();
+                let current_step = workbench.history.get(*step_id as usize).unwrap();
+
+                // First make sure that this renaming doesn't create and duplicates
+                // Every step name must be unique. If the new name is already in use,
+                // raise an error.
+                // TODO!
+
+                // Second, fix any downstream references to the old name
+                match &current_step.data {
+                    StepData::Plane {
+                        plane,
+                        width,
+                        height,
+                    } => {
+                        // If the step being renamed is a plane, then check any existing
+                        // sketches to make sure they don't reference the old plane name
+                        for step in workbench.history.iter_mut() {
+                            match &step.data {
+                                StepData::Sketch {
+                                    plane_name,
+                                    width,
+                                    height,
+                                    sketch,
+                                } => {
+                                    if plane_name == &current_step_name {
+                                        // change the plane name to the new name
+                                        step.data = StepData::Sketch {
+                                            plane_name: new_name.to_owned(),
+                                            width: *width,
+                                            height: *height,
+                                            sketch: sketch.clone(),
+                                        };
+                                    }
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+
+                // Third, actually rename the step
                 self.workbenches[*workbench_id as usize]
                     .history
                     .get_mut(*step_id as usize)
                     .unwrap()
                     .name = new_name.to_owned();
+
                 Ok(format!("\"name\": \"{}\"", new_name))
             }
             Message::NewPointOnSketch {

@@ -1,4 +1,3 @@
-import wasm from 'vite-plugin-wasm'
 import {
 	workbenchIsStale,
 	workbenchIndex,
