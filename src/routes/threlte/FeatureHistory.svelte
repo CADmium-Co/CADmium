@@ -46,12 +46,12 @@
 <div class="flex flex-col select-none">
 	<div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
 		<div class="font-bold text-sm px-2 py-2">History ({history.length})</div>
-		{#each history as feature}
+		{#each history as feature, featureIdx (feature.data.type + ':' + feature.name)}
 			<div>
 				{#if feature.data.type === 'Point'}
-					<PointFeature name={feature.name} />
+					<PointFeature name={feature.name} index={featureIdx} />
 				{:else if feature.data.type === 'Plane'}
-					<PlaneFeature name={feature.name} />
+					<PlaneFeature name={feature.name} index={featureIdx} />
 				{:else if feature.data.type === 'Sketch'}
 					<SketchFeature name={feature.name} />
 				{:else if feature.data.type === 'Extrusion'}

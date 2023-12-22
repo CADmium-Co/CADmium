@@ -1,3 +1,4 @@
+import wasm from 'vite-plugin-wasm'
 import {
 	workbenchIsStale,
 	workbenchIndex,
@@ -11,14 +12,14 @@ import {
 } from './stores'
 import { get } from 'svelte/store'
 
-export function renameStep(newName) {
+export function renameStep(stepIdx, newName) {
 	console.log('renaming step to: ', newName)
 	let wp = get(wasmProject)
 
 	const message_obj = {
 		RenameStep: {
-			workbench_id: 0,
-			step_id: 0,
+			workbench_id: get(workbenchIndex),
+			step_id: stepIdx,
 			new_name: newName
 		}
 	}
@@ -65,6 +66,7 @@ realizationIsStale.subscribe((value) => {
 		const maxStep = 1000
 		let wasmProj = get(wasmProject)
 		let workbenchIdx = get(workbenchIndex)
+		console.log('trying to get realization: ', workbenchIdx, wasmProj)
 		let wasmReal = wasmProj.get_realization(workbenchIdx, maxStep)
 		wasmRealization.set(wasmReal)
 		realization.set(JSON.parse(wasmReal.to_json()))
