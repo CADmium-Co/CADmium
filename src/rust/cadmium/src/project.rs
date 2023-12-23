@@ -41,6 +41,17 @@ impl Project {
         }
     }
 
+    pub fn from_json(json: &str) -> Self {
+        let result = serde_json::from_str(json);
+        match result {
+            Ok(p) => p,
+            Err(e) => {
+                println!("Error: {}", e);
+                Project::new("Error")
+            }
+        }
+    }
+
     pub fn compute_constraint_errors(&mut self) {
         for workbench in self.workbenches.iter_mut() {
             for step in workbench.history.iter_mut() {

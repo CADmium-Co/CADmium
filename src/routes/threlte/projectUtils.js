@@ -34,9 +34,12 @@ projectIsStale.subscribe((value) => {
 		console.log('Refreshing project')
 		let wp = get(wasmProject)
 		project.set(JSON.parse(wp.to_json()))
-		projectIsStale.set(false)
+		console.log('new project:', get(project))
 
+		workbenchIndex.set(0)
 		workbenchIsStale.set(true)
+
+		projectIsStale.set(false)
 	}
 })
 
@@ -46,9 +49,11 @@ workbenchIsStale.subscribe((value) => {
 	if (value) {
 		let workbenchIdx = get(workbenchIndex)
 		console.log('Refreshing workbench ', workbenchIdx)
-
 		let wasmProj = get(wasmProject)
+		console.log('wasmProj', wasmProj)
+
 		let workbenchJson = wasmProj.get_workbench(workbenchIdx)
+		console.log(workbenchJson)
 		// TODO: reach inside of project and set its representation
 		// of the workbench to the new one that we just got
 		workbench.set(JSON.parse(workbenchJson))
@@ -75,3 +80,13 @@ realizationIsStale.subscribe((value) => {
 		realizationIsStale.set(false)
 	}
 })
+
+export function readFile(e) {
+	var file = e.target.files[0]
+	if (!file) return
+	var reader = new FileReader()
+	reader.onload = function (e) {
+		console.log('file contents', e.target.result)
+	}
+	reader.readAsText(file)
+}

@@ -11,6 +11,7 @@
 	import { wasmProject, project, projectIsStale } from './stores.js'
 
 	let userName = 'mattferraro.dev'
+	let newFileContent = null
 
 	if (browser) {
 		onMount(() => {
@@ -21,10 +22,18 @@
 			})
 		})
 	}
+
+	$: if (newFileContent) {
+		console.log('received new file')
+		let newWasmProject = Project.from_json(newFileContent)
+		wasmProject.set(newWasmProject)
+		projectIsStale.set(true)
+		newFileContent = null
+	}
 </script>
 
 <div class="w-[100vw] h-[100vh] block">
-	<AppBar {userName} project={$project} />
+	<AppBar {userName} project={$project} bind:newFileContent />
 	<ToolBar />
 	<div class="flex">
 		<MainDisplay />

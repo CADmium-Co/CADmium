@@ -1,12 +1,14 @@
 <script>
 	import fileDownload from 'js-file-download'
-	import { wasmProject } from './stores'
+	import { projectIsStale, wasmProject } from './stores'
 
 	import Download from 'phosphor-svelte/lib/Download'
 	import Upload from 'phosphor-svelte/lib/Upload'
 
 	export let userName = 'mattferraro.dev'
 	export let project = {}
+
+	export let newFileContent = null
 </script>
 
 <div class="bg-gray-200 h-[45px]">
@@ -19,7 +21,7 @@
 		<div class="text-xl font-medium">{project.name || ''}</div>
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
-			class="hover:bg-gray-300 rounded-full p-1"
+			class="hover:bg-gray-300 rounded p-1"
 			on:click={() => {
 				console.log('down')
 				let asString = $wasmProject.to_json()
@@ -31,12 +33,33 @@
 
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
-			class="hover:bg-gray-300 rounded-full p-1"
+			class="hover:bg-gray-300 rounded p-1"
 			on:click={() => {
-				console.log('down')
+				console.log('up')
 			}}
 		>
-			<Upload class="h-6 w-6" />
+			<!-- <Upload class="h-6 w-6" /> -->
+			<!-- <input id="file-inp" type="file" style="visibility:hidden;" onchange="readFile(event)" /> -->
+			<input
+				id="file-inp"
+				type="file"
+				on:change={(e) => {
+					console.log('on change: ', e)
+					var file = e.target.files[0]
+					if (!file) return
+					var reader = new FileReader()
+					reader.onload = function (e) {
+						// console.log('file contents', e.target.result)
+						newFileContent = e.target.result
+
+						// console.log('wasm project', $wasmProject)
+						// let newWasmProject = $wasmProject.from_json(e.target.result)
+						// wasmProject.set(newWasmProject)
+						// projectIsStale.set(true)
+					}
+					reader.readAsText(file)
+				}}
+			/>
 		</div>
 
 		<div class="flex-grow flex flex-row-reverse gap-4 mr-4">

@@ -48,6 +48,12 @@ impl Project {
     }
 
     #[wasm_bindgen]
+    pub fn from_json(json: String) -> Project {
+        let p = project::Project::from_json(&json);
+        Project { native: p }
+    }
+
+    #[wasm_bindgen]
     pub fn compute_constraint_errors(&mut self) {
         self.native.compute_constraint_errors();
     }
