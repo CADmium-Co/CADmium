@@ -36,6 +36,12 @@
 		const radius = circle.radius
 		circleTuples.push({ id: circleId, center, radius })
 	}
+
+	// $: console.log('passive sketch sketch', sketch)
+	// $: console.log($hiddenSketches, uniqueId)
+
+	$: hidden = $hiddenSketches.includes(uniqueId)
+	// $: console.log('sketch hidden?', hidden)
 </script>
 
 {#if !hidden}
