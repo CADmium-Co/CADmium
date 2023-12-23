@@ -3,6 +3,9 @@
 	import Line from './Line.svelte'
 	import Circle from './Circle.svelte'
 
+	import { hiddenSketches } from './stores.js'
+
+	export let uniqueId
 	export let name
 	export let sketch
 	export let plane
@@ -35,14 +38,16 @@
 	}
 </script>
 
-{#each pointTuples as { id, twoD, threeD } (id)}
-	<Point2D {name} x={threeD.x} y={threeD.y} z={threeD.z} hidden={threeD.hidden} />
-{/each}
+{#if !hidden}
+	{#each pointTuples as { id, twoD, threeD } (id)}
+		<Point2D {name} x={threeD.x} y={threeD.y} z={threeD.z} hidden={threeD.hidden} />
+	{/each}
 
-{#each lineTuples as line (line.id)}
-	<Line start={line.start} end={line.end} />
-{/each}
+	{#each lineTuples as line (line.id)}
+		<Line start={line.start} end={line.end} />
+	{/each}
 
-{#each circleTuples as circle (circle.id)}
-	<Circle center={circle.center} radius={circle.radius} {plane} id={circle.id} />
-{/each}
+	{#each circleTuples as circle (circle.id)}
+		<Circle center={circle.center} radius={circle.radius} {plane} id={circle.id} />
+	{/each}
+{/if}

@@ -629,11 +629,12 @@ impl Workbench {
                                 plane,
                                 &sketch.split_intersections(),
                             ),
+                            step.name.clone(),
                         ),
                     );
                 }
                 StepData::Extrusion { extrusion } => {
-                    let (_sketch, split_sketch) = &realized.sketches[&extrusion.sketch_id];
+                    let (_sketch, split_sketch, _name) = &realized.sketches[&extrusion.sketch_id];
                     let plane = &realized.planes[&split_sketch.plane_id];
                     let solids =
                         Solid::from_extrusion(step.name.clone(), plane, split_sketch, extrusion);
@@ -655,7 +656,7 @@ pub struct Realization {
     // history and build a bunch of geometry
     pub planes: HashMap<String, RealPlane>,
     pub points: HashMap<String, Point3>,
-    pub sketches: HashMap<String, (RealSketch, RealSketch)>,
+    pub sketches: HashMap<String, (RealSketch, RealSketch, String)>,
     pub solids: HashMap<String, Solid>,
 }
 

@@ -72,9 +72,10 @@
 	/>
 {/each}
 
-{#each sketches as [sketchName, sketchTuple] (`${$workbench.name}-${sketchName}`)}
+{#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}`)}
 	<Sketch
-		name={sketchName}
+		uniqueId={sketchId}
+		name={sketchTuple[2]}
 		{sketchTuple}
 		editing={false}
 		plane={planes_by_id[sketchTuple[0].plane_id]}

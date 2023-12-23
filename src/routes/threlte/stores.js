@@ -14,4 +14,4 @@ export const wasmRealization = writable()
 export const realization = writable({})
 export const realizationIsStale = writable(false)
 
-// stores the index of the feature being edited
+export const hiddenSketches = writable([])

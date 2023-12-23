@@ -3,10 +3,15 @@
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
 	import { workbenchIsStale } from './stores.js'
+	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
+	import Eye from 'phosphor-svelte/lib/Eye'
+	import { hiddenSketches } from './stores.js'
 
 	export let name
 	export let index
+	export let id
 	let editing = false
+	let hidden = false
 
 	let source = '/actions/sketch_min.svg'
 
@@ -30,6 +35,32 @@
 >
 	<img class="h-8 w-8 px-1" src={source} alt={name} />
 	{name}
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded"
+		on:click={() => {
+			if (hidden) {
+				// cool, unhide
+				hidden = false
+				hiddenSketches.update((sketches) => {
+					return sketches.filter((sketch) => sketch !== id)
+				})
+			} else {
+				// cool, hide
+				hidden = true
+				hiddenSketches.update((sketches) => {
+					return [...sketches, id]
+				})
+			}
+		}}
+	>
+		{#if hidden}
+			<EyeSlash weight="light" size="18px" />
+		{:else}
+			<Eye weight="light" size="18px" />
+		{/if}
+	</div>
 </div>
 
 {#if editing}
