@@ -75,11 +75,3 @@ realizationIsStale.subscribe((value) => {
 		realizationIsStale.set(false)
 	}
 })
-
-// workbenchIndex.set(0)
-// workbench.set($project.workbenches[$workbenchIndex])
-
-// const maxStep = $featureIndex >= 0 ? $featureIndex + 1 : 1000
-// wasmRealization.set($wasmProject.get_realization(0, maxStep))
-// realization.set(JSON.parse($wasmRealization.to_json()))
-// realizationIsStale.set(false)

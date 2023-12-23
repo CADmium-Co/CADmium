@@ -63,23 +63,10 @@ impl Project {
         None
     }
 
-    // pub fn get_workbench_mut_by_index(&mut self, index: usize) -> Option<&mut Workbench> {
-    //     let index = index as usize;
-    //     if index < self.workbenches.len() {
-    //         return Some(&mut self.workbenches[index]);
-    //     }
-    //     None
-    // }
-
     pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Realization {
         let workbench = &self.workbenches[workbench_id as usize];
         let realization = workbench.realize(max_steps);
         realization
-        // let result = serde_json::to_string(&realization);
-        // match result {
-        //     Ok(json) => json,
-        //     Err(e) => format!("Error: {}", e),
-        // }
     }
 
     pub fn handle_message_string(&mut self, message_string: &str) -> Result<String, String> {
@@ -119,15 +106,6 @@ impl Project {
                 let current_step_name = workbench.history[*step_id as usize].name.clone();
                 let current_step = workbench.history.get(*step_id as usize).unwrap();
 
-                // First make sure that this renaming doesn't create and duplicates
-                // Every step name must be unique. If the new name is already in use,
-                // raise an error.
-                // TODO!
-
-                // Second, fix any downstream references to the old name
-                // NO LONGER NEEDED!
-
-                // Third, actually rename the step
                 self.workbenches[*workbench_id as usize]
                     .history
                     .get_mut(*step_id as usize)
