@@ -11,7 +11,10 @@
 	export let index
 	export let id
 	let editing = false
-	let hidden = false
+	let hidden = true
+
+	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
+	let mode = 'Select'
 
 	let source = '/actions/sketch_min.svg'
 
@@ -96,6 +99,35 @@
 					>Cancel</button
 				>
 			</div>
+
+			<label>
+				Mode
+				<div class="flex">
+					{#each sketch_modes as sketch_mode}
+						<input
+							hidden
+							type="radio"
+							id={sketch_mode.name}
+							name="mode"
+							value={sketch_mode.name}
+							on:click={() => (mode = sketch_mode.name)}
+						/>
+						{#if sketch_mode.name === mode}
+							<label
+								class="text-sm py-1 bg-white flex-grow border-solid border-2 border-sky-500 text-center"
+								for={sketch_mode.name}>{sketch_mode.name}</label
+							>
+						{:else}
+							<label
+								class="text-sm py-1 bg-gray-200 flex-grow border-solid border-2 border-gray-500 text-center hover:bg-gray-300"
+								for={sketch_mode.name}>{sketch_mode.name}</label
+							>
+						{/if}
+
+						<br />
+					{/each}
+				</div>
+			</label>
 		</form>
 	</div>
 {/if}
