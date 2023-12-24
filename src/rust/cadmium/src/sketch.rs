@@ -3,6 +3,7 @@ use geo::line_intersection::{line_intersection, LineIntersection};
 use geo::Contains;
 use geo::Intersects;
 use geo::Line;
+use serde_with::{serde_as, DisplayFromStr};
 
 use core::panic;
 use geo::LineString;
@@ -20,16 +21,26 @@ use svg::Document;
 
 use crate::project::{Plane, RealSketch};
 
+#[serde_as]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Sketch {
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub points: HashMap<u64, Point2>,
     pub highest_point_id: u64,
+
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub line_segments: HashMap<u64, Line2>,
     pub highest_line_segment_id: u64,
+
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub circles: HashMap<u64, Circle2>,
     pub highest_circle_id: u64,
+
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub arcs: HashMap<u64, Arc2>,
     pub highest_arc_id: u64,
+
+    #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub constraints: HashMap<u64, Constraint>,
     pub highest_constraint_id: u64,
 }

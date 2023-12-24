@@ -34,7 +34,6 @@ projectIsStale.subscribe((value) => {
 		console.log('Refreshing project')
 		let wp = get(wasmProject)
 		project.set(JSON.parse(wp.to_json()))
-		console.log('new project:', get(project))
 
 		workbenchIndex.set(0)
 		workbenchIsStale.set(true)
@@ -50,10 +49,8 @@ workbenchIsStale.subscribe((value) => {
 		let workbenchIdx = get(workbenchIndex)
 		console.log('Refreshing workbench ', workbenchIdx)
 		let wasmProj = get(wasmProject)
-		console.log('wasmProj', wasmProj)
 
 		let workbenchJson = wasmProj.get_workbench(workbenchIdx)
-		console.log(workbenchJson)
 		// TODO: reach inside of project and set its representation
 		// of the workbench to the new one that we just got
 		workbench.set(JSON.parse(workbenchJson))

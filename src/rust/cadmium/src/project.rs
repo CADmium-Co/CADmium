@@ -1236,4 +1236,17 @@ mod tests {
         }
         let realization = p.get_realization(0, 1000);
     }
+
+    #[test]
+    fn to_and_from_json() {
+        // let mut p = Project::new("Test Project");
+        // p.add_defaults();
+
+        let file_contents =
+            std::fs::read_to_string("/Users/matthewferraro/Downloads/first_project.cadmium")
+                .unwrap();
+
+        let p2 = Project::from_json(&file_contents);
+        println!("{:?}", p2);
+    }
 }

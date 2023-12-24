@@ -22,6 +22,7 @@ serde = "1.0.188"
 itertools = "0.11.0"
 svg = "0.13.1"
 geo = "0.26.0"
+serde_with = "3.4.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

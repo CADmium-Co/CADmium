@@ -23,7 +23,6 @@
 		<div
 			class="hover:bg-gray-300 rounded p-1"
 			on:click={() => {
-				console.log('down')
 				let asString = $wasmProject.to_json()
 				fileDownload(asString, `${project.name}.cadmium`)
 			}}
@@ -40,26 +39,25 @@
 		>
 			<!-- <Upload class="h-6 w-6" /> -->
 			<!-- <input id="file-inp" type="file" style="visibility:hidden;" onchange="readFile(event)" /> -->
-			<input
-				id="file-inp"
-				type="file"
-				on:change={(e) => {
-					console.log('on change: ', e)
-					var file = e.target.files[0]
-					if (!file) return
-					var reader = new FileReader()
-					reader.onload = function (e) {
-						// console.log('file contents', e.target.result)
-						newFileContent = e.target.result
-
-						// console.log('wasm project', $wasmProject)
-						// let newWasmProject = $wasmProject.from_json(e.target.result)
-						// wasmProject.set(newWasmProject)
-						// projectIsStale.set(true)
-					}
-					reader.readAsText(file)
-				}}
-			/>
+			<label for="file-inp">
+				<Upload class="h-6 w-6" />
+				<input
+					id="file-inp"
+					type="file"
+					hidden
+					on:change={(e) => {
+						var file = e.target.files[0]
+						if (!file) return
+						var reader = new FileReader()
+						reader.onload = function (e) {
+							// Note that this field is bound by the +page.svelte component,
+							// which kicks off some changes as a result of this value changing.
+							newFileContent = e.target.result
+						}
+						reader.readAsText(file)
+					}}
+				/>
+			</label>
 		</div>
 
 		<div class="flex-grow flex flex-row-reverse gap-4 mr-4">
