@@ -22,7 +22,7 @@
 		color: '#000000',
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
-		transparent: false,
+		transparent: true,
 		dashed: true,
 		dashSize: 0.1,
 		gapSize: 0.1,

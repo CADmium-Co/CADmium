@@ -3,6 +3,7 @@ import {
 	workbenchIndex,
 	workbench,
 	project,
+	featureIndex,
 	wasmProject,
 	projectIsStale,
 	realizationIsStale,
@@ -47,9 +48,7 @@ projectIsStale.subscribe((value) => {
 workbenchIsStale.subscribe((value) => {
 	if (value) {
 		let workbenchIdx = get(workbenchIndex)
-		console.log('Refreshing workbench ', workbenchIdx)
 		let wasmProj = get(wasmProject)
-
 		let workbenchJson = wasmProj.get_workbench(workbenchIdx)
 		// TODO: reach inside of project and set its representation
 		// of the workbench to the new one that we just got
@@ -66,10 +65,10 @@ workbenchIsStale.subscribe((value) => {
 realizationIsStale.subscribe((value) => {
 	if (value) {
 		console.log('Refreshing realization')
-		const maxStep = 1000
+
 		let wasmProj = get(wasmProject)
 		let workbenchIdx = get(workbenchIndex)
-		let wasmReal = wasmProj.get_realization(workbenchIdx, maxStep)
+		let wasmReal = wasmProj.get_realization(workbenchIdx, get(featureIndex) + 1)
 		wasmRealization.set(wasmReal)
 		realization.set(JSON.parse(wasmReal.to_json()))
 		// console.log('new realization:', get(realization))

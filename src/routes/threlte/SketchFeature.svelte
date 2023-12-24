@@ -2,25 +2,23 @@
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
-	import { workbenchIsStale } from './stores.js'
+	import { hiddenSketches, sketchMode, featureIndex } from './stores.js'
 	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
 	import Eye from 'phosphor-svelte/lib/Eye'
-	import { hiddenSketches } from './stores.js'
 
 	export let name
 	export let index
 	export let id
-	let editing = false
-	let hidden = true
+	// let hidden = true
 
 	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
-	let mode = 'Select'
 
 	let source = '/actions/sketch_min.svg'
 
 	const closeAndRefresh = () => {
 		console.log('closing, refreshing')
-		workbenchIsStale.set(true)
+		$featureIndex = 1000
+		$sketchMode = 'Select'
 	}
 </script>
 
@@ -29,10 +27,11 @@
 	role="button"
 	tabindex="0"
 	on:dblclick={() => {
-		editing = !editing
-
-		if (editing === false) {
+		if ($featureIndex === index) {
 			closeAndRefresh()
+		} else {
+			$featureIndex = index
+			$sketchMode = 'Select'
 		}
 	}}
 >
@@ -43,22 +42,20 @@
 	<div
 		class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded"
 		on:click={() => {
-			if (hidden) {
+			if ($hiddenSketches.includes(id)) {
 				// cool, unhide
-				hidden = false
 				hiddenSketches.update((sketches) => {
 					return sketches.filter((sketch) => sketch !== id)
 				})
 			} else {
 				// cool, hide
-				hidden = true
 				hiddenSketches.update((sketches) => {
 					return [...sketches, id]
 				})
 			}
 		}}
 	>
-		{#if hidden}
+		{#if $hiddenSketches.includes(id)}
 			<EyeSlash weight="light" size="18px" />
 		{:else}
 			<Eye weight="light" size="18px" />
@@ -66,11 +63,11 @@
 	</div>
 </div>
 
-{#if editing}
+{#if $featureIndex === index}
 	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
 		<form
 			on:submit|preventDefault={() => {
-				editing = false
+				// editing = false
 				closeAndRefresh()
 			}}
 			class="px-3 py-2 bg-gray-100 flex flex-col space-y-2"
@@ -86,20 +83,6 @@
 				/>
 			</label>
 
-			<div class="flex space-x-1.5">
-				<button
-					class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
-					on:click={() => {
-						renameStep(index, name)
-					}}>Done</button
-				>
-
-				<button
-					class="bg-transparent hover:bg-sky-700 text-sky-500 font-semibold hover:text-white py-1.5 px-4 border border-sky-500 hover:border-transparent"
-					>Cancel</button
-				>
-			</div>
-
 			<label>
 				Mode
 				<div class="flex">
@@ -110,9 +93,9 @@
 							id={sketch_mode.name}
 							name="mode"
 							value={sketch_mode.name}
-							on:click={() => (mode = sketch_mode.name)}
+							on:click={() => ($sketchMode = sketch_mode.name)}
 						/>
-						{#if sketch_mode.name === mode}
+						{#if sketch_mode.name === $sketchMode}
 							<label
 								class="text-sm py-1 bg-white flex-grow border-solid border-2 border-sky-500 text-center"
 								for={sketch_mode.name}>{sketch_mode.name}</label
@@ -128,6 +111,21 @@
 					{/each}
 				</div>
 			</label>
+
+			<div class="flex space-x-1.5">
+				<button
+					class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
+					on:click={() => {
+						// This is a form button so remember that it triggers the form's on:submit
+						renameStep(index, name)
+					}}>Done</button
+				>
+
+				<button
+					class="bg-transparent hover:bg-sky-700 text-sky-500 font-semibold hover:text-white py-1.5 px-4 border border-sky-500 hover:border-transparent"
+					>Cancel</button
+				>
+			</div>
 		</form>
 	</div>
 {/if}

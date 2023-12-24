@@ -8,7 +8,7 @@
 	import BottomBar from './BottomBar.svelte'
 	import MainDisplay from './MainDisplay.svelte'
 	import ToolBar from './ToolBar.svelte'
-	import { wasmProject, project, projectIsStale } from './stores.js'
+	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from './stores.js'
 
 	let userName = 'mattferraro.dev'
 	let newFileContent = null
@@ -18,6 +18,7 @@
 			init().then(() => {
 				let p = new Project('First Project')
 				wasmProject.set(p)
+				console.log('made a new project')
 				projectIsStale.set(true)
 			})
 		})
@@ -30,6 +31,13 @@
 		projectIsStale.set(true)
 		newFileContent = null
 	}
+
+	featureIndex.subscribe((val) => {
+		if ($wasmProject.get_workbench) {
+			console.log('featureIndex changed to', val)
+			workbenchIsStale.set(true)
+		}
+	})
 </script>
 
 <div class="w-[100vw] h-[100vh] block">

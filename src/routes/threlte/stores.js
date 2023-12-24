@@ -15,3 +15,4 @@ export const realization = writable({})
 export const realizationIsStale = writable(false)
 
 export const hiddenSketches = writable([])
+export const sketchMode = writable('Select')

@@ -2,18 +2,18 @@
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
-	import { workbenchIsStale, projectIsStale } from './stores.js'
+	import { workbenchIsStale, projectIsStale, featureIndex } from './stores.js'
 
 	export let name
 	export let index
-	let editing = false
 
 	let source = '/actions/plane_min.svg'
 
 	const closeAndRefresh = () => {
 		console.log('closing, refreshing')
 		workbenchIsStale.set(true)
-		projectIsStale.set(true)
+		// projectIsStale.set(true)
+		$featureIndex = 1000
 	}
 </script>
 
@@ -22,22 +22,26 @@
 	role="button"
 	tabindex="0"
 	on:dblclick={() => {
-		editing = !editing
-
-		if (editing === false) {
+		if ($featureIndex === index) {
 			closeAndRefresh()
+		} else {
+			$featureIndex = index
 		}
 	}}
 >
 	<img class="h-8 w-8 px-1" src={source} alt={name} />
-	{name}
+	{#if $featureIndex < index}
+		<span class="italic">{name}</span>
+	{:else}
+		<span>{name}</span>
+	{/if}
 </div>
 
-{#if editing}
+{#if $featureIndex === index}
 	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
 		<form
 			on:submit|preventDefault={() => {
-				editing = false
+				// editing = false
 				closeAndRefresh()
 			}}
 			class="px-3 py-2 bg-gray-100 flex flex-col space-y-2"

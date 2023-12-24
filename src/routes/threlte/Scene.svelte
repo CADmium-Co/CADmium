@@ -63,15 +63,6 @@
 	/>
 {/each}
 
-{#each solids as [solidName, solid] (`${$workbench.name}-${solidName}`)}
-	<Solid
-		name={solidName}
-		indices={solid.indices}
-		vertices={solid.vertices}
-		normals={solid.normals}
-	/>
-{/each}
-
 {#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}`)}
 	<Sketch
 		uniqueId={sketchId}
@@ -79,6 +70,15 @@
 		{sketchTuple}
 		editing={false}
 		plane={planes_by_id[sketchTuple[0].plane_id]}
+	/>
+{/each}
+
+{#each solids as [solidName, solid] (`${$workbench.name}-${solidName}`)}
+	<Solid
+		name={solidName}
+		indices={solid.indices}
+		vertices={solid.vertices}
+		normals={solid.normals}
 	/>
 {/each}
 
