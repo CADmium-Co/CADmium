@@ -35,8 +35,14 @@
 		}
 	}}
 >
-	<img class="h-8 w-8 px-1" src={source} alt={name} />
-	{name}
+	{#if $featureIndex < index}
+		<img class="h-8 w-8 px-1 opacity-50" src={source} alt={name} />
+		<span class="italic opacity-50">{name}</span>
+	{:else}
+		<img class="h-8 w-8 px-1" src={source} alt={name} />
+		<span>{name}</span>
+	{/if}
+
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div

@@ -29,10 +29,11 @@
 		}
 	}}
 >
-	<img class="h-8 w-8 px-1" src={source} alt={name} />
 	{#if $featureIndex < index}
-		<span class="italic">{name}</span>
+		<img class="h-8 w-8 px-1 opacity-50" src={source} alt={name} />
+		<span class="italic opacity-50">{name}</span>
 	{:else}
+		<img class="h-8 w-8 px-1" src={source} alt={name} />
 		<span>{name}</span>
 	{/if}
 </div>
