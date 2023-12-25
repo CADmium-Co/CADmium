@@ -5,6 +5,7 @@
 	import FeatureHistory from './FeatureHistory.svelte'
 	import { Canvas } from '@threlte/core'
 	import Scene from './Scene.svelte'
+	import { sketchTool } from './stores'
 
 	let width = 250 // px
 	let minWidth = 150
@@ -46,7 +47,10 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
 
-<div class="bg-white" style="width:{viewportWidth}px; height:{height}px">
+<div
+	class="bg-white {$sketchTool === 'line' ? 'cursor-crosshair' : ''}"
+	style="width:{viewportWidth}px; height:{height}px"
+>
 	<Canvas>
 		<Scene />
 	</Canvas>

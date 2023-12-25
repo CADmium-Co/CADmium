@@ -1,5 +1,5 @@
 <script>
-	import { sketchBeingEdited } from './stores'
+	import { sketchBeingEdited, sketchTool } from './stores'
 
 	let solving = false
 	const solveSketch = () => {}
@@ -21,7 +21,13 @@
 	let sketchActions = [
 		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solveSketch },
 		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: stepSketch },
-		{ alt: 'line', src: '/actions/line.svg' },
+		{
+			alt: 'line',
+			src: '/actions/line.svg',
+			handler: () => {
+				$sketchTool = 'line'
+			}
+		},
 		{ alt: 'circle', src: '/actions/circle.svg' }
 	]
 </script>

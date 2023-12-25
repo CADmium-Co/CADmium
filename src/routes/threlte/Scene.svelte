@@ -12,7 +12,7 @@
 
 	$: points = $realization.points ? Object.entries($realization.points) : []
 	$: planes = $realization.planes ? Object.entries($realization.planes) : []
-	$: planes_by_id = planes ? Object.fromEntries(planes) : {}
+	$: planesById = planes ? Object.fromEntries(planes) : {}
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
 </script>
@@ -69,7 +69,7 @@
 		name={sketchTuple[2]}
 		{sketchTuple}
 		editing={$sketchBeingEdited === sketchId}
-		plane={planes_by_id[sketchTuple[0].plane_id]}
+		plane={planesById[sketchTuple[0].plane_id]}
 	/>
 {/each}
 

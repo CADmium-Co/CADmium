@@ -2,7 +2,13 @@
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
-	import { hiddenSketches, sketchMode, featureIndex, sketchBeingEdited } from './stores.js'
+	import {
+		hiddenSketches,
+		sketchMode,
+		featureIndex,
+		sketchBeingEdited,
+		sketchTool
+	} from './stores.js'
 	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
 	import Eye from 'phosphor-svelte/lib/Eye'
 
@@ -19,6 +25,7 @@
 		$featureIndex = 1000
 		$sketchMode = 'Select'
 		$sketchBeingEdited = null
+		$sketchTool = null
 	}
 
 	$: if ($featureIndex === index) {
