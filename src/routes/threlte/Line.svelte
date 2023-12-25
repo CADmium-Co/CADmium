@@ -4,6 +4,7 @@
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 	import { Vector2 } from 'three'
 	import { T } from '@threlte/core'
+	import { flatten, promoteTo3 } from './projectUtils'
 
 	export let start
 	export let end
@@ -31,14 +32,17 @@
 		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
 	})
 
-	const points = [
-		start.threeD.x,
-		start.threeD.y,
-		start.threeD.z,
-		end.threeD.x,
-		end.threeD.y,
-		end.threeD.z
-	]
+	const points = flatten(
+		promoteTo3([new Vector2(start.twoD.x, start.twoD.y), new Vector2(end.twoD.x, end.twoD.y)])
+	)
+	// const points = [
+	// 	start.threeD.x,
+	// 	start.threeD.y,
+	// 	start.threeD.z,
+	// 	end.threeD.x,
+	// 	end.threeD.y,
+	// 	end.threeD.z
+	// ]
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
 </script>

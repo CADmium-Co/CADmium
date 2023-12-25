@@ -5,7 +5,6 @@
 
 	export let x
 	export let y
-	export let z
 	export let hidden
 	export let name
 
@@ -14,7 +13,7 @@
 	const texture = useTexture(source)
 
 	let geom = new BufferGeometry()
-	let vertices = new Float32Array([x, y, z])
+	let vertices = new Float32Array([x, y, 0])
 	geom.setAttribute('position', new Float32BufferAttribute(vertices, 3))
 
 	// const geometry = new THREE.SphereGeometry(15, 32, 16)

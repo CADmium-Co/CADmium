@@ -169,15 +169,15 @@
 		{#each arcTuples as arc (arc.id)}
 			<Arc center={arc.center} start={arc.start} end={arc.end} />
 		{/each}
+
+		{#each lineTuples as line (line.id)}
+			<Line start={line.start} end={line.end} />
+		{/each}
+
+		{#each pointTuples as { id, twoD, threeD } (id)}
+			<Point2D {name} x={twoD.x} y={twoD.y} hidden={threeD.hidden} />
+		{/each}
 	</T.Group>
-
-	{#each pointTuples as { id, twoD, threeD } (id)}
-		<Point2D {name} x={threeD.x} y={threeD.y} z={threeD.z} hidden={threeD.hidden} />
-	{/each}
-
-	{#each lineTuples as line (line.id)}
-		<Line start={line.start} end={line.end} />
-	{/each}
 
 	<!-- {#each faceTuples as face (face.id)}
 		<Face {plane} face={face.face} id={face.id} {pointsById} />
