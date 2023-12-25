@@ -3,7 +3,7 @@
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 	import { T } from '@threlte/core'
-	import { Vector2, Vector3 } from 'three'
+	import { Vector2 } from 'three'
 	import { flatten, circleToPoints, promoteTo3 } from './projectUtils'
 
 	export let id

@@ -92,6 +92,39 @@ export function readFile(e) {
 	reader.readAsText(file)
 }
 
+export function arcToPoints(center, start, end) {
+	const radius = start.distanceTo(center)
+	// console.log('Arc To Points', center, start, end, radius)
+
+	// see https://math.stackexchange.com/a/4132095/816177
+	const tolerance = CIRCLE_TOLERANCE // in meters
+	const k = tolerance / radius
+	// more precise but slower to calculate:
+	// const n = Math.ceil(Math.PI / Math.acos(1 - k))
+	// faster to calculate, at most only overestimates by 1:
+	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+	const segmentAngle = (2 * Math.PI) / n
+	const segmentLength = radius * segmentAngle
+	const startAngle = Math.atan2(start.y - center.y, start.x - center.x)
+
+	const lineVertices = []
+	lineVertices.push(start.clone())
+	for (let i = 1; i <= n; i++) {
+		let theta = ((2 * Math.PI) / n) * i + startAngle
+		let xComponent = radius * Math.cos(theta)
+		let yComponent = radius * Math.sin(theta)
+		let point = new Vector2(xComponent, yComponent).add(center)
+		lineVertices.push(point)
+
+		let distanceToEnd = point.distanceTo(end)
+		if (distanceToEnd <= segmentLength) {
+			lineVertices.push(end.clone())
+			break
+		}
+	}
+	return lineVertices
+}
+
 export function circleToPoints(centerPoint, radius) {
 	// this is 2D function
 	// centerPoint is a Vector2, radius is a float

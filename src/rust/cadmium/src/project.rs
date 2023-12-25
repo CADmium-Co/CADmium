@@ -417,7 +417,7 @@ impl Workbench {
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
 
-        let sketch_id = self.add_sketch("Sketch 1", "Top");
+        let sketch_id = self.add_sketch("Sketch 1", "Front");
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 

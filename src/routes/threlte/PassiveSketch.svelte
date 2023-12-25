@@ -165,6 +165,10 @@
 		{#each circleTuples as circle (circle.id)}
 			<Circle center={circle.center} radius={circle.radius} id={circle.id} />
 		{/each}
+
+		{#each arcTuples as arc (arc.id)}
+			<Arc center={arc.center} start={arc.start} end={arc.end} />
+		{/each}
 	</T.Group>
 
 	{#each pointTuples as { id, twoD, threeD } (id)}
@@ -173,10 +177,6 @@
 
 	{#each lineTuples as line (line.id)}
 		<Line start={line.start} end={line.end} />
-	{/each}
-
-	{#each arcTuples as arc (arc.id)}
-		<Arc center={arc.center} start={arc.start} end={arc.end} {plane} />
 	{/each}
 
 	<!-- {#each faceTuples as face (face.id)}
