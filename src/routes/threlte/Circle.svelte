@@ -18,7 +18,7 @@
 	let y = new Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
 	let c = new Vector3(center.threeD.x, center.threeD.y, center.threeD.z)
 
-	$: lineMaterial = new LineMaterial({
+	$: dottedLineMaterial = new LineMaterial({
 		color: '#000000',
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
@@ -27,6 +27,15 @@
 		dashSize: 0.1,
 		gapSize: 0.1,
 		dashScale: 3,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidLineMaterial = new LineMaterial({
+		color: '#000000',
+		linewidth: 1.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
 		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
 	})
 
@@ -51,10 +60,19 @@
 	lineGeometry.setPositions(lineVertices)
 </script>
 
-<T.Line2
-	geometry={lineGeometry}
-	material={lineMaterial}
-	on:create={({ ref }) => {
-		ref.computeLineDistances()
-	}}
-/>
+<T.Group>
+	<T.Line2
+		geometry={lineGeometry}
+		material={dottedLineMaterial}
+		on:create={({ ref }) => {
+			ref.computeLineDistances()
+		}}
+	/>
+	<T.Line2
+		geometry={lineGeometry}
+		material={solidLineMaterial}
+		on:create={({ ref }) => {
+			ref.computeLineDistances()
+		}}
+	/>
+</T.Group>

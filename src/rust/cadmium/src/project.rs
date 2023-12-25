@@ -449,11 +449,11 @@ impl Workbench {
 
         // Simple circle in lower left
         let p4 = sketch.add_point(-0.5, -0.25);
-        sketch.add_circle(p4, 0.2);
+        sketch.add_circle(p4, 0.3);
 
         // // intersecting circle!
-        // let p5 = sketch.add_point(-0.5, -0.25);
-        let c2 = sketch.add_circle(p4, 0.3);
+        let p5 = sketch.add_point(-0.8, -0.25);
+        let c2 = sketch.add_circle(p5, 0.3);
 
         // sketch.add_circle_diameter_constraint(c2, 0.6);
 

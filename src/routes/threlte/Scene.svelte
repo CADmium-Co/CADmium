@@ -3,7 +3,7 @@
 	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
 	import { Vector3 } from 'three'
 
-	import { realization, workbench } from './stores.js'
+	import { realization, workbench, sketchBeingEdited } from './stores.js'
 
 	import Point3D from './Point3D.svelte'
 	import Plane from './Plane.svelte'
@@ -68,7 +68,7 @@
 		uniqueId={sketchId}
 		name={sketchTuple[2]}
 		{sketchTuple}
-		editing={false}
+		editing={$sketchBeingEdited === sketchId}
 		plane={planes_by_id[sketchTuple[0].plane_id]}
 	/>
 {/each}

@@ -22,6 +22,15 @@
 		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
 	})
 
+	$: solidLineMaterial = new LineMaterial({
+		color: '#000000',
+		linewidth: 1.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
 	const points = [
 		start.threeD.x,
 		start.threeD.y,
@@ -34,10 +43,19 @@
 	lineGeometry.setPositions(points)
 </script>
 
-<T.Line2
-	geometry={lineGeometry}
-	material={dottedLineMaterial}
-	on:create={({ ref }) => {
-		ref.computeLineDistances()
-	}}
-/>
+<T.Group>
+	<T.Line2
+		geometry={lineGeometry}
+		material={dottedLineMaterial}
+		on:create={({ ref }) => {
+			ref.computeLineDistances()
+		}}
+	/>
+	<T.Line2
+		geometry={lineGeometry}
+		material={solidLineMaterial}
+		on:create={({ ref }) => {
+			ref.computeLineDistances()
+		}}
+	/>
+</T.Group>

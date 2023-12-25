@@ -2,14 +2,13 @@
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
-	import { hiddenSketches, sketchMode, featureIndex } from './stores.js'
+	import { hiddenSketches, sketchMode, featureIndex, sketchBeingEdited } from './stores.js'
 	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
 	import Eye from 'phosphor-svelte/lib/Eye'
 
 	export let name
 	export let index
 	export let id
-	// let hidden = true
 
 	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
 
@@ -19,6 +18,11 @@
 		console.log('closing, refreshing')
 		$featureIndex = 1000
 		$sketchMode = 'Select'
+		$sketchBeingEdited = null
+	}
+
+	$: if ($featureIndex === index) {
+		$sketchBeingEdited = id
 	}
 </script>
 
@@ -87,35 +91,6 @@
 					class="shadow appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:border focus:border-sky-500"
 					bind:value={name}
 				/>
-			</label>
-
-			<label>
-				Mode
-				<div class="flex">
-					{#each sketch_modes as sketch_mode}
-						<input
-							hidden
-							type="radio"
-							id={sketch_mode.name}
-							name="mode"
-							value={sketch_mode.name}
-							on:click={() => ($sketchMode = sketch_mode.name)}
-						/>
-						{#if sketch_mode.name === $sketchMode}
-							<label
-								class="text-sm py-1 bg-white flex-grow border-solid border-2 border-sky-500 text-center"
-								for={sketch_mode.name}>{sketch_mode.name}</label
-							>
-						{:else}
-							<label
-								class="text-sm py-1 bg-gray-200 flex-grow border-solid border-2 border-gray-500 text-center hover:bg-gray-300"
-								for={sketch_mode.name}>{sketch_mode.name}</label
-							>
-						{/if}
-
-						<br />
-					{/each}
-				</div>
 			</label>
 
 			<div class="flex space-x-1.5">
