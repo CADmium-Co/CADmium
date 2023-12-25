@@ -1,7 +1,7 @@
 <script>
 	import { T } from '@threlte/core'
 	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
-	import { Vector3 } from 'three'
+	import { Vector3, MOUSE } from 'three'
 	import { interactivity } from '@threlte/extras'
 
 	import { realization, workbench, sketchBeingEdited } from './stores.js'
@@ -19,6 +19,14 @@
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
 	$: console.log('sketches', sketches)
+
+	// mouseButtons={{ LEFT: 0, MIDDLE: 1, RIGHT: 2 }} 0 // standard
+	// mouseButtons={{ LEFT: 0, MIDDLE: 2, RIGHT: 1 }} 1 // no
+	// mouseButtons={{ LEFT: 1, MIDDLE: 0, RIGHT: 2 }} 2 // close!
+	// mouseButtons={{ LEFT: 1, MIDDLE: 2, RIGHT: 0 }} 3 // close?
+	// mouseButtons={{ LEFT: 2, MIDDLE: 1, RIGHT: 0 }} 5 // no
+	// mouseButtons={{ LEFT: 2, MIDDLE: 0, RIGHT: 1 }} 4 // seems to meet most people's expectations
+	// mouseButtons={{ LEFT: 2, MIDDLE: 50, RIGHT: 1 }} 4 // disable left click entirely--free it up for interaction
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={400} up={[0, 0, 1]}>
@@ -28,6 +36,7 @@
 			ref.up = new Vector3(0, 0, 1.0)
 			ref.panSpeed = 0.6
 		}}
+		mouseButtons={{ LEFT: 2, MIDDLE: 50, RIGHT: 1 }}
 	/>
 </T.OrthographicCamera>
 
