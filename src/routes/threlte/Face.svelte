@@ -1,7 +1,7 @@
 <script>
 	import { T } from '@threlte/core'
-	import { Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry } from 'three'
-	import { flatten, circleToPoints, promoteTo3, arcToPoints } from './projectUtils'
+	import { Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry, Path } from 'three'
+	import { circleToPoints, arcToPoints } from './projectUtils'
 
 	export let face
 	export let id
@@ -58,18 +58,18 @@
 				shape.setFromPoints(points)
 			}
 		}
-
-		// if (shapePoints.length > 0) {
-		// 	shape.moveTo(shapePoints[0][0], shapePoints[0][1])
-		// 	for (let i = 1; i < shapePoints.length; i++) {
-		// 		shape.lineTo(shapePoints[i][0], shapePoints[i][1])
-		// 	}
-		// }
 	}
 
 	const shape = new Shape()
 	let exterior = face.exterior
 	writeWireToShape(exterior, shape)
+
+	for (let interior of face.holes) {
+		const path = new Path()
+		writeWireToShape(interior, path)
+		shape.holes.push(path)
+	}
+
 	const geometry = new ShapeGeometry(shape)
 
 	const material = new MeshStandardMaterial({
