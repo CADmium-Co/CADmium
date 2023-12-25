@@ -3,10 +3,11 @@
 	import Line from './Line.svelte'
 	import Circle from './Circle.svelte'
 	import Arc from './Arc.svelte'
+	import Face from './Face.svelte'
 
 	import { hiddenSketches } from './stores.js'
 	import { Text, Suspense } from '@threlte/extras'
-	import { Matrix4, Euler, MeshStandardMaterial, DoubleSide, Vector2, Vector3 } from 'three'
+	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
 	import { T, useThrelte } from '@threlte/core'
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
@@ -52,6 +53,23 @@
 		const start = pointsById[arc.start]
 		const end = pointsById[arc.end]
 		arcTuples.push({ id: arcId, center, start, end })
+	}
+
+	const faceTuples = []
+	for (let faceId of Object.keys(sketch.faces)) {
+		const face = sketch.faces[faceId]
+		// a face has an exterior and holes.
+		// exterior is a wire, and holes is an array of wires.
+		// a wire contains either .Segments or .Circle
+		// If a wire has .Segments, it is an array of segments
+		// each segment is an object with a field called 'type'
+		// if 'type' is 'Line' then there is also .start and .end which are point IDs
+		// if 'type' is 'Arc' then there is also .center, .start, and .end which are point IDs and .clockwise which is boolean
+		// If a wire has .Circle is an object with:
+		// .center which is a point ID, .radius which is a float, and .top which is a point ID
+		// holes is an array of wires
+		// console.log('face:', faceId, face)
+		faceTuples.push({ id: faceId, face })
 	}
 
 	// $: console.log('passive sketch plane', plane)
@@ -143,6 +161,10 @@
 				<Text text={name} color="#42a7eb" fontSize={0.05} anchorX="0%" anchorY="0%" />
 			</Suspense>
 		</T.Group>
+
+		{#each circleTuples as circle (circle.id)}
+			<Circle center={circle.center} radius={circle.radius} id={circle.id} />
+		{/each}
 	</T.Group>
 
 	{#each pointTuples as { id, twoD, threeD } (id)}
@@ -153,11 +175,11 @@
 		<Line start={line.start} end={line.end} />
 	{/each}
 
-	{#each circleTuples as circle (circle.id)}
-		<Circle center={circle.center} radius={circle.radius} {plane} id={circle.id} />
-	{/each}
-
 	{#each arcTuples as arc (arc.id)}
 		<Arc center={arc.center} start={arc.start} end={arc.end} {plane} />
 	{/each}
+
+	<!-- {#each faceTuples as face (face.id)}
+		<Face {plane} face={face.face} id={face.id} {pointsById} />
+	{/each} -->
 {/if}

@@ -11,6 +11,7 @@ import {
 	realization
 } from './stores'
 import { get } from 'svelte/store'
+import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
@@ -89,4 +90,48 @@ export function readFile(e) {
 		console.log('file contents', e.target.result)
 	}
 	reader.readAsText(file)
+}
+
+export function circleToPoints(centerPoint, radius) {
+	// this is 2D function
+	// centerPoint is a Vector2, radius is a float
+	// returns an array of Vector2's
+
+	// see https://math.stackexchange.com/a/4132095/816177
+	const tolerance = CIRCLE_TOLERANCE // in meters
+	const k = tolerance / radius
+	// more precise but slower to calculate:
+	// const n = Math.ceil(Math.PI / Math.acos(1 - k))
+	// faster to calculate, at most only overestimates by 1:
+	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
+
+	const lineVertices = []
+	for (let i = 0; i <= n; i++) {
+		let theta = ((2 * Math.PI) / n) * i
+		let xComponent = radius * Math.cos(theta)
+		let yComponent = radius * Math.sin(theta)
+		let point = new Vector2(xComponent, yComponent).add(centerPoint)
+		lineVertices.push(point)
+	}
+	return lineVertices
+}
+
+export function promoteTo3(points) {
+	// points is an array of Vector2's
+	// returns an array of Vector3's
+	let points3 = []
+	for (let point of points) {
+		points3.push(new Vector3(point.x, point.y, 0))
+	}
+	return points3
+}
+
+export function flatten(points) {
+	// points is an array of Vector3's
+	// returns a flattened array of floats
+	let pointsFlat = []
+	for (let point of points) {
+		pointsFlat.push(point.x, point.y, point.z)
+	}
+	return pointsFlat
 }
