@@ -58,17 +58,6 @@
 	const faceTuples = []
 	for (let faceId of Object.keys(sketch.faces)) {
 		const face = sketch.faces[faceId]
-		// a face has an exterior and holes.
-		// exterior is a wire, and holes is an array of wires.
-		// a wire contains either .Segments or .Circle
-		// If a wire has .Segments, it is an array of segments
-		// each segment is an object with a field called 'type'
-		// if 'type' is 'Line' then there is also .start and .end which are point IDs
-		// if 'type' is 'Arc' then there is also .center, .start, and .end which are point IDs and .clockwise which is boolean
-		// If a wire has .Circle is an object with:
-		// .center which is a point ID, .radius which is a float, and .top which is a point ID
-		// holes is an array of wires
-		// console.log('face:', faceId, face)
 		faceTuples.push({ id: faceId, face })
 	}
 
@@ -177,9 +166,9 @@
 		{#each pointTuples as { id, twoD, threeD } (id)}
 			<Point2D {name} x={twoD.x} y={twoD.y} hidden={threeD.hidden} />
 		{/each}
-	</T.Group>
 
-	<!-- {#each faceTuples as face (face.id)}
-		<Face {plane} face={face.face} id={face.id} {pointsById} />
-	{/each} -->
+		{#each faceTuples as face (face.id)}
+			<Face face={face.face} id={face.id} {pointsById} />
+		{/each}
+	</T.Group>
 {/if}
