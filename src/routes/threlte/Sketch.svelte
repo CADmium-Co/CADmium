@@ -7,7 +7,7 @@
 	export let editing
 	export let plane
 
-	// $: console.log('Sketch name: ', name)
+	$: console.log('Sketch name: ', name)
 	// $: console.log('Sketch tuple: ', sketchTuple)
 	// $: console.log('Sketch editing: ', editing)
 	// TODO: draw the extent of the plane with some lines and put text on it

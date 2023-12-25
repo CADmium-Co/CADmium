@@ -21,45 +21,54 @@
 	export let sketch
 	export let plane
 
-	const pointIds = Object.keys(sketch.points)
-	const pointTuples = []
-	const pointsById = {}
-	for (let pointId of pointIds) {
-		const point3D = sketch.points[pointId]
-		const point2D = sketch.points_2d[pointId]
-		pointTuples.push({ id: pointId, twoD: point2D, threeD: point3D })
-		pointsById[pointId] = { twoD: point2D, threeD: point3D }
-	}
+	let pointTuples = []
+	let lineTuples = []
+	let circleTuples = []
+	let arcTuples = []
+	let faceTuples = []
+	let pointsById = {}
 
-	const lineTuples = []
-	for (let lineId of Object.keys(sketch.line_segments)) {
-		const line = sketch.line_segments[lineId]
-		const start = pointsById[line.start]
-		const end = pointsById[line.end]
-		lineTuples.push({ id: lineId, start, end })
-	}
+	$: {
+		const pointIds = Object.keys(sketch.points)
+		pointTuples = []
+		pointsById = {}
+		for (let pointId of pointIds) {
+			const point3D = sketch.points[pointId]
+			const point2D = sketch.points_2d[pointId]
+			pointTuples.push({ id: pointId, twoD: point2D, threeD: point3D })
+			pointsById[pointId] = { twoD: point2D, threeD: point3D }
+		}
 
-	const circleTuples = []
-	for (let circleId of Object.keys(sketch.circles)) {
-		const circle = sketch.circles[circleId]
-		const center = pointsById[circle.center]
-		const radius = circle.radius
-		circleTuples.push({ id: circleId, center, radius })
-	}
+		lineTuples = []
+		for (let lineId of Object.keys(sketch.line_segments)) {
+			const line = sketch.line_segments[lineId]
+			const start = pointsById[line.start]
+			const end = pointsById[line.end]
+			lineTuples.push({ id: lineId, start, end })
+		}
 
-	const arcTuples = []
-	for (let arcId of Object.keys(sketch.arcs)) {
-		const arc = sketch.arcs[arcId]
-		const center = pointsById[arc.center]
-		const start = pointsById[arc.start]
-		const end = pointsById[arc.end]
-		arcTuples.push({ id: arcId, center, start, end })
-	}
+		circleTuples = []
+		for (let circleId of Object.keys(sketch.circles)) {
+			const circle = sketch.circles[circleId]
+			const center = pointsById[circle.center]
+			const radius = circle.radius
+			circleTuples.push({ id: circleId, center, radius })
+		}
 
-	const faceTuples = []
-	for (let faceId of Object.keys(sketch.faces)) {
-		const face = sketch.faces[faceId]
-		faceTuples.push({ id: faceId, face })
+		arcTuples = []
+		for (let arcId of Object.keys(sketch.arcs)) {
+			const arc = sketch.arcs[arcId]
+			const center = pointsById[arc.center]
+			const start = pointsById[arc.start]
+			const end = pointsById[arc.end]
+			arcTuples.push({ id: arcId, center, start, end })
+		}
+
+		faceTuples = []
+		for (let faceId of Object.keys(sketch.faces)) {
+			const face = sketch.faces[faceId]
+			faceTuples.push({ id: faceId, face })
+		}
 	}
 
 	// $: console.log('passive sketch plane', plane)

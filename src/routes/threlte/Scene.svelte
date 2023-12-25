@@ -18,6 +18,7 @@
 	$: planesById = planes ? Object.fromEntries(planes) : {}
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
+	$: console.log('sketches', sketches)
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={400} up={[0, 0, 1]}>
@@ -66,7 +67,9 @@
 	/>
 {/each}
 
+<!-- TODO: MATT, in the morning, just figure out how to break this cached state! -->
 {#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}`)}
+	<!-- {#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}-${Object.keys(sketchTuple[1].points).length()}`)} -->
 	<Sketch
 		uniqueId={sketchId}
 		name={sketchTuple[2]}

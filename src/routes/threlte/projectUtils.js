@@ -31,6 +31,8 @@ export function addPointToSketch(sketchIdx, point) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+
+	projectIsStale.set(true)
 }
 
 export function renameStep(stepIdx, newName) {
