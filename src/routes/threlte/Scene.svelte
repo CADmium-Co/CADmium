@@ -67,9 +67,7 @@
 	/>
 {/each}
 
-<!-- TODO: MATT, in the morning, just figure out how to break this cached state! -->
 {#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}`)}
-	<!-- {#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}-${Object.keys(sketchTuple[1].points).length()}`)} -->
 	<Sketch
 		uniqueId={sketchId}
 		name={sketchTuple[2]}

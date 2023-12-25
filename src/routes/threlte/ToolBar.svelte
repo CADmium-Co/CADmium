@@ -36,9 +36,9 @@
 	{#if $sketchBeingEdited}
 		{#each sketchActions as action}
 			<button
-				class="inline-flex items-center {action.text === 'Solve' && solving
+				class="inline-flex items-center p-1 {$sketchTool === action.alt
 					? 'bg-gray-400'
-					: ''} hover:bg-gray-200 p-1"
+					: 'hover:bg-gray-200'} p-1"
 				on:click={action.handler}
 			>
 				<img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ''}

@@ -18,3 +18,10 @@ export const hiddenSketches = writable([])
 export const sketchMode = writable('Select')
 export const sketchBeingEdited = writable(null)
 export const sketchTool = writable(null)
+
+export const tempPoints = writable([])
+export const tempLines = writable([])
+export const tempCircles = writable([])
+export const tempArcs = writable([])
+
+export const snapPoints = writable([])

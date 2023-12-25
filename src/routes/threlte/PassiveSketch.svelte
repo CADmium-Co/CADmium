@@ -1,17 +1,19 @@
 <script>
+	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
+	import { T, useThrelte } from '@threlte/core'
+	import { Text, Suspense } from '@threlte/extras'
+	import { hiddenSketches, sketchTool, snapPoints } from './stores.js'
+
 	import Point2D from './Point2D.svelte'
 	import Line from './Line.svelte'
 	import Circle from './Circle.svelte'
 	import Arc from './Arc.svelte'
 	import Face from './Face.svelte'
 
-	import { hiddenSketches } from './stores.js'
-	import { Text, Suspense } from '@threlte/extras'
-	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
-	import { T, useThrelte } from '@threlte/core'
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-	import { addPointToSketch } from './projectUtils'
+
+	import NewLineTool from './NewLineTool.svelte'
 
 	const { size, dpr } = useThrelte()
 
@@ -21,12 +23,23 @@
 	export let sketch
 	export let plane
 
+	let newLineTool
+
 	let pointTuples = []
 	let lineTuples = []
 	let circleTuples = []
 	let arcTuples = []
 	let faceTuples = []
 	let pointsById = {}
+	// let snapPointTuples = []
+
+	// $: {
+	// 	snapPointTuples = []
+	// 	// console.log('snap point tuples!', $snapPoints)
+	// 	for (let [pointId, point] of Object.entries($snapPoints)) {
+	// 		snapPointTuples.push({ id: pointId, twoD: point.twoD, threeD: point.threeD })
+	// 	}
+	// }
 
 	$: {
 		const pointIds = Object.keys(sketch.points)
@@ -146,16 +159,23 @@
 			{material}
 			on:click={(e) => {
 				if (editing) {
-					// how should we handle this event?
-					let inTwoD = projectToPlane(e.point)
-
-					addPointToSketch(uniqueId, inTwoD)
-					// console.log(inTwoD)
+					if ($sketchTool === 'line') {
+						newLineTool.click(e, projectToPlane(e.point))
+					}
+				}
+			}}
+			on:pointermove={(e) => {
+				if (editing) {
+					if ($sketchTool === 'line') {
+						newLineTool.mouseMove(e, projectToPlane(e.point))
+					}
 				}
 			}}
 		>
 			<T.PlaneGeometry args={[width * 10, height * 10]} />
 		</T.Mesh>
+
+		<NewLineTool bind:this={newLineTool} {pointsById} />
 
 		<T.Line2
 			geometry={lineGeometry}
@@ -184,7 +204,11 @@
 		{/each}
 
 		{#each pointTuples as { id, twoD, threeD } (id)}
-			<Point2D {name} x={twoD.x} y={twoD.y} hidden={threeD.hidden} />
+			<Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} snappedTo={false} />
+		{/each}
+
+		{#each $snapPoints as { id, twoD, threeD } (id)}
+			<Point2D x={twoD.x} y={twoD.y} hidden={false} snappedTo={true} />
 		{/each}
 
 		{#each faceTuples as face (face.id)}
