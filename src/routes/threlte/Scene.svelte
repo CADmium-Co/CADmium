@@ -2,6 +2,7 @@
 	import { T } from '@threlte/core'
 	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
 	import { Vector3 } from 'three'
+	import { interactivity } from '@threlte/extras'
 
 	import { realization, workbench, sketchBeingEdited } from './stores.js'
 
@@ -9,6 +10,8 @@
 	import Plane from './Plane.svelte'
 	import Solid from './Solid.svelte'
 	import Sketch from './Sketch.svelte'
+
+	interactivity()
 
 	$: points = $realization.points ? Object.entries($realization.points) : []
 	$: planes = $realization.planes ? Object.entries($realization.planes) : []

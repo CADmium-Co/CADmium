@@ -458,30 +458,30 @@ impl Workbench {
         // sketch.add_circle_diameter_constraint(c2, 0.6);
 
         // Rounded square in lower right
-        // let shrink = 0.4;
-        // let offset_x = 0.1;
-        // let offset_y = -0.70;
-        // let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
-        // let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
-        // let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let d = sketch.add_point(1.00 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let e = sketch.add_point(0.75 * shrink + offset_x, 1.00 * shrink + offset_y);
-        // let f = sketch.add_point(0.25 * shrink + offset_x, 1.00 * shrink + offset_y);
-        // let g = sketch.add_point(0.00 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let h = sketch.add_point(0.00 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let i = sketch.add_point(0.75 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let j = sketch.add_point(0.75 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let shrink = 0.4;
+        let offset_x = 0.1;
+        let offset_y = -0.70;
+        let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
+        let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
+        let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let d = sketch.add_point(1.00 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let e = sketch.add_point(0.75 * shrink + offset_x, 1.00 * shrink + offset_y);
+        let f = sketch.add_point(0.25 * shrink + offset_x, 1.00 * shrink + offset_y);
+        let g = sketch.add_point(0.00 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let h = sketch.add_point(0.00 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let i = sketch.add_point(0.75 * shrink + offset_x, 0.25 * shrink + offset_y);
+        let j = sketch.add_point(0.75 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
+        let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
 
-        // sketch.add_segment(a, b);
-        // sketch.add_arc(i, b, c, false);
-        // sketch.add_segment(c, d);
-        // sketch.add_arc(j, d, e, false);
-        // sketch.add_segment(e, f);
-        // sketch.add_arc(k, f, g, false);
-        // sketch.add_segment(g, h);
-        // sketch.add_arc(l, h, a, false);
+        sketch.add_segment(a, b);
+        sketch.add_arc(i, b, c, false);
+        sketch.add_segment(c, d);
+        sketch.add_arc(j, d, e, false);
+        sketch.add_segment(e, f);
+        sketch.add_arc(k, f, g, false);
+        sketch.add_segment(g, h);
+        sketch.add_arc(l, h, a, false);
 
         self.add_extrusion(
             "Ext 1",

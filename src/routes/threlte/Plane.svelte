@@ -1,8 +1,7 @@
 <script>
 	import { Matrix4, Euler, MeshStandardMaterial, DoubleSide, Vector2, Vector3 } from 'three'
-	import { T, extend } from '@threlte/core'
+	import { T, extend, useThrelte } from '@threlte/core'
 	import { Text, Suspense } from '@threlte/extras'
-	import { useThrelte } from '@threlte/core'
 
 	import { Line2 } from 'three/addons/lines/Line2.js'
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'

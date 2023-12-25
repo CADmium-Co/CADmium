@@ -14,6 +14,10 @@ import { get } from 'svelte/store'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
+export function addPointToSketch(sketchIdx, point) {
+	console.log('trying to add point to sketch', sketchIdx, point)
+}
+
 export function renameStep(stepIdx, newName) {
 	console.log('renaming step to: ', newName)
 	let wp = get(wasmProject)
