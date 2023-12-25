@@ -125,15 +125,26 @@ impl Project {
 
                 Ok(format!("\"name\": \"{}\"", new_name))
             }
+            Message::NewPointOnSketch2 {
+                workbench_id,
+                sketch_id,
+                x,
+                y,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let point_id = sketch.add_point(*x, *y);
+                Ok(format!("\"id\": \"{}\"", point_id))
+            }
             Message::NewPointOnSketch {
                 workbench_id,
-                sketch_name,
+                sketch_id,
                 point_id,
                 x,
                 y,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
                 sketch.add_point_with_id(*x, *y, *point_id);
                 Ok("".to_owned())
             }
@@ -359,6 +370,25 @@ impl Workbench {
                     sketch,
                 } => {
                     if name == step.name {
+                        return Some(sketch);
+                    }
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    pub fn get_sketch_by_id_mut(&mut self, id: &str) -> Option<&mut Sketch> {
+        for step in self.history.iter_mut() {
+            match &mut step.data {
+                StepData::Sketch {
+                    plane_id: _,
+                    width: _,
+                    height: _,
+                    sketch,
+                } => {
+                    if id == step.unique_id {
                         return Some(sketch);
                     }
                 }
@@ -1076,8 +1106,14 @@ pub enum Message {
     },
     NewPointOnSketch {
         workbench_id: u64,
-        sketch_name: String,
+        sketch_id: String,
         point_id: u64,
+        x: f64,
+        y: f64,
+    },
+    NewPointOnSketch2 {
+        workbench_id: u64,
+        sketch_id: String,
         x: f64,
         y: f64,
     },
@@ -1169,7 +1205,7 @@ mod tests {
         //     y: -1.0,
         // };
 
-        let json = r#"{"NewPointOnSketch":{"workbench_id":0,"sketch_name":"Sketch 1","point_id":100,"x":-1.0,"y":-1.0}}"#;
+        let json = r#"{"NewPointOnSketch":{"workbench_id":0,"sketch_id":"Sketch-0","point_id":100,"x":-1.0,"y":-1.0}}"#;
         let msg = Message::from_json(json).unwrap();
         let res = p.handle_message(&msg);
 

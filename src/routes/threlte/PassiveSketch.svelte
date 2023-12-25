@@ -11,6 +11,7 @@
 	import { T, useThrelte } from '@threlte/core'
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { addPointToSketch } from './projectUtils'
 
 	const { size, dpr } = useThrelte()
 
@@ -121,6 +122,13 @@
 	lineGeometry.setPositions(points)
 
 	$: hidden = $hiddenSketches.includes(uniqueId)
+
+	function projectToPlane(point3D) {
+		// point3D is a Vector3
+		let xComponent = point3D.clone().sub(plane.origin).dot(primary)
+		let yComponent = point3D.clone().sub(plane.origin).dot(secondary)
+		return new Vector2(xComponent, yComponent)
+	}
 </script>
 
 {#if !hidden}
@@ -130,7 +138,10 @@
 			on:click={(e) => {
 				if (editing) {
 					// how should we handle this event?
-					// console.log(e.point)
+					let inTwoD = projectToPlane(e.point)
+
+					addPointToSketch(uniqueId, inTwoD)
+					// console.log(inTwoD)
 				}
 			}}
 		>

@@ -16,21 +16,35 @@ import { Vector2, Vector3 } from 'three'
 export const CIRCLE_TOLERANCE = 0.0001
 
 export function addPointToSketch(sketchIdx, point) {
-	console.log('trying to add point to sketch', sketchIdx, point)
+	console.log('trying to add point to sketch', get(workbenchIndex), sketchIdx, point)
+
+	const messageObj = {
+		NewPointOnSketch2: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchIdx,
+			x: point.x,
+			y: point.y
+		}
+	}
+	console.log('message:', messageObj)
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
 }
 
 export function renameStep(stepIdx, newName) {
 	console.log('renaming step to: ', newName)
 	let wp = get(wasmProject)
 
-	const message_obj = {
+	const messageObj = {
 		RenameStep: {
 			workbench_id: get(workbenchIndex),
 			step_id: stepIdx,
 			new_name: newName
 		}
 	}
-	let result = wp.send_message(JSON.stringify(message_obj))
+	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
 }
 
