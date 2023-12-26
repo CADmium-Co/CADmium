@@ -136,10 +136,10 @@ I am currently racing toward an MVP, which I expect in February, 2024. To reach 
   - [ ] Clearance control: Annotate users with a Clearance level. Annotate Projects or Groups as requiring specific Clearance Levels or higher. Regardless of other rules, never allow a user to open a Project or join a Group they do not have sufficient Clearance for.
   - [ ] Disallow any Clearance Controlled projects from being shared publicly
   - [ ] Easy "revoke all access" button for Org Admins to remove employees who leave their companies
-    - [ ] Support backups in case a User, Group Admin, or Org Admin causes wide damage: Must
+    - [ ] Support backups in case a User, Group Admin, or Org Admin causes wide damage
   - [ ] Audit trail: Every time a User access a Project, or an Admin modifies a permission or Clearance, it gets logged in a way that not even Org Admins can modify, although all Org Admins can read the log
   - [ ] Set up a set of servers which exclusively run in [the US, Europe], to comply with certain [US, European] restrictions
-- [ ] LLMs ($z/month)
+- [ ] Generative AI ($z/month)
   - [ ] Take every project that is shared in the public domain and (others which opt in) and train an LLM to predict steps given previous steps
   - [ ] Build a Co-Pilot like visual interface for using that LLM
 
