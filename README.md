@@ -48,8 +48,10 @@ I am currently racing toward an MVP, which I expect in February, 2024. To reach 
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
 - [ ] Export
-  - [ ] proper scaling on .obj and .step exports (currently the units are off)
+  - [ ] Proper scaling on .obj and .step exports (currently the units are off)
   - [ ] .dxf export for sketches
+- [ ] Units
+  - [ ] Make it clear what units the whole file is in
 - [ ] Marketing
   - [ ] Youtube video demonstrations
     - [ ] A simple cube
@@ -105,8 +107,14 @@ I am currently racing toward an MVP, which I expect in February, 2024. To reach 
   - [ ] Configure key and mouse bindings
   - [ ] Save your settings in localStorage
   - [ ] Export/import user settings as json files
+- [ ] Units
+  - [ ] Allow Projects to be saved in Imperial units as well as Metric (Specified as System?)
+  - [ ] Allow Projects to specify preferred units within that System, like [m, cm, mm], or [in, ft] (Specified as Units)
+  - [ ] Allow Users to override the display units locally, without it affecting the Project file
 - [ ] Electron or Tauri App so you can run local-only
   - [ ] Demonstrate associating .cadmium files with this app so they open on double-click from file explorer
+- [ ] Holes
+  - [ ] A dedicated history feature for punching holes at standard sizes [M4 tight clearance, 1/4-20 loose clearance, M5 Tap Drill]
 
 ## Features to Make Money
 
