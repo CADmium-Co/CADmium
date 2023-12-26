@@ -48,7 +48,9 @@
 <div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
 
 <div
-	class="bg-white {$sketchTool === 'line' || $sketchTool === 'circle' ? 'cursor-crosshair' : ''}"
+	class="bg-white {$sketchTool === 'line' || $sketchTool === 'circle' || $sketchTool === 'rectangle'
+		? 'cursor-crosshair'
+		: ''}"
 	style="width:{viewportWidth}px; height:{height}px"
 >
 	<Canvas>
