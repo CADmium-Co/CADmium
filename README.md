@@ -47,7 +47,6 @@ I am currently racing toward an MVP, which I expect in February, 2024. To reach 
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
-  - [ ] Label .cadmium projects as
 - [ ] Export
   - [ ] proper scaling on .obj and .step exports (currently the units are off)
   - [ ] .dxf export for sketches
@@ -132,7 +131,7 @@ I am currently racing toward an MVP, which I expect in February, 2024. To reach 
     - [ ] Support backups in case a User, Group Admin, or Org Admin causes wide damage: Must
   - [ ] Audit trail: Every time a User access a Project, or an Admin modifies a permission or Clearance, it gets logged in a way that not even Org Admins can modify, although all Org Admins can read the log
   - [ ] Set up a set of servers which exclusively run in [the US, Europe], to comply with certain [US, European] restrictions
-- [ ] LLMs
+- [ ] LLMs ($z/month)
   - [ ] Take every project that is shared in the public domain and (others which opt in) and train an LLM to predict steps given previous steps
   - [ ] Build a Co-Pilot like visual interface for using that LLM
 
