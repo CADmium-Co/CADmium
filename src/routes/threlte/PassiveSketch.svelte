@@ -14,16 +14,17 @@
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
 	import NewLineTool from './NewLineTool.svelte'
+	import NewCircleTool from './NewCircleTool.svelte'
 
 	const { size, dpr } = useThrelte()
 
-	export let editing = false
-	export let uniqueId
-	export let name
-	export let sketch
-	export let plane
+	export let name,
+		sketch,
+		plane,
+		uniqueId,
+		editing = false
 
-	let newLineTool
+	let newLineTool, newCircleTool
 
 	let pointTuples = []
 	let lineTuples = []
@@ -152,6 +153,8 @@
 				if (editing) {
 					if ($sketchTool === 'line') {
 						newLineTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
+					} else if ($sketchTool === 'circle') {
+						newCircleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
 					}
 				}
 			}}
@@ -159,6 +162,8 @@
 				if (editing) {
 					if ($sketchTool === 'line') {
 						newLineTool.mouseMove(e, projectToPlane(e.point))
+					} else if ($sketchTool === 'circle') {
+						newCircleTool.mouseMove(e, projectToPlane(e.point))
 					}
 				}
 			}}
@@ -167,6 +172,7 @@
 		</T.Mesh>
 
 		<NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} />
+		<NewCircleTool bind:this={newCircleTool} {pointsById} sketchIndex={uniqueId} />
 
 		<T.Line2
 			geometry={lineGeometry}

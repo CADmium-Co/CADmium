@@ -226,6 +226,13 @@ impl Sketch {
         id
     }
 
+    pub fn add_hidden_point(&mut self, x: f64, y: f64) -> u64 {
+        let id = self.highest_point_id + 1;
+        self.points.insert(id, Point2::new_hidden(x, y));
+        self.highest_point_id += 1;
+        id
+    }
+
     pub fn add_point_with_id(&mut self, x: f64, y: f64, id0: u64) -> Result<(), String> {
         if self.points.contains_key(&id0) {
             return Err("Point already exists".to_string());
@@ -267,6 +274,21 @@ impl Sketch {
             center: point_id,
             radius,
             top,
+        };
+        let id = self.highest_circle_id + 1;
+        self.circles.insert(id, c);
+        self.highest_circle_id += 1;
+        id
+    }
+
+    pub fn add_circle_between_points(&mut self, center_id: u64, edge_id: u64) -> u64 {
+        let center_pt = self.points.get(&center_id).unwrap();
+        let edge_pt = self.points.get(&edge_id).unwrap();
+        let radius = center_pt.distance_to(edge_pt);
+        let c = Circle2 {
+            center: center_id,
+            radius,
+            top: edge_id,
         };
         let id = self.highest_circle_id + 1;
         self.circles.insert(id, c);
@@ -1657,6 +1679,20 @@ impl Point2 {
             fy: 0.0,
             fixed: true,
             hidden: false,
+        }
+    }
+
+    pub fn new_hidden(x: f64, y: f64) -> Self {
+        Point2 {
+            x,
+            y,
+            m: 1.0,
+            dx: 0.0,
+            dy: 0.0,
+            fx: 0.0,
+            fy: 0.0,
+            fixed: false,
+            hidden: true,
         }
     }
 

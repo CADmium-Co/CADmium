@@ -15,6 +15,25 @@ import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
+export function addCircleBetweenPoints(sketchIdx, point1, point2) {
+	console.log('trying to add a circle between', point1, point2)
+
+	const messageObj = {
+		NewCircleBetweenPoints: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchIdx,
+			center_id: parseInt(point1),
+			edge_id: parseInt(point2)
+		}
+	}
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
+
+	projectIsStale.set(true)
+}
+
 export function addLineToSketch(sketchIdx, point1, point2) {
 	console.log('trying to add a line between', point1, point2)
 
@@ -34,21 +53,23 @@ export function addLineToSketch(sketchIdx, point1, point2) {
 	projectIsStale.set(true)
 }
 
-export function addPointToSketch(sketchIdx, point) {
-	console.log('trying to add point to sketch', get(workbenchIndex), sketchIdx, point)
+export function addPointToSketch(sketchIdx, point, hidden) {
+	console.log('trying to add point to sketch', get(workbenchIndex), sketchIdx, point, hidden)
 
 	const messageObj = {
 		NewPointOnSketch2: {
 			workbench_id: get(workbenchIndex),
 			sketch_id: sketchIdx,
 			x: point.x,
-			y: point.y
+			y: point.y,
+			hidden: hidden
 		}
 	}
-	console.log('message:', messageObj)
+	console.log('sending message:', messageObj)
 
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log('received result:', result)
 	result = JSON.parse(result)
 
 	// TODO: could this just refresh the workbench or realization?

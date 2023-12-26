@@ -130,11 +130,29 @@ impl Project {
                 sketch_id,
                 x,
                 y,
+                hidden,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                let point_id = sketch.add_point(*x, *y);
+                let point_id;
+                if *hidden {
+                    point_id = sketch.add_hidden_point(*x, *y);
+                } else {
+                    point_id = sketch.add_point(*x, *y);
+                }
+
                 Ok(format!("\"id\": \"{}\"", point_id))
+            }
+            Message::NewCircleBetweenPoints {
+                workbench_id,
+                sketch_id,
+                center_id,
+                edge_id,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let circle_id = sketch.add_circle_between_points(*center_id, *edge_id);
+                Ok(format!("\"id\": \"{}\"", circle_id))
             }
             Message::NewPointOnSketch {
                 workbench_id,
@@ -446,7 +464,7 @@ impl Workbench {
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
 
-        let sketch_id = self.add_sketch("Sketch 1", "Front");
+        let sketch_id = self.add_sketch("Sketch 1", "Top");
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
@@ -1115,6 +1133,13 @@ pub enum Message {
         sketch_id: String,
         x: f64,
         y: f64,
+        hidden: bool,
+    },
+    NewCircleBetweenPoints {
+        workbench_id: u64,
+        sketch_id: String,
+        center_id: u64,
+        edge_id: u64,
     },
     NewLineOnSketch {
         workbench_id: u64,

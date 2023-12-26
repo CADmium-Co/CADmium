@@ -1,42 +1,42 @@
 <script>
 	import { snapPoints, sketchTool } from './stores'
-	import { addLineToSketch, addPointToSketch } from './projectUtils'
+	import { addCircleBetweenPoints, addPointToSketch } from './projectUtils'
 
 	export let pointsById
 	export let sketchIndex
 
-	let previousPoint
+	let centerPoint
 
 	$: if ($sketchTool === null) {
-		previousPoint = null
+		centerPoint = null
 	}
 
 	function processPoint(point) {
-		if (!previousPoint) {
-			// if there is no anchor point, set one
+		if (!centerPoint) {
+			// if there is no center point, set one
 			if (point.pointId) {
 				// nothing to do, the point exists!
-				console.log('nothing to do the point exists!')
+				// console.log('nothing to do the point exists!')
 			} else {
-				console.log('oh cool, creating point!')
+				// console.log('oh cool, creating point!')
 				let result = addPointToSketch(sketchIndex, point.twoD, false)
 				point.pointId = result
 			}
+			centerPoint = point
 		} else {
-			// there WAS an anchor point, so we should create a line
+			// there WAS an center point, so we should create a circle!
 			if (point.pointId) {
-				// if the point exists, then we should create a line
-				addLineToSketch(sketchIndex, previousPoint.pointId, point.pointId)
-				previousPoint = null
+				// if the point exists, then we should create a circle between the two existing points
+				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
+				centerPoint = null
 				return
 			} else {
-				// if the point doesn't exist, then we should create a point and a line
-				let result = addPointToSketch(sketchIndex, point.twoD, false)
+				// if the point doesn't exist, then we should create a point and a circle
+				let result = addPointToSketch(sketchIndex, point.twoD, true)
 				point.pointId = result
-				addLineToSketch(sketchIndex, previousPoint.pointId, point.pointId)
+				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
 			}
 		}
-		previousPoint = point
 	}
 
 	export function click(event, projected) {
