@@ -1,19 +1,52 @@
 <script>
-	import { snapPoints } from './stores'
+	import { snapPoints, sketchTool } from './stores'
 	import { Vector2, Vector3 } from 'three'
+	import { addLineToSketch, addPointToSketch } from './projectUtils'
 
 	export let pointsById
+	export let sketchIndex
 
-	let initialPoint
+	let previousPoint
+
+	$: if ($sketchTool === null) {
+		previousPoint = null
+	}
+
+	function processPoint(point) {
+		if (!previousPoint) {
+			// if there is no anchor point, set one
+			if (point.pointId) {
+				// nothing to do, the point exists!
+				console.log('nothing to do the point exists!')
+			} else {
+				console.log('oh cool, creating point!')
+				let result = addPointToSketch(sketchIndex, point.twoD)
+				point.pointId = result
+			}
+		} else {
+			// there WAS an anchor point, so we should create a line
+			if (point.pointId) {
+				// if the point exists, then we should create a line
+				addLineToSketch(sketchIndex, previousPoint.pointId, point.pointId)
+				previousPoint = null
+				return
+			} else {
+				// if the point doesn't exist, then we should create a point and a line
+				let result = addPointToSketch(sketchIndex, point.twoD)
+				point.pointId = result
+				addLineToSketch(sketchIndex, previousPoint.pointId, point.pointId)
+			}
+		}
+		previousPoint = point
+	}
 
 	export function click(event, projected) {
-		console.log('clicking', event)
-
-		console.log('projected', projected)
-
-		// let inTwoD = projectToPlane(e.point)
-
-		// addPointToSketch(uniqueId, inTwoD)
+		if ($snapPoints.length > 0) {
+			processPoint($snapPoints[0])
+		} else {
+			let pt = { twoD: projected.twoD, threeD: projected.threeD, pointId: null }
+			processPoint(pt)
+		}
 	}
 
 	export function mouseMove(event, projected) {
@@ -27,6 +60,7 @@
 		for (let [pointId, point] of Object.entries(pointsById)) {
 			let dx = point.twoD.x - projected.x
 			let dy = point.twoD.y - projected.y
+			// TODO: make the snap distance depend on camera zoom level so it appears consistent
 			if (Math.hypot(dx, dy) < 0.01) {
 				snappedTo = { twoD: point.twoD, threeD: point.threeD, pointId }
 				break

@@ -8,7 +8,14 @@
 	import BottomBar from './BottomBar.svelte'
 	import MainDisplay from './MainDisplay.svelte'
 	import ToolBar from './ToolBar.svelte'
-	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from './stores.js'
+	import {
+		sketchTool,
+		workbenchIsStale,
+		wasmProject,
+		project,
+		projectIsStale,
+		featureIndex
+	} from './stores.js'
 
 	let userName = 'mattferraro.dev'
 	let newFileContent = null
@@ -38,6 +45,19 @@
 			workbenchIsStale.set(true)
 		}
 	})
+
+	function onKeyDown(e) {
+		// console.log(e)
+		if (e.key === 'Escape') {
+			// console.log('is escape key!')
+			// console.log($sketchTool)
+			// console.log($sketchTool !== null)
+			if ($sketchTool !== null) {
+				// console.log('I mean, I could reset sketch tool!')
+				$sketchTool = null
+			}
+		}
+	}
 </script>
 
 <div class="w-[100vw] h-[100vh] block">
@@ -48,3 +68,5 @@
 	</div>
 	<BottomBar />
 </div>
+
+<svelte:window on:keydown={onKeyDown} />

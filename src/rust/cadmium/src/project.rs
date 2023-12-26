@@ -150,15 +150,14 @@ impl Project {
             }
             Message::NewLineOnSketch {
                 workbench_id,
-                sketch_name,
-                line_id,
+                sketch_id,
                 start_point_id,
                 end_point_id,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
-                sketch.add_line_with_id(*start_point_id, *end_point_id, *line_id);
-                Ok("".to_owned())
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let line_id = sketch.add_segment(*start_point_id, *end_point_id);
+                Ok(format!("\"id\": \"{}\"", line_id))
             }
             Message::DeleteLineSegment {
                 workbench_id,
@@ -1119,8 +1118,7 @@ pub enum Message {
     },
     NewLineOnSketch {
         workbench_id: u64,
-        sketch_name: String,
-        line_id: u64,
+        sketch_id: String,
         start_point_id: u64,
         end_point_id: u64,
     },

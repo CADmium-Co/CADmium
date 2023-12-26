@@ -31,15 +31,6 @@
 	let arcTuples = []
 	let faceTuples = []
 	let pointsById = {}
-	// let snapPointTuples = []
-
-	// $: {
-	// 	snapPointTuples = []
-	// 	// console.log('snap point tuples!', $snapPoints)
-	// 	for (let [pointId, point] of Object.entries($snapPoints)) {
-	// 		snapPointTuples.push({ id: pointId, twoD: point.twoD, threeD: point.threeD })
-	// 	}
-	// }
 
 	$: {
 		const pointIds = Object.keys(sketch.points)
@@ -160,7 +151,7 @@
 			on:click={(e) => {
 				if (editing) {
 					if ($sketchTool === 'line') {
-						newLineTool.click(e, projectToPlane(e.point))
+						newLineTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
 					}
 				}
 			}}
@@ -175,7 +166,7 @@
 			<T.PlaneGeometry args={[width * 10, height * 10]} />
 		</T.Mesh>
 
-		<NewLineTool bind:this={newLineTool} {pointsById} />
+		<NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} />
 
 		<T.Line2
 			geometry={lineGeometry}
