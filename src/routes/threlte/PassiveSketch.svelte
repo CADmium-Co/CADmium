@@ -202,7 +202,7 @@
 			<Point2D x={twoD.x} y={twoD.y} hidden={false} snappedTo={true} />
 		{/each}
 
-		{#each faceTuples as face (face.id)}
+		{#each faceTuples as face (`${faceTuples.length}-${face.id}`)}
 			<Face face={face.face} id={face.id} {pointsById} />
 		{/each}
 	</T.Group>
