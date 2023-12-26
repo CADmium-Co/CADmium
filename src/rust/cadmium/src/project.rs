@@ -1308,4 +1308,19 @@ mod tests {
         let p2 = Project::from_json(&file_contents);
         println!("{:?}", p2);
     }
+
+    #[test]
+    fn circle_crashing() {
+        // let mut p = Project::new("Test Project");
+        // p.add_defaults();
+
+        let file_contents =
+            std::fs::read_to_string("/Users/matthewferraro/Downloads/circle_crashing_2.cadmium")
+                .unwrap();
+
+        let p2 = Project::from_json(&file_contents);
+
+        let realization = p2.get_realization(0, 1000);
+        println!("{:?}", realization);
+    }
 }

@@ -1002,6 +1002,7 @@ impl Sketch {
         let mut temp_sketch = self.clone();
 
         // First compare every line segment against every line segment to see if they intersect
+        // TODO: this doesn't correctly handle when one line crosses *two* others
         let mut count = 0;
         let mut intersections: Vec<(u64, u64, Point2)> = vec![];
 
@@ -1082,7 +1083,10 @@ impl Sketch {
                 count += 1;
 
                 let intersection = temp_sketch.circle_intersection(circle_a, circle_b);
-                circle_intersections.push((*circle_a_id, *circle_b_id, intersection));
+                // If the circles intersect, then we'll need to do some splitting
+                if intersection.len() > 0 {
+                    circle_intersections.push((*circle_a_id, *circle_b_id, intersection));
+                }
             }
         }
 

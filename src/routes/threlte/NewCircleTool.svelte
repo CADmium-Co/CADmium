@@ -28,14 +28,13 @@
 			if (point.pointId) {
 				// if the point exists, then we should create a circle between the two existing points
 				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
-				centerPoint = null
-				return
 			} else {
 				// if the point doesn't exist, then we should create a point and a circle
 				let result = addPointToSketch(sketchIndex, point.twoD, true)
 				point.pointId = result
-				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
 			}
+			addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
+			centerPoint = null
 		}
 	}
 
