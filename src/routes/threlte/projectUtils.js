@@ -31,7 +31,7 @@ export function addCircleBetweenPoints(sketchIdx, point1, point2) {
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
 
-	projectIsStale.set(true)
+	workbenchIsStale.set(true)
 }
 
 export function addLineToSketch(sketchIdx, point1, point2) {
@@ -50,7 +50,7 @@ export function addLineToSketch(sketchIdx, point1, point2) {
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
 
-	projectIsStale.set(true)
+	workbenchIsStale.set(true)
 }
 
 export function addPointToSketch(sketchIdx, point, hidden) {
@@ -73,7 +73,7 @@ export function addPointToSketch(sketchIdx, point, hidden) {
 	result = JSON.parse(result)
 
 	// TODO: could this just refresh the workbench or realization?
-	projectIsStale.set(true)
+	workbenchIsStale.set(true)
 
 	return result.success.id
 }
