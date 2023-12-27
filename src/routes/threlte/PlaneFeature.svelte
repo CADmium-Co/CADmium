@@ -3,16 +3,20 @@
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
 	import { workbenchIsStale, projectIsStale, featureIndex } from './stores.js'
+	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
 
 	export let name
 	export let index
+	export let plane
+	export let setCameraFocus
 
 	let source = '/actions/plane_min.svg'
+
+	console.log('plane', plane)
 
 	const closeAndRefresh = () => {
 		console.log('closing, refreshing')
 		workbenchIsStale.set(true)
-		// projectIsStale.set(true)
 		$featureIndex = 1000
 	}
 </script>
@@ -36,6 +40,19 @@
 		<img class="h-8 w-8 px-1" src={source} alt={name} />
 		<span>{name}</span>
 	{/if}
+
+	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y-no-static-element-interactions -->
+	<div
+		class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded hover:bg-slate-200"
+		on:mousedown={() => {
+			console.log('clicked on plane glass')
+			setCameraFocus(plane.tertiary, plane.origin, plane.secondary)
+			// move camera to focus on plane
+		}}
+	>
+		<MagnifyingGlass weight="light" size="18px" />
+	</div>
 </div>
 
 {#if $featureIndex === index}

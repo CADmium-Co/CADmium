@@ -37,7 +37,7 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
 
 - [ ] Sketching
   - [ ] Ability to create a sketch on the face of a solid
-  - [ ] New Rectangle Tool
+  - [x] New Rectangle Tool
   - [ ] Ability to select and delete points/lines/circles/constraints
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
@@ -56,6 +56,9 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
+  - [x] Buttons to zoom to Planes
+  - [ ] Zoom camera to cursor, not center
+  - [ ] Fix pan speed being mismatched on x and y
 - [ ] Export
   - [ ] Proper scaling on .obj and .step exports (currently the units are off)
   - [ ] .dxf export for sketches

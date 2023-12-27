@@ -20,6 +20,8 @@
 	$: history = $workbench.history ?? []
 	$: solids = $realization.solids ?? {}
 
+	export let setCameraFocus
+
 	function onMouseDown(event) {
 		initialPosition = { x: event.pageX, y: event.pageY }
 		initialHeight = height
@@ -51,7 +53,12 @@
 				{#if feature.data.type === 'Point'}
 					<PointFeature name={feature.name} index={featureIdx} />
 				{:else if feature.data.type === 'Plane'}
-					<PlaneFeature name={feature.name} index={featureIdx} />
+					<PlaneFeature
+						name={feature.name}
+						index={featureIdx}
+						plane={feature.data.plane}
+						{setCameraFocus}
+					/>
 				{:else if feature.data.type === 'Sketch'}
 					<SketchFeature name={feature.name} index={featureIdx} id={feature.unique_id} />
 				{:else if feature.data.type === 'Extrusion'}

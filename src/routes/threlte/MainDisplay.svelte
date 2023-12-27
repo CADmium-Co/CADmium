@@ -18,6 +18,8 @@
 	$: viewportWidth = innerWidth - width - 10
 	$: height = innerHeight > 135 ? innerHeight - 45 * 3 : 300
 
+	let setCameraFocus
+
 	function onMouseDown(event) {
 		initialPosition = { x: event.pageX, y: event.pageY }
 		initialWidth = width
@@ -42,7 +44,7 @@
 </script>
 
 <div style="width:{width}px; height:{height}px">
-	<FeatureHistory />
+	<FeatureHistory {setCameraFocus} />
 </div>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
@@ -54,7 +56,7 @@
 	style="width:{viewportWidth}px; height:{height}px"
 >
 	<Canvas>
-		<Scene />
+		<Scene bind:setCameraFocus />
 	</Canvas>
 </div>
 

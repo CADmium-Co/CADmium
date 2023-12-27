@@ -1,5 +1,5 @@
 <script>
-	import { T } from '@threlte/core'
+	import { T, useThrelte } from '@threlte/core'
 	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
 	import { Vector3, MOUSE } from 'three'
 	import { interactivity } from '@threlte/extras'
@@ -20,6 +20,20 @@
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
 	$: console.log('sketches', sketches)
 
+	let { camera } = useThrelte()
+
+	export function setCameraFocus(goTo, lookAt, up) {
+		// TODO: make this tween nicely
+		const positionMultiple = 100
+		goTo = new Vector3(goTo.x, goTo.y, goTo.z)
+		goTo.multiplyScalar(positionMultiple)
+		lookAt = new Vector3(lookAt.x, lookAt.y, lookAt.z)
+		up = new Vector3(up.x, up.y, up.z)
+		camera.current.position.set(goTo.x, goTo.y, goTo.z)
+		camera.current.lookAt(lookAt.x, lookAt.y, lookAt.z)
+		camera.current.up = up
+	}
+
 	// mouseButtons={{ LEFT: 0, MIDDLE: 1, RIGHT: 2 }} 0 // standard
 	// mouseButtons={{ LEFT: 0, MIDDLE: 2, RIGHT: 1 }} 1 // no
 	// mouseButtons={{ LEFT: 1, MIDDLE: 0, RIGHT: 2 }} 2 // close!
@@ -34,10 +48,8 @@
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={400} up={[0, 0, 1]}>
 	<TrackballControls
 		rotateSpeed={1.8}
-		on:create={({ ref }) => {
-			ref.up = new Vector3(0, 0, 1.0)
-			ref.panSpeed = 0.6
-		}}
+		panSpeed={0.5}
+		on:create={({ ref }) => {}}
 		mouseButtons={{ LEFT: 2, MIDDLE: 50, RIGHT: 1 }}
 	/>
 </T.OrthographicCamera>
