@@ -1,7 +1,7 @@
 <script>
 	import { T, useThrelte } from '@threlte/core'
 	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
-	import { Vector3, MOUSE } from 'three'
+	import { Vector3 } from 'three'
 	import { interactivity } from '@threlte/extras'
 
 	import { realization, workbench, sketchBeingEdited } from './stores.js'

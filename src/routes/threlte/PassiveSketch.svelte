@@ -16,6 +16,7 @@
 	import NewLineTool from './NewLineTool.svelte'
 	import NewCircleTool from './NewCircleTool.svelte'
 	import NewRectangleTool from './NewRectangleTool.svelte'
+	import SelectTool from './SelectTool.svelte'
 
 	const { size, dpr } = useThrelte()
 
@@ -25,7 +26,7 @@
 		uniqueId,
 		editing = false
 
-	let newLineTool, newCircleTool, newRectangleTool
+	let newLineTool, newCircleTool, newRectangleTool, selectTool
 
 	let pointTuples = []
 	let lineTuples = []
@@ -138,6 +139,10 @@
 
 	$: hidden = $hiddenSketches.includes(uniqueId)
 
+	$: if (editing) {
+		$sketchTool = 'select'
+	}
+
 	function projectToPlane(point3D) {
 		// point3D is a Vector3
 		let xComponent = point3D.clone().sub(plane.origin).dot(primary)
@@ -158,6 +163,8 @@
 						newCircleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
 					} else if ($sketchTool === 'rectangle') {
 						newRectangleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
+					} else if ($sketchTool === 'select') {
+						selectTool.click(e, projectToPlane(e.point))
 					}
 				}
 			}}
@@ -176,6 +183,7 @@
 			<T.PlaneGeometry args={[width * 10, height * 10]} />
 		</T.Mesh>
 
+		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} />
 		<NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} />
 		<NewCircleTool bind:this={newCircleTool} {pointsById} sketchIndex={uniqueId} />
 		<NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={uniqueId} />
@@ -203,7 +211,7 @@
 		{/each}
 
 		{#each lineTuples as line (line.id)}
-			<Line start={line.start} end={line.end} />
+			<Line start={line.start} end={line.end} id={line.id} />
 		{/each}
 
 		{#each pointTuples as { id, twoD, threeD } (id)}
