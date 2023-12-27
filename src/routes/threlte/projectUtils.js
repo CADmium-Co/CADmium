@@ -15,6 +15,86 @@ import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
+export function deleteEntities(sketchIdx, selection) {
+	const lines = selection.filter((e) => e.type === 'line')
+	const arcs = selection.filter((e) => e.type === 'arc')
+	const circles = selection.filter((e) => e.type === 'circle')
+	// const points = selection.filter((e) => e.type === 'point')
+
+	deleteLines(
+		sketchIdx,
+		lines.map((e) => parseInt(e.id))
+	)
+	deleteArcs(
+		sketchIdx,
+		arcs.map((e) => parseInt(e.id))
+	)
+	deleteCircles(
+		sketchIdx,
+		circles.map((e) => parseInt(e.id))
+	)
+}
+
+export function deleteLines(sketchIdx, lineIds) {
+	if (lineIds.length === 0) return
+	console.log('trying to delete line IDs', lineIds)
+
+	const messageObj = {
+		DeleteLines: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchIdx,
+			line_ids: lineIds
+		}
+	}
+	console.log('sending message:', messageObj)
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
+
+	workbenchIsStale.set(true)
+}
+
+export function deleteArcs(sketchIdx, arcIds) {
+	if (arcIds.length === 0) return
+	console.log('trying to delete arc IDs', arcIds)
+
+	const messageObj = {
+		DeleteArcs: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchIdx,
+			arc_ids: arcIds
+		}
+	}
+	console.log('sending message:', messageObj)
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
+
+	workbenchIsStale.set(true)
+}
+
+export function deleteCircles(sketchIdx, circleIds) {
+	if (circleIds.length === 0) return
+	console.log('trying to delete circle IDs', circleIds)
+
+	const messageObj = {
+		DeleteCircles: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchIdx,
+			circle_ids: circleIds
+		}
+	}
+	console.log('sending message:', messageObj)
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
+
+	workbenchIsStale.set(true)
+}
+
 export function addRectangleBetweenPoints(sketchIdx, point1, point2) {
 	console.log('trying to add a rectangle between', point1, point2)
 

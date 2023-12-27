@@ -360,13 +360,164 @@ impl Sketch {
         id
     }
 
+    pub fn delete_circle(&mut self, id: u64) {
+        let center_point_id = self.circles.get(&id).unwrap().center;
+        let top_point_id = self.circles.get(&id).unwrap().top;
+        let mut center_is_safe = false;
+        let mut top_is_safe = false;
+
+        for (line_id, line) in self.line_segments.iter() {
+            if line.start == center_point_id || line.end == center_point_id {
+                center_is_safe = true;
+            }
+            if line.start == top_point_id || line.end == top_point_id {
+                top_is_safe = true;
+            }
+        }
+
+        for (arc_id, arc) in self.arcs.iter() {
+            if arc.start == center_point_id
+                || arc.end == center_point_id
+                || arc.center == center_point_id
+            {
+                center_is_safe = true;
+            }
+            if arc.start == top_point_id || arc.end == top_point_id || arc.center == top_point_id {
+                top_is_safe = true;
+            }
+        }
+
+        for (circle_id, circle) in self.circles.iter() {
+            if *circle_id != id {
+                if circle.center == center_point_id || circle.top == center_point_id {
+                    center_is_safe = true;
+                }
+                if circle.center == top_point_id || circle.top == top_point_id {
+                    top_is_safe = true;
+                }
+            }
+        }
+
+        if !center_is_safe {
+            self.points.remove(&center_point_id);
+        }
+        if !top_is_safe {
+            self.points.remove(&top_point_id);
+        }
+
+        self.circles.remove(&id);
+    }
+
+    pub fn delete_arc(&mut self, id: u64) {
+        // TODO: return a result instead of crashing if the arc doesn't exist
+        // TODO: remove any constraints that reference this arc
+        let start_point_id = self.arcs.get(&id).unwrap().start;
+        let end_point_id = self.arcs.get(&id).unwrap().end;
+        let center_point_id = self.arcs.get(&id).unwrap().center;
+        let mut start_is_safe = false;
+        let mut end_is_safe = false;
+        let mut center_is_safe = false;
+
+        for (line_id, line) in self.line_segments.iter() {
+            if line.start == start_point_id || line.end == start_point_id {
+                start_is_safe = true;
+            }
+            if line.start == end_point_id || line.end == end_point_id {
+                end_is_safe = true;
+            }
+            if line.start == center_point_id || line.end == center_point_id {
+                center_is_safe = true;
+            }
+        }
+        for (arc_id, arc) in self.arcs.iter() {
+            if (*arc_id != id) {
+                if arc.start == start_point_id
+                    || arc.end == start_point_id
+                    || arc.center == start_point_id
+                {
+                    start_is_safe = true;
+                }
+                if arc.start == end_point_id
+                    || arc.end == end_point_id
+                    || arc.center == end_point_id
+                {
+                    end_is_safe = true;
+                }
+                if arc.start == center_point_id
+                    || arc.end == center_point_id
+                    || arc.center == center_point_id
+                {
+                    center_is_safe = true;
+                }
+            }
+        }
+        for (circle_id, circle) in self.circles.iter() {
+            if circle.center == start_point_id || circle.top == start_point_id {
+                start_is_safe = true;
+            }
+            if circle.center == end_point_id || circle.top == end_point_id {
+                end_is_safe = true;
+            }
+            if circle.center == center_point_id || circle.top == center_point_id {
+                center_is_safe = true;
+            }
+        }
+        if !start_is_safe {
+            self.points.remove(&start_point_id);
+        }
+        if !end_is_safe {
+            self.points.remove(&end_point_id);
+        }
+        if !center_is_safe {
+            self.points.remove(&center_point_id);
+        }
+
+        self.arcs.remove(&id);
+    }
+
     pub fn delete_line_segment(&mut self, id: u64) {
-        // TODO: maybe return a result instead of crashing if
-        // the line segment doesn't exist?
-
+        // TODO: return a result instead of crashing if the line segment doesn't exist
         // TODO: remove any constraints that reference this line segment
+        let start_point_id = self.line_segments.get(&id).unwrap().start;
+        let end_point_id = self.line_segments.get(&id).unwrap().end;
+        let mut start_is_safe = false;
+        let mut end_is_safe = false;
+        for (line_id, line) in self.line_segments.iter() {
+            if *line_id != id {
+                if line.start == start_point_id || line.end == start_point_id {
+                    start_is_safe = true;
+                }
+                if line.start == end_point_id || line.end == end_point_id {
+                    end_is_safe = true;
+                }
+            }
+        }
+        for (arc_id, arc) in self.arcs.iter() {
+            if arc.start == start_point_id
+                || arc.end == start_point_id
+                || arc.center == start_point_id
+            {
+                start_is_safe = true;
+            }
+            if arc.start == end_point_id || arc.end == end_point_id || arc.center == end_point_id {
+                end_is_safe = true;
+            }
+        }
+        for (circle_id, circle) in self.circles.iter() {
+            if circle.center == start_point_id || circle.top == start_point_id {
+                start_is_safe = true;
+            }
+            if circle.center == end_point_id || circle.top == end_point_id {
+                end_is_safe = true;
+            }
+        }
+        if !start_is_safe {
+            self.points.remove(&start_point_id);
+        }
+        if !end_is_safe {
+            self.points.remove(&end_point_id);
+        }
 
-        // TODO: remove any points which would be left stranded without this line segment
         self.line_segments.remove(&id);
     }
 
@@ -2397,5 +2548,94 @@ mod tests {
         let solved = sketch.solve(1000);
         println!("did solve? {}", solved);
         sketch.save_svg("test_svgs/manual_rectangle_solved.svg");
+    }
+
+    #[test]
+    fn delete_lines() {
+        let mut sketch = Sketch::new();
+
+        let a = sketch.add_fixed_point(0.0, 0.0);
+        let b = sketch.add_point(1.0, -0.1);
+        let c = sketch.add_point(1.1, 0.9);
+        let d = sketch.add_point(-0.1, 0.9);
+
+        let segment_ab = sketch.add_segment(a, b);
+        let segment_bc = sketch.add_segment(b, c);
+        let segment_cd = sketch.add_segment(c, d);
+        let segment_da = sketch.add_segment(d, a);
+
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 4);
+
+        sketch.delete_line_segment(segment_ab);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 4);
+
+        sketch.delete_line_segment(segment_bc);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 3);
+
+        sketch.delete_line_segment(segment_cd);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 2);
+
+        sketch.delete_line_segment(segment_da);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 0);
+    }
+
+    #[test]
+    fn delete_arcs() {
+        let mut sketch = Sketch::new();
+
+        let a = sketch.add_point(1.0, 0.0);
+        let b = sketch.add_point(2.0, 1.0);
+        let c = sketch.add_point(1.0, 2.0);
+        let d = sketch.add_point(0.0, 1.0);
+        let center = sketch.add_point(1.0, 1.0);
+
+        let arc_ab = sketch.add_arc(center, a, b, false);
+        let arc_bc = sketch.add_arc(center, b, c, false);
+        let arc_cd = sketch.add_arc(center, c, d, false);
+        let arc_da = sketch.add_arc(center, d, a, false);
+
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 5);
+
+        sketch.delete_arc(arc_ab);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 5);
+
+        sketch.delete_arc(arc_bc);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 4);
+
+        sketch.delete_arc(arc_cd);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 3);
+
+        sketch.delete_arc(arc_da);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 0);
+    }
+
+    #[test]
+    fn delete_circles() {
+        let mut sketch = Sketch::new();
+
+        let center = sketch.add_point(1.0, 1.0);
+        let circle_a = sketch.add_circle(center, 1.0);
+        let circle_b = sketch.add_circle(center, 2.0);
+
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 3);
+
+        sketch.delete_circle(circle_a);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 2);
+
+        sketch.delete_circle(circle_b);
+        println!("points: {:?}", sketch.points.len());
+        assert_eq!(sketch.points.len(), 0);
     }
 }

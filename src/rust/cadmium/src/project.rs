@@ -126,6 +126,42 @@ impl Project {
 
                 Ok(format!("\"name\": \"{}\"", new_name))
             }
+            Message::DeleteLines {
+                workbench_id,
+                sketch_id,
+                line_ids,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                for line_id in line_ids {
+                    sketch.delete_line_segment(*line_id);
+                }
+                Ok("".to_owned())
+            }
+            Message::DeleteArcs {
+                workbench_id,
+                sketch_id,
+                arc_ids,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                for arc_id in arc_ids {
+                    sketch.delete_arc(*arc_id);
+                }
+                Ok("".to_owned())
+            }
+            Message::DeleteCircles {
+                workbench_id,
+                sketch_id,
+                circle_ids,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                for circle_id in circle_ids {
+                    sketch.delete_circle(*circle_id);
+                }
+                Ok("".to_owned())
+            }
             Message::NewPointOnSketch2 {
                 workbench_id,
                 sketch_id,
@@ -550,7 +586,7 @@ impl Workbench {
             "Ext 1",
             Extrusion {
                 sketch_id,
-                face_ids: vec![2, 3],
+                face_ids: vec![0, 1],
                 length: 0.25,
                 offset: 0.0,
                 direction: Direction::Normal,
@@ -1136,6 +1172,21 @@ pub enum Message {
     },
     RenameProject {
         new_name: String,
+    },
+    DeleteLines {
+        workbench_id: u64,
+        sketch_id: String,
+        line_ids: Vec<u64>,
+    },
+    DeleteArcs {
+        workbench_id: u64,
+        sketch_id: String,
+        arc_ids: Vec<u64>,
+    },
+    DeleteCircles {
+        workbench_id: u64,
+        sketch_id: String,
+        circle_ids: Vec<u64>,
     },
     NewPointOnSketch {
         workbench_id: u64,

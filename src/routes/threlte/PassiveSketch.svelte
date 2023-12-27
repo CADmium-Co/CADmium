@@ -78,7 +78,68 @@
 		}
 	}
 
-	// $: console.log('passive sketch plane', plane)
+	$: dashedLineMaterial = new LineMaterial({
+		color: '#000000',
+		linewidth: 1.0 * $dpr,
+		depthTest: false,
+		transparent: true,
+		dashed: true,
+		dashSize: 0.1,
+		gapSize: 0.1,
+		dashScale: 3,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: dashedHoveredMaterial = new LineMaterial({
+		color: '#ffaa00',
+		linewidth: 1.0 * $dpr,
+		depthTest: false,
+		transparent: true,
+		dashed: true,
+		dashSize: 0.1,
+		gapSize: 0.1,
+		dashScale: 3,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidLineMaterial = new LineMaterial({
+		color: '#000000',
+		linewidth: 1.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidHoveredMaterial = new LineMaterial({
+		color: '#88aa00',
+		linewidth: 5.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidSelectedMaterial = new LineMaterial({
+		color: '#ffaa00',
+		linewidth: 5.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: collisionLineMaterial = new LineMaterial({
+		color: '#FFFFFF',
+		linewidth: 12.0 * $dpr,
+		depthTest: false,
+		depthWrite: false,
+		transparent: true,
+		opacity: 0,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
 	// Build some Three.js vectors from the props
 	const primary = new Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
 	const secondary = new Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
@@ -91,7 +152,7 @@
 	eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
 
 	// Lastly, make the Plane Material
-	const material = new MeshStandardMaterial({
+	const planeMaterial = new MeshStandardMaterial({
 		color: '#525292',
 		metalness: 0.0,
 		transparent: true,
@@ -125,7 +186,7 @@
 		0
 	]
 
-	$: lineMaterial = new LineMaterial({
+	$: boundaryMaterial = new LineMaterial({
 		color: '#42a7eb',
 		linewidth: 1.0 * $dpr,
 		depthTest: true,
@@ -154,7 +215,7 @@
 {#if !hidden}
 	<T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
 		<T.Mesh
-			{material}
+			material={planeMaterial}
 			on:click={(e) => {
 				if (editing) {
 					if ($sketchTool === 'line') {
@@ -183,14 +244,14 @@
 			<T.PlaneGeometry args={[width * 10, height * 10]} />
 		</T.Mesh>
 
-		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} />
+		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool == 'select'} />
 		<NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} />
 		<NewCircleTool bind:this={newCircleTool} {pointsById} sketchIndex={uniqueId} />
 		<NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={uniqueId} />
 
 		<T.Line2
 			geometry={lineGeometry}
-			material={lineMaterial}
+			material={boundaryMaterial}
 			on:create={({ ref }) => {
 				ref.computeLineDistances()
 			}}
@@ -203,15 +264,46 @@
 		</T.Group>
 
 		{#each circleTuples as circle (circle.id)}
-			<Circle center={circle.center} radius={circle.radius} id={circle.id} />
+			<Circle
+				center={circle.center}
+				radius={circle.radius}
+				id={circle.id}
+				{solidLineMaterial}
+				{solidHoveredMaterial}
+				{solidSelectedMaterial}
+				{dashedHoveredMaterial}
+				{dashedLineMaterial}
+				{collisionLineMaterial}
+			/>
 		{/each}
 
 		{#each arcTuples as arc (arc.id)}
-			<Arc center={arc.center} start={arc.start} end={arc.end} />
+			<Arc
+				center={arc.center}
+				start={arc.start}
+				end={arc.end}
+				id={arc.id}
+				{solidLineMaterial}
+				{solidHoveredMaterial}
+				{solidSelectedMaterial}
+				{dashedHoveredMaterial}
+				{dashedLineMaterial}
+				{collisionLineMaterial}
+			/>
 		{/each}
 
 		{#each lineTuples as line (line.id)}
-			<Line start={line.start} end={line.end} id={line.id} />
+			<Line
+				start={line.start}
+				end={line.end}
+				id={line.id}
+				{solidLineMaterial}
+				{solidHoveredMaterial}
+				{solidSelectedMaterial}
+				{dashedHoveredMaterial}
+				{dashedLineMaterial}
+				{collisionLineMaterial}
+			/>
 		{/each}
 
 		{#each pointTuples as { id, twoD, threeD } (id)}

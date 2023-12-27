@@ -1,37 +1,22 @@
 <script>
-	import { useThrelte } from '@threlte/core'
-	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 	import { T } from '@threlte/core'
-	import { Vector2 } from 'three'
 	import { flatten, circleToPoints, promoteTo3 } from './projectUtils'
+	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
 
-	export let id
-	export let center
-	export let radius
+	export let id, center, radius
 
-	const { size, dpr } = useThrelte()
+	export let dashedLineMaterial,
+		dashedHoveredMaterial,
+		solidLineMaterial,
+		solidHoveredMaterial,
+		solidSelectedMaterial,
+		collisionLineMaterial
 
-	$: dottedLineMaterial = new LineMaterial({
-		color: '#000000',
-		linewidth: 1.0 * $dpr,
-		depthTest: false,
-		transparent: true,
-		dashed: true,
-		dashSize: 0.1,
-		gapSize: 0.1,
-		dashScale: 3,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
+	const type = 'circle'
 
-	$: solidLineMaterial = new LineMaterial({
-		color: '#000000',
-		linewidth: 1.5 * $dpr,
-		depthTest: true,
-		transparent: true,
-		dashed: false,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
+	let hovered = false
+	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
 	let points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
 
@@ -42,16 +27,37 @@
 <T.Group>
 	<T.Line2
 		geometry={lineGeometry}
-		material={dottedLineMaterial}
+		material={hovered ? dashedHoveredMaterial : dashedLineMaterial}
 		on:create={({ ref }) => {
 			ref.computeLineDistances()
 		}}
 	/>
 	<T.Line2
 		geometry={lineGeometry}
-		material={solidLineMaterial}
+		material={hovered ? solidHoveredMaterial : selected ? solidSelectedMaterial : solidLineMaterial}
 		on:create={({ ref }) => {
 			ref.computeLineDistances()
+		}}
+	/>
+	<T.Line2
+		geometry={lineGeometry}
+		material={collisionLineMaterial}
+		on:create={({ ref }) => {
+			ref.computeLineDistances()
+		}}
+		on:pointerover={() => {
+			if ($sketchTool === 'select') {
+				hovered = true
+				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+			}
+		}}
+		on:pointerout={() => {
+			if ($sketchTool === 'select') {
+				hovered = false
+				$currentlyMousedOver = $currentlyMousedOver.filter(
+					(item) => !(item.id === id && item.type === type)
+				)
+			}
 		}}
 	/>
 </T.Group>

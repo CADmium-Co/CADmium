@@ -48,15 +48,12 @@
 
 	function onKeyDown(e) {
 		// console.log(e)
-		if (e.key === 'Escape') {
-			// console.log('is escape key!')
-			// console.log($sketchTool)
-			// console.log($sketchTool !== null)
-			if ($sketchTool !== null) {
-				// console.log('I mean, I could reset sketch tool!')
-				$sketchTool = null
-			}
-		}
+		// if (e.key === 'Escape') {
+		// 	if ($sketchTool !== null) {
+		// 		// console.log('I mean, I could reset sketch tool!')
+		// 		$sketchTool = null
+		// 	}
+		// }
 	}
 </script>
 
