@@ -5,16 +5,21 @@
 	import { Vector2 } from 'three'
 	import { T } from '@threlte/core'
 	import { flatten, promoteTo3 } from './projectUtils'
-	import { currentlyMousedOver, sketchTool } from './stores'
+	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
 
 	export let start
 	export let end
 	export let id
+	const type = 'line'
 
 	const { size, dpr } = useThrelte()
 
+	let hovered = false
+	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
+
+	// TODO: why does every line have its own copy of all these materials? They should share a single copy
 	$: dashedLineMaterial = new LineMaterial({
-		color: '#000000',
+		color: hovered ? '#ffaa00' : '#000000',
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
 		transparent: true,
@@ -34,9 +39,27 @@
 		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
 	})
 
+	$: solidHoveredMaterial = new LineMaterial({
+		color: '#88aa00',
+		linewidth: 5.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidSelectedMaterial = new LineMaterial({
+		color: '#ffaa00',
+		linewidth: 5.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
 	$: collisionLineMaterial = new LineMaterial({
 		color: '#FFFFFF',
-		linewidth: 10.0 * $dpr,
+		linewidth: 12.0 * $dpr,
 		depthTest: false,
 		depthWrite: false,
 		transparent: true,
@@ -63,7 +86,7 @@
 	/>
 	<T.Line2
 		geometry={lineGeometry}
-		material={solidLineMaterial}
+		material={hovered ? solidHoveredMaterial : selected ? solidSelectedMaterial : solidLineMaterial}
 		on:create={({ ref }) => {
 			ref.computeLineDistances()
 		}}
@@ -76,15 +99,13 @@
 		}}
 		on:pointerover={() => {
 			if ($sketchTool === 'select') {
-				solidLineMaterial.color.set('#ffaa00')
-				dashedLineMaterial.color.set('#ffaa00')
+				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type: 'line', id: id }]
 			}
 		}}
 		on:pointerout={() => {
 			if ($sketchTool === 'select') {
-				solidLineMaterial.color.set('#000000')
-				dashedLineMaterial.color.set('#000000')
+				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === 'line')
 				)

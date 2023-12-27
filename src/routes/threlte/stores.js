@@ -27,3 +27,4 @@ export const tempArcs = writable([])
 export const snapPoints = writable([])
 
 export const currentlyMousedOver = writable([])
+export const currentlySelected = writable([])
