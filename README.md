@@ -1,14 +1,29 @@
 # CADmium
 
-This is an attempt to create a new CAD program from scratch. Legacy CAD programs have taken many thousands of years of collective engineering time to get where they are so this program will never be able to compete on breadth of features. CADmium is intended to capture 80% of the most common CAD use cases while doing less than 20% of the work. For now I am targetting the home hobbyist who just wants to design a widget for their 3D printer, not a company that wants to design a car or airplane.
+This project aims to create a new CAD program from scratch. It is small, it runs in a web browser, and the source code is available for free here on Github.
 
-Features:
+Legacy CAD programs have taken many thousands of years of collective engineering time to get where they are so this program will never be able to compete on breadth of features. But CADmium is intended to capture 80% of the most common CAD use cases while doing less than 10% of the work. For now I am targetting the home hobbyist who just wants to design a widget for their 3D printer, not a company that wants to design a car or airplane.
 
-- Simple, modern, parametric CAD UI that runs in a browser
-- Export as .step, .obj, or .cadmium (a json-based CAD format that this project is inventing)
-- Functions without an internet connection (once you've loaded the page)
+If you're looking for:
+
+- A simple, modern, parametric CAD UI that runs in a browser
+- That can export solids as .step, .obj, or .cadmium (a json-based CAD format that this project is inventing)
+- That can export sketches as .svg or .dxf
+- That Functions without an internet connection
+
+Then this project may be for you!
 
 **Status**: Early prototype. This tool is not yet an MVP, but is being developed in the open.
+
+## Overall Plan
+
+I am currently racing toward an MVP, which I expect to release as version 0.1 in February, 2024. After that I hope to get a small group of users together to help guide me toward a version 1.0 release which will be more fully featured and which may serve as a solid foundation for hobbyists: all of it free, source available, and local-only.
+
+Beyond that, I will try to monetize by offering a hosted version of the software as a paid product. To achieve this I will introduce a notion of users, accounts, sharing, and a public commons. All of the actual CAD functionality, including the ability to read and modify .cadmium files, will always be available for free here on Github in a local-only form.
+
+## Licensing
+
+The entire project is available under the MIT license, but I can't guarantee that it will be forever. I may switch to an [FSL](https://fsl.software/) license soon.
 
 ## Technology
 
@@ -18,13 +33,7 @@ Leveraging truck, I wrote a small rust library called [cadmium](https://github.c
 
 The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph.
 
-## Licensing
-
-The entire project is available under the MIT license, but I can't guarantee that it will be forever. I would like to make money at some point in the future.
-
 ## TODO for MVP (0.1 Release)
-
-I am currently racing toward an MVP, which I expect in February, 2024. To reach it, I still need:
 
 - [ ] Sketching
   - [ ] Ability to create a sketch on the face of a solid
