@@ -154,6 +154,17 @@ impl Project {
                 let circle_id = sketch.add_circle_between_points(*center_id, *edge_id);
                 Ok(format!("\"id\": \"{}\"", circle_id))
             }
+            Message::NewRectangleBetweenPoints {
+                workbench_id,
+                sketch_id,
+                start_id,
+                end_id,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                // let point_ids, line_ids = sketch.add_rectangle_between_points(*start_id, *end_id);
+                Ok(format!("\"id\": \"{}\"", 7))
+            }
             Message::NewPointOnSketch {
                 workbench_id,
                 sketch_id,
@@ -1140,6 +1151,12 @@ pub enum Message {
         sketch_id: String,
         center_id: u64,
         edge_id: u64,
+    },
+    NewRectangleBetweenPoints {
+        workbench_id: u64,
+        sketch_id: String,
+        start_id: u64,
+        end_id: u64,
     },
     NewLineOnSketch {
         workbench_id: u64,

@@ -27,6 +27,8 @@
 	// mouseButtons={{ LEFT: 2, MIDDLE: 1, RIGHT: 0 }} 5 // no
 	// mouseButtons={{ LEFT: 2, MIDDLE: 0, RIGHT: 1 }} 4 // seems to meet most people's expectations
 	// mouseButtons={{ LEFT: 2, MIDDLE: 50, RIGHT: 1 }} 4 // disable left click entirely--free it up for interaction
+
+	// camera position: [160.8, -250.8, 200.55] looks good and angular
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={400} up={[0, 0, 1]}>

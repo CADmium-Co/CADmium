@@ -15,6 +15,7 @@
 
 	import NewLineTool from './NewLineTool.svelte'
 	import NewCircleTool from './NewCircleTool.svelte'
+	import NewRectangleTool from './NewRectangleTool.svelte'
 
 	const { size, dpr } = useThrelte()
 
@@ -24,7 +25,7 @@
 		uniqueId,
 		editing = false
 
-	let newLineTool, newCircleTool
+	let newLineTool, newCircleTool, newRectangleTool
 
 	let pointTuples = []
 	let lineTuples = []
@@ -155,6 +156,8 @@
 						newLineTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
 					} else if ($sketchTool === 'circle') {
 						newCircleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
+					} else if ($sketchTool === 'rectangle') {
+						newRectangleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
 					}
 				}
 			}}
@@ -164,6 +167,8 @@
 						newLineTool.mouseMove(e, projectToPlane(e.point))
 					} else if ($sketchTool === 'circle') {
 						newCircleTool.mouseMove(e, projectToPlane(e.point))
+					} else if ($sketchTool === 'rectangle') {
+						newRectangleTool.mouseMove(e, projectToPlane(e.point))
 					}
 				}
 			}}
@@ -173,6 +178,7 @@
 
 		<NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} />
 		<NewCircleTool bind:this={newCircleTool} {pointsById} sketchIndex={uniqueId} />
+		<NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={uniqueId} />
 
 		<T.Line2
 			geometry={lineGeometry}

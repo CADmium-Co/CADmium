@@ -22,6 +22,7 @@
 				let result = addPointToSketch(sketchIndex, point.twoD, false)
 				point.pointId = result
 			}
+			console.log('set anchor point')
 			anchorPoint = point
 		} else {
 			// there WAS an anchor point, so we should create a circle!
@@ -33,6 +34,7 @@
 				let result = addPointToSketch(sketchIndex, point.twoD, true)
 				point.pointId = result
 			}
+			console.log('setting rectangle')
 			addRectangleBetweenPoints(sketchIndex, anchorPoint.pointId, point.pointId)
 			anchorPoint = null
 		}

@@ -15,6 +15,25 @@ import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
+export function addRectangleBetweenPoints(sketchIdx, point1, point2) {
+	console.log('trying to add a rectangle between', point1, point2)
+
+	const messageObj = {
+		NewRectangleBetweenPoints: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchIdx,
+			start_id: parseInt(point1),
+			end_id: parseInt(point2)
+		}
+	}
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
+
+	workbenchIsStale.set(true)
+}
+
 export function addCircleBetweenPoints(sketchIdx, point1, point2) {
 	console.log('trying to add a circle between', point1, point2)
 
