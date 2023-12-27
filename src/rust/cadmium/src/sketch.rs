@@ -296,6 +296,46 @@ impl Sketch {
         id
     }
 
+    pub fn add_rectangle_between_points(
+        &mut self,
+        start_id: u64,
+        end_id: u64,
+    ) -> (Vec<u64>, Vec<u64>) {
+        let start = self.points.get(&start_id).unwrap();
+        let end = self.points.get(&end_id).unwrap();
+
+        let dx = end.x - start.x;
+        let dy = end.y - start.y;
+
+        let mut points = vec![];
+        let mut segments = vec![];
+
+        // create the two missing points
+        let p0 = {
+            let start_point = self.points.get(&start_id).unwrap();
+            self.add_point(start_point.x + dx, start_point.y)
+        };
+        let p1 = {
+            let start_point = self.points.get(&start_id).unwrap();
+            self.add_point(start_point.x, start_point.y + dy)
+        };
+
+        points.push(p0);
+        points.push(p1);
+
+        let s0 = self.add_segment(start_id, p1);
+        let s1 = self.add_segment(p1, end_id);
+        let s2 = self.add_segment(end_id, p0);
+        let s3 = self.add_segment(p0, start_id);
+
+        segments.push(s0);
+        segments.push(s1);
+        segments.push(s2);
+        segments.push(s3);
+
+        (points, segments)
+    }
+
     pub fn add_segment(&mut self, id0: u64, id1: u64) -> u64 {
         let l = Line2 {
             start: id0,

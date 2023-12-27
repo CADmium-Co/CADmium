@@ -2,6 +2,7 @@ use crate::{
     extrusion::{Direction, Extrusion, Solid},
     sketch::{Constraint, Face, Point2, Sketch},
 };
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 
@@ -162,8 +163,12 @@ impl Project {
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
                 let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                // let point_ids, line_ids = sketch.add_rectangle_between_points(*start_id, *end_id);
-                Ok(format!("\"id\": \"{}\"", 7))
+                let (point_ids, line_ids) = sketch.add_rectangle_between_points(*start_id, *end_id);
+                Ok(format!(
+                    "\"point_ids\": [{}], \"line_ids\": [{}]",
+                    point_ids.iter().join(","),
+                    line_ids.iter().join(",")
+                ))
             }
             Message::NewPointOnSketch {
                 workbench_id,

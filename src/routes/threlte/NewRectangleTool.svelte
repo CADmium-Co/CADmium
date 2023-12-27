@@ -31,7 +31,7 @@
 				addRectangleBetweenPoints(sketchIndex, anchorPoint.pointId, point.pointId)
 			} else {
 				// if the point doesn't exist, then we should create a point and a circle
-				let result = addPointToSketch(sketchIndex, point.twoD, true)
+				let result = addPointToSketch(sketchIndex, point.twoD, false)
 				point.pointId = result
 			}
 			console.log('setting rectangle')
