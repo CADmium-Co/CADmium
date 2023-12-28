@@ -347,16 +347,27 @@
 					{collisionLineMaterial}
 				/>
 			{:else if geom.type === 'point'}
-				<Point2D x={geom.x} y={geom.y} hidden={false} snappedTo={false} id={geom.uuid} />
+				<Point2D
+					x={geom.x}
+					y={geom.y}
+					hidden={false}
+					snappedTo={false}
+					id={geom.uuid}
+					isPreview
+					{collisionLineMaterial}
+				/>
 			{/if}
 		{/each}
 
 		{#each pointTuples as { id, twoD, threeD } (id)}
-			<Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} snappedTo={false} {id} />
-		{/each}
-
-		{#each $snapPoints as { id, twoD, threeD } (id)}
-			<Point2D x={twoD.x} y={twoD.y} hidden={false} snappedTo={true} {id} />
+			<Point2D
+				x={twoD.x}
+				y={twoD.y}
+				hidden={threeD.hidden}
+				snappedTo={false}
+				{id}
+				{collisionLineMaterial}
+			/>
 		{/each}
 
 		{#each faceTuples as face (`${faceTuples.length}-${face.id}`)}

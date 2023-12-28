@@ -475,7 +475,7 @@ impl Workbench {
 
         let sketch_id = self.add_sketch("Sketch 1", "Top");
 
-        let sketch = self.get_sketch_mut("Sketch 1").unwrap();
+        // let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
         // square in center
         // let width = 0.5;
@@ -498,16 +498,16 @@ impl Workbench {
         // let big_seg_2 = sketch.add_segment(big_p2, big_p3);
         // let big_seg_3 = sketch.add_segment(big_p3, big_p0);
 
-        self.add_extrusion(
-            "Ext 1",
-            Extrusion {
-                sketch_id,
-                face_ids: vec![0, 1],
-                length: 0.15,
-                offset: 0.0,
-                direction: Direction::Normal,
-            },
-        );
+        // self.add_extrusion(
+        //     "Ext 1",
+        //     Extrusion {
+        //         sketch_id,
+        //         face_ids: vec![0, 1],
+        //         length: 0.15,
+        //         offset: 0.0,
+        //         direction: Direction::Normal,
+        //     },
+        // );
     }
 
     pub fn add_defaults(&mut self) {

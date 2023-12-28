@@ -40,11 +40,14 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [x] New Rectangle Tool
   - [x] Ability to select and delete points/lines/circles/constraints
   - [ ] Bind (l) to line and (c) to circle and (r) to rectangle
+  - [ ] Allow snapping to Origin
+  - [x] Adjust point snapping to be zoom invariant
   - [ ] Faster way to select lots of lines/arcs/circles
-  - [ ] Show line/circle/arc previews before committing to them
+  - [x] Show line/circle/arc previews before committing to them
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
   - [ ] Handle point on line constraints and resulting face geometry
+  - [ ] Fix crash that occurs when two lines overlap but don't intersect
 - [ ] Extrusion
   - [ ] Configure an extrusion to subtract, add, or create new solids
   - [ ] Configure extrusion depth

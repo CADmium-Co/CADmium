@@ -1,5 +1,5 @@
 <script>
-	import { snapPoints, sketchTool, previewGeometry } from './stores'
+	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
 	import { addCircleBetweenPoints, addPointToSketch } from './projectUtils'
 
 	export let pointsById
@@ -61,13 +61,10 @@
 		// and to the perimeters of circles and so on
 		// so these snap points do not necessarily correspond to actual points in the sketch
 		let snappedTo
-		for (let [pointId, point] of Object.entries(pointsById)) {
-			let dx = point.twoD.x - projected.x
-			let dy = point.twoD.y - projected.y
-			// TODO: make the snap distance depend on camera zoom level so it appears consistent
-			if (Math.hypot(dx, dy) < 0.01) {
-				snappedTo = { twoD: point.twoD, threeD: point.threeD, pointId }
-				break
+		for (let geom of $currentlyMousedOver) {
+			if (geom.type === 'point') {
+				let point = pointsById[geom.id]
+				snappedTo = { twoD: point.twoD, threeD: point.threeD, pointId: geom.id }
 			}
 		}
 
