@@ -202,12 +202,14 @@
 			{pointsById}
 			sketchIndex={uniqueId}
 			active={$sketchTool == 'circle'}
+			{projectToPlane}
 		/>
 		<NewRectangleTool
 			bind:this={newRectangleTool}
 			{pointsById}
 			sketchIndex={uniqueId}
 			active={$sketchTool == 'rectangle'}
+			{projectToPlane}
 		/>
 
 		<T.Line2

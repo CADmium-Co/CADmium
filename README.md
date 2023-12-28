@@ -40,7 +40,7 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [x] New Rectangle Tool
   - [x] Ability to select and delete points/lines/circles/constraints
   - [ ] Bind (l) to line and (c) to circle and (r) to rectangle
-  - [ ] Allow snapping to Origin
+  - [x] Allow snapping to Origin
   - [x] Adjust point snapping to be zoom invariant
   - [ ] Faster way to select lots of lines/arcs/circles
   - [x] Show line/circle/arc previews before committing to them
@@ -59,13 +59,13 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [ ] Ability to rename the project
   - [ ] Ability to create and delete entire workbenches
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
-  - [ ] Default to completely empty project
+  - [x] Default to completely empty project
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
   - [x] Buttons to zoom to Planes
-- [ ] Debug
-  - [ ] On wasm crash, show a helpful error in the console
+- [x] Debug
+  - [x] On wasm crash, show a helpful error in the console
   - [x] On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
 - [ ] TrackballControls
   - [ ] Zoom camera to cursor, not center

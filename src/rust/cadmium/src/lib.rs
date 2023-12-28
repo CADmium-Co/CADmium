@@ -1,5 +1,6 @@
 #![allow(dead_code, unused)]
 use wasm_bindgen::prelude::*;
+extern crate console_error_panic_hook;
 
 pub mod extrusion;
 pub mod project;
@@ -19,6 +20,7 @@ pub struct Project {
 impl Project {
     #[wasm_bindgen(constructor)]
     pub fn new(name: &str) -> Project {
+        console_error_panic_hook::set_once();
         let mut p = Project {
             native: project::Project::new(name),
         };

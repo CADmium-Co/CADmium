@@ -81,9 +81,7 @@
 
 		// only reset $snapPoints if something has changed
 		if (snappedTo) {
-			if ($snapPoints.length === 0) {
-				$snapPoints = [snappedTo]
-			}
+			$snapPoints = [snappedTo]
 		} else {
 			if ($snapPoints.length > 0) {
 				$snapPoints = []
