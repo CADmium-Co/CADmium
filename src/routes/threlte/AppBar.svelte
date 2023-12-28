@@ -1,9 +1,10 @@
 <script>
 	import fileDownload from 'js-file-download'
-	import { projectIsStale, wasmProject } from './stores'
+	import { projectIsStale, wasmProject, messageHistory } from './stores'
 
 	import Download from 'phosphor-svelte/lib/Download'
 	import Upload from 'phosphor-svelte/lib/Upload'
+	import Bug from 'phosphor-svelte/lib/Bug'
 
 	export let userName = 'mattferraro.dev'
 	export let project = {}
@@ -31,12 +32,7 @@
 		</div>
 
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div
-			class="hover:bg-gray-300 rounded p-1"
-			on:click={() => {
-				console.log('up')
-			}}
-		>
+		<div class="hover:bg-gray-300 rounded p-1">
 			<!-- <Upload class="h-6 w-6" /> -->
 			<!-- <input id="file-inp" type="file" style="visibility:hidden;" onchange="readFile(event)" /> -->
 			<label for="file-inp">
@@ -58,6 +54,17 @@
 					}}
 				/>
 			</label>
+		</div>
+
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
+		<div
+			class="hover:bg-gray-300 rounded p-1"
+			on:click={() => {
+				let asString = JSON.stringify($messageHistory)
+				fileDownload(asString, `${project.name}.history.json`)
+			}}
+		>
+			<Bug class="h-6 w-6" />
 		</div>
 
 		<div class="flex-grow flex flex-row-reverse gap-4 mr-4">

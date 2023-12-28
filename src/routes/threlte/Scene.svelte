@@ -1,8 +1,10 @@
 <script>
 	import { T, useThrelte } from '@threlte/core'
 	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
-	import { Vector3 } from 'three'
+	import { Vector2, Vector3 } from 'three'
 	import { interactivity } from '@threlte/extras'
+	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
 	import { realization, workbench, sketchBeingEdited } from './stores.js'
 
@@ -13,14 +15,14 @@
 
 	interactivity()
 
+	const { size, dpr, camera } = useThrelte()
+
 	$: points = $realization.points ? Object.entries($realization.points) : []
 	$: planes = $realization.planes ? Object.entries($realization.planes) : []
 	$: planesById = planes ? Object.fromEntries(planes) : {}
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
 	$: console.log('sketches', sketches)
-
-	let { camera } = useThrelte()
 
 	export function setCameraFocus(goTo, lookAt, up) {
 		// TODO: make this tween nicely
@@ -33,6 +35,68 @@
 		camera.current.lookAt(lookAt.x, lookAt.y, lookAt.z)
 		camera.current.up = up
 	}
+
+	$: dashedLineMaterial = new LineMaterial({
+		color: '#000000',
+		linewidth: 1.0 * $dpr,
+		depthTest: false,
+		transparent: true,
+		dashed: true,
+		dashSize: 0.1,
+		gapSize: 0.1,
+		dashScale: 3,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: dashedHoveredMaterial = new LineMaterial({
+		color: '#ffaa00',
+		linewidth: 1.0 * $dpr,
+		depthTest: false,
+		transparent: true,
+		dashed: true,
+		dashSize: 0.1,
+		gapSize: 0.1,
+		dashScale: 3,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidLineMaterial = new LineMaterial({
+		color: '#000000',
+		linewidth: 1.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidHoveredMaterial = new LineMaterial({
+		color: '#88aa00',
+		linewidth: 5.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: solidSelectedMaterial = new LineMaterial({
+		color: '#ffaa00',
+		linewidth: 5.5 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: collisionLineMaterial = new LineMaterial({
+		color: '#FFFFFF',
+		linewidth: 12.0 * $dpr,
+		depthTest: false,
+		depthWrite: false,
+		transparent: true,
+		opacity: 0,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
 
 	// mouseButtons={{ LEFT: 0, MIDDLE: 1, RIGHT: 2 }} 0 // standard
 	// mouseButtons={{ LEFT: 0, MIDDLE: 2, RIGHT: 1 }} 1 // no
@@ -74,7 +138,14 @@
 />
 
 {#each points as [pointName, point] (`${$workbench.name}-${pointName}`)}
-	<Point3D name={pointName} x={point.x} y={point.y} z={point.z} hidden={point.hidden} />
+	<Point3D
+		id={pointName}
+		x={point.x}
+		y={point.y}
+		z={point.z}
+		hidden={point.hidden}
+		{collisionLineMaterial}
+	/>
 {/each}
 
 {#each planes as [planeName, plane] (`${$workbench.name}-${planeName}`)}
@@ -97,6 +168,12 @@
 		{sketchTuple}
 		editing={$sketchBeingEdited === sketchId}
 		plane={planesById[sketchTuple[0].plane_id]}
+		{solidLineMaterial}
+		{solidHoveredMaterial}
+		{solidSelectedMaterial}
+		{dashedHoveredMaterial}
+		{dashedLineMaterial}
+		{collisionLineMaterial}
 	/>
 {/each}
 

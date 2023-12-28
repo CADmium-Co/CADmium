@@ -7,6 +7,13 @@
 	export let editing
 	export let plane
 
+	export let dashedLineMaterial,
+		dashedHoveredMaterial,
+		solidLineMaterial,
+		solidHoveredMaterial,
+		solidSelectedMaterial,
+		collisionLineMaterial
+
 	$: console.log('Sketch name: ', name)
 	// $: console.log('Sketch tuple: ', sketchTuple)
 	// $: console.log('Sketch editing: ', editing)
@@ -14,7 +21,30 @@
 </script>
 
 {#if editing}
-	<PassiveSketch {name} {uniqueId} sketch={sketchTuple[0]} plane={plane.plane} editing />
+	<PassiveSketch
+		{name}
+		{uniqueId}
+		sketch={sketchTuple[0]}
+		plane={plane.plane}
+		editing
+		{solidLineMaterial}
+		{solidHoveredMaterial}
+		{solidSelectedMaterial}
+		{dashedHoveredMaterial}
+		{dashedLineMaterial}
+		{collisionLineMaterial}
+	/>
 {:else}
-	<PassiveSketch {name} {uniqueId} sketch={sketchTuple[1]} plane={plane.plane} />
+	<PassiveSketch
+		{name}
+		{uniqueId}
+		sketch={sketchTuple[1]}
+		plane={plane.plane}
+		{solidLineMaterial}
+		{solidHoveredMaterial}
+		{solidSelectedMaterial}
+		{dashedHoveredMaterial}
+		{dashedLineMaterial}
+		{collisionLineMaterial}
+	/>
 {/if}

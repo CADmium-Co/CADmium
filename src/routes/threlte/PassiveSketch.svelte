@@ -2,7 +2,7 @@
 	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
 	import { T, useThrelte } from '@threlte/core'
 	import { Text, Suspense } from '@threlte/extras'
-	import { hiddenSketches, previewGeometry, sketchTool, snapPoints } from './stores.js'
+	import { hiddenSketches, previewGeometry, sketchTool } from './stores.js'
 
 	import Point2D from './Point2D.svelte'
 	import Line from './Line.svelte'
@@ -25,6 +25,13 @@
 		plane,
 		uniqueId,
 		editing = false
+
+	export let dashedLineMaterial,
+		dashedHoveredMaterial,
+		solidLineMaterial,
+		solidHoveredMaterial,
+		solidSelectedMaterial,
+		collisionLineMaterial
 
 	let newLineTool, newCircleTool, newRectangleTool, selectTool
 
@@ -77,68 +84,6 @@
 			faceTuples.push({ id: faceId, face })
 		}
 	}
-
-	$: dashedLineMaterial = new LineMaterial({
-		color: '#000000',
-		linewidth: 1.0 * $dpr,
-		depthTest: false,
-		transparent: true,
-		dashed: true,
-		dashSize: 0.1,
-		gapSize: 0.1,
-		dashScale: 3,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
-
-	$: dashedHoveredMaterial = new LineMaterial({
-		color: '#ffaa00',
-		linewidth: 1.0 * $dpr,
-		depthTest: false,
-		transparent: true,
-		dashed: true,
-		dashSize: 0.1,
-		gapSize: 0.1,
-		dashScale: 3,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
-
-	$: solidLineMaterial = new LineMaterial({
-		color: '#000000',
-		linewidth: 1.5 * $dpr,
-		depthTest: true,
-		transparent: true,
-		dashed: false,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
-
-	$: solidHoveredMaterial = new LineMaterial({
-		color: '#88aa00',
-		linewidth: 5.5 * $dpr,
-		depthTest: true,
-		transparent: true,
-		dashed: false,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
-
-	$: solidSelectedMaterial = new LineMaterial({
-		color: '#ffaa00',
-		linewidth: 5.5 * $dpr,
-		depthTest: true,
-		transparent: true,
-		dashed: false,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
-
-	$: collisionLineMaterial = new LineMaterial({
-		color: '#FFFFFF',
-		linewidth: 12.0 * $dpr,
-		depthTest: false,
-		depthWrite: false,
-		transparent: true,
-		opacity: 0,
-		dashed: false,
-		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
-	})
 
 	// Build some Three.js vectors from the props
 	const primary = new Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
@@ -250,6 +195,7 @@
 			{pointsById}
 			sketchIndex={uniqueId}
 			active={$sketchTool == 'line'}
+			{projectToPlane}
 		/>
 		<NewCircleTool
 			bind:this={newCircleTool}
@@ -351,7 +297,6 @@
 					x={geom.x}
 					y={geom.y}
 					hidden={false}
-					snappedTo={false}
 					id={geom.uuid}
 					isPreview
 					{collisionLineMaterial}
@@ -360,14 +305,7 @@
 		{/each}
 
 		{#each pointTuples as { id, twoD, threeD } (id)}
-			<Point2D
-				x={twoD.x}
-				y={twoD.y}
-				hidden={threeD.hidden}
-				snappedTo={false}
-				{id}
-				{collisionLineMaterial}
-			/>
+			<Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} {id} {collisionLineMaterial} />
 		{/each}
 
 		{#each faceTuples as face (`${faceTuples.length}-${face.id}`)}

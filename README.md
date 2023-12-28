@@ -64,6 +64,9 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
   - [x] Buttons to zoom to Planes
+- [ ] Debug
+  - [ ] On wasm crash, show a helpful error in the console
+  - [x] On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
 - [ ] TrackballControls
   - [ ] Zoom camera to cursor, not center
   - [ ] Fix pan speed being mismatched on x and y

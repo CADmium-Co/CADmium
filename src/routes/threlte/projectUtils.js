@@ -8,7 +8,8 @@ import {
 	projectIsStale,
 	realizationIsStale,
 	wasmRealization,
-	realization
+	realization,
+	messageHistory
 } from './stores'
 import { get } from 'svelte/store'
 import { Vector2, Vector3 } from 'three'
@@ -51,6 +52,7 @@ export function deleteLines(sketchIdx, lineIds) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
 
 	workbenchIsStale.set(true)
 }
@@ -71,6 +73,7 @@ export function deleteArcs(sketchIdx, arcIds) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
 
 	workbenchIsStale.set(true)
 }
@@ -91,6 +94,7 @@ export function deleteCircles(sketchIdx, circleIds) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
 
 	workbenchIsStale.set(true)
 }
@@ -110,6 +114,7 @@ export function addRectangleBetweenPoints(sketchIdx, point1, point2) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
 
 	workbenchIsStale.set(true)
 }
@@ -129,6 +134,7 @@ export function addCircleBetweenPoints(sketchIdx, point1, point2) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
 
 	workbenchIsStale.set(true)
 }
@@ -148,6 +154,10 @@ export function addLineToSketch(sketchIdx, point1, point2) {
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log(result)
+	messageHistory.update((history) => [
+		...history,
+		{ message: messageObj, result: JSON.parse(result) }
+	])
 
 	workbenchIsStale.set(true)
 }
@@ -165,10 +175,13 @@ export function addPointToSketch(sketchIdx, point, hidden) {
 		}
 	}
 	console.log('sending message:', messageObj)
-
 	let wp = get(wasmProject)
 	let result = wp.send_message(JSON.stringify(messageObj))
 	console.log('received result:', result)
+	messageHistory.update((history) => [
+		...history,
+		{ message: messageObj, result: JSON.parse(result) }
+	])
 	result = JSON.parse(result)
 
 	// TODO: could this just refresh the workbench or realization?
@@ -189,6 +202,10 @@ export function renameStep(stepIdx, newName) {
 		}
 	}
 	let result = wp.send_message(JSON.stringify(messageObj))
+	messageHistory.update((history) => [
+		...history,
+		{ message: messageObj, result: JSON.parse(result) }
+	])
 	console.log(result)
 }
 

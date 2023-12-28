@@ -30,3 +30,5 @@ export const currentlyMousedOver = writable([])
 export const currentlySelected = writable([])
 
 export const previewGeometry = writable([])
+
+export const messageHistory = writable([])

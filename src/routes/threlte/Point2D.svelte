@@ -8,7 +8,6 @@
 
 	export let x, y, hidden, id
 	export let isPreview = false
-	export let snappedTo = false
 
 	export let collisionLineMaterial
 

@@ -1,10 +1,12 @@
 <script>
 	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
 	import { addLineToSketch, addPointToSketch } from './projectUtils'
+	import { Vector3 } from 'three'
 
 	export let pointsById
 	export let sketchIndex
 	export let active
+	export let projectToPlane
 
 	let previousPoint
 
@@ -61,9 +63,19 @@
 		let snappedTo
 
 		for (let geom of $currentlyMousedOver) {
+			if (geom.type === 'point3D') {
+				let twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
+				let point = {
+					twoD: { x: twoD.x, y: twoD.y },
+					threeD: { x: geom.x, y: geom.y, z: geom.z },
+					pointId: null
+				}
+				snappedTo = point
+			}
 			if (geom.type === 'point') {
 				let point = pointsById[geom.id]
 				snappedTo = { twoD: point.twoD, threeD: point.threeD, pointId: geom.id }
+				break // If there is a 2D point, prefer to use it rather than the 3D point
 			}
 		}
 
