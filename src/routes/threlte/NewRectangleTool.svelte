@@ -20,13 +20,18 @@
 				// console.log('nothing to do the point exists!')
 			} else {
 				// console.log('oh cool, creating point!')
-				let result = addPointToSketch(sketchIndex, point.twoD, false)
-				point.pointId = result
+				point.pointId = null
 			}
 			console.log('set anchor point')
 			anchorPoint = point
 		} else {
-			// there WAS an anchor point, so we should create a circle!
+			// there WAS an anchor point, so we should create a rectangle!
+			if (anchorPoint.pointId === null) {
+				// if the anchor point doesn't exist, then we should create a point
+				let result = addPointToSketch(sketchIndex, anchorPoint.twoD, false)
+				anchorPoint.pointId = result
+			}
+
 			if (point.pointId) {
 				// if the point exists, then we should create a circle between the two existing points
 				addRectangleBetweenPoints(sketchIndex, anchorPoint.pointId, point.pointId)
@@ -89,7 +94,7 @@
 			let upperLeft = { twoD: { x: anchorPoint.twoD.x, y: end.twoD.y } }
 			let lowerRight = { twoD: { x: end.twoD.x, y: anchorPoint.twoD.y } }
 
-			previewGeometry.set([
+			let previewGeoms = [
 				{
 					type: 'point',
 					x: upperLeft.twoD.x,
@@ -133,7 +138,18 @@
 					end: end,
 					uuid: `line-lr-end-${end.twoD.x}-${end.twoD.y}`
 				}
-			])
+			]
+
+			if (anchorPoint.pointId === null) {
+				previewGeoms.push({
+					type: 'point',
+					x: anchorPoint.twoD.x,
+					y: anchorPoint.twoD.y,
+					uuid: `point-null-${anchorPoint.twoD.x}-${anchorPoint.twoD.y}`
+				})
+			}
+
+			previewGeometry.set(previewGeoms)
 		} else {
 			previewGeometry.set([])
 		}

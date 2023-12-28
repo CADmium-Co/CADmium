@@ -20,11 +20,16 @@
 				console.log('nothing to do the point exists!')
 			} else {
 				console.log('oh cool, creating point!')
-				let result = addPointToSketch(sketchIndex, point.twoD, false)
-				point.pointId = result
+				point.pointId = null
 			}
 		} else {
 			// there WAS an anchor point, so we should create a line
+			if (previousPoint.pointId === null) {
+				// if the center point doesn't exist, then we should create a point
+				let result = addPointToSketch(sketchIndex, previousPoint.twoD, false)
+				previousPoint.pointId = result
+			}
+
 			if (point.pointId) {
 				// if the point exists, then we should create a line
 				addLineToSketch(sketchIndex, previousPoint.pointId, point.pointId)
@@ -85,10 +90,21 @@
 				end = snappedTo
 			}
 
-			previewGeometry.set([
+			let previewGeoms = [
 				{ type: 'line', start: previousPoint, end: end, uuid: `line-${end.twoD.x}-${end.twoD.y}` },
 				{ type: 'point', x: end.twoD.x, y: end.twoD.y, uuid: `point-${end.twoD.x}-${end.twoD.y}` }
-			])
+			]
+
+			if (previousPoint.pointId === null) {
+				previewGeoms.push({
+					type: 'point',
+					x: previousPoint.twoD.x,
+					y: previousPoint.twoD.y,
+					uuid: `point-null-${previousPoint.twoD.x}-${previousPoint.twoD.y}`
+				})
+			}
+
+			previewGeometry.set(previewGeoms)
 		} else {
 			previewGeometry.set([])
 		}
