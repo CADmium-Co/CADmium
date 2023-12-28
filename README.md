@@ -52,27 +52,27 @@ You will need rust and wasm-pack working locally. See `vercel_build.sh` for an e
 
 I am not currently able to handle contributions. After the 0.1 release in February I will be looking for help in a few areas:
 
-1. **Design:** The tool must look and feel good and I am not a designer. I would love contributions in the form of:
-  - Advice, mockups, or tailwindcss examples of how to make different elements look and behave better.
-  - In particular, help picking a color palette that works well and is unique
-  - Help figuring out how to implement dark mode
+**Design:** The tool must look and feel good and I am not a designer. I would love contributions in the form of:
+- Advice, mockups, or tailwindcss examples of how to make different elements look and behave better.
+- In particular, help picking a color palette that works well and is unique
+- Help figuring out how to implement dark mode
 
-1. **Rust:** This is my first project in rust. I need an experienced rustacean's help to:
+**Rust:** This is my first project in rust. I need an experienced rustacean's help to:
   - Figure out how to better lay out my rust code so it is more modular. I currently have two huge files where almost all of the logic lives and that makes it difficult to develop
   - Point out any glaring issues with how I'm using the language
   - Give me general feedback on if the message passing implementation can be improved in some way
   - Finally explain to me how Lifetimes work
 
-1. **Svelte:** This is my first project using Svelte. I'd love an experienced set of eyes to:
+**Svelte:** This is my first project using Svelte. I'd love an experienced set of eyes to:
   - Look over the basic structure and tell me if I'm making any big mistakes
   - Help me migrate to Svelte 5 when it comes out
 
-1. **Users:** I need to gather a small userbase of hobbyists and engineers who can use the tool to design a lot of actual parts to help me find
+**Users:** I need to gather a small userbase of hobbyists and engineers who can use the tool to design a lot of actual parts to help me find
   - Bugs
   - Big opportunities for improvement
   - The limitations of my approach
 
-1. **Business:** I have quit my job and I am working on this full time. I'd love your help if you know how to:
+**Business:** I have quit my job and I am working on this full time. I'd love your help if you know how to:
   - Start and administer a 1-person SAAS business
   - Generate income using a code base which is open source
 
