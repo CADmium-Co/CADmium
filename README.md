@@ -82,13 +82,13 @@ If you feel like you would be willing and able to help, please join [my discord]
 
 - [ ] Sketching
   - [ ] Ability to create a sketch on the face of a solid
-  - :white_check_mark: New Rectangle Tool
-  - :white_check_mark: Ability to select and delete points/lines/circles/constraints
+  - [x] New Rectangle Tool
+  - [x] Ability to select and delete points/lines/circles/constraints
   - [ ] Bind (l) to line and (c) to circle and (r) to rectangle
-  - :white_check_mark: Allow snapping to Origin
-  - :white_check_mark: Adjust point snapping to be zoom invariant
+  - [x] Allow snapping to Origin
+  - [x] Adjust point snapping to be zoom invariant
   - [ ] Faster way to delete lots of lines/arcs/circles
-  - :white_check_mark: Show line/circle/arc previews before committing to them
+  - [x] Show line/circle/arc previews before committing to them
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
   - [ ] Handle point on line constraints and resulting face geometry
@@ -104,14 +104,14 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Ability to rename the project
   - [ ] Ability to create and delete entire workbenches
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
-  - :white_check_mark: Default to completely empty project
+  - [x] Default to completely empty project
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
-  - :white_check_mark: Buttons to zoom to Planes
-- :white_check_mark: Debug
-  - :white_check_mark: On wasm crash, show a helpful error in the console
-  - :white_check_mark: On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
+  - [x] Buttons to zoom to Planes
+- [x] Debug
+  - [x] On wasm crash, show a helpful error in the console
+  - [x] On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
 - [ ] TrackballControls
   - [ ] Zoom camera to cursor, not center
   - [ ] Fix pan speed being mismatched on x and y
