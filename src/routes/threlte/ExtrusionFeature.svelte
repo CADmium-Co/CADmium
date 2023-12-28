@@ -6,12 +6,15 @@
 
 	export let name
 	export let index
+
+	export let data
+	// looks like: {sketch_id: 'Sketch-0', face_ids: Array(0), length: 0.25, offset: 0, direction: 'Normal'}
+
 	let editing = false
 
 	let source = '/actions/extrude_min.svg'
 
 	const closeAndRefresh = () => {
-		console.log('closing, refreshing')
 		workbenchIsStale.set(true)
 	}
 </script>
