@@ -33,6 +33,56 @@ Leveraging truck, I wrote a small rust library called [cadmium](https://github.c
 
 The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph.
 
+## Running The Code
+
+If you're just trying to kick the tires, [click here](https://cadmium-nine.vercel.app/threlte) to view the live web demo.
+
+To build locally:
+
+```
+git clone https://github.com/MattFerraro/CADmium.git
+cd CADmium
+npm run build:wasm
+npm run dev
+```
+
+You will need rust and wasm-pack working locally. See `vercel_build.sh` for an example of installing these dependencies.
+
+## Contributing
+
+I am not currently able to handle contributions. After the 0.1 release in February I will be looking for help in a few areas:
+
+1. _Design:_ The tool must look and feel good and I am not a designer. I would love contributions in the form of:
+
+- Advice, mockups, or tailwindcss examples of how to make different elements look and behave better.
+- In particular, help picking a color palette that works well and is unique
+- Help figuring out how to implement dark mode
+
+1. _Rust:_ This is my first project in rust. I need an experienced rustacean's help to:
+
+- Figure out how to better lay out my rust code so it is more modular. I currently have two huge files where almost all of the logic lives and that makes it difficult to develop
+- Point out any glaring issues with how I'm using the language
+- Give me general feedback on if the message passing implementation can be improved in some way
+- Finally explain to me how Lifetimes work
+
+1. _Svelte:_ This is my first project using Svelte. I'd love an experienced set of eyes to:
+
+- Look over the basic structure and tell me if I'm making any big mistakes
+- Help me migrate to Svelte 5 when it comes out
+
+1. _Users:_ I need to gather a small userbase of hobbyists and engineers who can use the tool to design a lot of actual parts to help me find
+
+- Bugs
+- Big opportunities for improvement
+- The limitations of my approach
+
+1. _Business:_ I have quit my job and I am working on this full time. I'd love your help if you know how to:
+
+- Start and administer a 1-person SAAS business
+- Generate income using a code base which is open source
+
+If you feel like you would be willing and able to help, please join [my discord](https://discord.gg/MQbBNyNQFf)!
+
 ## TODO for MVP (0.1 Release)
 
 - [ ] Sketching
@@ -42,7 +92,7 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [ ] Bind (l) to line and (c) to circle and (r) to rectangle
   - [x] Allow snapping to Origin
   - [x] Adjust point snapping to be zoom invariant
-  - [ ] Faster way to select lots of lines/arcs/circles
+  - [ ] Faster way to delete lots of lines/arcs/circles
   - [x] Show line/circle/arc previews before committing to them
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
