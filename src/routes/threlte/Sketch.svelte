@@ -1,5 +1,6 @@
 <script>
 	import PassiveSketch from './PassiveSketch.svelte'
+	import { currentlySelected, previewGeometry, sketchTool } from './stores.js'
 
 	export let uniqueId
 	export let name
@@ -14,10 +15,27 @@
 		solidSelectedMaterial,
 		collisionLineMaterial
 
-	$: console.log('Sketch name: ', name)
-	// $: console.log('Sketch tuple: ', sketchTuple)
-	// $: console.log('Sketch editing: ', editing)
-	// TODO: draw the extent of the plane with some lines and put text on it
+	function onKeyDown(event) {
+		if (!editing) return
+
+		if (event.key === 'l') {
+			$sketchTool = 'line'
+			$currentlySelected = []
+			$previewGeometry = []
+		} else if (event.key === 'r') {
+			$sketchTool = 'rectangle'
+			$currentlySelected = []
+			$previewGeometry = []
+		} else if (event.key === 'c') {
+			$sketchTool = 'circle'
+			$currentlySelected = []
+			$previewGeometry = []
+		} else if (event.key === 'Escape') {
+			$sketchTool = 'select'
+			$currentlySelected = []
+			$previewGeometry = []
+		}
+	}
 </script>
 
 {#if editing}
@@ -48,3 +66,5 @@
 		{collisionLineMaterial}
 	/>
 {/if}
+
+<svelte:window on:keydown={onKeyDown} />

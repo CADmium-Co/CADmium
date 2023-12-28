@@ -10,7 +10,7 @@
 
 	let previousPoint
 
-	$: if ($sketchTool === null) {
+	$: if ($sketchTool !== 'line') {
 		previousPoint = null
 	}
 

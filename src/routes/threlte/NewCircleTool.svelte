@@ -10,7 +10,7 @@
 
 	let centerPoint
 
-	$: if ($sketchTool === null) {
+	$: if ($sketchTool !== 'circle') {
 		centerPoint = null
 	}
 

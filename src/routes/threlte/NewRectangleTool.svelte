@@ -10,7 +10,7 @@
 
 	let anchorPoint
 
-	$: if ($sketchTool === null) {
+	$: if ($sketchTool !== 'rectangle') {
 		anchorPoint = null
 	}
 
