@@ -1,9 +1,10 @@
 <script>
-	import { snapPoints, sketchTool } from './stores'
+	import { snapPoints, sketchTool, previewGeometry } from './stores'
 	import { addRectangleBetweenPoints, addPointToSketch } from './projectUtils'
 
 	export let pointsById
 	export let sketchIndex
+	export let active
 
 	let anchorPoint
 
@@ -77,5 +78,76 @@
 				$snapPoints = []
 			}
 		}
+
+		if (anchorPoint) {
+			let end = { twoD: { x: projected.x, y: projected.y } }
+
+			if (snappedTo) {
+				end = snappedTo
+			}
+
+			let upperLeft = { twoD: { x: anchorPoint.twoD.x, y: end.twoD.y } }
+			let lowerRight = { twoD: { x: end.twoD.x, y: anchorPoint.twoD.y } }
+
+			previewGeometry.set([
+				{
+					type: 'point',
+					x: upperLeft.twoD.x,
+					y: upperLeft.twoD.y,
+					uuid: `point-ul-${upperLeft.twoD.x}-${upperLeft.twoD.y}`
+				},
+				{
+					type: 'point',
+					x: lowerRight.twoD.x,
+					y: lowerRight.twoD.y,
+					uuid: `point-lr-${lowerRight.twoD.x}-${lowerRight.twoD.y}`
+				},
+				{
+					type: 'point',
+					x: end.twoD.x,
+					y: end.twoD.y,
+					uuid: `point-end-${end.twoD.x}-${end.twoD.y}`
+				},
+				{
+					type: 'line',
+					start: anchorPoint,
+					end: upperLeft,
+					uuid: `line-s-ul-${upperLeft.twoD.x}-${upperLeft.twoD.y}`
+				},
+
+				{
+					type: 'line',
+					start: anchorPoint,
+					end: lowerRight,
+					uuid: `line-s-lr-${lowerRight.twoD.x}-${lowerRight.twoD.y}`
+				},
+				{
+					type: 'line',
+					start: upperLeft,
+					end: end,
+					uuid: `line-ul-end-${end.twoD.x}-${end.twoD.y}`
+				},
+				{
+					type: 'line',
+					start: lowerRight,
+					end: end,
+					uuid: `line-lr-end-${end.twoD.x}-${end.twoD.y}`
+				}
+			])
+		} else {
+			previewGeometry.set([])
+		}
+	}
+
+	export function onKeyDown(event) {
+		if (!active) return
+
+		if (event.key === 'Escape') {
+			previewGeometry.set([])
+			anchorPoint = null
+			$sketchTool = 'select'
+		}
 	}
 </script>
+
+<svelte:window on:keydown={onKeyDown} />

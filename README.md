@@ -38,13 +38,17 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
 - [ ] Sketching
   - [ ] Ability to create a sketch on the face of a solid
   - [x] New Rectangle Tool
-  - [ ] Ability to select and delete points/lines/circles/constraints
+  - [x] Ability to select and delete points/lines/circles/constraints
+  - [ ] Bind (l) to line and (c) to circle and (r) to rectangle
+  - [ ] Faster way to select lots of lines/arcs/circles
+  - [ ] Show line/circle/arc previews before committing to them
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
   - [ ] Handle point on line constraints and resulting face geometry
 - [ ] Extrusion
   - [ ] Configure an extrusion to subtract, add, or create new solids
   - [ ] Configure extrusion depth
+  - [ ] Configure extrusion faces
   - [ ] Stabilize face identification so that it doesn't jump around when you make sketch changes
 - [ ] Revolution
   - [ ] Same as extrusion
@@ -57,6 +61,7 @@ The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
   - [x] Buttons to zoom to Planes
+- [ ] TrackballControls
   - [ ] Zoom camera to cursor, not center
   - [ ] Fix pan speed being mismatched on x and y
 - [ ] Export

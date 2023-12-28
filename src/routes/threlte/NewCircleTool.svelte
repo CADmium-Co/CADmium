@@ -1,9 +1,10 @@
 <script>
-	import { snapPoints, sketchTool } from './stores'
+	import { snapPoints, sketchTool, previewGeometry } from './stores'
 	import { addCircleBetweenPoints, addPointToSketch } from './projectUtils'
 
 	export let pointsById
 	export let sketchIndex
+	export let active
 
 	let centerPoint
 
@@ -18,13 +19,18 @@
 				// nothing to do, the point exists!
 				// console.log('nothing to do the point exists!')
 			} else {
-				// console.log('oh cool, creating point!')
-				let result = addPointToSketch(sketchIndex, point.twoD, false)
-				point.pointId = result
+				// again, don't actually DO anything yet to the sketch
+				point.pointId = null
 			}
 			centerPoint = point
 		} else {
 			// there WAS an center point, so we should create a circle!
+			if (centerPoint.pointId === null) {
+				// if the center point doesn't exist, then we should create a point
+				let result = addPointToSketch(sketchIndex, centerPoint.twoD, false)
+				centerPoint.pointId = result
+			}
+
 			if (point.pointId) {
 				// if the point exists, then we should create a circle between the two existing points
 				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
@@ -75,5 +81,47 @@
 				$snapPoints = []
 			}
 		}
+
+		if (centerPoint) {
+			let radius
+			if (snappedTo) {
+				let dx = snappedTo.twoD.x - centerPoint.twoD.x
+				let dy = snappedTo.twoD.y - centerPoint.twoD.y
+				radius = Math.hypot(dx, dy)
+			} else {
+				let dx = projected.x - centerPoint.twoD.x
+				let dy = projected.y - centerPoint.twoD.y
+				radius = Math.hypot(dx, dy)
+			}
+
+			previewGeometry.set([
+				{
+					type: 'circle',
+					center: centerPoint,
+					radius: radius,
+					uuid: `circle-${centerPoint.twoD.x}-${centerPoint.twoD.y}-${radius}`
+				},
+				{
+					type: 'point',
+					x: centerPoint.twoD.x,
+					y: centerPoint.twoD.y,
+					uuid: `point-${centerPoint.twoD.x}-${centerPoint.twoD.y}`
+				}
+			])
+		} else {
+			previewGeometry.set([])
+		}
+	}
+
+	export function onKeyDown(event) {
+		if (!active) return
+
+		if (event.key === 'Escape') {
+			previewGeometry.set([])
+			centerPoint = null
+			$sketchTool = 'select'
+		}
 	}
 </script>
+
+<svelte:window on:keydown={onKeyDown} />

@@ -1,9 +1,10 @@
 <script>
-	import { snapPoints, sketchTool } from './stores'
+	import { snapPoints, sketchTool, previewGeometry } from './stores'
 	import { addLineToSketch, addPointToSketch } from './projectUtils'
 
 	export let pointsById
 	export let sketchIndex
+	export let active
 
 	let previousPoint
 
@@ -76,5 +77,32 @@
 				$snapPoints = []
 			}
 		}
+
+		if (previousPoint) {
+			let end = { twoD: { x: projected.x, y: projected.y } }
+
+			if (snappedTo) {
+				end = snappedTo
+			}
+
+			previewGeometry.set([
+				{ type: 'line', start: previousPoint, end: end, uuid: `line-${end.twoD.x}-${end.twoD.y}` },
+				{ type: 'point', x: end.twoD.x, y: end.twoD.y, uuid: `point-${end.twoD.x}-${end.twoD.y}` }
+			])
+		} else {
+			previewGeometry.set([])
+		}
+	}
+
+	export function onKeyDown(event) {
+		if (!active) return
+
+		if (event.key === 'Escape') {
+			previewGeometry.set([])
+			previousPoint = null
+			$sketchTool = 'select'
+		}
 	}
 </script>
+
+<svelte:window on:keydown={onKeyDown} />

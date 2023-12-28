@@ -2,7 +2,7 @@
 	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
 	import { T, useThrelte } from '@threlte/core'
 	import { Text, Suspense } from '@threlte/extras'
-	import { hiddenSketches, sketchTool, snapPoints } from './stores.js'
+	import { hiddenSketches, previewGeometry, sketchTool, snapPoints } from './stores.js'
 
 	import Point2D from './Point2D.svelte'
 	import Line from './Line.svelte'
@@ -245,9 +245,24 @@
 		</T.Mesh>
 
 		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool == 'select'} />
-		<NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} />
-		<NewCircleTool bind:this={newCircleTool} {pointsById} sketchIndex={uniqueId} />
-		<NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={uniqueId} />
+		<NewLineTool
+			bind:this={newLineTool}
+			{pointsById}
+			sketchIndex={uniqueId}
+			active={$sketchTool == 'line'}
+		/>
+		<NewCircleTool
+			bind:this={newCircleTool}
+			{pointsById}
+			sketchIndex={uniqueId}
+			active={$sketchTool == 'circle'}
+		/>
+		<NewRectangleTool
+			bind:this={newRectangleTool}
+			{pointsById}
+			sketchIndex={uniqueId}
+			active={$sketchTool == 'rectangle'}
+		/>
 
 		<T.Line2
 			geometry={lineGeometry}
@@ -306,12 +321,42 @@
 			/>
 		{/each}
 
+		{#each $previewGeometry as geom (geom.uuid)}
+			{#if geom.type === 'line'}
+				<Line
+					start={geom.start}
+					end={geom.end}
+					id={null}
+					{solidLineMaterial}
+					{solidHoveredMaterial}
+					{solidSelectedMaterial}
+					{dashedHoveredMaterial}
+					{dashedLineMaterial}
+					{collisionLineMaterial}
+				/>
+			{:else if geom.type === 'circle'}
+				<Circle
+					center={geom.center}
+					radius={geom.radius}
+					id={null}
+					{solidLineMaterial}
+					{solidHoveredMaterial}
+					{solidSelectedMaterial}
+					{dashedHoveredMaterial}
+					{dashedLineMaterial}
+					{collisionLineMaterial}
+				/>
+			{:else if geom.type === 'point'}
+				<Point2D x={geom.x} y={geom.y} hidden={false} snappedTo={false} id={geom.uuid} />
+			{/if}
+		{/each}
+
 		{#each pointTuples as { id, twoD, threeD } (id)}
-			<Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} snappedTo={false} />
+			<Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} snappedTo={false} {id} />
 		{/each}
 
 		{#each $snapPoints as { id, twoD, threeD } (id)}
-			<Point2D x={twoD.x} y={twoD.y} hidden={false} snappedTo={true} />
+			<Point2D x={twoD.x} y={twoD.y} hidden={false} snappedTo={true} {id} />
 		{/each}
 
 		{#each faceTuples as face (`${faceTuples.length}-${face.id}`)}
