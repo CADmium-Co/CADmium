@@ -1,5 +1,8 @@
 {
     "rust-analyzer.linkedProjects": [
         "./src/rust/cadmium/Cargo.toml",
-    ]
+    ],
+    "[markdown]": {
+        "editor.formatOnSave": false,
+    }
 }

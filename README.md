@@ -9,7 +9,7 @@ If you're looking for:
 - A simple, modern, parametric CAD UI that runs in a browser
 - That can export solids as .step, .obj, or .cadmium (a json-based CAD format that this project is inventing)
 - That can export sketches as .svg or .dxf
-- That Functions without an internet connection
+- That works without an internet connection
 
 Then this project may be for you!
 
@@ -31,7 +31,7 @@ The boundary representation engine under the hood is [truck](https://github.com/
 
 Leveraging truck, I wrote a small rust library called [cadmium](https://github.com/MattFerraro/CADmium/tree/main/src/rust/cadmium) which provides structs for projects, workspaces, sketches, extrusions, and constraints. My goal is that this rust library provides all the same functionality as the UI for anyone who prefers code-first CAD. This library is able to save and load projects to disk as json. I have also built a set of javascript bindings so that the whole thing can be compiled to wasm and run in a browser.
 
-The UI is built with SvelteKit and Tailwind. It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph.
+The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph decaratively.
 
 ## Running The Code
 
@@ -52,34 +52,29 @@ You will need rust and wasm-pack working locally. See `vercel_build.sh` for an e
 
 I am not currently able to handle contributions. After the 0.1 release in February I will be looking for help in a few areas:
 
-1. _Design:_ The tool must look and feel good and I am not a designer. I would love contributions in the form of:
+1. **Design:** The tool must look and feel good and I am not a designer. I would love contributions in the form of:
+  - Advice, mockups, or tailwindcss examples of how to make different elements look and behave better.
+  - In particular, help picking a color palette that works well and is unique
+  - Help figuring out how to implement dark mode
 
-- Advice, mockups, or tailwindcss examples of how to make different elements look and behave better.
-- In particular, help picking a color palette that works well and is unique
-- Help figuring out how to implement dark mode
+1. **Rust:** This is my first project in rust. I need an experienced rustacean's help to:
+  - Figure out how to better lay out my rust code so it is more modular. I currently have two huge files where almost all of the logic lives and that makes it difficult to develop
+  - Point out any glaring issues with how I'm using the language
+  - Give me general feedback on if the message passing implementation can be improved in some way
+  - Finally explain to me how Lifetimes work
 
-1. _Rust:_ This is my first project in rust. I need an experienced rustacean's help to:
+1. **Svelte:** This is my first project using Svelte. I'd love an experienced set of eyes to:
+  - Look over the basic structure and tell me if I'm making any big mistakes
+  - Help me migrate to Svelte 5 when it comes out
 
-- Figure out how to better lay out my rust code so it is more modular. I currently have two huge files where almost all of the logic lives and that makes it difficult to develop
-- Point out any glaring issues with how I'm using the language
-- Give me general feedback on if the message passing implementation can be improved in some way
-- Finally explain to me how Lifetimes work
+1. **Users:** I need to gather a small userbase of hobbyists and engineers who can use the tool to design a lot of actual parts to help me find
+  - Bugs
+  - Big opportunities for improvement
+  - The limitations of my approach
 
-1. _Svelte:_ This is my first project using Svelte. I'd love an experienced set of eyes to:
-
-- Look over the basic structure and tell me if I'm making any big mistakes
-- Help me migrate to Svelte 5 when it comes out
-
-1. _Users:_ I need to gather a small userbase of hobbyists and engineers who can use the tool to design a lot of actual parts to help me find
-
-- Bugs
-- Big opportunities for improvement
-- The limitations of my approach
-
-1. _Business:_ I have quit my job and I am working on this full time. I'd love your help if you know how to:
-
-- Start and administer a 1-person SAAS business
-- Generate income using a code base which is open source
+1. **Business:** I have quit my job and I am working on this full time. I'd love your help if you know how to:
+  - Start and administer a 1-person SAAS business
+  - Generate income using a code base which is open source
 
 If you feel like you would be willing and able to help, please join [my discord](https://discord.gg/MQbBNyNQFf)!
 
@@ -87,13 +82,13 @@ If you feel like you would be willing and able to help, please join [my discord]
 
 - [ ] Sketching
   - [ ] Ability to create a sketch on the face of a solid
-  - [x] New Rectangle Tool
-  - [x] Ability to select and delete points/lines/circles/constraints
+  - :white_check_mark: New Rectangle Tool
+  - :white_check_mark: Ability to select and delete points/lines/circles/constraints
   - [ ] Bind (l) to line and (c) to circle and (r) to rectangle
-  - [x] Allow snapping to Origin
-  - [x] Adjust point snapping to be zoom invariant
+  - :white_check_mark: Allow snapping to Origin
+  - :white_check_mark: Adjust point snapping to be zoom invariant
   - [ ] Faster way to delete lots of lines/arcs/circles
-  - [x] Show line/circle/arc previews before committing to them
+  - :white_check_mark: Show line/circle/arc previews before committing to them
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
   - [ ] Handle point on line constraints and resulting face geometry
@@ -109,14 +104,14 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Ability to rename the project
   - [ ] Ability to create and delete entire workbenches
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
-  - [x] Default to completely empty project
+  - :white_check_mark: Default to completely empty project
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
-  - [x] Buttons to zoom to Planes
-- [x] Debug
-  - [x] On wasm crash, show a helpful error in the console
-  - [x] On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
+  - :white_check_mark: Buttons to zoom to Planes
+- :white_check_mark: Debug
+  - :white_check_mark: On wasm crash, show a helpful error in the console
+  - :white_check_mark: On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
 - [ ] TrackballControls
   - [ ] Zoom camera to cursor, not center
   - [ ] Fix pan speed being mismatched on x and y
