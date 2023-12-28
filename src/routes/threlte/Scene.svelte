@@ -4,7 +4,6 @@
 	import { Vector2, Vector3 } from 'three'
 	import { interactivity } from '@threlte/extras'
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
 	import { realization, workbench, sketchBeingEdited } from './stores.js'
 
@@ -22,7 +21,6 @@
 	$: planesById = planes ? Object.fromEntries(planes) : {}
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
-	$: console.log('sketches', sketches)
 
 	export function setCameraFocus(goTo, lookAt, up) {
 		// TODO: make this tween nicely

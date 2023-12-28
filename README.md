@@ -81,6 +81,7 @@ If you feel like you would be willing and able to help, please join [my discord]
 ## TODO for MVP (0.1 Release)
 
 - [ ] Sketching
+  - [ ] Ability to create a new sketch on a plane
   - [ ] Ability to create a sketch on the face of a solid
   - [x] New Rectangle Tool
   - [x] Ability to select and delete points/lines/circles/constraints
@@ -95,6 +96,7 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Fix crash that occurs when two lines overlap but don't intersect
   - [ ] Allow some lines to be construction lines
 - [ ] Extrusion
+  - [ ] Ability to create a new extrusion and select faces for it
   - [ ] Configure an extrusion to subtract, add, or create new solids
   - [ ] Configure extrusion depth
   - [ ] Configure extrusion faces

@@ -12,8 +12,6 @@
 
 	let source = '/actions/plane_min.svg'
 
-	console.log('plane', plane)
-
 	const closeAndRefresh = () => {
 		console.log('closing, refreshing')
 		workbenchIsStale.set(true)
@@ -46,7 +44,6 @@
 	<div
 		class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded hover:bg-slate-200"
 		on:mousedown={() => {
-			console.log('clicked on plane glass')
 			setCameraFocus(plane.tertiary, plane.origin, plane.secondary)
 			// move camera to focus on plane
 		}}
