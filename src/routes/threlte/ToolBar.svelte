@@ -1,9 +1,12 @@
 <script>
 	import { sketchBeingEdited, sketchTool } from './stores'
+	import { newExtrusion } from './projectUtils'
 
 	let solving = false
 	const solveSketch = () => {}
-	const createNewExtrusion = () => {}
+	const createNewExtrusion = () => {
+		newExtrusion()
+	}
 	const createNewSketch = () => {}
 	const stepSketch = () => {}
 

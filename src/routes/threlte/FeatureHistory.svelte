@@ -48,7 +48,7 @@
 <div class="flex flex-col select-none">
 	<div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
 		<div class="font-bold text-sm px-2 py-2">History ({history.length})</div>
-		{#each history as feature, featureIdx (feature.data.type + ':' + feature.name)}
+		{#each history as feature, featureIdx (feature.data.type + ':' + feature.unique_id)}
 			<div>
 				{#if feature.data.type === 'Point'}
 					<PointFeature name={feature.name} index={featureIdx} />

@@ -521,14 +521,14 @@ impl Workbench {
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
         // square in upper right
-        // let p0 = sketch.add_fixed_point(0.1, 0.00);
-        // let p1 = sketch.add_point(0.45, 0.0);
-        // let p2 = sketch.add_point(0.45, 0.25);
-        // let p3 = sketch.add_point(0.0, 0.25);
-        // let seg_0 = sketch.add_segment(p0, p1);
-        // let seg_1 = sketch.add_segment(p1, p2);
-        // let seg_2 = sketch.add_segment(p2, p3);
-        // let seg_3 = sketch.add_segment(p3, p0);
+        let p0 = sketch.add_fixed_point(0.0, 0.0);
+        let p1 = sketch.add_point(0.45, 0.0);
+        let p2 = sketch.add_point(0.45, 0.45);
+        let p3 = sketch.add_point(0.0, 0.45);
+        let seg_0 = sketch.add_segment(p0, p1);
+        let seg_1 = sketch.add_segment(p1, p2);
+        let seg_2 = sketch.add_segment(p2, p3);
+        let seg_3 = sketch.add_segment(p3, p0);
 
         // let big_p0 = sketch.add_point(-0.1, -0.1);
         // let big_p1 = sketch.add_point(0.55, -0.1);
@@ -586,7 +586,7 @@ impl Workbench {
         //     "Ext 1",
         //     Extrusion {
         //         sketch_id,
-        //         face_ids: vec![0, 1],
+        //         face_ids: vec![],
         //         length: 0.25,
         //         offset: 0.0,
         //         direction: Direction::Normal,

@@ -16,6 +16,40 @@ import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
+export function newExtrusion() {
+	const bench = get(workbench)
+
+	let sketchId = null
+	for (let step of bench.history) {
+		if (step.data.type === 'Sketch') {
+			sketchId = step.unique_id
+		}
+	}
+	if (sketchId === null) {
+		console.log('No sketch found in history')
+		return
+	}
+
+	const messageObj = {
+		NewExtrusion: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchId,
+			face_ids: [],
+			length: 0.25,
+			offset: 0.0,
+			extrusion_name: 'Extra',
+			direction: 'Normal'
+		}
+	}
+
+	let wp = get(wasmProject)
+	let result = wp.send_message(JSON.stringify(messageObj))
+	console.log(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
+
+	workbenchIsStale.set(true)
+}
+
 export function deleteEntities(sketchIdx, selection) {
 	const lines = selection.filter((e) => e.type === 'line')
 	const arcs = selection.filter((e) => e.type === 'arc')
