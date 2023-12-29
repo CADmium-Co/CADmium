@@ -16,6 +16,17 @@ import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
+function sendWasmMessage(messageObj) {
+	let wp = get(wasmProject)
+	const messageStr = JSON.stringify(messageObj)
+	// console.log('sending message:', messageStr)
+	let result = wp.send_message(messageStr)
+	// console.log('result: ', result)
+	let resultObj = JSON.parse(result)
+	messageHistory.update((history) => [...history, { message: messageObj, result: resultObj }])
+	return resultObj
+}
+
 export function newExtrusion() {
 	const bench = get(workbench)
 
@@ -42,10 +53,7 @@ export function newExtrusion() {
 		}
 	}
 
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
+	sendWasmMessage(messageObj)
 
 	workbenchIsStale.set(true)
 }
@@ -55,87 +63,69 @@ export function deleteEntities(sketchIdx, selection) {
 	const arcs = selection.filter((e) => e.type === 'arc')
 	const circles = selection.filter((e) => e.type === 'circle')
 	// const points = selection.filter((e) => e.type === 'point')
+	const workbenchIdx = get(workbenchIndex)
 
 	deleteLines(
+		workbenchIdx,
 		sketchIdx,
 		lines.map((e) => parseInt(e.id))
 	)
 	deleteArcs(
+		workbenchIdx,
 		sketchIdx,
 		arcs.map((e) => parseInt(e.id))
 	)
 	deleteCircles(
+		workbenchIdx,
 		sketchIdx,
 		circles.map((e) => parseInt(e.id))
 	)
+
+	// only referesh the workbench once, after all deletions are done
+	workbenchIsStale.set(true)
 }
 
-export function deleteLines(sketchIdx, lineIds) {
+function deleteLines(workbenchIdx, sketchIdx, lineIds) {
 	if (lineIds.length === 0) return
-	console.log('trying to delete line IDs', lineIds)
 
 	const messageObj = {
 		DeleteLines: {
-			workbench_id: get(workbenchIndex),
+			workbench_id: workbenchIdx,
 			sketch_id: sketchIdx,
 			line_ids: lineIds
 		}
 	}
-	console.log('sending message:', messageObj)
-
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
-
-	workbenchIsStale.set(true)
+	sendWasmMessage(messageObj)
 }
 
-export function deleteArcs(sketchIdx, arcIds) {
+function deleteArcs(workbenchIdx, sketchIdx, arcIds) {
 	if (arcIds.length === 0) return
-	console.log('trying to delete arc IDs', arcIds)
 
 	const messageObj = {
 		DeleteArcs: {
-			workbench_id: get(workbenchIndex),
+			workbench_id: workbenchIdx,
 			sketch_id: sketchIdx,
 			arc_ids: arcIds
 		}
 	}
-	console.log('sending message:', messageObj)
-
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
-
-	workbenchIsStale.set(true)
+	sendWasmMessage(messageObj)
 }
 
-export function deleteCircles(sketchIdx, circleIds) {
+function deleteCircles(workbenchIdx, sketchIdx, circleIds) {
 	if (circleIds.length === 0) return
-	console.log('trying to delete circle IDs', circleIds)
 
 	const messageObj = {
 		DeleteCircles: {
-			workbench_id: get(workbenchIndex),
+			workbench_id: workbenchIdx,
 			sketch_id: sketchIdx,
 			circle_ids: circleIds
 		}
 	}
-	console.log('sending message:', messageObj)
 
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
-
-	workbenchIsStale.set(true)
+	sendWasmMessage(messageObj)
 }
 
 export function addRectangleBetweenPoints(sketchIdx, point1, point2) {
-	console.log('trying to add a rectangle between', point1, point2)
-
 	const messageObj = {
 		NewRectangleBetweenPoints: {
 			workbench_id: get(workbenchIndex),
@@ -144,18 +134,12 @@ export function addRectangleBetweenPoints(sketchIdx, point1, point2) {
 			end_id: parseInt(point2)
 		}
 	}
-
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
+	sendWasmMessage(messageObj)
 
 	workbenchIsStale.set(true)
 }
 
 export function addCircleBetweenPoints(sketchIdx, point1, point2) {
-	console.log('trying to add a circle between', point1, point2)
-
 	const messageObj = {
 		NewCircleBetweenPoints: {
 			workbench_id: get(workbenchIndex),
@@ -164,18 +148,12 @@ export function addCircleBetweenPoints(sketchIdx, point1, point2) {
 			edge_id: parseInt(point2)
 		}
 	}
-
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [...history, { message: messageObj, result: result }])
+	sendWasmMessage(messageObj)
 
 	workbenchIsStale.set(true)
 }
 
 export function addLineToSketch(sketchIdx, point1, point2) {
-	console.log('trying to add a line between', point1, point2)
-
 	const messageObj = {
 		NewLineOnSketch: {
 			workbench_id: get(workbenchIndex),
@@ -184,21 +162,12 @@ export function addLineToSketch(sketchIdx, point1, point2) {
 			end_point_id: parseInt(point2)
 		}
 	}
-
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log(result)
-	messageHistory.update((history) => [
-		...history,
-		{ message: messageObj, result: JSON.parse(result) }
-	])
+	sendWasmMessage(messageObj)
 
 	workbenchIsStale.set(true)
 }
 
 export function addPointToSketch(sketchIdx, point, hidden) {
-	console.log('trying to add point to sketch', get(workbenchIndex), sketchIdx, point, hidden)
-
 	const messageObj = {
 		NewPointOnSketch2: {
 			workbench_id: get(workbenchIndex),
@@ -208,26 +177,12 @@ export function addPointToSketch(sketchIdx, point, hidden) {
 			hidden: hidden
 		}
 	}
-	console.log('sending message:', messageObj)
-	let wp = get(wasmProject)
-	let result = wp.send_message(JSON.stringify(messageObj))
-	console.log('received result:', result)
-	messageHistory.update((history) => [
-		...history,
-		{ message: messageObj, result: JSON.parse(result) }
-	])
-	result = JSON.parse(result)
-
-	// TODO: could this just refresh the workbench or realization?
+	let result = sendWasmMessage(messageObj)
 	workbenchIsStale.set(true)
-
 	return result.success.id
 }
 
 export function renameStep(stepIdx, newName) {
-	console.log('renaming step to: ', newName)
-	let wp = get(wasmProject)
-
 	const messageObj = {
 		RenameStep: {
 			workbench_id: get(workbenchIndex),
@@ -235,12 +190,7 @@ export function renameStep(stepIdx, newName) {
 			new_name: newName
 		}
 	}
-	let result = wp.send_message(JSON.stringify(messageObj))
-	messageHistory.update((history) => [
-		...history,
-		{ message: messageObj, result: JSON.parse(result) }
-	])
-	console.log(result)
+	sendWasmMessage(messageObj)
 }
 
 // If the project ever becomes stale, refresh it. This should be pretty rare.
