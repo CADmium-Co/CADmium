@@ -1,16 +1,21 @@
 <script>
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
-	import { renameStep } from './projectUtils'
+	import { arraysEqual, renameStep, updateExtrusion } from './projectUtils'
 	import { selectingFor, workbenchIsStale, featureIndex, currentlySelected } from './stores.js'
 	import X from 'phosphor-svelte/lib/X'
 
-	export let name, index
-	export let data
-	// looks like: {sketch_id: 'Sketch-0', face_ids: Array(0), length: 0.25, offset: 0, direction: 'Normal'}
+	export let name, index, id, data
+	// data looks like: {sketch_id: 'Sketch-0', face_ids: Array(0), length: 0.25, offset: 0, direction: 'Normal'}
 
-	let faceIds = data.face_ids
-	// faceIds = ['face1', 'face2', 'face3', 'face4', 'face5', 'face6', 'face7']
+	let faceIdsFromInputs = data.face_ids.sort()
+
+	$: {
+		if (data && data.face_ids) {
+			faceIdsFromInputs = data.face_ids.map((e) => e + '').sort()
+		}
+	}
+
 	let length = data.length
 	let direction = data.direction
 
@@ -24,7 +29,19 @@
 	currentlySelected.subscribe((e) => {
 		if ($featureIndex !== index) return
 
-		console.log('currently selected has changed to:', $currentlySelected)
+		const faceIdsFromSelection = $currentlySelected
+			.filter((e) => e.type === 'face')
+			.map((e) => e.id)
+			.sort()
+
+		console.log('ids from inputs and from selection:', faceIdsFromInputs, faceIdsFromSelection)
+
+		if (arraysEqual(faceIdsFromInputs, faceIdsFromSelection)) {
+			console.log('face ids are the same, no update')
+		} else {
+			console.log('triggering update to new face Ids:', faceIdsFromSelection)
+			updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
+		}
 	})
 
 	// $: console.log($currentlySelected)
@@ -91,14 +108,14 @@
 				class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500 min-h-8 flex-wrap"
 				on:focusin={() => {
 					$selectingFor = ['face']
-					$currentlySelected = faceIds.map((id) => ({ type: 'face', id }))
+					$currentlySelected = faceIdsFromInputs.map((id) => ({ type: 'face', id }))
 				}}
 				on:focusout={() => {
 					$selectingFor = []
 				}}
 			>
 				<div class="h-8" />
-				{#each faceIds as faceId}
+				<!-- {#each faceIds as faceId}
 					<div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
 						{faceId}<button
 							on:click|preventDefault={() => {
@@ -106,7 +123,7 @@
 							}}><X /></button
 						>
 					</div>
-				{/each}
+				{/each} -->
 			</div>
 
 			<div class="flex space-x-1.5">

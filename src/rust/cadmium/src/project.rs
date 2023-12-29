@@ -339,6 +339,28 @@ impl Project {
                 let extrusion_id = workbench.add_extrusion(extrusion_name, extrusion);
                 Ok(format!("\"id\": \"{}\"", extrusion_id))
             }
+            Message::UpdateExtrusion {
+                workbench_id,
+                extrusion_name,
+                extrusion_id,
+                sketch_id,
+                face_ids,
+                length,
+                offset,
+                direction,
+            } => {
+                let workbench = &mut self.workbenches[*workbench_id as usize];
+                let extrusion = Extrusion {
+                    sketch_id: sketch_id.to_owned(),
+                    face_ids: face_ids.to_owned(),
+                    length: *length,
+                    offset: *offset,
+                    direction: direction.to_owned(),
+                };
+                let as_step_data = StepData::Extrusion { extrusion };
+                workbench.update_step_data(extrusion_id, as_step_data);
+                Ok(format!("\"id\": \"{}\"", extrusion_id))
+            }
             Message::UpdateExtrusionLength {
                 workbench_id,
                 extrusion_name,
@@ -402,6 +424,18 @@ impl Workbench {
             }
         }
         None
+    }
+
+    pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
+        let mut index = 0;
+        for step in self.history.iter() {
+            if step.unique_id == step_id {
+                break;
+            }
+            index += 1;
+        }
+
+        self.history[index].data = new_step_data;
     }
 
     pub fn last_plane_id(&self) -> Option<String> {
@@ -1253,6 +1287,16 @@ pub enum Message {
     NewExtrusion {
         workbench_id: u64,
         extrusion_name: String,
+        sketch_id: String,
+        face_ids: Vec<u64>,
+        length: f64,
+        offset: f64,
+        direction: Direction,
+    },
+    UpdateExtrusion {
+        workbench_id: u64,
+        extrusion_name: String,
+        extrusion_id: String,
         sketch_id: String,
         face_ids: Vec<u64>,
         length: f64,

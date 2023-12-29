@@ -16,15 +16,45 @@ import { Vector2, Vector3 } from 'three'
 
 export const CIRCLE_TOLERANCE = 0.0001
 
-function sendWasmMessage(messageObj) {
+export function arraysEqual(a, b) {
+	if (a.length !== b.length) {
+		return false
+	}
+	for (let i = 0; i < a.length; i++) {
+		if (a[i] !== b[i]) {
+			return false
+		}
+	}
+	return true
+}
+
+function sendWasmMessage(messageObj, debug = false) {
 	let wp = get(wasmProject)
 	const messageStr = JSON.stringify(messageObj)
-	// console.log('sending message:', messageStr)
+	if (debug) console.log('sending message:', messageStr)
 	let result = wp.send_message(messageStr)
-	// console.log('result: ', result)
+	if (debug) console.log('result:', result)
 	let resultObj = JSON.parse(result)
 	messageHistory.update((history) => [...history, { message: messageObj, result: resultObj }])
 	return resultObj
+}
+
+export function updateExtrusion(extrusionId, sketchId, length, faces) {
+	const messageObj = {
+		UpdateExtrusion: {
+			workbench_id: get(workbenchIndex),
+			sketch_id: sketchId,
+			face_ids: faces.map((f) => parseInt(f)),
+			length: length,
+			offset: 0.0,
+			extrusion_name: 'Extra',
+			direction: 'Normal',
+			extrusion_id: extrusionId
+		}
+	}
+	sendWasmMessage(messageObj)
+
+	workbenchIsStale.set(true)
 }
 
 export function newExtrusion() {

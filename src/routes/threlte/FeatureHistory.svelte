@@ -62,7 +62,12 @@
 				{:else if feature.data.type === 'Sketch'}
 					<SketchFeature name={feature.name} index={featureIdx} id={feature.unique_id} />
 				{:else if feature.data.type === 'Extrusion'}
-					<ExtrusionFeature name={feature.name} index={featureIdx} data={feature.data.extrusion} />
+					<ExtrusionFeature
+						name={feature.name}
+						index={featureIdx}
+						data={feature.data.extrusion}
+						id={feature.unique_id}
+					/>
 				{:else}
 					TODO: {feature.name} {feature.data.type}
 				{/if}

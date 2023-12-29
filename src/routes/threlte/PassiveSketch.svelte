@@ -186,7 +186,7 @@
 				}
 			}}
 		>
-			<T.PlaneGeometry args={[width * 10, height * 10]} />
+			<T.PlaneGeometry args={[width * 100, height * 100]} />
 		</T.Mesh>
 
 		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool == 'select'} />
