@@ -336,8 +336,8 @@ impl Project {
                     offset: *offset,
                     direction: direction.to_owned(),
                 };
-                workbench.add_extrusion(extrusion_name, extrusion);
-                Ok("".to_owned())
+                let extrusion_id = workbench.add_extrusion(extrusion_name, extrusion);
+                Ok(format!("\"id\": \"{}\"", extrusion_id))
             }
             Message::UpdateExtrusionLength {
                 workbench_id,
@@ -661,11 +661,12 @@ impl Workbench {
         new_step_id
     }
 
-    pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) {
+    pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
         let counter = self.step_counters.get_mut("Extrusion").unwrap();
         self.history
             .push(Step::new_extrusion(name, extrusion, *counter));
         *counter += 1;
+        *counter - 1
     }
 
     pub fn realize(&self, max_steps: u64) -> Realization {

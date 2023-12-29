@@ -1,11 +1,13 @@
 <script>
-	import { sketchBeingEdited, sketchTool } from './stores'
+	import { featureIndex, sketchBeingEdited, sketchTool, workbench } from './stores'
 	import { newExtrusion } from './projectUtils'
 
 	let solving = false
 	const solveSketch = () => {}
 	const createNewExtrusion = () => {
 		newExtrusion()
+		// set that as the current feature being edited
+		$featureIndex = $workbench.history.length - 1
 	}
 	const createNewSketch = () => {}
 	const stepSketch = () => {}

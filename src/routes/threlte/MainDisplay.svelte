@@ -5,7 +5,7 @@
 	import FeatureHistory from './FeatureHistory.svelte'
 	import { Canvas } from '@threlte/core'
 	import Scene from './Scene.svelte'
-	import { sketchTool } from './stores'
+	import { sketchTool, selectingFor } from './stores'
 
 	let width = 250 // px
 	let minWidth = 150
@@ -49,11 +49,20 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
 
+<!-- svelte-ignore a11y-click-events-have-key-events -->
+<!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
 	class="bg-white {$sketchTool === 'line' || $sketchTool === 'circle' || $sketchTool === 'rectangle'
 		? 'cursor-crosshair'
 		: ''}"
 	style="width:{viewportWidth}px; height:{height}px"
+	on:mousedown={(e) => {
+		if ($selectingFor.length > 0) {
+			// If the user is selecting shapes, then click events on the 3D screen
+			// should not steal focus away from form inputs
+			e.preventDefault()
+		}
+	}}
 >
 	<Canvas>
 		<Scene bind:setCameraFocus />

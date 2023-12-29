@@ -19,16 +19,12 @@ export const sketchMode = writable('Select')
 export const sketchBeingEdited = writable(null)
 export const sketchTool = writable(null)
 
-export const tempPoints = writable([])
-export const tempLines = writable([])
-export const tempCircles = writable([])
-export const tempArcs = writable([])
-
-export const snapPoints = writable([])
+// could be looking for 'face' or 'plane' or other things
+export const selectingFor = writable([])
 
 export const currentlyMousedOver = writable([])
 export const currentlySelected = writable([])
-
+export const snapPoints = writable([])
 export const previewGeometry = writable([])
 
 export const messageHistory = writable([])

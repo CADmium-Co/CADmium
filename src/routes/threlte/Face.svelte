@@ -1,11 +1,25 @@
 <script>
 	import { T } from '@threlte/core'
-	import { Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry, Path } from 'three'
+	import {
+		EdgesGeometry,
+		Vector2,
+		Shape,
+		MeshStandardMaterial,
+		DoubleSide,
+		LineBasicMaterial,
+		ShapeGeometry,
+		Path
+	} from 'three'
 	import { circleToPoints, arcToPoints } from './projectUtils'
+	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
 
-	export let face
-	export let id
+	export let face, id
 	export let pointsById
+
+	const type = 'face'
+
+	let hovered = false
+	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
 	// a face has an exterior and holes.
 	// exterior is a wire, and holes is an array of wires.
@@ -71,8 +85,10 @@
 	}
 
 	const geometry = new ShapeGeometry(shape)
+	// const edges = new EdgesGeometry(geometry, 15)
+	// const edgeMaterial = new LineBasicMaterial({ color: 0xff0000 })
 
-	const material = new MeshStandardMaterial({
+	const standardMaterial = new MeshStandardMaterial({
 		color: '#525252',
 		side: DoubleSide,
 		metalness: 0.0,
@@ -84,6 +100,64 @@
 		polygonOffset: true,
 		polygonOffsetFactor: -4
 	})
+
+	const hoverMaterial = new MeshStandardMaterial({
+		color: '#525252',
+		side: DoubleSide,
+		metalness: 0.0,
+		transparent: true,
+		opacity: 0.25,
+		depthWrite: false,
+		depthTest: true,
+		wireframe: false,
+		polygonOffset: true,
+		polygonOffsetFactor: -4
+	})
+
+	const selectedMaterial = new MeshStandardMaterial({
+		color: '#525252',
+		side: DoubleSide,
+		metalness: 0.0,
+		transparent: true,
+		opacity: 0.4,
+		depthWrite: false,
+		depthTest: true,
+		wireframe: false,
+		polygonOffset: true,
+		polygonOffsetFactor: -4
+	})
 </script>
 
-<T.Mesh {geometry} {material} />
+<T.Group>
+	<T.Mesh
+		{geometry}
+		material={selected ? selectedMaterial : hovered ? hoverMaterial : standardMaterial}
+		on:pointerenter={() => {
+			if ($selectingFor.includes(type)) {
+				hovered = true
+				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+			}
+		}}
+		on:pointerleave={() => {
+			if ($selectingFor.includes(type)) {
+				hovered = false
+				$currentlyMousedOver = $currentlyMousedOver.filter(
+					(item) => !(item.id === id && item.type === type)
+				)
+			}
+		}}
+		on:click={() => {
+			if ($selectingFor.includes(type)) {
+				if ($currentlySelected.some((e) => e.id === id && e.type === type)) {
+					// this face was already selected, so unselect it
+					$currentlySelected = $currentlySelected.filter(
+						(item) => !(item.id === id && item.type === type)
+					)
+				} else {
+					$currentlySelected = [...$currentlySelected, { type: type, id: id }]
+				}
+			}
+		}}
+	/>
+	<!-- <T.LineSegments geometry={edges} material={edgeMaterial} /> -->
+</T.Group>
