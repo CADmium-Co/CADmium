@@ -109,8 +109,8 @@
 		polygonOffsetFactor: -4
 	})
 
-	const width = 2.0
-	const height = 1.5
+	const width = 200.0
+	const height = 150.0
 
 	// this is x, y, z for each of five points, making a closed square
 	const points = [
@@ -220,9 +220,9 @@
 			}}
 		/>
 
-		<T.Group position.x={-width / 2 + 0.01} position.y={height / 2 - 0.01}>
+		<T.Group position.x={(-width / 2) * 0.99} position.y={(height / 2) * 0.99}>
 			<Suspense>
-				<Text text={name} color="#42a7eb" fontSize={0.05} anchorX="0%" anchorY="0%" />
+				<Text text={name} color="#42a7eb" fontSize={5} anchorX="0%" anchorY="0%" />
 			</Suspense>
 		</T.Group>
 

@@ -14,7 +14,7 @@ import {
 import { get } from 'svelte/store'
 import { Vector2, Vector3 } from 'three'
 
-export const CIRCLE_TOLERANCE = 0.0001
+export const CIRCLE_TOLERANCE = 0.1
 
 export function arraysEqual(a, b) {
 	if (a.length !== b.length) {
@@ -76,7 +76,7 @@ export function newExtrusion() {
 			workbench_id: get(workbenchIndex),
 			sketch_id: sketchId,
 			face_ids: [],
-			length: 0.25,
+			length: 25,
 			offset: 0.0,
 			extrusion_name: 'Extra',
 			direction: 'Normal'
@@ -273,7 +273,7 @@ realizationIsStale.subscribe((value) => {
 
 export function getObj(solidId) {
 	let wasmReal = get(wasmRealization)
-	let objString = wasmReal.solid_to_obj(solidId, 0.001)
+	let objString = wasmReal.solid_to_obj(solidId, 1.0)
 	return objString
 }
 

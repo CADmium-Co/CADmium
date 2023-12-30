@@ -26,7 +26,7 @@ use truck_modeling::{
     builder, Edge, Face as TruckFace, Point3 as TruckPoint3, Vector3 as TruckVector3, Vertex, Wire,
 };
 
-const MESH_TOLERANCE: f64 = 0.001;
+const MESH_TOLERANCE: f64 = 0.1;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Extrusion {

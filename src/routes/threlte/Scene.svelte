@@ -107,7 +107,7 @@
 	// camera position: [160.8, -250.8, 200.55] looks good and angular
 </script>
 
-<T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={400} up={[0, 0, 1]}>
+<T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={5} up={[0, 0, 1]}>
 	<TrackballControls
 		rotateSpeed={1.8}
 		panSpeed={0.5}

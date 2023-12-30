@@ -46,9 +46,24 @@
 		polygonOffsetFactor: -4
 	})
 
-	const s = 0.5
-	// this is x, y, z for each of five points, making a closed square
-	const points = [-s, -s, 0, s, -s, 0, s, s, 0, -s, s, 0, -s, -s, 0]
+	// this is x, y, z for each of five points, making a closed rectangle
+	const points = [
+		-width / 2,
+		-height / 2,
+		0,
+		width / 2,
+		-height / 2,
+		0,
+		width / 2,
+		height / 2,
+		0,
+		-width / 2,
+		height / 2,
+		0,
+		-width / 2,
+		-height / 2,
+		0
+	]
 
 	$: lineMaterial = new LineMaterial({
 		color: '#42a7eb',
@@ -76,9 +91,9 @@
 		}}
 	/>
 
-	<T.Group position.x={-0.49} position.y={0.49}>
+	<T.Group position.x={(-width / 2) * 0.99} position.y={(height / 2) * 0.99}>
 		<Suspense>
-			<Text text={name} color="#42a7eb" fontSize={0.05} anchorX="0%" anchorY="0%" />
+			<Text text={name} color="#42a7eb" fontSize={5} anchorX="0%" anchorY="0%" />
 		</Suspense>
 	</T.Group>
 </T.Group>

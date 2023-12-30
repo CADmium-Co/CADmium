@@ -12,6 +12,8 @@
 	const normalsArray = new Float32Array(normals.flatMap((v) => [v.x, v.y, v.z]))
 	const verticesArray = new Float32Array(vertices.flatMap((v) => [v.x, v.y, v.z]))
 
+	console.log('Vertices: ', vertices.length)
+
 	geometry.setIndex(indices)
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(verticesArray, 3))
 	geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalsArray, 3))

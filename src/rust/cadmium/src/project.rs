@@ -556,9 +556,9 @@ impl Workbench {
 
         // square in upper right
         let p0 = sketch.add_fixed_point(0.0, 0.0);
-        let p1 = sketch.add_point(0.45, 0.0);
-        let p2 = sketch.add_point(0.45, 0.45);
-        let p3 = sketch.add_point(0.0, 0.45);
+        let p1 = sketch.add_point(45.0, 0.0);
+        let p2 = sketch.add_point(45.0, 45.0);
+        let p3 = sketch.add_point(0.0, 45.0);
         let seg_0 = sketch.add_segment(p0, p1);
         let seg_1 = sketch.add_segment(p1, p2);
         let seg_2 = sketch.add_segment(p2, p3);
@@ -843,8 +843,8 @@ impl Step {
             suppressed: false,
             data: StepData::Plane {
                 plane,
-                height: 1.0,
-                width: 1.0,
+                height: 100.0,
+                width: 100.0,
             },
         }
     }
