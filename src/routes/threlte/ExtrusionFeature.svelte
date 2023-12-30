@@ -22,6 +22,7 @@
 		console.log('extrusion feature closing')
 		$featureIndex = 1000
 		$currentlySelected = []
+		$selectingFor = []
 		workbenchIsStale.set(true)
 	}
 
