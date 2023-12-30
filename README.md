@@ -21,10 +21,6 @@ I am currently racing toward an MVP, which I expect to release as version 0.1 in
 
 Beyond that, I will try to monetize by offering a hosted version of the software as a paid product. To achieve this I will introduce a notion of users, accounts, sharing, and a public commons. All of the actual CAD functionality, including the ability to read and modify .cadmium files, will always be available for free here on Github in a local-only form.
 
-## Licensing
-
-The entire project is available under the MIT license, but I can't guarantee that it will be forever. I may switch to an [FSL](https://fsl.software/) license soon.
-
 ## Technology
 
 The boundary representation engine under the hood is [truck](https://github.com/ricosjp/truck), which is written in rust and is not dependent on any legacy b-rep engine.
