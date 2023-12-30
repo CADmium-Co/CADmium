@@ -17,13 +17,20 @@
 	}
 
 	let length = data.length
-	let direction = data.direction
 
 	const closeAndRefresh = () => {
 		console.log('extrusion feature closing')
 		$featureIndex = 1000
 		$currentlySelected = []
 		workbenchIsStale.set(true)
+	}
+
+	function sendUpdate() {
+		const faceIdsFromSelection = $currentlySelected
+			.filter((e) => e.type === 'face')
+			.map((e) => e.id)
+			.sort()
+		updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
 	}
 
 	currentlySelected.subscribe((e) => {
@@ -40,7 +47,7 @@
 			console.log('face ids are the same, no update')
 		} else {
 			console.log('triggering update to new face Ids:', faceIdsFromSelection)
-			updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
+			sendUpdate()
 		}
 	})
 
@@ -98,6 +105,9 @@
 					data-1p-ignore
 					class="shadow appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:border focus:border-sky-500"
 					bind:value={length}
+					on:input={() => {
+						sendUpdate()
+					}}
 				/>
 			</label>
 

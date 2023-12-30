@@ -45,7 +45,7 @@ export function updateExtrusion(extrusionId, sketchId, length, faces) {
 			workbench_id: get(workbenchIndex),
 			sketch_id: sketchId,
 			face_ids: faces.map((f) => parseInt(f)),
-			length: length,
+			length: parseFloat(length),
 			offset: 0.0,
 			extrusion_name: 'Extra',
 			direction: 'Normal',

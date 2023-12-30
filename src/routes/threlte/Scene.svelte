@@ -175,7 +175,7 @@
 	/>
 {/each}
 
-{#each solids as [solidName, solid] (`${$workbench.name}-${solidName}`)}
+{#each solids as [solidName, solid] (`${$workbench.name}-${solidName}-${solid.crc32}`)}
 	<Solid
 		name={solidName}
 		indices={solid.indices}

@@ -47,6 +47,7 @@ pub enum Direction {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Solid {
     pub name: String,
+    pub crc32: String,
     pub vertices: Vec<Vector3>,
     pub normals: Vec<Vector3>,
     pub uvs: Vec<Vector2>,
@@ -99,6 +100,7 @@ impl Solid {
 
             let mut solid = Solid {
                 name: format!("{}:{}", name, face_id),
+                crc32: "".to_owned(),
                 vertices: vec![],
                 normals: vec![],
                 triangles: vec![],
@@ -135,6 +137,15 @@ impl Solid {
                     index += 1;
                 }
             }
+
+            // compute the crc32 of the vertices
+            let mut hasher = crc32fast::Hasher::new();
+            for vertex in solid.vertices.iter() {
+                hasher.update(&vertex.x.to_be_bytes());
+                hasher.update(&vertex.y.to_be_bytes());
+                hasher.update(&vertex.z.to_be_bytes());
+            }
+            solid.crc32 = format!("{:x}", hasher.finalize());
 
             retval.insert(format!("{}:{}", name, face_id), solid);
         }
