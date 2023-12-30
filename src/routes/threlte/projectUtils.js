@@ -271,6 +271,12 @@ realizationIsStale.subscribe((value) => {
 	}
 })
 
+export function getObj(solidId) {
+	let wasmReal = get(wasmRealization)
+	let objString = wasmReal.solid_to_obj(solidId, 0.001)
+	return objString
+}
+
 export function readFile(e) {
 	var file = e.target.files[0]
 	if (!file) return
