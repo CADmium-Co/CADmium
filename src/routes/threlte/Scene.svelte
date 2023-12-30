@@ -149,7 +149,7 @@
 {#each planes as [planeName, plane] (`${$workbench.name}-${planeName}`)}
 	<Plane
 		name={plane.name}
-		uniqueId={planeName}
+		id={planeName}
 		height={plane.height}
 		width={plane.width}
 		origin={plane.plane.origin}

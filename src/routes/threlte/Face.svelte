@@ -1,15 +1,6 @@
 <script>
 	import { T } from '@threlte/core'
-	import {
-		EdgesGeometry,
-		Vector2,
-		Shape,
-		MeshStandardMaterial,
-		DoubleSide,
-		LineBasicMaterial,
-		ShapeGeometry,
-		Path
-	} from 'three'
+	import { Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry, Path } from 'three'
 	import { circleToPoints, arcToPoints } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
 

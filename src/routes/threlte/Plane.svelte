@@ -7,14 +7,11 @@
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
-	export let name
-	export let uniqueId
-	export let width
-	export let height
-	export let origin
-	export let primary
-	export let secondary
-	export let tertiary
+	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
+
+	export let name, id
+	export let width, height
+	export let origin, primary, secondary, tertiary
 
 	extend({ Line2 })
 
@@ -76,10 +73,31 @@
 
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
+
+	const type = 'plane'
+
+	let hovered = false
+	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 </script>
 
 <T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
-	<T.Mesh {material}>
+	<T.Mesh
+		{material}
+		on:pointerenter={() => {
+			if ($selectingFor.includes(type)) {
+				hovered = true
+				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+			}
+		}}
+		on:pointerleave={() => {
+			if ($selectingFor.includes(type)) {
+				hovered = false
+				$currentlyMousedOver = $currentlyMousedOver.filter(
+					(item) => !(item.id === id && item.type === type)
+				)
+			}
+		}}
+	>
 		<T.PlaneGeometry args={[width, height]} />
 	</T.Mesh>
 
