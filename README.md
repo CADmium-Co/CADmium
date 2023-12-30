@@ -29,6 +29,10 @@ Leveraging truck, I wrote a small rust library called [cadmium](https://github.c
 
 The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph decaratively.
 
+## License
+
+This software is offered under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license). In summary, you can do whatever you like with this software except offer it as a service to others.
+
 ## Running The Code
 
 If you're just trying to kick the tires, [click here](https://cadmium-nine.vercel.app/threlte) to view the live web demo.
