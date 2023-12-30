@@ -26,6 +26,7 @@
 	}
 
 	function sendUpdate() {
+		// updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
 		const faceIdsFromSelection = $currentlySelected
 			.filter((e) => e.type === 'face')
 			.map((e) => e.id)
@@ -55,6 +56,11 @@
 	// $: faceIds = $currentlySelected.filter((e) => e.type === 'face').map((e) => e.id)
 
 	let source = '/actions/extrude_min.svg'
+
+	$: if ($featureIndex === index) {
+		$selectingFor = ['face']
+		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: 'face', id }))
+	}
 </script>
 
 <div
@@ -116,24 +122,19 @@
 			<div
 				tabindex="0"
 				class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500 min-h-8 flex-wrap"
-				on:focusin={() => {
-					$selectingFor = ['face']
-					$currentlySelected = faceIdsFromInputs.map((id) => ({ type: 'face', id }))
-				}}
-				on:focusout={() => {
-					$selectingFor = []
-				}}
 			>
 				<div class="h-8" />
-				<!-- {#each faceIds as faceId}
+				{#each faceIdsFromInputs as faceId}
 					<div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
 						{faceId}<button
 							on:click|preventDefault={() => {
-								faceIds = faceIds.filter((id) => id !== faceId)
+								$currentlySelected = $currentlySelected.filter(
+									(item) => !(item.id === faceId && item.type === 'face')
+								)
 							}}><X /></button
 						>
 					</div>
-				{/each} -->
+				{/each}
 			</div>
 
 			<div class="flex space-x-1.5">
