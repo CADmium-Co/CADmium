@@ -40,9 +40,9 @@
 		depthTest: false,
 		transparent: true,
 		dashed: true,
-		dashSize: 0.1,
-		gapSize: 0.1,
-		dashScale: 3,
+		dashSize: 2,
+		gapSize: 2,
+		dashScale: 1,
 		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
 	})
 
@@ -52,9 +52,9 @@
 		depthTest: false,
 		transparent: true,
 		dashed: true,
-		dashSize: 0.1,
-		gapSize: 0.1,
-		dashScale: 3,
+		dashSize: 2,
+		gapSize: 2,
+		dashScale: 1,
 		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
 	})
 

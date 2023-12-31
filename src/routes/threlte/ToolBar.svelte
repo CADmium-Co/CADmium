@@ -1,6 +1,6 @@
 <script>
 	import { featureIndex, sketchBeingEdited, sketchTool, workbench } from './stores'
-	import { newExtrusion } from './projectUtils'
+	import { newExtrusion, newSketchOnPlane } from './projectUtils'
 
 	let solving = false
 	const solveSketch = () => {}
@@ -9,7 +9,10 @@
 		// set that as the current feature being edited
 		$featureIndex = $workbench.history.length - 1
 	}
-	const createNewSketch = () => {}
+	const createNewSketch = () => {
+		console.log('Create new sketch')
+		newSketchOnPlane()
+	}
 	const stepSketch = () => {}
 
 	let actions = [
@@ -19,8 +22,8 @@
 			text: 'New Sketch',
 			handler: createNewSketch
 		},
-		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: createNewExtrusion },
-		{ alt: 'plane', src: '/actions/plane_min.svg' }
+		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: createNewExtrusion }
+		// { alt: 'plane', src: '/actions/plane_min.svg' }
 	]
 
 	let sketchActions = [

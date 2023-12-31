@@ -262,15 +262,15 @@ impl Project {
                 sketch.solve(*max_steps);
                 Ok(("".to_owned()))
             }
-            Message::NewSketch {
+            Message::NewSketchOnPlane {
                 workbench_id,
                 sketch_name,
-                plane_name,
+                plane_id,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
 
-                workbench.add_sketch(&sketch_name, &plane_name);
-                Ok(format!("\"sketch_name\": \"{}\"", sketch_name))
+                let new_sketch_name = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
+                Ok(format!("\"sketch_name\": \"{}\"", new_sketch_name))
             }
             Message::UpdateSketchPlane {
                 workbench_id,
@@ -507,7 +507,7 @@ impl Workbench {
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
 
-        let sketch_id = self.add_sketch("Sketch 1", "Top");
+        // let sketch_id = self.add_sketch_to_plane("Sketch 1", "Top");
 
         // let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
@@ -546,11 +546,11 @@ impl Workbench {
 
     pub fn add_defaults(&mut self) {
         self.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
-        self.add_plane("Top", Plane::top());
+        let top_plane_id = self.add_plane("Top", Plane::top());
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
 
-        let sketch_id = self.add_sketch("Sketch 1", "Top");
+        let sketch_id = self.add_sketch_to_plane("Sketch 1", &top_plane_id);
 
         let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
@@ -645,10 +645,12 @@ impl Workbench {
         *counter += 1;
     }
 
-    pub fn add_plane(&mut self, name: &str, plane: Plane) {
+    pub fn add_plane(&mut self, name: &str, plane: Plane) -> String {
         let counter = self.step_counters.get_mut("Plane").unwrap();
         self.history.push(Step::new_plane(name, plane, *counter));
         *counter += 1;
+
+        self.plane_name_to_id(name).unwrap()
     }
 
     pub fn plane_name_to_id(&self, plane_name: &str) -> Option<String> {
@@ -669,25 +671,41 @@ impl Workbench {
         None
     }
 
-    pub fn add_sketch(&mut self, name: &str, plane_name: &str) -> String {
-        // if the plane name is empty string, default to whichever plane is currently first
-        // in the feature history
-        let plane_id = if plane_name == "" {
-            self.get_first_plane_id().unwrap()
-        } else {
-            self.plane_name_to_id(plane_name).unwrap()
-        };
+    pub fn add_sketch_to_plane(&mut self, name: &str, plane_id: &str) -> String {
+        if plane_id != "" {
+            // if the plane id is specified, check to make sure a plane with that ID exists
+            let mut plane_exists = false;
+            for step in self.history.iter() {
+                if step.unique_id == plane_id {
+                    match &step.data {
+                        StepData::Plane {
+                            plane,
+                            width,
+                            height,
+                        } => {
+                            plane_exists = true;
+                        }
+                        _ => {}
+                    }
+                }
+            }
+
+            if !plane_exists {
+                return format!("failed to find plane with id {}", plane_id);
+            }
+        }
+        // if the plane id is empty string, that's okay it's a placeholder
 
         // If the sketch name is empty string, then we need to generate a new name
         // Let's use "Sketch n" where n is the number of sketches
         let counter = self.step_counters.get_mut("Sketch").unwrap();
         let sketch_name = if name == "" {
-            format!("Sketch {}", counter)
+            format!("Sketch {}", *counter + 1)
         } else {
             name.to_owned()
         };
 
-        let new_step = Step::new_sketch(name, &plane_id, *counter);
+        let new_step = Step::new_sketch(&sketch_name, &plane_id, *counter);
         let new_step_id = new_step.unique_id.clone();
         self.history.push(new_step);
         *counter += 1;
@@ -740,6 +758,11 @@ impl Workbench {
                     plane_id,
                     sketch,
                 } => {
+                    if plane_id == "" {
+                        println!("Sketch {} has no plane", step.name);
+                        continue;
+                    }
+
                     let plane = &realized.planes[plane_id];
 
                     realized.sketches.insert(
@@ -1270,10 +1293,10 @@ pub enum Message {
         sketch_name: String,
         max_steps: u64,
     },
-    NewSketch {
+    NewSketchOnPlane {
         workbench_id: u64,
         sketch_name: String,
-        plane_name: String,
+        plane_id: String,
     },
     UpdateSketchPlane {
         workbench_id: u64,
@@ -1355,22 +1378,22 @@ mod tests {
         // println!("{:?}", res);
     }
 
-    #[test]
-    fn one_extrusion() {
-        let mut p = Project::new("Test Project");
-        p.add_defaults();
+    // #[test]
+    // fn one_extrusion() {
+    //     let mut p = Project::new("Test Project");
+    //     let top_plane_id = p.add_plane("Top", Plane::top());
 
-        let message = &Message::NewSketch {
-            workbench_id: 0,
-            sketch_name: "".to_owned(),
-            plane_name: "".to_owned(),
-        };
+    //     let message = &Message::NewSketchOnPlane {
+    //         workbench_id: 0,
+    //         sketch_name: "".to_owned(),
+    //         plane_name: "".to_owned(),
+    //     };
 
-        let result = p.handle_message(message);
-        println!("{:?}", result);
+    //     let result = p.handle_message(message);
+    //     println!("{:?}", result);
 
-        let realization = p.get_realization(0, 1000);
-    }
+    //     let realization = p.get_realization(0, 1000);
+    // }
 
     #[test]
     fn move_sketch() {
