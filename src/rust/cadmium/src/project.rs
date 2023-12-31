@@ -269,18 +269,18 @@ impl Project {
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
 
-                let new_sketch_name = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
-                Ok(format!("\"sketch_name\": \"{}\"", new_sketch_name))
+                let new_sketch_id = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
+                Ok(format!("\"sketch_id\": \"{}\"", new_sketch_id))
             }
-            Message::UpdateSketchPlane {
+            Message::SetSketchPlane {
                 workbench_id,
-                sketch_name,
+                sketch_id,
                 plane_id: pid,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
 
                 for step in workbench.history.iter_mut() {
-                    if step.name == *sketch_name {
+                    if step.unique_id == *sketch_id {
                         match &mut step.data {
                             StepData::Sketch {
                                 plane_id: pn2,
@@ -290,7 +290,7 @@ impl Project {
                             } => {
                                 *pn2 = pid.to_owned();
 
-                                return Ok(format!("\"plane_name\": \"{}\"", pid));
+                                return Ok(format!("\"plane_id\": \"{}\"", pid));
                             }
                             _ => {}
                         }
@@ -550,19 +550,19 @@ impl Workbench {
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
 
-        let sketch_id = self.add_sketch_to_plane("Sketch 1", &top_plane_id);
+        // let sketch_id = self.add_sketch_to_plane("Sketch 1", &top_plane_id);
 
-        let sketch = self.get_sketch_mut("Sketch 1").unwrap();
+        // let sketch = self.get_sketch_mut("Sketch 1").unwrap();
 
         // square in upper right
-        let p0 = sketch.add_fixed_point(0.0, 0.0);
-        let p1 = sketch.add_point(45.0, 0.0);
-        let p2 = sketch.add_point(45.0, 45.0);
-        let p3 = sketch.add_point(0.0, 45.0);
-        let seg_0 = sketch.add_segment(p0, p1);
-        let seg_1 = sketch.add_segment(p1, p2);
-        let seg_2 = sketch.add_segment(p2, p3);
-        let seg_3 = sketch.add_segment(p3, p0);
+        // let p0 = sketch.add_fixed_point(0.0, 0.0);
+        // let p1 = sketch.add_point(45.0, 0.0);
+        // let p2 = sketch.add_point(45.0, 45.0);
+        // let p3 = sketch.add_point(0.0, 45.0);
+        // let seg_0 = sketch.add_segment(p0, p1);
+        // let seg_1 = sketch.add_segment(p1, p2);
+        // let seg_2 = sketch.add_segment(p2, p3);
+        // let seg_3 = sketch.add_segment(p3, p0);
 
         // let big_p0 = sketch.add_point(-0.1, -0.1);
         // let big_p1 = sketch.add_point(0.55, -0.1);
@@ -1298,9 +1298,9 @@ pub enum Message {
         sketch_name: String,
         plane_id: String,
     },
-    UpdateSketchPlane {
+    SetSketchPlane {
         workbench_id: u64,
-        sketch_name: String,
+        sketch_id: String,
         plane_id: String,
     },
     DeleteSketch {

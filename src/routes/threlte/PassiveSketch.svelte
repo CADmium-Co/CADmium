@@ -189,26 +189,26 @@
 			<T.PlaneGeometry args={[width * 100, height * 100]} />
 		</T.Mesh>
 
-		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool == 'select'} />
+		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool === 'select'} />
 		<NewLineTool
 			bind:this={newLineTool}
 			{pointsById}
 			sketchIndex={uniqueId}
-			active={$sketchTool == 'line'}
+			active={$sketchTool === 'line'}
 			{projectToPlane}
 		/>
 		<NewCircleTool
 			bind:this={newCircleTool}
 			{pointsById}
 			sketchIndex={uniqueId}
-			active={$sketchTool == 'circle'}
+			active={$sketchTool === 'circle'}
 			{projectToPlane}
 		/>
 		<NewRectangleTool
 			bind:this={newRectangleTool}
 			{pointsById}
 			sketchIndex={uniqueId}
-			active={$sketchTool == 'rectangle'}
+			active={$sketchTool === 'rectangle'}
 			{projectToPlane}
 		/>
 

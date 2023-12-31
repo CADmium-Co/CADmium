@@ -1,36 +1,59 @@
 <script>
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
-	import { renameStep } from './projectUtils'
+	import { renameStep, setSketchPlane } from './projectUtils'
 	import {
 		hiddenSketches,
-		sketchMode,
 		featureIndex,
+		selectionMax,
+		selectionMin,
+		currentlySelected,
+		selectingFor,
 		sketchBeingEdited,
 		sketchTool
 	} from './stores.js'
 	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
 	import Eye from 'phosphor-svelte/lib/Eye'
+	import X from 'phosphor-svelte/lib/X'
 
-	export let name
-	export let index
-	export let id
-
-	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
+	export let name, index, id, plane_id
 
 	let source = '/actions/sketch_min.svg'
+
+	let surface = null
+	let selectingForSketchPlane = false
+
+	$: {
+		if (plane_id !== '') {
+			surface = { type: 'plane', id: plane_id }
+		} else {
+			surface = null
+		}
+	}
+	console.log('A Sketch Feature: ', name, index, id, plane_id)
 
 	const closeAndRefresh = () => {
 		console.log('closing, refreshing')
 		$featureIndex = 1000
-		$sketchMode = 'Select'
 		$sketchBeingEdited = null
 		$sketchTool = null
+		$selectingFor = []
+		$selectionMax = 1000
+		$selectionMin = 0
+		$currentlySelected = []
 	}
 
 	$: if ($featureIndex === index) {
 		$sketchBeingEdited = id
 	}
+
+	currentlySelected.subscribe(() => {
+		if (!selectingForSketchPlane) return
+
+		console.log('CS changed when selecting for Sketch Plane:', $currentlySelected)
+
+		setSketchPlane(id, $currentlySelected[0].id)
+	})
 </script>
 
 <div
@@ -42,7 +65,7 @@
 			closeAndRefresh()
 		} else {
 			$featureIndex = index
-			$sketchMode = 'Select'
+			$sketchTool = 'select'
 		}
 	}}
 >
@@ -99,6 +122,42 @@
 					bind:value={name}
 				/>
 			</label>
+
+			<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+			Surface
+			<div
+				tabindex="0"
+				class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500 min-h-8 flex-wrap"
+				on:focusin={() => {
+					$sketchTool = null
+					$selectingFor = ['plane', 'meshFace']
+					$selectionMax = 1
+					$selectionMin = 1
+
+					if (surface !== null) {
+						$currentlySelected = [surface]
+					}
+					selectingForSketchPlane = true
+				}}
+				on:focusout={() => {
+					$sketchTool = null
+					$selectingFor = []
+					$selectionMax = 1000
+					$selectionMin = 0
+					selectingForSketchPlane = false
+				}}
+			>
+				<div class="h-8" />
+				{#if surface !== null}
+					<div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
+						{surface.type}:{surface.id}<button
+							on:click|preventDefault={() => {
+								surface = null
+							}}><X /></button
+						>
+					</div>
+				{/if}
+			</div>
 
 			<div class="flex space-x-1.5">
 				<button

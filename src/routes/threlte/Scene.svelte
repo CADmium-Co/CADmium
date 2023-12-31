@@ -24,7 +24,7 @@
 
 	export function setCameraFocus(goTo, lookAt, up) {
 		// TODO: make this tween nicely
-		const positionMultiple = 100
+		const positionMultiple = 1000
 		goTo = new Vector3(goTo.x, goTo.y, goTo.z)
 		goTo.multiplyScalar(positionMultiple)
 		lookAt = new Vector3(lookAt.x, lookAt.y, lookAt.z)

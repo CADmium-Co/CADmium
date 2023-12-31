@@ -15,12 +15,13 @@ export const realization = writable({})
 export const realizationIsStale = writable(false)
 
 export const hiddenSketches = writable([])
-export const sketchMode = writable('Select')
 export const sketchBeingEdited = writable(null)
 export const sketchTool = writable(null)
 
 // could be looking for 'face' or 'plane' or other things
 export const selectingFor = writable([])
+export const selectionMax = writable(1000)
+export const selectionMin = writable(0)
 
 export const currentlyMousedOver = writable([])
 export const currentlySelected = writable([])

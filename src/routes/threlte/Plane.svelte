@@ -7,7 +7,13 @@
 	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 
-	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
+	import {
+		currentlySelected,
+		currentlyMousedOver,
+		selectingFor,
+		selectionMin,
+		selectionMax
+	} from './stores'
 
 	export let name, id
 	export let width, height
@@ -30,12 +36,25 @@
 	eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
 
 	// Lastly, make the Plane Material
-	const material = new MeshStandardMaterial({
+	const standardMaterial = new MeshStandardMaterial({
 		color: '#525292',
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
 		opacity: 0.05,
+		depthWrite: false,
+		depthTest: true,
+		wireframe: false,
+		polygonOffset: true,
+		polygonOffsetFactor: -4
+	})
+
+	const hoveredMaterial = new MeshStandardMaterial({
+		color: '#525292',
+		side: DoubleSide,
+		metalness: 0.0,
+		transparent: true,
+		opacity: 0.15,
 		depthWrite: false,
 		depthTest: true,
 		wireframe: false,
@@ -62,9 +81,18 @@
 		0
 	]
 
-	$: lineMaterial = new LineMaterial({
+	$: standardLineMaterial = new LineMaterial({
 		color: '#42a7eb',
 		linewidth: 2.0 * $dpr,
+		depthTest: true,
+		transparent: true,
+		dashed: false,
+		resolution: new Vector2($size.width * $dpr, $size.height * $dpr)
+	})
+
+	$: hoveredLineMaterial = new LineMaterial({
+		color: '#fcba03',
+		linewidth: 3.0 * $dpr,
 		depthTest: true,
 		transparent: true,
 		dashed: false,
@@ -82,9 +110,10 @@
 
 <T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
 	<T.Mesh
-		{material}
-		on:pointerenter={() => {
+		material={hovered ? hoveredMaterial : standardMaterial}
+		on:pointerenter={(e) => {
 			if ($selectingFor.includes(type)) {
+				e.stopPropagation()
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
 			}
@@ -97,13 +126,38 @@
 				)
 			}
 		}}
+		on:click={(e) => {
+			if ($selectingFor.includes(type)) {
+				e.stopPropagation()
+				if ($currentlySelected.some((e) => e.id === id && e.type === type)) {
+					if ($currentlySelected.length - 1 < $selectionMin) {
+						// we can't deselect if doing so puts us below the minimum
+						// number of selected entities
+						return
+					}
+
+					$currentlySelected = $currentlySelected.filter(
+						(item) => !(item.id === id && item.type === type)
+					)
+				} else {
+					if ($currentlySelected.length + 1 > $selectionMax) {
+						// if selecting this entity puts us above the maximum
+						// number of selected entities, boot the oldest one
+						$currentlySelected.shift()
+					}
+
+					$currentlySelected = [...$currentlySelected, { type: type, id: id }]
+				}
+				console.log('currently selected:', $currentlySelected)
+			}
+		}}
 	>
 		<T.PlaneGeometry args={[width, height]} />
 	</T.Mesh>
 
 	<T.Line2
 		geometry={lineGeometry}
-		material={lineMaterial}
+		material={selected ? hoveredLineMaterial : hovered ? hoveredLineMaterial : standardLineMaterial}
 		on:create={({ ref }) => {
 			ref.computeLineDistances()
 		}}

@@ -13,7 +13,7 @@ If you're looking for:
 
 Then this project may be for you!
 
-**Status**: Early prototype. This tool is not yet an MVP, but is being developed in the open.
+**Status**: Early prototype. This tool is not yet an MVP, but is being developed in the open. Please do not share this to HN or Reddit or things like that.
 
 ## Overall Plan
 
@@ -81,37 +81,39 @@ If you feel like you would be willing and able to help, please join [my discord]
 ## TODO for MVP (0.1 Release)
 
 - [ ] Sketching
-  - [ ] Ability to create a new sketch on a plane
-  - [ ] Ability to create a sketch on the face of a solid
+  - [x] Ability to create a new sketch on a plane
   - [x] New Rectangle Tool
   - [x] Ability to select and delete points/lines/circles/constraints
   - [x] Bind (l) to line and (c) to circle and (r) to rectangle
   - [x] Allow snapping to Origin
   - [x] Adjust point snapping to be zoom invariant
-  - [ ] Faster way to select lots of lines/arcs/circles
   - [x] Show line/circle/arc previews before committing to them
+  - [ ] Faster way to select lots of lines/arcs/circles
+  - [ ] Ability to create a sketch on the face of a solid
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
   - [ ] Handle point on line constraints and resulting face geometry
   - [ ] Fix crash that occurs when two lines overlap but don't intersect
   - [ ] Allow some lines to be construction lines
 - [ ] Extrusion
-  - [ ] Ability to create a new extrusion and select faces for it
+  - [x] Ability to create a new extrusion and select faces for it
+  - [x] Configure extrusion depth
+  - [x] Configure extrusion faces
+  - [ ] Automatically merge parts that are touching
+  - [ ] Remove webbing for parts that are surrounded by other parts
   - [ ] Configure an extrusion to subtract, add, or create new solids
-  - [ ] Configure extrusion depth
-  - [ ] Configure extrusion faces
   - [ ] Stabilize face identification so that it doesn't jump around when you make sketch changes
 - [ ] Revolution
   - [ ] Same as extrusion
 - [ ] Project
+  - [x] Default to completely empty project
+  - [x] Buttons to zoom to Planes
   - [ ] Ability to rename the project
   - [ ] Ability to create and delete entire workbenches
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
-  - [x] Default to completely empty project
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
   - [ ] Natural UX for when a link truly breaks
   - [ ] Orientation cube in upper right (replace Gizmo)
-  - [x] Buttons to zoom to Planes
 - [x] Debug
   - [x] On wasm crash, show a helpful error in the console
   - [x] On wasm crash, include some way to emit the sequence of events that created the crash so I can easily repro errors that other generate
@@ -119,12 +121,13 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Zoom camera to cursor, not center
   - [ ] Fix pan speed being mismatched on x and y
 - [ ] Export
-  - [ ] Proper scaling on .obj and .step exports (currently the units are off)
+  - [x] Proper scaling on .obj and .step exports
   - [ ] .dxf export for sketches
 - [ ] Units
   - [ ] Make it clear what units the whole file is in
 - [ ] Marketing
   - [ ] Youtube video demonstrations
+    - [x] Create a Youtube Channel
     - [ ] A simple cube
     - [ ] A plate with screw holes
     - [ ] Something pretty complex

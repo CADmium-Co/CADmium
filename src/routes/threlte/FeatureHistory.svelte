@@ -60,7 +60,12 @@
 						{setCameraFocus}
 					/>
 				{:else if feature.data.type === 'Sketch'}
-					<SketchFeature name={feature.name} index={featureIdx} id={feature.unique_id} />
+					<SketchFeature
+						name={feature.name}
+						index={featureIdx}
+						id={feature.unique_id}
+						plane_id={feature.data.plane_id}
+					/>
 				{:else if feature.data.type === 'Extrusion'}
 					<ExtrusionFeature
 						name={feature.name}

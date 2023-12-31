@@ -35,7 +35,7 @@
 	export function onKeyDown(event) {
 		if (!active) return
 
-		console.log('key press', event)
+		// console.log('key press', event)
 		if (event.key === 'Escape') {
 			currentlySelected.set([])
 		} else if (event.key === 'Delete' || event.key === 'Backspace') {
