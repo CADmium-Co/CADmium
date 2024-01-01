@@ -61,7 +61,7 @@ pub struct Solid {
     >,
 }
 
-pub fn find_merge_opportunities(faces: &Vec<Face>) -> Option<(usize, usize, usize)> {
+pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Option<(usize, usize, usize)> {
     for (a, face_a) in faces.iter().enumerate() {
         for (b, face_b) in faces.iter().enumerate() {
             if a == b {
@@ -83,6 +83,35 @@ pub fn find_merge_opportunities(faces: &Vec<Face>) -> Option<(usize, usize, usiz
     None
 }
 
+pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
+    for (a, face_a) in faces.iter().enumerate() {
+        for (b, face_b) in faces.iter().enumerate() {
+            if a == b || a > b {
+                continue;
+            }
+
+            let adjacent_edges = face_a.exterior.adjacent_edges(&face_b.exterior);
+
+            match adjacent_edges {
+                None => continue,
+                Some(matched_edges) => return Some((a, b, matched_edges.0, matched_edges.1)),
+            }
+        }
+    }
+
+    None
+}
+
+pub fn merge_faces_2(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
+    // create  new sketch using these faces
+    let mut sketch = Sketch::from_faces(faces, real_sketch);
+
+    let (faces, unused_segments) = sketch.find_faces();
+
+    println!("Merge faces 2 output: {}", faces.len());
+    faces
+}
+
 pub fn merge_faces(faces: Vec<Face>) -> Vec<Face> {
     let mut faces = faces.clone();
     // adjacency:
@@ -90,12 +119,51 @@ pub fn merge_faces(faces: Vec<Face>) -> Vec<Face> {
     // if so, merge them into a single shape by deleting any shared sides
     // and recomputing the faces
 
+    while let Some((a, b, a_indices, b_indices)) = find_adjacent_shapes(&faces) {
+        println!("touching_shapes: {:?}", (a, b, a_indices, b_indices));
+        let face_a = &faces[a];
+        let face_b = &faces[b];
+
+        match (&face_a.exterior, &face_b.exterior) {
+            (Ring::Segments(segments_a), Ring::Segments(segments_b)) => {
+                let mut face_a_location = 0;
+                let mut face_b_location = 0;
+                let mut pulling_from_a = true;
+                let mut new_exterior_segments: Vec<Segment> = vec![];
+
+                loop {
+                    if pulling_from_a {
+                        let segment = segments_a[face_a_location].clone();
+                        new_exterior_segments.push(segment);
+                        face_a_location += 1;
+                    } else {
+                        // pull from b
+                        let segment = segments_b[face_b_location].clone();
+                        new_exterior_segments.push(segment);
+                        face_b_location += 1;
+                    }
+                }
+            }
+            _ => panic!("Only Rings made of Segments can have adjacent edges!"),
+        }
+
+        // let mut new_face = Face {
+        //     exterior: new_exterior_segments,
+        //     holes: vec![],
+        // };
+
+        // remove face a and face b
+        // add new_face
+
+        break;
+    }
+
     // envelopment:
     // check if this shape's exterior is equal to any other shape's hole
     // if so, merge them into a single shape by deleting that hole from the
     // other shape, and adding this shape's holes to that shape's holes
-    while let Some((a, b, c)) = find_merge_opportunities(&faces) {
-        // this means a's exterior is equal to one of b's holes. Hole c
+    while let Some((a, b, c)) = find_enveloped_shapes(&faces) {
+        // this means a's exterior is equal to one of b's holes. Hole c in particular
         let face_a = &faces[a];
         let face_b = &faces[b];
 
@@ -150,7 +218,7 @@ impl Solid {
             .iter()
             .map(|face_id| sketch.faces.get(*face_id as usize).unwrap().clone())
             .collect();
-        let merged_faces = merge_faces(unmerged_faces);
+        let merged_faces = merge_faces_2(&unmerged_faces, sketch);
 
         for (f_index, face) in merged_faces.iter().enumerate() {
             // let face = sketch.faces.get(*face_id as usize).unwrap();
@@ -448,7 +516,7 @@ mod tests {
         let solids = realization.solids;
         println!("solids: {:?}", solids.len());
 
-        // assert_eq!(solids.len(), 1); // doesn't work yet!
+        assert_eq!(solids.len(), 1); // doesn't work yet!
     }
 
     #[test]
@@ -474,6 +542,20 @@ mod tests {
         // and thus should result in a single output solid
 
         let contents = std::fs::read_to_string("src/test_inputs/nested_circles.cadmium").unwrap();
+
+        // deserialize the contents into a Project
+        let mut p: Project = serde_json::from_str(&contents).unwrap();
+
+        // get a realization
+        let mut workbench = p.workbenches.get_mut(0).unwrap();
+        let realization = workbench.realize(100);
+        let solids = realization.solids;
+        assert_eq!(solids.len(), 1);
+    }
+
+    #[test]
+    fn two_es() {
+        let contents = std::fs::read_to_string("src/test_inputs/two_Es.cadmium").unwrap();
 
         // deserialize the contents into a Project
         let mut p: Project = serde_json::from_str(&contents).unwrap();

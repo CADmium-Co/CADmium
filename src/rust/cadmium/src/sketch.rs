@@ -10,9 +10,11 @@ use geo::LineString;
 use geo::Polygon;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::f64::consts::{PI, TAU};
+use std::hash::{Hash, Hasher};
 use std::sync::Arc;
 use svg::node::element::path::Data;
 // use svg::node::element::Circle;
@@ -59,6 +61,97 @@ impl Sketch {
             constraints: HashMap::new(),
             highest_constraint_id: 0,
         }
+    }
+
+    pub fn from_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Self {
+        let mut new_sketch = Sketch::new();
+
+        println!("Creating a sketch just from faces");
+        for face in faces {
+            println!("Face: {:?}", face);
+        }
+
+        new_sketch.points = real_sketch.points_2d.clone();
+
+        let mut circles: HashMap<String, Circle2> = HashMap::new();
+        let mut line_segments: HashMap<String, Line2> = HashMap::new();
+        let mut arcs: HashMap<String, Arc2> = HashMap::new();
+
+        fn include_ring(
+            ring: &Ring,
+            circles: &mut HashMap<String, Circle2>,
+            line_segments: &mut HashMap<String, Line2>,
+            arcs: &mut HashMap<String, Arc2>,
+        ) {
+            match ring {
+                Ring::Circle(circle) => {
+                    let cs = circle.canonical_string();
+                    let search_result = circles.get(&cs);
+                    match search_result {
+                        Some(existing_circle) => {
+                            circles.remove(&cs);
+                        }
+                        None => {
+                            circles.insert(cs.clone(), circle.clone());
+                        }
+                    }
+                }
+                Ring::Segments(segments) => {
+                    for segment in segments {
+                        match segment {
+                            Segment::Line(line) => {
+                                let cs = line.canonical_string();
+                                let search_result = line_segments.get(&cs);
+
+                                match search_result {
+                                    Some(existing_line) => {
+                                        line_segments.remove(&cs);
+                                    }
+                                    None => {
+                                        line_segments.insert(cs.clone(), line.clone());
+                                    }
+                                }
+                            }
+                            Segment::Arc(arc) => {
+                                let cs = arc.canonical_string();
+                                let search_result = arcs.get(&cs);
+
+                                match search_result {
+                                    Some(existing_arc) => {
+                                        arcs.remove(&cs);
+                                    }
+                                    None => {
+                                        arcs.insert(cs.clone(), arc.clone());
+                                    }
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+            }
+        }
+
+        for face in faces {
+            include_ring(&face.exterior, &mut circles, &mut line_segments, &mut arcs);
+            for ring in &face.holes {
+                include_ring(ring, &mut circles, &mut line_segments, &mut arcs)
+            }
+        }
+
+        for (index, circle) in circles.values().enumerate() {
+            new_sketch.circles.insert(index as u64, circle.clone());
+        }
+
+        for (index, line) in line_segments.values().enumerate() {
+            new_sketch.line_segments.insert(index as u64, line.clone());
+        }
+
+        for (index, arc) in arcs.values().enumerate() {
+            new_sketch.arcs.insert(index as u64, arc.clone());
+        }
+
+        new_sketch
     }
 
     pub fn arc_angle(&self, arc: &Arc2) -> f64 {
@@ -1359,7 +1452,7 @@ impl Sketch {
 
         // this next block of code converts everything to Polygons just so we can
         // determine what faces contain which other faces. It's a bit of a waste
-        // because geo is a relatively heavy dependency and we don't need all of
+        // because geo is a relatively heavy dependency and we don't need all of it
         let polygons: Vec<Polygon> = rings.iter().map(|r| self.as_polygon(r)).collect();
         // they are already sorted from smallest to largest area - self.find_rings does this
         let mut what_contains_what: Vec<(usize, usize)> = vec![];
@@ -1931,7 +2024,7 @@ impl Vector2 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Circle2 {
     pub center: u64,
     pub radius: f64,
@@ -1942,9 +2035,13 @@ impl Circle2 {
     pub fn equals(&self, other: &Self) -> bool {
         self.center == other.center && self.radius == other.radius
     }
+
+    pub fn canonical_string(&self) -> String {
+        format!("{}-{}", self.center, self.radius)
+    }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct Arc2 {
     pub center: u64,
     pub start: u64,
@@ -1961,6 +2058,17 @@ impl Arc2 {
             clockwise: !self.clockwise,
         }
     }
+
+    pub fn canonical_string(&self) -> String {
+        if self.start < self.end {
+            format!(
+                "{}-{}-{}-{}",
+                self.start, self.end, self.center, self.clockwise
+            )
+        } else {
+            self.reverse().canonical_string()
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -1974,6 +2082,14 @@ impl Line2 {
         Line2 {
             start: self.end,
             end: self.start,
+        }
+    }
+
+    pub fn canonical_string(&self) -> String {
+        if self.start < self.end {
+            format!("{}-{}", self.start, self.end)
+        } else {
+            format!("{}-{}", self.end, self.start)
         }
     }
 }
@@ -2015,6 +2131,10 @@ impl Segment {
     pub fn equals_or_reverse_equals(&self, other: &Self) -> bool {
         self == other || self == &other.reverse()
     }
+
+    pub fn reverse_equals(&self, other: &Self) -> bool {
+        self == &other.reverse()
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -2024,6 +2144,29 @@ pub enum Ring {
 }
 
 impl Ring {
+    pub fn adjacent_edges(&self, other: &Self) -> Option<(Vec<usize>, Vec<usize>)> {
+        match (self, other) {
+            (Ring::Segments(segments_a), Ring::Segments(segments_b)) => {
+                let mut edge_indices_a: Vec<usize> = vec![];
+                let mut edge_indices_b: Vec<usize> = vec![];
+                for (index_a, segment_a) in segments_a.iter().enumerate() {
+                    for (index_b, segment_b) in segments_b.iter().enumerate() {
+                        if segment_a.reverse_equals(segment_b) {
+                            edge_indices_a.push(index_a);
+                            edge_indices_b.push(index_b);
+                        }
+                    }
+                }
+                if edge_indices_a.len() == 0 {
+                    return None;
+                } else {
+                    Some((edge_indices_a, edge_indices_b))
+                }
+            }
+            _ => None,
+        }
+    }
+
     pub fn equals(&self, other: &Self) -> bool {
         match (self, other) {
             (Ring::Circle(circle_a), Ring::Circle(circle_b)) => circle_a.equals(circle_b),
