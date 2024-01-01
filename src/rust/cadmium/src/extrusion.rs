@@ -61,7 +61,8 @@ pub struct Solid {
     >,
 }
 
-pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Option<(usize, usize, usize)> {
+pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
+    let mut retval = vec![];
     for (a, face_a) in faces.iter().enumerate() {
         for (b, face_b) in faces.iter().enumerate() {
             if a == b {
@@ -74,122 +75,135 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Option<(usize, usize, usize)>
                 let hole = hole.canonical_form();
 
                 if face_b_exterior.equals(&hole) {
-                    return Some((b, a, hole_index));
+                    retval.push((b, a)); // (small, big)
                 }
             }
         }
     }
 
-    None
-}
-
-pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
-    for (a, face_a) in faces.iter().enumerate() {
-        for (b, face_b) in faces.iter().enumerate() {
-            if a == b || a > b {
-                continue;
-            }
-
-            let adjacent_edges = face_a.exterior.adjacent_edges(&face_b.exterior);
-
-            match adjacent_edges {
-                None => continue,
-                Some(matched_edges) => return Some((a, b, matched_edges.0, matched_edges.1)),
-            }
-        }
-    }
-
-    None
+    return retval;
 }
 
 pub fn merge_faces_2(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
     // create  new sketch using these faces
     let mut sketch = Sketch::from_faces(faces, real_sketch);
 
-    let (faces, unused_segments) = sketch.find_faces();
+    let (mut faces, unused_segments) = sketch.find_faces();
+
+    // any face that is returned which is wholly enclosed in another face should be
+    // deleted, without touching the holes in the enclosing face
+    let mut envelopments = find_enveloped_shapes(&faces);
+
+    // sort the envelopments by the index of the smaller face
+    envelopments.sort_by(|a, b| b.0.cmp(&a.0));
+
+    println!("envelopments: {:?}", envelopments);
+
+    for (small, big) in envelopments {
+        faces.remove(small);
+    }
 
     println!("Merge faces 2 output: {}", faces.len());
     faces
 }
 
-pub fn merge_faces(faces: Vec<Face>) -> Vec<Face> {
-    let mut faces = faces.clone();
-    // adjacency:
-    // check if this shape's exterior is adjacent to any other shape's exterior
-    // if so, merge them into a single shape by deleting any shared sides
-    // and recomputing the faces
+// pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
+//     for (a, face_a) in faces.iter().enumerate() {
+//         for (b, face_b) in faces.iter().enumerate() {
+//             if a == b || a > b {
+//                 continue;
+//             }
 
-    while let Some((a, b, a_indices, b_indices)) = find_adjacent_shapes(&faces) {
-        println!("touching_shapes: {:?}", (a, b, a_indices, b_indices));
-        let face_a = &faces[a];
-        let face_b = &faces[b];
+//             let adjacent_edges = face_a.exterior.adjacent_edges(&face_b.exterior);
 
-        match (&face_a.exterior, &face_b.exterior) {
-            (Ring::Segments(segments_a), Ring::Segments(segments_b)) => {
-                let mut face_a_location = 0;
-                let mut face_b_location = 0;
-                let mut pulling_from_a = true;
-                let mut new_exterior_segments: Vec<Segment> = vec![];
+//             match adjacent_edges {
+//                 None => continue,
+//                 Some(matched_edges) => return Some((a, b, matched_edges.0, matched_edges.1)),
+//             }
+//         }
+//     }
 
-                loop {
-                    if pulling_from_a {
-                        let segment = segments_a[face_a_location].clone();
-                        new_exterior_segments.push(segment);
-                        face_a_location += 1;
-                    } else {
-                        // pull from b
-                        let segment = segments_b[face_b_location].clone();
-                        new_exterior_segments.push(segment);
-                        face_b_location += 1;
-                    }
-                }
-            }
-            _ => panic!("Only Rings made of Segments can have adjacent edges!"),
-        }
+//     None
+// }
 
-        // let mut new_face = Face {
-        //     exterior: new_exterior_segments,
-        //     holes: vec![],
-        // };
+// pub fn merge_faces(faces: Vec<Face>) -> Vec<Face> {
+//     let mut faces = faces.clone();
+//     // adjacency:
+//     // check if this shape's exterior is adjacent to any other shape's exterior
+//     // if so, merge them into a single shape by deleting any shared sides
+//     // and recomputing the faces
 
-        // remove face a and face b
-        // add new_face
+//     while let Some((a, b, a_indices, b_indices)) = find_adjacent_shapes(&faces) {
+//         println!("touching_shapes: {:?}", (a, b, a_indices, b_indices));
+//         let face_a = &faces[a];
+//         let face_b = &faces[b];
 
-        break;
-    }
+//         match (&face_a.exterior, &face_b.exterior) {
+//             (Ring::Segments(segments_a), Ring::Segments(segments_b)) => {
+//                 let mut face_a_location = 0;
+//                 let mut face_b_location = 0;
+//                 let mut pulling_from_a = true;
+//                 let mut new_exterior_segments: Vec<Segment> = vec![];
 
-    // envelopment:
-    // check if this shape's exterior is equal to any other shape's hole
-    // if so, merge them into a single shape by deleting that hole from the
-    // other shape, and adding this shape's holes to that shape's holes
-    while let Some((a, b, c)) = find_enveloped_shapes(&faces) {
-        // this means a's exterior is equal to one of b's holes. Hole c in particular
-        let face_a = &faces[a];
-        let face_b = &faces[b];
+//                 loop {
+//                     if pulling_from_a {
+//                         let segment = segments_a[face_a_location].clone();
+//                         new_exterior_segments.push(segment);
+//                         face_a_location += 1;
+//                     } else {
+//                         // pull from b
+//                         let segment = segments_b[face_b_location].clone();
+//                         new_exterior_segments.push(segment);
+//                         face_b_location += 1;
+//                     }
+//                 }
+//             }
+//             _ => panic!("Only Rings made of Segments can have adjacent edges!"),
+//         }
 
-        // to fix this we need to remove the information contained in a's exterior completely.
-        // to do that we remove the c indexed hole from face_b's list of holes
-        let mut b_new_holes = face_b.holes.clone();
-        b_new_holes.remove(c);
-        b_new_holes.append(&mut face_a.holes.clone());
+//         // let mut new_face = Face {
+//         //     exterior: new_exterior_segments,
+//         //     holes: vec![],
+//         // };
 
-        let mut new_face_b = Face {
-            exterior: face_b.exterior.clone(),
-            holes: b_new_holes,
-        };
+//         // remove face a and face b
+//         // add new_face
 
-        let mut new_faces = faces.clone();
+//         break;
+//     }
 
-        // replace the larger face with our modified face
-        new_faces[b] = new_face_b.clone();
+//     // envelopment:
+//     // check if this shape's exterior is equal to any other shape's hole
+//     // if so, merge them into a single shape by deleting that hole from the
+//     // other shape, and adding this shape's holes to that shape's holes
+//     while let Some((a, b, c)) = find_enveloped_shapes(&faces) {
+//         // this means a's exterior is equal to one of b's holes. Hole c in particular
+//         let face_a = &faces[a];
+//         let face_b = &faces[b];
 
-        // remove the smaller face from the list of faces
-        new_faces.remove(a);
-        faces = new_faces;
-    }
+//         // to fix this we need to remove the information contained in a's exterior completely.
+//         // to do that we remove the c indexed hole from face_b's list of holes
+//         let mut b_new_holes = face_b.holes.clone();
+//         b_new_holes.remove(c);
+//         b_new_holes.append(&mut face_a.holes.clone());
 
-    faces
-}
+//         let mut new_face_b = Face {
+//             exterior: face_b.exterior.clone(),
+//             holes: b_new_holes,
+//         };
+
+//         let mut new_faces = faces.clone();
+
+//         // replace the larger face with our modified face
+//         new_faces[b] = new_face_b.clone();
+
+//         // remove the smaller face from the list of faces
+//         new_faces.remove(a);
+//         faces = new_faces;
+//     }
+
+//     faces
+// }
 
 impl Solid {
     pub fn from_extrusion(
