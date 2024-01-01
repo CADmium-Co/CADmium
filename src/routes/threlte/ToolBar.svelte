@@ -24,6 +24,7 @@
 		$featureIndex = $workbench.history.length - 1
 	}
 	const stepSketch = () => {}
+	const debugging = false
 
 	let actions = [
 		{
@@ -70,31 +71,33 @@
 		{/each}
 	{/if}
 
-	Selecting For [
-	{#each $selectingFor as sf}
-		<div>
-			{sf},
-		</div>
-	{/each}
-	] Currently Selected [
-	{#each $currentlySelected as cs}
-		<div>
-			{cs.type}
-			{cs.id},
-		</div>
-	{/each}
-	] Moused Over [
-	{#each $currentlyMousedOver as cm}
-		<div>
-			{cm.type}
-			{cm.id},
-		</div>
-	{/each}
-	] Hidden Sketches [
-	{#each $hiddenSketches as hs}
-		<div>
-			{hs},
-		</div>
-	{/each}
-	]
+	{#if debugging}
+		Selecting For [
+		{#each $selectingFor as sf}
+			<div>
+				{sf},
+			</div>
+		{/each}
+		] Currently Selected [
+		{#each $currentlySelected as cs}
+			<div>
+				{cs.type}
+				{cs.id},
+			</div>
+		{/each}
+		] Moused Over [
+		{#each $currentlyMousedOver as cm}
+			<div>
+				{cm.type}
+				{cm.id},
+			</div>
+		{/each}
+		] Hidden Sketches [
+		{#each $hiddenSketches as hs}
+			<div>
+				{hs},
+			</div>
+		{/each}
+		]
+	{/if}
 </div>
