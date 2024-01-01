@@ -143,7 +143,7 @@
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
 
-	$: hidden = $hiddenSketches.includes(uniqueId)
+	$: hidden = $hiddenSketches.includes(uniqueId) && !editing
 
 	$: if (editing) {
 		$sketchTool = 'select'

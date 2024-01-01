@@ -109,6 +109,7 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [x] Default to completely empty project
   - [x] Buttons to zoom to Planes
   - [ ] Ability to rename the project
+  - [ ] Ability to delete steps
   - [ ] Ability to create and delete entire workbenches
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
   - [ ] Constantly save .cadmium file to localStorage, and offer to re-open the last saved project in case you accidentally close the tab
@@ -185,6 +186,9 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Allow Projects to be saved in Imperial units as well as Metric (Specified as System?)
   - [ ] Allow Projects to specify preferred units within that System, like [m, cm, mm], or [in, ft] (Specified as Units)
   - [ ] Allow Users to override the display units locally, without it affecting the Project file
+- [ ] Performance
+  - [ ] Remove the unnecessary workbench reloads
+  - [ ] Reduce number of vertices when creating a renderable mesh
 - [ ] Electron or Tauri App so you can run local-only
   - [ ] Demonstrate associating .cadmium files with this app so they open on double-click from file explorer
 - [ ] Holes

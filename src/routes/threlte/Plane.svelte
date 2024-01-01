@@ -105,7 +105,16 @@
 	const type = 'plane'
 
 	let hovered = false
+	let selected = false
+	// currentlySelected.subscribe(() => {
+	// 	// if (!id) return
+	// 	// if (!$currentlySelected.length) return
+	// 	selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
+	// 	console.log('recomputed whether plane', id, 'was selected: ', selected)
+	// })
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
+
+	$: if ($currentlyMousedOver.length === 0) hovered = false
 </script>
 
 <T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
@@ -124,6 +133,8 @@
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === type)
 				)
+			} else {
+				hovered = false
 			}
 		}}
 		on:click={(e) => {
@@ -148,7 +159,6 @@
 
 					$currentlySelected = [...$currentlySelected, { type: type, id: id }]
 				}
-				console.log('currently selected:', $currentlySelected)
 			}
 		}}
 	>

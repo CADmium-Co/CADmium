@@ -2,7 +2,13 @@
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { arraysEqual, renameStep, updateExtrusion } from './projectUtils'
-	import { selectingFor, workbenchIsStale, featureIndex, currentlySelected } from './stores.js'
+	import {
+		selectingFor,
+		workbenchIsStale,
+		featureIndex,
+		currentlySelected,
+		hiddenSketches
+	} from './stores.js'
 	import X from 'phosphor-svelte/lib/X'
 
 	export let name, index, id, data
@@ -23,6 +29,12 @@
 		$featureIndex = 1000
 		$currentlySelected = []
 		$selectingFor = []
+		// hide the sketch that this extrusion uses
+		if (!$hiddenSketches.includes(data.sketch_id)) {
+			console.log("Oh, we're hiding the sketch that this extrusion uses")
+			$hiddenSketches = [...$hiddenSketches, data.sketch_id]
+		}
+
 		workbenchIsStale.set(true)
 	}
 

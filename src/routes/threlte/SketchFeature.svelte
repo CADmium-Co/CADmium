@@ -10,7 +10,8 @@
 		currentlySelected,
 		selectingFor,
 		sketchBeingEdited,
-		sketchTool
+		sketchTool,
+		currentlyMousedOver
 	} from './stores.js'
 	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
 	import Eye from 'phosphor-svelte/lib/Eye'
@@ -28,6 +29,7 @@
 			surface = { type: 'plane', id: plane_id }
 		} else {
 			surface = null
+			engageSearchForPlane()
 		}
 	}
 	console.log('A Sketch Feature: ', name, index, id, plane_id)
@@ -47,12 +49,40 @@
 		$sketchBeingEdited = id
 	}
 
+	const engageSearchForPlane = () => {
+		console.log('engage search!')
+		$sketchTool = null
+		$selectingFor = ['plane', 'meshFace']
+		$selectionMax = 1
+		$selectionMin = 1
+
+		if (surface !== null) {
+			$currentlySelected = [surface]
+		}
+		selectingForSketchPlane = true
+		console.log('search is engaged')
+	}
+
+	const disengageSearchForPlane = () => {
+		console.log('Disengage search!')
+		$currentlySelected = []
+		$selectingFor = []
+		$selectionMax = 1000
+		$selectionMin = 0
+		selectingForSketchPlane = false
+		$sketchTool = 'select'
+		$currentlyMousedOver = []
+		console.log('search is disengaged')
+	}
+
 	currentlySelected.subscribe(() => {
 		if (!selectingForSketchPlane) return
-
-		console.log('CS changed when selecting for Sketch Plane:', $currentlySelected)
+		if (!id) return
+		if (!$currentlySelected.length) return
+		// console.log('CS changed when selecting for Sketch Plane:', $currentlySelected)
 
 		setSketchPlane(id, $currentlySelected[0].id)
+		disengageSearchForPlane()
 	})
 </script>
 
@@ -128,24 +158,8 @@
 			<div
 				tabindex="0"
 				class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500 min-h-8 flex-wrap"
-				on:focusin={() => {
-					$sketchTool = null
-					$selectingFor = ['plane', 'meshFace']
-					$selectionMax = 1
-					$selectionMin = 1
-
-					if (surface !== null) {
-						$currentlySelected = [surface]
-					}
-					selectingForSketchPlane = true
-				}}
-				on:focusout={() => {
-					$sketchTool = null
-					$selectingFor = []
-					$selectionMax = 1000
-					$selectionMin = 0
-					selectingForSketchPlane = false
-				}}
+				on:focusin={engageSearchForPlane}
+				on:focusout={disengageSearchForPlane}
 			>
 				<div class="h-8" />
 				{#if surface !== null}

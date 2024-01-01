@@ -14,7 +14,7 @@ import {
 import { get } from 'svelte/store'
 import { Vector2, Vector3 } from 'three'
 
-export const CIRCLE_TOLERANCE = 0.1
+export const CIRCLE_TOLERANCE = 0.05
 
 export function arraysEqual(a, b) {
 	if (a.length !== b.length) {
@@ -104,7 +104,7 @@ export function newExtrusion() {
 			face_ids: [],
 			length: 25,
 			offset: 0.0,
-			extrusion_name: 'Extra',
+			extrusion_name: '',
 			direction: 'Normal'
 		}
 	}

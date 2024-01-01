@@ -714,9 +714,16 @@ impl Workbench {
     }
 
     pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
+        // If the extrusion name is empty string, then we need to generate a new name
+        // Let's use "Extrusion n" where n is the number of extrusions
         let counter = self.step_counters.get_mut("Extrusion").unwrap();
+        let extrusion_name = if name == "" {
+            format!("Extrusion {}", *counter + 1)
+        } else {
+            name.to_owned()
+        };
         self.history
-            .push(Step::new_extrusion(name, extrusion, *counter));
+            .push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
         *counter += 1;
         *counter - 1
     }
