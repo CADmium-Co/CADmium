@@ -5,10 +5,10 @@ fn main() {
     let mut p = Project::new("First Project");
     p.add_defaults();
 
-    let wb = p.workbenches.get_mut(0).unwrap();
-    wb.add_sketch("Sketch1", "Top");
+    // let wb = p.workbenches.get_mut(0).unwrap();
+    // wb.add_sketch("Sketch1", "Top");
 
-    let sketch = wb.get_sketch_mut("Sketch1").unwrap();
+    // let sketch = wb.get_sketch_mut("Sketch1").unwrap();
 
     // let id0 = sketch.add_fixed_point(0.0, 0.0);
     // let id1 = sketch.add_fixed_point(1.0, 0.0);
@@ -45,7 +45,7 @@ fn main() {
     // let id6 = sketch.add_point(-0.75, -0.75);
     // sketch.add_segment(id5, id6);
 
-    sketch.save_svg("test_svgs/test2.svg");
+    // sketch.save_svg("test_svgs/test2.svg");
 
     // let realized = wb.realize(30);
     // println!("Real: {:?}", realized);

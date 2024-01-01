@@ -1938,6 +1938,12 @@ pub struct Circle2 {
     pub top: u64,
 }
 
+impl Circle2 {
+    pub fn equals(&self, other: &Self) -> bool {
+        self.center == other.center && self.radius == other.radius
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Arc2 {
     pub center: u64,
@@ -2017,7 +2023,64 @@ pub enum Ring {
     Segments(Vec<Segment>),
 }
 
-impl Ring {}
+impl Ring {
+    pub fn equals(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Ring::Circle(circle_a), Ring::Circle(circle_b)) => circle_a.equals(circle_b),
+            (Ring::Segments(segments_a), Ring::Segments(segments_b)) => {
+                segments_a.len() == segments_b.len()
+                    && segments_a
+                        .iter()
+                        .zip(segments_b.iter())
+                        .all(|(a, b)| a == b)
+            }
+            _ => false,
+        }
+    }
+
+    pub fn canonical_form(&self) -> Self {
+        // sort the segments in order by first finding the segment with the smallest start point
+        // and then rotating the list so that that segment is first
+        match self {
+            Ring::Circle(circle) => Ring::Circle(circle.clone()),
+            Ring::Segments(segments) => {
+                let mut canonical_segments: Vec<Segment> = vec![];
+                let mut min_index = 0;
+                let mut min_segment = segments.get(0).unwrap();
+                for (i, segment) in segments.iter().enumerate() {
+                    if segment.get_start() < min_segment.get_start() {
+                        min_index = i;
+                        min_segment = segment;
+                    }
+                }
+
+                for i in 0..segments.len() {
+                    canonical_segments.push(
+                        segments
+                            .get((i + min_index) % segments.len())
+                            .unwrap()
+                            .clone(),
+                    );
+                }
+
+                Ring::Segments(canonical_segments)
+            }
+        }
+    }
+
+    pub fn reverse(&self) -> Self {
+        match self {
+            Ring::Circle(circle) => Ring::Circle(circle.clone()),
+            Ring::Segments(segments) => {
+                let mut reversed_segments: Vec<Segment> = vec![];
+                for segment in segments.iter().rev() {
+                    reversed_segments.push(segment.reverse());
+                }
+                Ring::Segments(reversed_segments)
+            }
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Face {

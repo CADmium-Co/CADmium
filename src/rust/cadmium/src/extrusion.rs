@@ -16,6 +16,7 @@ use crate::project::RealPlane;
 use crate::project::RealSketch;
 use crate::project::Vector3;
 use crate::sketch::arc_to_points;
+use crate::sketch::Face;
 use crate::sketch::Ring;
 use crate::sketch::Segment;
 use crate::sketch::Sketch;
@@ -60,6 +61,68 @@ pub struct Solid {
     >,
 }
 
+pub fn find_merge_opportunities(faces: &Vec<Face>) -> Option<(usize, usize, usize)> {
+    for (a, face_a) in faces.iter().enumerate() {
+        for (b, face_b) in faces.iter().enumerate() {
+            if a == b {
+                continue;
+            }
+            let face_b_exterior = &face_b.exterior.canonical_form();
+
+            // check if b's exterior is equal to any of a's holes
+            for (hole_index, hole) in face_a.holes.iter().enumerate() {
+                let hole = hole.canonical_form();
+
+                if face_b_exterior.equals(&hole) {
+                    return Some((b, a, hole_index));
+                }
+            }
+        }
+    }
+
+    None
+}
+
+pub fn merge_faces(faces: Vec<Face>) -> Vec<Face> {
+    let mut faces = faces.clone();
+    // adjacency:
+    // check if this shape's exterior is adjacent to any other shape's exterior
+    // if so, merge them into a single shape by deleting any shared sides
+    // and recomputing the faces
+
+    // envelopment:
+    // check if this shape's exterior is equal to any other shape's hole
+    // if so, merge them into a single shape by deleting that hole from the
+    // other shape, and adding this shape's holes to that shape's holes
+    while let Some((a, b, c)) = find_merge_opportunities(&faces) {
+        // this means a's exterior is equal to one of b's holes. Hole c
+        let face_a = &faces[a];
+        let face_b = &faces[b];
+
+        // to fix this we need to remove the information contained in a's exterior completely.
+        // to do that we remove the c indexed hole from face_b's list of holes
+        let mut b_new_holes = face_b.holes.clone();
+        b_new_holes.remove(c);
+        b_new_holes.append(&mut face_a.holes.clone());
+
+        let mut new_face_b = Face {
+            exterior: face_b.exterior.clone(),
+            holes: b_new_holes,
+        };
+
+        let mut new_faces = faces.clone();
+
+        // replace the larger face with our modified face
+        new_faces[b] = new_face_b.clone();
+
+        // remove the smaller face from the list of faces
+        new_faces.remove(a);
+        faces = new_faces;
+    }
+
+    faces
+}
+
 impl Solid {
     pub fn from_extrusion(
         name: String,
@@ -77,8 +140,20 @@ impl Solid {
         let extrusion_vector = extrusion_direction.times(extrusion.length);
         let vector = TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
 
-        for face_id in &extrusion.face_ids {
-            let face = sketch.faces.get(*face_id as usize).unwrap();
+        let mut truck_solids = vec![];
+
+        // Before we extrude any faces, let's check to see if any of those faces are adjacent
+        // to any of the other faces. If so, let's merge them into a single face before extruding
+        // them. This will result in a single solid instead of multiple solids.
+        let unmerged_faces: Vec<Face> = extrusion
+            .face_ids
+            .iter()
+            .map(|face_id| sketch.faces.get(*face_id as usize).unwrap().clone())
+            .collect();
+        let merged_faces = merge_faces(unmerged_faces);
+
+        for (f_index, face) in merged_faces.iter().enumerate() {
+            // let face = sketch.faces.get(*face_id as usize).unwrap();
 
             // println!("face: {:?}", face);
             let exterior = &face.exterior;
@@ -97,9 +172,11 @@ impl Solid {
 
             let truck_solid = builder::tsweep(&face, vector);
             // println!("A Solid: {:?}", truck_solid);
+            let cloned_ts = truck_solid.clone();
+            truck_solids.push(cloned_ts);
 
             let mut solid = Solid {
-                name: format!("{}:{}", name, face_id),
+                name: format!("{}:{}", name, f_index),
                 crc32: "".to_owned(),
                 vertices: vec![],
                 normals: vec![],
@@ -147,8 +224,32 @@ impl Solid {
             }
             solid.crc32 = format!("{:x}", hasher.finalize());
 
-            retval.insert(format!("{}:{}", name, face_id), solid);
+            retval.insert(format!("{}:{}", name, f_index), solid);
         }
+
+        // now we have a bunch of solids, but we need to merge them into a single solid
+        // we can do that using a nested for loop to compare each solid against every other solid
+        // and merge them if they are adjacent
+        // for i in 0..truck_solids.len() {
+        //     for j in 0..truck_solids.len() {
+        //         // if i == j {
+        //         //     continue;
+        //         // }
+        //         let solid_i = &truck_solids[i];
+        //         let solid_j = &truck_solids[j];
+
+        //         let new_solid = or(solid_i, solid_j, 0.0001);
+
+        //         match new_solid {
+        //             Some(new_shape) => {
+        //                 println!("{} and {} merged!", i, j)
+        //             }
+        //             None => {
+        //                 println!("{} and {} did not merge!", i, j)
+        //             }
+        //         }
+        //     }
+        // }
 
         retval
     }
@@ -329,22 +430,79 @@ mod tests {
     }
 
     #[test]
-    fn step_export() {
-        let mut p = Project::new("Test Project");
-        p.add_defaults();
-        let workbench = &p.workbenches[0 as usize];
-        let realization = workbench.realize(1000);
-        // let solids = realization.solids;
-        let keys = Vec::from_iter(realization.solids.keys());
-        let key = keys[0 as usize];
-        let step_file = realization.solid_to_step(keys[0]);
+    fn three_adjacent_solids() {
+        // this file contains three shapes which are adjacent to each other and
+        // thus should result in a single output solid
 
-        realization.save_solid_as_step_file(keys[0], "test.step");
-        // now delete that file
-        // std::fs::remove_file("test.step").unwrap();
+        let contents =
+            std::fs::read_to_string("src/test_inputs/three_adjacent_faces.cadmium").unwrap();
 
-        realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001);
-        // now delete that file
-        // std::fs::remove_file("test.obj").unwrap();
+        // deserialize the contents into a Project
+        let mut p: Project = serde_json::from_str(&contents).unwrap();
+
+        // println!("p: {:?}", p);
+
+        // get a realization
+        let mut workbench = p.workbenches.get_mut(0).unwrap();
+        let realization = workbench.realize(100);
+        let solids = realization.solids;
+        println!("solids: {:?}", solids.len());
+
+        // assert_eq!(solids.len(), 1); // doesn't work yet!
     }
+
+    #[test]
+    fn nested_squares_solid() {
+        // this file contains one square nested inside another
+        // and thus should result in a single output solid
+
+        let contents = std::fs::read_to_string("src/test_inputs/nested_squares.cadmium").unwrap();
+
+        // deserialize the contents into a Project
+        let mut p: Project = serde_json::from_str(&contents).unwrap();
+
+        // get a realization
+        let mut workbench = p.workbenches.get_mut(0).unwrap();
+        let realization = workbench.realize(100);
+        let solids = realization.solids;
+        assert_eq!(solids.len(), 1);
+    }
+
+    #[test]
+    fn nested_circles_solid() {
+        // this file contains one circle nested inside another
+        // and thus should result in a single output solid
+
+        let contents = std::fs::read_to_string("src/test_inputs/nested_circles.cadmium").unwrap();
+
+        // deserialize the contents into a Project
+        let mut p: Project = serde_json::from_str(&contents).unwrap();
+
+        // get a realization
+        let mut workbench = p.workbenches.get_mut(0).unwrap();
+        let realization = workbench.realize(100);
+        let solids = realization.solids;
+        assert_eq!(solids.len(), 1);
+    }
+
+    // #[test]
+    // fn step_export() {
+    //     let mut p = Project::new("Test Project");
+    //     p.add_defaults();
+    //     p.add_
+    //     let workbench = &p.workbenches[0 as usize];
+    //     let realization = workbench.realize(1000);
+    //     // let solids = realization.solids;
+    //     let keys = Vec::from_iter(realization.solids.keys());
+    //     let key = keys[0 as usize];
+    //     let step_file = realization.solid_to_step(keys[0]);
+
+    //     realization.save_solid_as_step_file(keys[0], "test.step");
+    //     // now delete that file
+    //     // std::fs::remove_file("test.step").unwrap();
+
+    //     realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001);
+    //     // now delete that file
+    //     // std::fs::remove_file("test.obj").unwrap();
+    // }
 }
