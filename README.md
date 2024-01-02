@@ -99,8 +99,8 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [x] Ability to create a new extrusion and select faces for it
   - [x] Configure extrusion depth
   - [x] Configure extrusion faces
-  - [ ] Automatically merge parts that are touching
-  - [ ] Remove webbing for parts that are surrounded by other parts
+  - [x] Automatically merge parts that are touching
+  - [x] Remove webbing for parts that are surrounded by other parts
   - [ ] Configure an extrusion to subtract, add, or create new solids
   - [ ] Stabilize face identification so that it doesn't jump around when you make sketch changes
 - [ ] Revolution

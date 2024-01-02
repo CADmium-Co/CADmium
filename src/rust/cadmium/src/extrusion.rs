@@ -1,7 +1,12 @@
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
+use geo::Contains;
+use geo::InteriorPoint;
+use geo::Polygon;
+
 use serde::{Deserialize, Serialize};
+
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
@@ -84,27 +89,63 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
     return retval;
 }
 
-pub fn merge_faces_2(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
+pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
     // create  new sketch using these faces
     let mut sketch = Sketch::from_faces(faces, real_sketch);
 
-    let (mut faces, unused_segments) = sketch.find_faces();
+    let (mut all_sketch_faces, unused_segments) = sketch.find_faces();
 
-    // any face that is returned which is wholly enclosed in another face should be
-    // deleted, without touching the holes in the enclosing face
-    let mut envelopments = find_enveloped_shapes(&faces);
+    // check whether each of these new faces should returned or not by picking a
+    // random point on the new face and then checking every one of the original faces
+    // to see if it contains that point. If so, we can keep that new face
+    let mut faces_to_remove: Vec<usize> = vec![];
+    let old_faces_as_polygons: Vec<Polygon> = faces
+        .iter()
+        .map(|face| sketch.face_as_polygon(face))
+        .collect::<Vec<_>>();
+    for (new_face_idx, face) in all_sketch_faces.iter().enumerate() {
+        println!("\nNew face: {}: {:?}", new_face_idx, face);
 
-    // sort the envelopments by the index of the smaller face
-    envelopments.sort_by(|a, b| b.0.cmp(&a.0));
+        let as_geo_polygon = sketch.face_as_polygon(face);
+        println!("as_geo_polygon: {:?}", as_geo_polygon);
 
-    println!("envelopments: {:?}", envelopments);
+        let random_point_on_face = as_geo_polygon
+            .interior_point()
+            .expect("Every polygon should be able to yield an interior point");
+        println!("Random point on face: {:?}", random_point_on_face);
 
-    for (small, big) in envelopments {
-        faces.remove(small);
+        let mut located = false;
+        for (old_face_idx, old_face) in old_faces_as_polygons.iter().enumerate() {
+            if old_face.contains(&random_point_on_face) {
+                println!(
+                    "Old face {} contains point {:?}",
+                    old_face_idx, random_point_on_face
+                );
+                // this means the old face contains the random point on the new face
+                // so we can keep this new face
+                located = true;
+                break;
+            }
+        }
+        if !located {
+            println!(
+                "Random point from new face {} is not contained by any old faces",
+                new_face_idx
+            );
+            faces_to_remove.push(new_face_idx);
+        }
+    }
+
+    // remove the faces that we don't want
+    faces_to_remove.sort();
+    faces_to_remove.reverse();
+    println!("New Faces to remove: {:?}", faces_to_remove);
+    for face_to_remove in faces_to_remove {
+        all_sketch_faces.remove(face_to_remove);
     }
 
     println!("Merge faces 2 output: {}", faces.len());
-    faces
+    all_sketch_faces
 }
 
 // pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
@@ -224,15 +265,14 @@ impl Solid {
 
         let mut truck_solids = vec![];
 
-        // Before we extrude any faces, let's check to see if any of those faces are adjacent
-        // to any of the other faces. If so, let's merge them into a single face before extruding
-        // them. This will result in a single solid instead of multiple solids.
+        // Sometimes the chosen faces are touching, or one even envelops another. Let's
+        // merge those faces together so that we have single solid wherever possible
         let unmerged_faces: Vec<Face> = extrusion
             .face_ids
             .iter()
             .map(|face_id| sketch.faces.get(*face_id as usize).unwrap().clone())
             .collect();
-        let merged_faces = merge_faces_2(&unmerged_faces, sketch);
+        let merged_faces = merge_faces(&unmerged_faces, sketch);
 
         for (f_index, face) in merged_faces.iter().enumerate() {
             // let face = sketch.faces.get(*face_id as usize).unwrap();
@@ -579,6 +619,20 @@ mod tests {
         let realization = workbench.realize(100);
         let solids = realization.solids;
         assert_eq!(solids.len(), 1);
+    }
+
+    #[test]
+    fn lots_of_nesting() {
+        let contents = std::fs::read_to_string("src/test_inputs/lots_of_nesting.cadmium").unwrap();
+
+        // deserialize the contents into a Project
+        let mut p: Project = serde_json::from_str(&contents).unwrap();
+
+        // get a realization
+        let mut workbench = p.workbenches.get_mut(0).unwrap();
+        let realization = workbench.realize(100);
+        let solids = realization.solids;
+        assert_eq!(solids.len(), 4);
     }
 
     // #[test]

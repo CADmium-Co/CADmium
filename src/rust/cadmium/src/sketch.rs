@@ -230,6 +230,18 @@ impl Sketch {
         println!("Angle:      \t{}", self.arc_angle(arc) * 180.0 / PI);
     }
 
+    pub fn face_as_polygon(&self, face: &Face) -> Polygon {
+        let binding = self.as_polygon(&face.exterior);
+        let exterior = binding.exterior();
+
+        let mut interiors: Vec<LineString<f64>> = vec![];
+        for ring in &face.holes {
+            interiors.push(self.as_polygon(ring).exterior().clone());
+        }
+
+        Polygon::new(exterior.clone(), interiors)
+    }
+
     pub fn as_polygon(&self, ring: &Ring) -> Polygon {
         match ring {
             Ring::Circle(circle) => {
@@ -977,6 +989,7 @@ impl Sketch {
 
     pub fn solve(&mut self, steps: u64) -> bool {
         let tolerance = 1e-12;
+
         for _ in 0..steps {
             if self.step() < tolerance {
                 return true;
@@ -1592,7 +1605,7 @@ impl Sketch {
             // let mut this_ring: Ring = Ring::Segments(vec![]);
             let mut this_ring: Vec<Segment> = vec![];
             for segment_index in ring_indices {
-                let actual_segment = segments_overall.get(*segment_index).unwrap();
+                let actual_segment: &Segment = segments_overall.get(*segment_index).unwrap();
                 this_ring.push(actual_segment.clone());
             }
             all_rings.push(Ring::Segments(this_ring));
