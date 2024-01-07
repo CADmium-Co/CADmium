@@ -1447,14 +1447,16 @@ impl Sketch {
             all_shapes.add_item(Shape::Line(line.clone()));
         }
 
-        // for (line_id, line) in temp_sketch.line_segments.iter() {
-        //     all_shapes.add_item(Shape::Line(line.clone()));
-        // }
-        for (arc_id, arc) in temp_sketch.arcs.iter() {
-            all_shapes.add_item(Shape::Arc(arc.clone()));
-        }
-        for (circle_id, circle) in temp_sketch.circles.iter() {
+        let circle_ids: Vec<u64> = temp_sketch.circles.keys().cloned().sorted().collect();
+        for circle_id in circle_ids {
+            let circle = temp_sketch.circles.get(&circle_id).unwrap();
             all_shapes.add_item(Shape::Circle(circle.clone()));
+        }
+
+        let arc_ids: Vec<u64> = temp_sketch.arcs.keys().cloned().sorted().collect();
+        for arc_id in arc_ids {
+            let arc = temp_sketch.arcs.get(&arc_id).unwrap();
+            all_shapes.add_item(Shape::Arc(arc.clone()));
         }
 
         // println!("JUST debugging 0 vs 5");
@@ -1616,6 +1618,12 @@ impl Sketch {
             match shape {
                 (id, Shape::Line(line)) => {
                     final_sketch.add_segment(line.start, line.end);
+                }
+                (id, Shape::Circle(circle)) => {
+                    final_sketch.add_circle(circle.center, circle.radius);
+                }
+                (id, Shape::Arc(arc)) => {
+                    final_sketch.add_arc(arc.center, arc.start, arc.end, arc.clockwise);
                 }
                 _ => {}
             }
