@@ -577,7 +577,6 @@ mod tests {
     fn nested_squares_solid() {
         // this file contains one square nested inside another
         // and thus should result in a single output solid
-
         let contents = std::fs::read_to_string("src/test_inputs/nested_squares.cadmium").unwrap();
 
         // deserialize the contents into a Project

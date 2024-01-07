@@ -28,10 +28,9 @@ impl Project {
         let mut w = Workbench::new("Workbench 1");
         w.add_defaults();
         self.workbenches.push(w);
-
-        let mut w2 = Workbench::new("Workbench 2");
-        w2.add_defaults_2();
-        self.workbenches.push(w2);
+        // let mut w2 = Workbench::new("Workbench 2");
+        // w2.add_defaults_2();
+        // self.workbenches.push(w2);
     }
 
     pub fn json(&self) -> String {
@@ -248,7 +247,7 @@ impl Project {
                 let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
                 let mut max_change = 0.0;
                 for _ in 0..*steps {
-                    max_change = sketch.step();
+                    max_change = sketch.take_a_step();
                 }
                 Ok(format!("{}", max_change))
             }

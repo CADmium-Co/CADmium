@@ -275,7 +275,7 @@ workbenchIsStale.subscribe((value) => {
 		workbench.set(JSON.parse(workbenchJson))
 		workbenchIsStale.set(false)
 
-		console.log('Workbench:', get(workbench))
+		// console.log('Workbench:', get(workbench))
 
 		realizationIsStale.set(true)
 	}
