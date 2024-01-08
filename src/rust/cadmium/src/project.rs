@@ -1,6 +1,7 @@
+use crate::sketch::constraints::Constraint;
 use crate::{
     extrusion::{Direction, Extrusion, Solid},
-    sketch::{Constraint, Face, Point2, Sketch},
+    sketch::{Face, Point2, Sketch},
 };
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
