@@ -1426,10 +1426,69 @@ impl Sketch {
         Intersection::None
     }
 
+    pub fn circle_circle_intersection(
+        &self,
+        circle_a: &Circle2,
+        circle_b: &Circle2,
+    ) -> Intersection {
+        fn approx_equal(a: f64, b: f64, epsilon: f64) -> bool {
+            // note: epsilon should be positive for this to make sense!
+            return (a - b).abs() < epsilon;
+        }
+
+        let center_a = self.points.get(&circle_a.center).unwrap();
+        let center_b = self.points.get(&circle_b.center).unwrap();
+        let r_a = circle_a.radius;
+        let r_b = circle_b.radius;
+
+        // println!("Okay they really intersected");
+        // println!("center a: {:?}", center_a);
+        // println!("radius a: {:?}", r_a);
+        // println!("center b: {:?}", center_a);
+        // println!("radius b: {:?}", r_b);
+
+        // compute distance between centers
+        let center_dx = center_b.x - center_a.x;
+        let center_dy = center_b.y - center_a.y;
+        let center_dist = center_dx.hypot(center_dy);
+
+        // println!("center dist {:?}", center_dist);
+        // println!("r_a - r_b {:?}", r_a - r_b);
+
+        // if the circles are too far away OR too close, they don't intersect
+        if center_dist > r_a + r_b {
+            return Intersection::None;
+        }
+        if center_dist < (r_a - r_b).abs() {
+            return Intersection::None;
+        }
+
+        let r_2 = center_dist * center_dist;
+        let r_4 = r_2 * r_2;
+        let a = (r_a * r_a - r_b * r_b) / (2.0 * r_2);
+        let r_2_r_2 = r_a * r_a - r_b * r_b;
+        let c = (2.0 * (r_a * r_a + r_b * r_b) / r_2 - r_2_r_2 * r_2_r_2 / r_4 - 1.0).sqrt();
+
+        let fx = (center_a.x + center_b.x) / 2.0 + a * (center_b.x - center_a.x);
+        let gx = c * (center_b.y - center_a.y) / 2.0;
+        let ix1 = fx + gx;
+        let ix2 = fx - gx;
+
+        let fy = (center_a.y + center_b.y) / 2.0 + a * (center_b.y - center_a.y);
+        let gy = c * (center_a.x - center_b.x) / 2.0;
+        let iy1 = fy + gy;
+        let iy2 = fy - gy;
+
+        Intersection::TwoPoints(Point2::new(ix1, iy1), false, Point2::new(ix2, iy2), false)
+    }
+
     pub fn shape_intersection(&self, shape_a: &Shape, shape_b: &Shape) -> Intersection {
         match (shape_a, shape_b) {
             (Shape::Line(line_a), Shape::Line(line_b)) => {
                 self.line_line_intersection(&line_a, &line_b)
+            }
+            (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
+                self.circle_circle_intersection(&circle_a, &circle_b)
             }
             _ => Intersection::None,
         }
@@ -1479,10 +1538,10 @@ impl Sketch {
 
                 let intersection = temp_sketch.shape_intersection(shape_a, shape_b);
 
-                if *shape_a_id == 11 && *shape_b_id == 13 {
-                    println!("What's up at 11, 13?");
-                    println!("{:?}", intersection);
-                }
+                // if *shape_a_id == 11 && *shape_b_id == 13 {
+                //     println!("What's up at 11, 13?");
+                //     println!("{:?}", intersection);
+                // }
 
                 match intersection {
                     Intersection::None => {}
@@ -1516,8 +1575,8 @@ impl Sketch {
             }
 
             let (shape_a_id, shape_b_id, intersection) = intersection_tuple;
-            let shape_a = all_shapes.get_item(shape_a_id).unwrap();
-            let shape_b = all_shapes.get_item(shape_b_id).unwrap();
+            let shape_a = all_shapes.get_item(shape_a_id).unwrap().clone();
+            let shape_b = all_shapes.get_item(shape_b_id).unwrap().clone();
 
             match intersection {
                 Intersection::None => {}
@@ -1599,7 +1658,53 @@ impl Sketch {
                 Intersection::Line(point_a, point_b) => {
                     println!("Intersection line: {:?} {:?}", point_a, point_b);
                 }
-                Intersection::TwoPoints(_, _, _, _) => todo!(),
+                Intersection::TwoPoints(point_a, false, point_b, false) => {
+                    match (shape_a, shape_b) {
+                        (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
+                            // we need to add two new points, one for each of these intersections
+                            let new_point_0 = temp_sketch.add_point(point_a.x, point_a.y);
+                            let new_point_1 = temp_sketch.add_point(point_b.x, point_b.y);
+
+                            // then break each circle up into two arcs:
+                            let arc_a_0 = Arc2 {
+                                center: circle_a.center,
+                                start: new_point_0,
+                                end: new_point_1,
+                                clockwise: false,
+                            };
+                            let arc_a_1 = Arc2 {
+                                center: circle_a.center,
+                                start: new_point_1,
+                                end: new_point_0,
+                                clockwise: false,
+                            };
+                            let arc_b_0 = Arc2 {
+                                center: circle_b.center,
+                                start: new_point_0,
+                                end: new_point_1,
+                                clockwise: false,
+                            };
+                            let arc_b_1 = Arc2 {
+                                center: circle_b.center,
+                                start: new_point_1,
+                                end: new_point_0,
+                                clockwise: false,
+                            };
+
+                            // add these four new arcs
+                            all_shapes.add_item(Shape::Arc(arc_a_0));
+                            all_shapes.add_item(Shape::Arc(arc_a_1));
+                            all_shapes.add_item(Shape::Arc(arc_b_0));
+                            all_shapes.add_item(Shape::Arc(arc_b_1));
+
+                            // remove the two circles
+                            all_shapes.remove_item(shape_a_id);
+                            all_shapes.remove_item(shape_b_id);
+                        }
+                        (_, _) => todo!(),
+                    }
+                }
+                Intersection::TwoPoints(point_a, _, point_b, _) => todo!(),
                 Intersection::Arc(_) => todo!(),
                 Intersection::Circle(_) => todo!(),
             }
@@ -1627,6 +1732,11 @@ impl Sketch {
                 }
                 _ => {}
             }
+        }
+
+        println!("So, in summary I've generated these shapes:");
+        for shape in all_shapes.items.iter() {
+            println!("{:?}", shape);
         }
 
         return final_sketch;
@@ -2492,7 +2602,7 @@ impl Shape {
                 };
                 (Shape::Line(new_line_1), Shape::Line(new_line_2))
             }
-            Shape::Circle(_) => todo!(),
+            Shape::Circle(circle) => todo!(),
             Shape::Arc(_) => todo!(),
         }
     }
@@ -3290,6 +3400,56 @@ mod tests {
         // println!("Faces: {:?}", sketch_split.faces);
         println!("Number of faces: {:?}", sketch_split.faces.len());
         assert_eq!(sketch_split.faces.len(), 8);
+    }
+
+    #[test]
+    fn two_circles_two_intersections() {
+        // two intersecting circles should yield 3 extrudable faces
+        let contents = std::fs::read_to_string(
+            "src/test_inputs/sketches/circle_circle/two_circles_two_intersections.cadmium",
+        )
+        .unwrap();
+        let p: Project = serde_json::from_str(&contents).unwrap();
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 3);
+    }
+
+    #[test]
+    fn circle_circle_intersection() {
+        let mut sketch = Sketch::new();
+
+        // two touching normally
+        println!("two circles touching normally");
+        let a_radius = 1.0;
+        let a = sketch.add_point(0.0, 0.0);
+        let a_top = sketch.add_point(0.0, a_radius);
+        let b_radius = 1.0;
+        let b = sketch.add_point(1.0, 0.0);
+        let b_top = sketch.add_point(1.0, b_radius);
+        let circle_a = Circle2 {
+            center: a,
+            radius: a_radius,
+            top: a_top,
+        };
+        let circle_b = Circle2 {
+            center: b,
+            radius: b_radius,
+            top: b_top,
+        };
+        let intersection = sketch.circle_circle_intersection(&circle_a, &circle_b);
+        assert_eq!(
+            intersection,
+            Intersection::TwoPoints(
+                Point2::new(0.5, -0.8660254037844386),
+                false,
+                Point2::new(0.5, 0.8660254037844386),
+                false
+            )
+        );
     }
 
     #[test]
