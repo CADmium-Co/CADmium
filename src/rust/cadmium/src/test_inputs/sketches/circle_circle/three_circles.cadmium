@@ -1,0 +1,236 @@
+{
+    "name": "First Project",
+    "assemblies": [],
+    "workbenches": [
+        {
+            "name": "Workbench 1",
+            "history": [
+                {
+                    "name": "Origin",
+                    "unique_id": "Point-0",
+                    "suppressed": false,
+                    "data": {
+                        "type": "Point",
+                        "point": {
+                            "x": 0.0,
+                            "y": 0.0,
+                            "z": 0.0,
+                            "hidden": false
+                        }
+                    }
+                },
+                {
+                    "name": "Top",
+                    "unique_id": "Plane-0",
+                    "suppressed": false,
+                    "data": {
+                        "type": "Plane",
+                        "plane": {
+                            "origin": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0,
+                                "hidden": false
+                            },
+                            "primary": {
+                                "x": 1.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "secondary": {
+                                "x": 0.0,
+                                "y": 1.0,
+                                "z": 0.0
+                            },
+                            "tertiary": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0
+                            }
+                        },
+                        "width": 100.0,
+                        "height": 100.0
+                    }
+                },
+                {
+                    "name": "Front",
+                    "unique_id": "Plane-1",
+                    "suppressed": false,
+                    "data": {
+                        "type": "Plane",
+                        "plane": {
+                            "origin": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0,
+                                "hidden": false
+                            },
+                            "primary": {
+                                "x": 1.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            },
+                            "secondary": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0
+                            },
+                            "tertiary": {
+                                "x": 0.0,
+                                "y": -1.0,
+                                "z": 0.0
+                            }
+                        },
+                        "width": 100.0,
+                        "height": 100.0
+                    }
+                },
+                {
+                    "name": "Right",
+                    "unique_id": "Plane-2",
+                    "suppressed": false,
+                    "data": {
+                        "type": "Plane",
+                        "plane": {
+                            "origin": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 0.0,
+                                "hidden": false
+                            },
+                            "primary": {
+                                "x": 0.0,
+                                "y": 1.0,
+                                "z": 0.0
+                            },
+                            "secondary": {
+                                "x": 0.0,
+                                "y": 0.0,
+                                "z": 1.0
+                            },
+                            "tertiary": {
+                                "x": 1.0,
+                                "y": 0.0,
+                                "z": 0.0
+                            }
+                        },
+                        "width": 100.0,
+                        "height": 100.0
+                    }
+                },
+                {
+                    "name": "Sketch 1",
+                    "unique_id": "Sketch-0",
+                    "suppressed": false,
+                    "data": {
+                        "type": "Sketch",
+                        "plane_id": "Plane-0",
+                        "width": 1.25,
+                        "height": 0.75,
+                        "sketch": {
+                            "points": {
+                                "1": {
+                                    "x": -35.553461674580916,
+                                    "y": 0.0,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": false
+                                },
+                                "3": {
+                                    "x": 0.0,
+                                    "y": 0.0,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": false
+                                },
+                                "6": {
+                                    "x": 13.703451327534848,
+                                    "y": 7.201801992824934e-26,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": true
+                                },
+                                "5": {
+                                    "x": 41.89451474384109,
+                                    "y": -0.30979190567368764,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": false
+                                },
+                                "2": {
+                                    "x": -12.009276843381834,
+                                    "y": 12.081884321274098,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": true
+                                },
+                                "4": {
+                                    "x": -21.30303401359268,
+                                    "y": -0.30979190567368764,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": true
+                                }
+                            },
+                            "highest_point_id": 6,
+                            "line_segments": {},
+                            "highest_line_segment_id": 0,
+                            "circles": {
+                                "3": {
+                                    "center": 5,
+                                    "radius": 28.19276551824991,
+                                    "top": 6
+                                },
+                                "1": {
+                                    "center": 1,
+                                    "radius": 26.463192704553126,
+                                    "top": 2
+                                },
+                                "2": {
+                                    "center": 3,
+                                    "radius": 21.305286414622724,
+                                    "top": 4
+                                }
+                            },
+                            "highest_circle_id": 3,
+                            "arcs": {},
+                            "highest_arc_id": 0,
+                            "constraints": {},
+                            "highest_constraint_id": 0
+                        }
+                    }
+                }
+            ],
+            "step_counters": {
+                "Point": 1,
+                "Plane": 3,
+                "Extrusion": 1,
+                "Sketch": 1
+            }
+        }
+    ]
+}

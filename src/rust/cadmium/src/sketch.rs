@@ -1431,29 +1431,15 @@ impl Sketch {
         circle_a: &Circle2,
         circle_b: &Circle2,
     ) -> Intersection {
-        fn approx_equal(a: f64, b: f64, epsilon: f64) -> bool {
-            // note: epsilon should be positive for this to make sense!
-            return (a - b).abs() < epsilon;
-        }
-
         let center_a = self.points.get(&circle_a.center).unwrap();
         let center_b = self.points.get(&circle_b.center).unwrap();
         let r_a = circle_a.radius;
         let r_b = circle_b.radius;
 
-        // println!("Okay they really intersected");
-        // println!("center a: {:?}", center_a);
-        // println!("radius a: {:?}", r_a);
-        // println!("center b: {:?}", center_a);
-        // println!("radius b: {:?}", r_b);
-
         // compute distance between centers
         let center_dx = center_b.x - center_a.x;
         let center_dy = center_b.y - center_a.y;
         let center_dist = center_dx.hypot(center_dy);
-
-        // println!("center dist {:?}", center_dist);
-        // println!("r_a - r_b {:?}", r_a - r_b);
 
         // if the circles are too far away OR too close, they don't intersect
         if center_dist > r_a + r_b {
@@ -1482,6 +1468,47 @@ impl Sketch {
         Intersection::TwoPoints(Point2::new(ix1, iy1), false, Point2::new(ix2, iy2), false)
     }
 
+    pub fn circle_arc_intersection(&self, circle: &Circle2, arc: &Arc2) -> Intersection {
+        // treat this is circle/circle intersection, then just do some checks
+        // afterwards to make sure the intersection points really do fall within
+        // the bounds of the arc
+        let arc_center = self.points.get(&arc.center).unwrap();
+        let arc_start = self.points.get(&arc.start).unwrap();
+        let arc_dx = arc_center.x - arc_start.x;
+        let arc_dy = arc_center.y - arc_start.y;
+        let arc_radius = arc_dx.hypot(arc_dy);
+        let fake_circle = Circle2 {
+            center: arc.center,
+            radius: arc_radius,
+            top: arc.start,
+        };
+
+        let fake_intersection = self.circle_circle_intersection(circle, &fake_circle);
+        println!("Fake intersection: {:?}", fake_intersection);
+
+        match fake_intersection {
+            Intersection::None => Intersection::None,
+            Intersection::OnePoint(_, _) => todo!(),
+            Intersection::TwoPoints(_, _, _, _) => {
+                // check to make sure that both points fall within the arc. If only one
+                // of them does, just return that one. if none do, return none.
+                // if both do, return both.
+                Intersection::None
+            }
+            Intersection::Line(_, _) => todo!(),
+            Intersection::Arc(_) => todo!(),
+            Intersection::Circle(_) => todo!(),
+        }
+    }
+
+    pub fn arc_arc_intersection(&self, arc_a: &Arc2, arc_b: &Arc2) -> Intersection {
+        // treat this is circle/circle intersection, then just do some checks
+        // afterwards to make sure the intersection points really do fall within
+        // the bounds of the arcs
+
+        Intersection::None
+    }
+
     pub fn shape_intersection(&self, shape_a: &Shape, shape_b: &Shape) -> Intersection {
         match (shape_a, shape_b) {
             (Shape::Line(line_a), Shape::Line(line_b)) => {
@@ -1490,6 +1517,7 @@ impl Sketch {
             (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
                 self.circle_circle_intersection(&circle_a, &circle_b)
             }
+            (Shape::Circle(circle), Shape::Arc(arc)) => self.circle_arc_intersection(&circle, &arc),
             _ => Intersection::None,
         }
     }
@@ -1581,6 +1609,8 @@ impl Sketch {
             match intersection {
                 Intersection::None => {}
                 Intersection::OnePoint(point, _) => {
+                    // this code currently assumes line vs line intersection. need to
+                    // move this under a match statement
                     let new_point_id = temp_sketch.add_point(point.x, point.y);
                     println!("Add an intersection point with ID: {:?}", new_point_id);
 
@@ -1692,14 +1722,70 @@ impl Sketch {
                             };
 
                             // add these four new arcs
-                            all_shapes.add_item(Shape::Arc(arc_a_0));
-                            all_shapes.add_item(Shape::Arc(arc_a_1));
-                            all_shapes.add_item(Shape::Arc(arc_b_0));
-                            all_shapes.add_item(Shape::Arc(arc_b_1));
+                            let mut new_shapes: Vec<u64> = vec![];
+                            new_shapes.push(all_shapes.add_item(Shape::Arc(arc_a_0)));
+                            new_shapes.push(all_shapes.add_item(Shape::Arc(arc_a_1)));
+                            new_shapes.push(all_shapes.add_item(Shape::Arc(arc_b_0)));
+                            new_shapes.push(all_shapes.add_item(Shape::Arc(arc_b_1)));
 
                             // remove the two circles
                             all_shapes.remove_item(shape_a_id);
                             all_shapes.remove_item(shape_b_id);
+
+                            // now we have to sweep through all the existing intersections and remove any that reference the
+                            // ids of the circles we just removed, adding each one to a list of possible new intersections to check for
+                            let mut possibilities: Vec<u64> = vec![];
+                            let mut indices_to_remove: Vec<usize> = vec![];
+                            for (index, (a, b, _)) in all_intersections.iter().enumerate() {
+                                if *a == shape_a_id || *a == shape_b_id {
+                                    possibilities.push(*b);
+                                    indices_to_remove.push(index);
+                                }
+                                if *b == shape_a_id || *b == shape_b_id {
+                                    possibilities.push(*a);
+                                    indices_to_remove.push(index);
+                                }
+                            }
+
+                            println!("New possibilities: {:?}", possibilities);
+                            println!("Indices to remove: {:?}", indices_to_remove);
+
+                            for index_to_remove in indices_to_remove.iter().rev() {
+                                all_intersections.remove(*index_to_remove);
+                            }
+                            println!("All intersections after removing stale ones:");
+                            for existing_intersection in all_intersections.iter() {
+                                println!("{:?}", existing_intersection);
+                            }
+                            println!("that was all of them");
+
+                            for possibility_id in possibilities {
+                                for new_arc_id in new_shapes.iter() {
+                                    println!(
+                                        "Checking {:?} against {:?}",
+                                        possibility_id, new_arc_id
+                                    );
+                                    let possibility = all_shapes.get_item(possibility_id).unwrap();
+                                    let new_line = all_shapes.get_item(*new_arc_id).unwrap();
+                                    let intersection =
+                                        temp_sketch.shape_intersection(possibility, new_line);
+
+                                    println!("intersection: {:?}", intersection);
+
+                                    // match intersection {
+                                    //     Intersection::None => {}
+                                    //     Intersection::OnePoint(_, true) => {}
+                                    //     _ => {
+                                    //         all_intersections.push_back((
+                                    //             possibility_id,
+                                    //             *new_arc_id,
+                                    //             intersection,
+                                    //         ));
+                                    //         // println!("  hit!");
+                                    //     }
+                                    // }
+                                }
+                            }
                         }
                         (_, _) => todo!(),
                     }
@@ -3409,6 +3495,21 @@ mod tests {
             "src/test_inputs/sketches/circle_circle/two_circles_two_intersections.cadmium",
         )
         .unwrap();
+        let p: Project = serde_json::from_str(&contents).unwrap();
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 3);
+    }
+
+    #[test]
+    fn three_circles() {
+        // three intersecting circles should yield 5 extrudable faces
+        let contents =
+            std::fs::read_to_string("src/test_inputs/sketches/circle_circle/three_circles.cadmium")
+                .unwrap();
         let p: Project = serde_json::from_str(&contents).unwrap();
 
         let realized = p.get_realization(0, 1000);
