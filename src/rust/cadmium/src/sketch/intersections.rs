@@ -2,6 +2,7 @@ use std::collections::VecDeque;
 
 use crate::sketch::{Arc2, Circle2, IncrementingMap, Line2, Point2, Sketch};
 use itertools::Itertools;
+use std::f64::consts::{PI, TAU};
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Shape {
@@ -221,6 +222,9 @@ impl Sketch {
                     println!("Intersection line: {:?} {:?}", point_a, point_b);
                 }
                 Intersection::TwoPoints(point_a, false, point_b, false) => {
+                    println!("Shape A: {:?}", shape_a);
+                    println!("Shape B: {:?}", shape_b);
+
                     match (shape_a, shape_b) {
                         (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
                             // we need to add two new points, one for each of these intersections
@@ -303,21 +307,24 @@ impl Sketch {
                                         temp_sketch.shape_intersection(possibility, new_line);
 
                                     println!("intersection: {:?}", intersection);
+                                    let intersection_clone = intersection.clone();
 
-                                    // match intersection {
-                                    //     Intersection::None => {}
-                                    //     Intersection::OnePoint(_, true) => {}
-                                    //     _ => {
-                                    //         all_intersections.push_back((
-                                    //             possibility_id,
-                                    //             *new_arc_id,
-                                    //             intersection,
-                                    //         ));
-                                    //         // println!("  hit!");
-                                    //     }
-                                    // }
+                                    match intersection {
+                                        Intersection::None => {}
+                                        Intersection::TwoPoints(p_a, p_a_d, p_b, p_b_d) => {
+                                            all_intersections.push_back((
+                                                possibility_id,
+                                                *new_arc_id,
+                                                intersection_clone,
+                                            ));
+                                        }
+                                        _ => todo!(),
+                                    }
                                 }
                             }
+                        }
+                        (Shape::Circle(circle), Shape::Arc(arc)) => {
+                            println!("Circle on Arc collision!");
                         }
                         (_, _) => todo!(),
                     }
@@ -357,149 +364,7 @@ impl Sketch {
             println!("{:?}", shape);
         }
 
-        return final_sketch;
-
-        // First compare every line segment against every line segment to see if they intersect
-        // TODO: this doesn't correctly handle when one line crosses *two* others
-        let mut count = 0;
-        let mut intersections: Vec<(u64, u64, Point2)> = vec![];
-
-        // for (i, (line_a_id, line_a)) in temp_sketch.line_segments.iter().enumerate() {
-        for (i, line_a_id) in temp_sketch.line_segments.keys().sorted().enumerate() {
-            let line_a = temp_sketch.line_segments.get(line_a_id).unwrap();
-
-            // for (j, (line_b_id, line_b)) in temp_sketch.line_segments.iter().enumerate() {
-            for (j, line_b_id) in temp_sketch.line_segments.keys().sorted().enumerate() {
-                let line_b = temp_sketch.line_segments.get(&line_b_id).unwrap();
-                // we only need to compare each line segment to each other line segment once
-                // so we can skip indices where i > j.
-                // Also, every line intersects itself so no need to check that.
-                if i >= j {
-                    continue;
-                }
-
-                // line segments which share a point do intersect, but there's nothing to be done
-                // so let's just skip
-                if line_a.start == line_b.start
-                    || line_a.start == line_b.end
-                    || line_a.end == line_b.end
-                    || line_a.end == line_b.start
-                {
-                    continue;
-                }
-
-                count += 1;
-
-                let intersection = temp_sketch.line_intersection(line_a, line_b);
-                match intersection {
-                    None => {}
-                    Some(point) => {
-                        intersections.push((*line_a_id, *line_b_id, point));
-                    }
-                }
-            }
-        }
-
-        for (line_a_id, line_b_id, point) in intersections {
-            println!("Intersection ids: {} {}", line_a_id, line_b_id);
-
-            let line_a = temp_sketch.line_segments.get(&line_a_id).unwrap().clone();
-            let line_b = temp_sketch.line_segments.get(&line_b_id).unwrap().clone();
-
-            let new_point_id = temp_sketch.add_point(point.x, point.y);
-            temp_sketch.add_segment(line_a.start, new_point_id);
-            temp_sketch.add_segment(new_point_id, line_a.end);
-            temp_sketch.add_segment(line_b.start, new_point_id);
-            temp_sketch.add_segment(new_point_id, line_b.end);
-
-            temp_sketch.line_segments.remove(&line_a_id);
-            temp_sketch.line_segments.remove(&line_b_id);
-        }
-
-        // Second, compare every circle against every other circle to see if they intersect
-        let mut circle_intersections: Vec<(u64, u64, Vec<Point2>)> = vec![];
-
-        // for (i, (circle_a_id, circle_a)) in temp_sketch.circles.iter().enumerate() {
-        for (i, circle_a_id) in temp_sketch.circles.keys().sorted().enumerate() {
-            let circle_a = temp_sketch.circles.get(&circle_a_id).unwrap();
-
-            // for (j, (circle_b_id, circle_b)) in temp_sketch.circles.iter().enumerate() {
-            for (j, circle_b_id) in temp_sketch.circles.keys().sorted().enumerate() {
-                let circle_b = temp_sketch.circles.get(&circle_b_id).unwrap();
-
-                // we only need to compare each circle to each other circle once
-                // so we can skip indices where i > j.
-                // Also, every line intersects itself so no need to check that.
-                if i >= j {
-                    continue;
-                }
-
-                // circles which share a point do intersect, but there's nothing to be done
-                // so let's just skip
-                if circle_a.center == circle_b.center {
-                    continue;
-                }
-
-                count += 1;
-
-                let intersection = temp_sketch.circle_intersection(circle_a, circle_b);
-                // If the circles intersect, then we'll need to do some splitting
-                if intersection.len() > 0 {
-                    circle_intersections.push((*circle_a_id, *circle_b_id, intersection));
-                }
-            }
-        }
-
-        println!("Found {} intersections", circle_intersections.len());
-        for (circle_a_id, circle_b_id, points) in circle_intersections {
-            // TODO: check for duplicates! Things get hairy if 3 circles intersect at the same point!
-            let circle_a = temp_sketch.circles.get(&circle_a_id).unwrap().clone();
-            let circle_b = temp_sketch.circles.get(&circle_b_id).unwrap().clone();
-
-            let center_a = temp_sketch.points.get(&circle_a.center).unwrap().clone();
-            let center_b = temp_sketch.points.get(&circle_b.center).unwrap().clone();
-
-            println!(
-                "Circle A: {:?} centered: at {}, {}",
-                circle_a, center_a.x, center_a.y
-            );
-            println!(
-                "Circle B: {:?} centered: at {}, {}",
-                circle_b, center_b.x, center_b.y
-            );
-
-            let new_point_0 = temp_sketch.add_point(points[0].x, points[0].y);
-            let new_point_1 = temp_sketch.add_point(points[1].x, points[1].y);
-
-            println!(
-                "Intersections at: {}: ({}, {}) and {}: ({}, {})",
-                new_point_0, points[0].x, points[0].y, new_point_1, points[1].x, points[1].y
-            );
-
-            temp_sketch.add_arc(circle_a.center, new_point_0, new_point_1, false);
-            temp_sketch.add_arc(circle_a.center, new_point_1, new_point_0, false);
-
-            temp_sketch.add_arc(circle_b.center, new_point_0, new_point_1, false);
-            temp_sketch.add_arc(circle_b.center, new_point_1, new_point_0, false);
-
-            temp_sketch.circles.remove(&circle_a_id);
-            temp_sketch.circles.remove(&circle_b_id);
-
-            println!(
-                "So in the end, temp sketch has: {} circles, {} arcs, {} segments",
-                temp_sketch.circles.len(),
-                temp_sketch.arcs.len(),
-                temp_sketch.line_segments.len()
-            );
-
-            for arc_id in temp_sketch.arcs.keys().sorted() {
-                let arc = temp_sketch.arcs.get(arc_id).unwrap();
-                print!("Arc: {} ", arc_id);
-                temp_sketch.pretty_print_arc(arc);
-            }
-        }
-
-        temp_sketch
+        final_sketch
     }
 
     pub fn line_line_intersection(&self, line_a: &Line2, line_b: &Line2) -> Intersection {
@@ -695,15 +560,71 @@ impl Sketch {
         match fake_intersection {
             Intersection::None => Intersection::None,
             Intersection::OnePoint(_, _) => todo!(),
-            Intersection::TwoPoints(_, _, _, _) => {
+            Intersection::TwoPoints(point_a, is_degenerate_a, point_b, is_degenerate_b) => {
                 // check to make sure that both points fall within the arc. If only one
                 // of them does, just return that one. if none do, return none.
                 // if both do, return both.
-                Intersection::None
+                let point_a_good = self.point_within_arc(arc, &point_a);
+                let point_b_good = self.point_within_arc(arc, &point_b);
+
+                match (point_a_good, point_b_good) {
+                    (true, true) => {
+                        Intersection::TwoPoints(point_a, is_degenerate_a, point_b, is_degenerate_b)
+                    }
+                    (true, false) => Intersection::OnePoint(point_a, is_degenerate_a),
+                    (false, true) => Intersection::OnePoint(point_b, is_degenerate_b),
+                    (false, false) => Intersection::None,
+                }
             }
             Intersection::Line(_, _) => todo!(),
             Intersection::Arc(_) => todo!(),
             Intersection::Circle(_) => todo!(),
+        }
+    }
+
+    pub fn point_within_arc(&self, arc: &Arc2, point: &Point2) -> bool {
+        let center = self.points.get(&arc.center).unwrap();
+        let mut start = self.points.get(&arc.start).unwrap();
+        let mut end = self.points.get(&arc.end).unwrap();
+
+        // clockwise arcs are weird and unconventional. Within this function, pretend all arcs are CCW.
+        // doing this destroys 1 bit of information about the arc, but it's irrelevant for the purposes of this function
+        if arc.clockwise {
+            (start, end) = (end, start);
+        }
+
+        // cool, so you only have to imagine this math working for CCW arcs
+        let start_dx = start.x - center.x;
+        let start_dy = start.y - center.y;
+        let start_angle = start_dy.atan2(start_dx);
+
+        let end_dx = end.x - center.x;
+        let end_dy = end.y - center.y;
+        let mut end_angle = end_dy.atan2(end_dx);
+
+        if end_angle <= start_angle {
+            end_angle += TAU;
+        }
+
+        let point_dx = point.x - center.x;
+        let point_dy = point.y - center.y;
+        let mut point_angle = point_dy.atan2(point_dx);
+
+        if point_angle < start_angle {
+            point_angle += TAU;
+        }
+
+        if point_angle >= start_angle && point_angle <= end_angle {
+            // okay the angles work out, but we gotta run one last check:
+            // make sure the point is the right distance from center!
+            let arc_radius = start_dy.hypot(start_dx);
+            let point_radius = point_dy.hypot(point_dx);
+            let radius_diff = (arc_radius - point_radius).abs();
+
+            // floats are never really *equal*, just nearly equal
+            radius_diff < 1e-10
+        } else {
+            false
         }
     }
 
@@ -782,6 +703,59 @@ mod tests {
 
         println!("Number of faces: {:?}", sketch_split.faces.len());
         assert_eq!(sketch_split.faces.len(), 3);
+    }
+
+    #[test]
+    fn points_are_in_arcs() {
+        let mut sketch = Sketch::new();
+
+        let origin = sketch.add_point(0.0, 0.0);
+        let right = sketch.add_point(1.0, 0.0);
+        let left = sketch.add_point(-1.0, 0.0);
+        let arc_top = Arc2 {
+            center: origin,
+            start: right,
+            end: left,
+            clockwise: false,
+        };
+        let arc_bottom = Arc2 {
+            center: origin,
+            start: left,
+            end: right,
+            clockwise: false,
+        };
+        let arc_top_cw = Arc2 {
+            center: origin,
+            start: left,
+            end: right,
+            clockwise: true,
+        };
+        let arc_bottom_cw = Arc2 {
+            center: origin,
+            start: right,
+            end: left,
+            clockwise: true,
+        };
+
+        let up_top = Point2::new(0.0, 1.0);
+        let down_low = Point2::new(0.0, -1.0);
+
+        // counterclockwise, as god intended
+        assert_eq!(sketch.point_within_arc(&arc_top, &up_top), true);
+        assert_eq!(sketch.point_within_arc(&arc_top, &down_low), false);
+
+        assert_eq!(sketch.point_within_arc(&arc_bottom, &up_top), false);
+        assert_eq!(sketch.point_within_arc(&arc_bottom, &down_low), true);
+
+        // clockwise, like a hooligan
+        assert_eq!(sketch.point_within_arc(&arc_top_cw, &up_top), true);
+        assert_eq!(sketch.point_within_arc(&arc_top_cw, &down_low), false);
+
+        assert_eq!(sketch.point_within_arc(&arc_bottom_cw, &up_top), false);
+        assert_eq!(sketch.point_within_arc(&arc_bottom_cw, &down_low), true);
+
+        let way_up_top = Point2::new(0.0, 100.0);
+        assert_eq!(sketch.point_within_arc(&arc_top, &way_up_top), false);
     }
 
     #[test]
