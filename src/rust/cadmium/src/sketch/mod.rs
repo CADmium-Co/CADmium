@@ -1335,8 +1335,9 @@ impl<T> IncrementingMap<T> {
         id
     }
 
-    pub fn remove_item(&mut self, id: u64) {
+    pub fn remove_item(&mut self, id: u64) -> u64 {
         self.items.remove(&id);
+        id
     }
 
     pub fn get_item(&self, id: u64) -> Option<&T> {
