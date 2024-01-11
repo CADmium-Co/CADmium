@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::VecDeque, f32::EPSILON};
 
 use crate::sketch::{Arc2, Circle2, IncrementingMap, Line2, Point2, Sketch};
 use itertools::Itertools;
@@ -66,27 +66,23 @@ impl Sketch {
             (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
                 temp_sketch.circle_circle_collisions(circle_a, shape_a_id, circle_b, shape_b_id)
             }
-            (Shape::Circle(circle_a), Shape::Arc(arc_b)) => temp_sketch.circle_arc_collisions(
-                temp_sketch,
-                circle_a,
-                shape_a_id,
-                arc_b,
-                shape_b_id,
-            ),
+            (Shape::Circle(circle_a), Shape::Arc(arc_b)) => {
+                temp_sketch.circle_arc_collisions(circle_a, shape_a_id, arc_b, shape_b_id)
+            }
             (Shape::Circle(_), Shape::Line(_)) => todo!(),
-            (Shape::Arc(arc_a), Shape::Circle(circle_b)) => temp_sketch.circle_arc_collisions(
-                temp_sketch,
-                circle_b,
-                shape_b_id,
-                arc_a,
-                shape_a_id,
-            ),
+            (Shape::Arc(arc_a), Shape::Circle(circle_b)) => {
+                temp_sketch.circle_arc_collisions(circle_b, shape_b_id, arc_a, shape_a_id)
+            }
             (Shape::Arc(arc_a), Shape::Arc(arc_b)) => {
-                temp_sketch.arc_arc_collisions(temp_sketch, arc_a, shape_a_id, arc_b, shape_b_id)
+                temp_sketch.arc_arc_collisions(arc_a, shape_a_id, arc_b, shape_b_id)
             }
             (Shape::Arc(_), Shape::Line(_)) => todo!(),
-            (Shape::Line(_), Shape::Circle(_)) => todo!(),
-            (Shape::Line(_), Shape::Arc(_)) => todo!(),
+            (Shape::Line(line_a), Shape::Circle(circle_b)) => {
+                temp_sketch.line_circle_collisions(line_a, shape_a_id, circle_b, shape_b_id)
+            }
+            (Shape::Line(line_a), Shape::Arc(arc_b)) => {
+                temp_sketch.line_arc_collisions(line_a, shape_a_id, arc_b, shape_b_id)
+            }
             (Shape::Line(line_a), Shape::Line(line_b)) => {
                 temp_sketch.line_line_collisions(line_a, shape_a_id, line_b, shape_b_id)
             }
@@ -176,8 +172,49 @@ impl Sketch {
                 );
             }
             (Shape::Arc(_), Shape::Line(_)) => todo!(),
-            (Shape::Line(_), Shape::Circle(_)) => todo!(),
-            (Shape::Line(_), Shape::Arc(_)) => todo!(),
+            (Shape::Line(line_a), Shape::Circle(circle_b)) => {
+                let new_point_id = temp_sketch.add_point(point.x, point.y);
+
+                let (line_a1, line_a2) = self.split_line_at_point(&line_a, &new_point_id, &point);
+                let arc_b = self.split_circle_at_point(&circle_b, &new_point_id, &point);
+
+                // convert the circle into an arc in place
+                all_shapes.items.insert(shape_b_id, Shape::Arc(arc_b));
+
+                // delete the old line and replace with two smaller lines
+                new_shapes.push(all_shapes.add_item(Shape::Line(line_a1)));
+                new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
+                recently_deleted.push(all_shapes.remove_item(shape_a_id));
+
+                println!(
+                    "Broke line {} into {} and {}",
+                    shape_a_id, new_shapes[0], new_shapes[1]
+                );
+                println!("Replaced circle {} with arc in place", shape_b_id);
+            }
+            (Shape::Line(line_a), Shape::Arc(arc_b)) => {
+                let new_point_id = temp_sketch.add_point(point.x, point.y);
+
+                let (line_a1, line_a2) = self.split_line_at_point(&line_a, &new_point_id, &point);
+                let (arc_b1, arc_b2) = self.split_arc_at_point(&arc_b, &new_point_id, &point);
+
+                new_shapes.push(all_shapes.add_item(Shape::Line(line_a1)));
+                new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
+                new_shapes.push(all_shapes.add_item(Shape::Arc(arc_b1)));
+                new_shapes.push(all_shapes.add_item(Shape::Arc(arc_b2)));
+
+                recently_deleted.push(all_shapes.remove_item(shape_a_id));
+                recently_deleted.push(all_shapes.remove_item(shape_b_id));
+
+                println!(
+                    "Replaced line {} with {} and {}",
+                    recently_deleted[0], new_shapes[0], new_shapes[1]
+                );
+                println!(
+                    "Replaced arc {} with {} and {}",
+                    recently_deleted[1], new_shapes[2], new_shapes[3]
+                );
+            }
             (Shape::Line(line_a), Shape::Line(line_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
 
@@ -466,14 +503,6 @@ impl Sketch {
             return vec![];
         }
 
-        fn within_range(x: f64, a: f64, b: f64, epsilon: f64) -> bool {
-            if a < b {
-                return x >= a - epsilon && x <= b + epsilon;
-            } else {
-                return x >= b - epsilon && x <= a + epsilon;
-            }
-        }
-
         // it only counts as an intersection if it falls within both the segments
         // Check that the x-intercept is within the x-range of the first segment
 
@@ -493,6 +522,135 @@ impl Sketch {
         }
 
         vec![]
+    }
+
+    pub fn line_arc_collisions(
+        &self,
+        line_a: &Line2,
+        line_a_id: u64,
+        arc_b: &Arc2,
+        arc_b_id: u64,
+    ) -> Vec<Collision> {
+        // treat this is circle/circle collision, then just do some checks
+        // afterwards to make sure the collision points really do fall within
+        // the bounds of the arc
+        println!("LINE AGAINST ARC");
+        let arc_center = self.points.get(&arc_b.center).unwrap();
+        // println!("Getting arc start: {}", &arc.start);
+        let arc_start = self.points.get(&arc_b.start).unwrap();
+        let arc_dx = arc_center.x - arc_start.x;
+        let arc_dy = arc_center.y - arc_start.y;
+        let arc_radius = arc_dx.hypot(arc_dy);
+        let fake_circle = Circle2 {
+            center: arc_b.center,
+            radius: arc_radius,
+            top: arc_b.start,
+        };
+
+        println!("Fake circle: {:?}", &fake_circle);
+        println!("Line Details:");
+        let line_start = &self.points[&line_a.start];
+        println!("start: {:?}", line_start);
+        let line_end = &self.points[&line_a.end];
+        println!("end: {:?}", line_end);
+
+        let fake_collisions =
+            self.line_circle_collisions(line_a, line_a_id, &fake_circle, arc_b_id);
+
+        println!("Fake collisions: {:?}", fake_collisions);
+
+        let mut real_collisions: Vec<Collision> = vec![];
+
+        for c in fake_collisions {
+            // check to make sure the point falls within the arc.
+            if self.point_within_arc(arc_b, &c.point) {
+                real_collisions.push(c);
+            }
+        }
+
+        real_collisions
+    }
+
+    pub fn line_circle_collisions(
+        &self,
+        line_a: &Line2,
+        line_a_id: u64,
+        circle_b: &Circle2,
+        circle_b_id: u64,
+    ) -> Vec<Collision> {
+        // to make the math easier, let's assume the circle's center point is the origin
+        // let's translate the line's start and end points
+        let mut start = self.points[&line_a.start].clone();
+        let mut end = self.points[&line_a.end].clone();
+        let center = self.points[&circle_b.center].clone();
+        let r = circle_b.radius;
+        start.x -= center.x;
+        start.y -= center.y;
+        end.x -= center.x;
+        end.y -= center.y;
+
+        // get the line in normal form
+        let (a, b, c) = normal_form(&start, &end);
+
+        println!("In normal form: {} {} {}", a, b, c);
+        let (mut y1, mut y2, mut x1, mut x2);
+
+        if a == 0.0 {
+            println!("It's a horizontal line");
+            // oh, it's a horizontal line! that makes the math easier
+            y1 = -c / b;
+            y2 = -c / b;
+
+            println!("Y1 and Y2: {} {}", y1, y2);
+
+            x1 = (r * r - y1 * y1).sqrt();
+            x2 = -(r * r - y1 * y1).sqrt();
+
+            println!("X1 and X2: {} {}", x1, x2);
+        } else {
+            println!("It's not a special case");
+            let det = a * a + b * b;
+            let d = (a * a * (r * r * det - c * c)).sqrt();
+
+            y1 = (-d + b * c) / det;
+            y2 = (d - b * c) / det;
+
+            x1 = (-b * y1 - c) / a;
+            x2 = (-b * y2 - c) / a;
+        }
+
+        y1 += center.y;
+        y2 += center.y;
+        x1 += center.x;
+        x2 += center.x;
+
+        println!("X1 Y1: {} {}", x1, y1);
+        println!("X2 Y2: {} {}", x2, y2);
+
+        let mut valid_collisions: Vec<Collision> = vec![];
+
+        let start = &self.points[&line_a.start];
+        let end = &self.points[&line_a.end];
+
+        let epsilon = 1e-10;
+
+        if within_range(x1, start.x, end.x, epsilon) && within_range(y1, start.y, end.y, epsilon) {
+            valid_collisions.push(Collision {
+                point: Point2::new(x1, y1),
+                shape_a: line_a_id,
+                shape_b: circle_b_id,
+            });
+        }
+
+        if within_range(x2, start.x, end.x, epsilon) && within_range(y2, start.y, end.y, epsilon) {
+            valid_collisions.push(Collision {
+                point: Point2::new(x2, y2),
+                shape_a: line_a_id,
+                shape_b: circle_b_id,
+            });
+        }
+
+        valid_collisions
     }
 
     pub fn circle_circle_collisions(
@@ -609,7 +767,6 @@ impl Sketch {
 
     pub fn circle_arc_collisions(
         &self,
-        temp_sketch: &Sketch,
         circle: &Circle2,
         circle_id: u64,
         arc: &Arc2,
@@ -618,9 +775,9 @@ impl Sketch {
         // treat this is circle/circle collision, then just do some checks
         // afterwards to make sure the collision points really do fall within
         // the bounds of the arc
-        let arc_center = temp_sketch.points.get(&arc.center).unwrap();
+        let arc_center = self.points.get(&arc.center).unwrap();
         // println!("Getting arc start: {}", &arc.start);
-        let arc_start = temp_sketch.points.get(&arc.start).unwrap();
+        let arc_start = self.points.get(&arc.start).unwrap();
         let arc_dx = arc_center.x - arc_start.x;
         let arc_dy = arc_center.y - arc_start.y;
         let arc_radius = arc_dx.hypot(arc_dy);
@@ -638,7 +795,7 @@ impl Sketch {
 
         for c in fake_collisions {
             // check to make sure the point falls within the arc.
-            if self.point_within_arc(temp_sketch, arc, &c.point) {
+            if self.point_within_arc(arc, &c.point) {
                 real_collisions.push(c);
             }
         }
@@ -646,12 +803,7 @@ impl Sketch {
         real_collisions
     }
 
-    pub fn circle_arc_intersection(
-        &self,
-        temp_sketch: &Sketch,
-        circle: &Circle2,
-        arc: &Arc2,
-    ) -> Intersection {
+    pub fn circle_arc_intersection(&self, circle: &Circle2, arc: &Arc2) -> Intersection {
         // treat this is circle/circle intersection, then just do some checks
         // afterwards to make sure the intersection points really do fall within
         // the bounds of the arc
@@ -676,8 +828,8 @@ impl Sketch {
                 // check to make sure that both points fall within the arc. If only one
                 // of them does, just return that one. if none do, return none.
                 // if both do, return both.
-                let point_a_good = self.point_within_arc(temp_sketch, arc, &point_a);
-                let point_b_good = self.point_within_arc(temp_sketch, arc, &point_b);
+                let point_a_good = self.point_within_arc(arc, &point_a);
+                let point_b_good = self.point_within_arc(arc, &point_b);
 
                 match (point_a_good, point_b_good) {
                     (true, true) => {
@@ -694,10 +846,10 @@ impl Sketch {
         }
     }
 
-    pub fn point_within_arc(&self, temp_sketch: &Sketch, arc: &Arc2, point: &Point2) -> bool {
-        let center = temp_sketch.points.get(&arc.center).unwrap();
-        let mut start = temp_sketch.points.get(&arc.start).unwrap();
-        let mut end = temp_sketch.points.get(&arc.end).unwrap();
+    pub fn point_within_arc(&self, arc: &Arc2, point: &Point2) -> bool {
+        let center = self.points.get(&arc.center).unwrap();
+        let mut start = self.points.get(&arc.start).unwrap();
+        let mut end = self.points.get(&arc.end).unwrap();
 
         // clockwise arcs are weird and unconventional. Within this function, pretend all arcs are CCW.
         // doing this destroys 1 bit of information about the arc, but it's irrelevant for the purposes of this function
@@ -742,7 +894,6 @@ impl Sketch {
 
     pub fn arc_arc_collisions(
         &self,
-        temp_sketch: &Sketch,
         arc_a: &Arc2,
         arc_a_id: u64,
         arc_b: &Arc2,
@@ -751,10 +902,10 @@ impl Sketch {
         // treat this is circle/circle collision, then just do some checks
         // afterwards to make sure the collision points really do fall within
         // the bounds of the arc
-        let arc_a_center = temp_sketch.points.get(&arc_a.center).unwrap();
+        let arc_a_center = self.points.get(&arc_a.center).unwrap();
         // println!("Getting arc start: {}", &arc.start);
-        let arc_a_start = temp_sketch.points.get(&arc_a.start).unwrap();
-        let arc_a_end = temp_sketch.points.get(&arc_a.end).unwrap();
+        let arc_a_start = self.points.get(&arc_a.start).unwrap();
+        let arc_a_end = self.points.get(&arc_a.end).unwrap();
         let arc_a_dx = arc_a_center.x - arc_a_start.x;
         let arc_a_dy = arc_a_center.y - arc_a_start.y;
         let arc_a_radius = arc_a_dx.hypot(arc_a_dy);
@@ -764,10 +915,10 @@ impl Sketch {
             top: arc_a.start,
         };
 
-        let arc_b_center = temp_sketch.points.get(&arc_b.center).unwrap();
+        let arc_b_center = self.points.get(&arc_b.center).unwrap();
         // println!("Getting arc start: {}", &arc.start);
-        let arc_b_start = temp_sketch.points.get(&arc_b.start).unwrap();
-        let arc_b_end = temp_sketch.points.get(&arc_b.end).unwrap();
+        let arc_b_start = self.points.get(&arc_b.start).unwrap();
+        let arc_b_end = self.points.get(&arc_b.end).unwrap();
         let arc_b_dx = arc_b_center.x - arc_b_start.x;
         let arc_b_dy = arc_b_center.y - arc_b_start.y;
         let arc_b_radius = arc_b_dx.hypot(arc_b_dy);
@@ -793,9 +944,7 @@ impl Sketch {
 
         for c in fake_collisions {
             // check to make sure the point falls within both arcs.
-            if self.point_within_arc(temp_sketch, arc_a, &c.point)
-                && self.point_within_arc(temp_sketch, arc_b, &c.point)
-            {
+            if self.point_within_arc(arc_a, &c.point) && self.point_within_arc(arc_b, &c.point) {
                 // check to make sure the collision point is not approximately equal to any of
                 // the start or end points
 
@@ -873,6 +1022,23 @@ pub fn points_almost_equal(point_a: &Point2, point_b: &Point2) -> bool {
     let dx = (point_b.x - point_a.x).abs();
     let dy = (point_b.y - point_a.y).abs();
     dx < 1e-10 && dy < 1e-10
+}
+
+fn normal_form(start: &Point2, end: &Point2) -> (f64, f64, f64) {
+    // finds the normal form of a line:
+    // ax + by + c = 0
+    let a = start.y - end.y;
+    let b = end.x - start.x;
+    let c = (start.x - end.x) * start.y + (end.y - start.y) * start.x;
+    return (a, b, c);
+}
+
+fn within_range(x: f64, a: f64, b: f64, epsilon: f64) -> bool {
+    if a < b {
+        return x >= a - epsilon && x <= b + epsilon;
+    } else {
+        return x >= b - epsilon && x <= a + epsilon;
+    }
 }
 
 #[cfg(test)]
@@ -960,6 +1126,22 @@ mod tests {
     }
 
     #[test]
+    fn circle_rectangle() {
+        // a circle that intersects with a rectangle on two lines
+        let contents = std::fs::read_to_string(
+            "src/test_inputs/sketches/circle_line/circle_rectangle.cadmium",
+        )
+        .unwrap();
+        let p: Project = serde_json::from_str(&contents).unwrap();
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 3);
+    }
+
+    #[test]
     fn points_are_in_arcs() {
         let mut sketch = Sketch::new();
 
@@ -995,39 +1177,21 @@ mod tests {
         let down_low = Point2::new(0.0, -1.0);
 
         // counterclockwise, as god intended
-        assert_eq!(sketch.point_within_arc(&sketch, &arc_top, &up_top), true);
-        assert_eq!(sketch.point_within_arc(&sketch, &arc_top, &down_low), false);
+        assert_eq!(sketch.point_within_arc(&arc_top, &up_top), true);
+        assert_eq!(sketch.point_within_arc(&arc_top, &down_low), false);
 
-        assert_eq!(
-            sketch.point_within_arc(&sketch, &arc_bottom, &up_top),
-            false
-        );
-        assert_eq!(
-            sketch.point_within_arc(&sketch, &arc_bottom, &down_low),
-            true
-        );
+        assert_eq!(sketch.point_within_arc(&arc_bottom, &up_top), false);
+        assert_eq!(sketch.point_within_arc(&arc_bottom, &down_low), true);
 
         // clockwise, like a hooligan
-        assert_eq!(sketch.point_within_arc(&sketch, &arc_top_cw, &up_top), true);
-        assert_eq!(
-            sketch.point_within_arc(&sketch, &arc_top_cw, &down_low),
-            false
-        );
+        assert_eq!(sketch.point_within_arc(&arc_top_cw, &up_top), true);
+        assert_eq!(sketch.point_within_arc(&arc_top_cw, &down_low), false);
 
-        assert_eq!(
-            sketch.point_within_arc(&sketch, &arc_bottom_cw, &up_top),
-            false
-        );
-        assert_eq!(
-            sketch.point_within_arc(&sketch, &arc_bottom_cw, &down_low),
-            true
-        );
+        assert_eq!(sketch.point_within_arc(&arc_bottom_cw, &up_top), false);
+        assert_eq!(sketch.point_within_arc(&arc_bottom_cw, &down_low), true);
 
         let way_up_top = Point2::new(0.0, 100.0);
-        assert_eq!(
-            sketch.point_within_arc(&sketch, &arc_top, &way_up_top),
-            false
-        );
+        assert_eq!(sketch.point_within_arc(&arc_top, &way_up_top), false);
     }
 
     #[test]
@@ -1135,6 +1299,113 @@ mod tests {
         };
         let collisions = sketch.circle_circle_collisions(&circle_a, 7, &circle_b, 8);
         assert_eq!(collisions, vec![]);
+    }
+
+    #[test]
+    fn line_circle_collisions() {
+        let mut sketch = Sketch::new();
+
+        println!("simple crossing point horizontal line");
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(2.0, 0.0);
+        let c = sketch.add_point(0.0, 1.0);
+        let line_ab = Line2 { start: a, end: b };
+        let circle_a = Circle2 {
+            center: a,
+            radius: 1.0,
+            top: c,
+        };
+        let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
+        assert_eq!(
+            collisions,
+            vec![Collision {
+                point: Point2::new(1.0, 0.0),
+                shape_a: 1,
+                shape_b: 2,
+            }]
+        );
+
+        println!("simple crossing point horizontal line but backwards");
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(-2.0, 0.0);
+        let c = sketch.add_point(0.0, 1.0);
+        let line_ab = Line2 { start: a, end: b };
+        let circle_a = Circle2 {
+            center: a,
+            radius: 1.0,
+            top: c,
+        };
+        let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
+        assert_eq!(
+            collisions,
+            vec![Collision {
+                point: Point2::new(-1.0, 0.0),
+                shape_a: 1,
+                shape_b: 2,
+            }]
+        );
+
+        // simple cross
+        println!("simple crossing point 45 degree angle");
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(2.0, 2.0);
+        let c = sketch.add_point(0.0, 1.0);
+        let line_ab = Line2 { start: a, end: b };
+        let circle_a = Circle2 {
+            center: a,
+            radius: 1.0,
+            top: c,
+        };
+        let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
+        assert_eq!(
+            collisions,
+            vec![Collision {
+                point: Point2::new(0.7071067811865476, 0.7071067811865476), // sqrt(2)/2
+                shape_a: 1,
+                shape_b: 2,
+            }]
+        );
+
+        // simple cross
+        println!("simple crossing point 45 degree angle but away from origin");
+        let a = sketch.add_point(10.0, 10.0);
+        let b = sketch.add_point(12.0, 12.0);
+        let c = sketch.add_point(10.0, 11.0);
+        let line_ab = Line2 { start: a, end: b };
+        let circle_a = Circle2 {
+            center: a,
+            radius: 1.0,
+            top: c,
+        };
+        let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
+        assert_eq!(
+            collisions,
+            vec![Collision {
+                point: Point2::new(10.7071067811865476, 10.7071067811865476),
+                shape_a: 1,
+                shape_b: 2,
+            }]
+        );
+
+        println!("simple crossing point vertical line");
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(0.0, 2.0);
+        let c = sketch.add_point(0.0, 1.0);
+        let line_ab = Line2 { start: a, end: b };
+        let circle_a = Circle2 {
+            center: a,
+            radius: 1.0,
+            top: c,
+        };
+        let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
+        assert_eq!(
+            collisions,
+            vec![Collision {
+                point: Point2::new(0.0, 1.0),
+                shape_a: 1,
+                shape_b: 2,
+            }]
+        );
     }
 
     #[test]
