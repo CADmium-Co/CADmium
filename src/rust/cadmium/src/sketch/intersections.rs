@@ -69,14 +69,18 @@ impl Sketch {
             (Shape::Circle(circle_a), Shape::Arc(arc_b)) => {
                 temp_sketch.circle_arc_collisions(circle_a, shape_a_id, arc_b, shape_b_id)
             }
-            (Shape::Circle(_), Shape::Line(_)) => todo!(),
+            (Shape::Circle(circle_a), Shape::Line(line_b)) => {
+                temp_sketch.line_circle_collisions(line_b, shape_b_id, circle_a, shape_a_id)
+            }
             (Shape::Arc(arc_a), Shape::Circle(circle_b)) => {
                 temp_sketch.circle_arc_collisions(circle_b, shape_b_id, arc_a, shape_a_id)
             }
             (Shape::Arc(arc_a), Shape::Arc(arc_b)) => {
                 temp_sketch.arc_arc_collisions(arc_a, shape_a_id, arc_b, shape_b_id)
             }
-            (Shape::Arc(_), Shape::Line(_)) => todo!(),
+            (Shape::Arc(arc_a), Shape::Line(line_b)) => {
+                temp_sketch.line_arc_collisions(line_b, shape_b_id, arc_a, shape_a_id)
+            }
             (Shape::Line(line_a), Shape::Circle(circle_b)) => {
                 temp_sketch.line_circle_collisions(line_a, shape_a_id, circle_b, shape_b_id)
             }
@@ -111,8 +115,8 @@ impl Sketch {
             (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
 
-                let arc_a = self.split_circle_at_point(&circle_a, &new_point_id, &point);
-                let arc_b = self.split_circle_at_point(&circle_b, &new_point_id, &point);
+                let arc_a = temp_sketch.split_circle_at_point(&circle_a, &new_point_id, &point);
+                let arc_b = temp_sketch.split_circle_at_point(&circle_b, &new_point_id, &point);
 
                 // this is a unique case. We're making substitutions here, not deleting or creating
                 all_shapes.items.insert(shape_a_id, Shape::Arc(arc_a));
@@ -124,9 +128,10 @@ impl Sketch {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
 
                 // the circle can be converted to an arc
-                let arc_a = self.split_circle_at_point(&circle_a, &new_point_id, &point);
+                let arc_a = temp_sketch.split_circle_at_point(&circle_a, &new_point_id, &point);
                 // the arc must be split into two arcs
-                let (arc_b1, arc_b2) = self.split_arc_at_point(&arc_b, &new_point_id, &point);
+                let (arc_b1, arc_b2) =
+                    temp_sketch.split_arc_at_point(&arc_b, &new_point_id, &point);
 
                 // the circle -> arc amounts to a substitution not a deletion + creation
                 all_shapes.items.insert(shape_a_id, Shape::Arc(arc_a));
@@ -149,8 +154,10 @@ impl Sketch {
             (Shape::Arc(arc_a), Shape::Arc(arc_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
 
-                let (arc_a1, arc_a2) = self.split_arc_at_point(&arc_a, &new_point_id, &point);
-                let (arc_b1, arc_b2) = self.split_arc_at_point(&arc_b, &new_point_id, &point);
+                let (arc_a1, arc_a2) =
+                    temp_sketch.split_arc_at_point(&arc_a, &new_point_id, &point);
+                let (arc_b1, arc_b2) =
+                    temp_sketch.split_arc_at_point(&arc_b, &new_point_id, &point);
 
                 new_shapes.push(all_shapes.add_item(Shape::Arc(arc_a1)));
                 new_shapes.push(all_shapes.add_item(Shape::Arc(arc_a2)));
@@ -175,8 +182,9 @@ impl Sketch {
             (Shape::Line(line_a), Shape::Circle(circle_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
 
-                let (line_a1, line_a2) = self.split_line_at_point(&line_a, &new_point_id, &point);
-                let arc_b = self.split_circle_at_point(&circle_b, &new_point_id, &point);
+                let (line_a1, line_a2) =
+                    temp_sketch.split_line_at_point(&line_a, &new_point_id, &point);
+                let arc_b = temp_sketch.split_circle_at_point(&circle_b, &new_point_id, &point);
 
                 // convert the circle into an arc in place
                 all_shapes.items.insert(shape_b_id, Shape::Arc(arc_b));
@@ -195,8 +203,10 @@ impl Sketch {
             (Shape::Line(line_a), Shape::Arc(arc_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
 
-                let (line_a1, line_a2) = self.split_line_at_point(&line_a, &new_point_id, &point);
-                let (arc_b1, arc_b2) = self.split_arc_at_point(&arc_b, &new_point_id, &point);
+                let (line_a1, line_a2) =
+                    temp_sketch.split_line_at_point(&line_a, &new_point_id, &point);
+                let (arc_b1, arc_b2) =
+                    temp_sketch.split_arc_at_point(&arc_b, &new_point_id, &point);
 
                 new_shapes.push(all_shapes.add_item(Shape::Line(line_a1)));
                 new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
@@ -584,6 +594,7 @@ impl Sketch {
         let mut end = self.points[&line_a.end].clone();
         let center = self.points[&circle_b.center].clone();
         let r = circle_b.radius;
+        println!("Radius as reported by circle: {}", r);
         start.x -= center.x;
         start.y -= center.y;
         end.x -= center.x;
@@ -592,10 +603,13 @@ impl Sketch {
         // get the line in normal form
         let (a, b, c) = normal_form(&start, &end);
 
+        println!("Line from {:?} to {:?}", &start, &end);
         println!("In normal form: {} {} {}", a, b, c);
         let (mut y1, mut y2, mut x1, mut x2);
 
-        if a == 0.0 {
+        let dy = (end.y - start.y).abs();
+
+        if a == 0.0 || dy < 1e-10 {
             println!("It's a horizontal line");
             // oh, it's a horizontal line! that makes the math easier
             y1 = -c / b;
@@ -606,26 +620,58 @@ impl Sketch {
             x1 = (r * r - y1 * y1).sqrt();
             x2 = -(r * r - y1 * y1).sqrt();
 
-            println!("X1 and X2: {} {}", x1, x2);
+            // println!("X1 and X2: {} {}", x1, x2);
         } else {
             println!("It's not a special case");
             let det = a * a + b * b;
-            let d = (a * a * (r * r * det - c * c)).sqrt();
+            let d = (a * a * ((r * r * det) - c * c)).sqrt();
 
-            y1 = (-d + b * c) / det;
+            y1 = (-d - b * c) / det;
+            // println!("y1 {}", y1);
             y2 = (d - b * c) / det;
+            // println!("y2 {}", y2);
 
-            x1 = (-b * y1 - c) / a;
-            x2 = (-b * y2 - c) / a;
+            x1 = -(b * y1 + c) / a;
+            // println!("x1 {}", x1);
+            x2 = -(b * y2 + c) / a;
+            // println!("x2 {}", x2);
+        }
+
+        println!("In shifted coordinates:");
+        println!("x1 y1 {} {}", x1, y1);
+        println!("x2 y2 {} {}", x2, y2);
+
+        if (x1.hypot(y1) - r).abs() > 1e-10 {
+            panic!(
+                "Somehow the radius is not equal! Got {} expected {}",
+                x1.hypot(y1),
+                r
+            );
+        }
+
+        if (x2.hypot(y2) - r).abs() > 1e-10 {
+            panic!(
+                "Somehow the radius is not equal! Got {} expected {}",
+                x2.hypot(y2),
+                r
+            );
         }
 
         y1 += center.y;
         y2 += center.y;
         x1 += center.x;
         x2 += center.x;
+        start.x += center.x;
+        start.y += center.y;
+        end.x += center.x;
+        end.y += center.y;
 
-        println!("X1 Y1: {} {}", x1, y1);
-        println!("X2 Y2: {} {}", x2, y2);
+        println!("In real coordinates:");
+        println!("x1 y1 {} {}", x1, y1);
+        println!("x2 y2 {} {}", x2, y2);
+
+        // println!("X1 Y1: {} {}", x1, y1);
+        // println!("X2 Y2: {} {}", x2, y2);
 
         let mut valid_collisions: Vec<Collision> = vec![];
 
@@ -634,7 +680,11 @@ impl Sketch {
 
         let epsilon = 1e-10;
 
+        println!("Checking that X {} is within {} {}", x1, start.x, end.x);
+        println!("Checking that Y {} is within {} {}", y1, start.y, end.y);
+
         if within_range(x1, start.x, end.x, epsilon) && within_range(y1, start.y, end.y, epsilon) {
+            println!("Added that point!");
             valid_collisions.push(Collision {
                 point: Point2::new(x1, y1),
                 shape_a: line_a_id,
@@ -642,7 +692,10 @@ impl Sketch {
             });
         }
 
+        println!("Checking that X {} is within {} {}", x2, start.x, end.x);
+        println!("Checking that Y {} is within {} {}", y2, start.y, end.y);
         if within_range(x2, start.x, end.x, epsilon) && within_range(y2, start.y, end.y, epsilon) {
+            println!("Added that point!");
             valid_collisions.push(Collision {
                 point: Point2::new(x2, y2),
                 shape_a: line_a_id,
@@ -1128,8 +1181,20 @@ mod tests {
     #[test]
     fn circle_rectangle() {
         // a circle that intersects with a rectangle on two lines
+        // let contents = std::fs::read_to_string(
+        //     "src/test_inputs/sketches/circle_line/circle_rectangle.cadmium",
+        // )
+        // .unwrap();
+        // let p: Project = serde_json::from_str(&contents).unwrap();
+
+        // let realized = p.get_realization(0, 1000);
+        // let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        // println!("Number of faces: {:?}", sketch_split.faces.len());
+        // assert_eq!(sketch_split.faces.len(), 3);
+
         let contents = std::fs::read_to_string(
-            "src/test_inputs/sketches/circle_line/circle_rectangle.cadmium",
+            "src/test_inputs/sketches/circle_line/circle_rect_changing_size.cadmium",
         )
         .unwrap();
         let p: Project = serde_json::from_str(&contents).unwrap();
@@ -1139,6 +1204,38 @@ mod tests {
 
         println!("Number of faces: {:?}", sketch_split.faces.len());
         assert_eq!(sketch_split.faces.len(), 3);
+    }
+
+    #[test]
+    fn circle_quadrangle() {
+        // a circle that intersects with a rectangle on two lines
+        let contents = std::fs::read_to_string(
+            "src/test_inputs/sketches/circle_line/circle_quadrangle.cadmium",
+        )
+        .unwrap();
+        let p: Project = serde_json::from_str(&contents).unwrap();
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 3);
+    }
+
+    #[test]
+    fn circle_rect_circle() {
+        // a circle that intersects with a rectangle on two lines
+        let contents = std::fs::read_to_string(
+            "src/test_inputs/sketches/circle_line/circle_rect_circle.cadmium",
+        )
+        .unwrap();
+        let p: Project = serde_json::from_str(&contents).unwrap();
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 5);
     }
 
     #[test]
@@ -1345,7 +1442,6 @@ mod tests {
             }]
         );
 
-        // simple cross
         println!("simple crossing point 45 degree angle");
         let a = sketch.add_point(0.0, 0.0);
         let b = sketch.add_point(2.0, 2.0);
@@ -1366,7 +1462,6 @@ mod tests {
             }]
         );
 
-        // simple cross
         println!("simple crossing point 45 degree angle but away from origin");
         let a = sketch.add_point(10.0, 10.0);
         let b = sketch.add_point(12.0, 12.0);
