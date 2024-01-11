@@ -36,7 +36,40 @@ pub struct Collision {
     point: Point2,
     shape_a: u64,
     shape_b: u64,
+    shape_a_degeneracy: Degeneracy,
+    shape_b_degeneracy: Degeneracy,
 }
+
+impl Collision {
+    pub fn new(point: Point2, shape_a: u64, shape_b: u64) -> Self {
+        Collision {
+            point,
+            shape_a,
+            shape_b,
+            shape_a_degeneracy: Degeneracy::None,
+            shape_b_degeneracy: Degeneracy::None,
+        }
+    }
+    pub fn degenerate(shape_a: u64, shape_b: u64) -> Self {
+        Collision {
+            point: Point2::new(f64::NAN, f64::NAN),
+            shape_a,
+            shape_b,
+            shape_a_degeneracy: Degeneracy::Complete,
+            shape_b_degeneracy: Degeneracy::Complete,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Degeneracy {
+    None,
+    IsStart,
+    IsEnd,
+    Complete,
+}
+
+use Degeneracy::*;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Intersection {
@@ -108,8 +141,8 @@ impl Sketch {
         let shape_b_id = collision.shape_b;
         let point = collision.point;
 
-        let shape_a = all_shapes.get_item(shape_a_id).unwrap();
-        let shape_b = all_shapes.get_item(shape_b_id).unwrap();
+        let shape_a = all_shapes.get_item(shape_a_id).unwrap().clone();
+        let shape_b = all_shapes.get_item(shape_b_id).unwrap().clone();
 
         match (shape_a, shape_b) {
             (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
@@ -226,29 +259,49 @@ impl Sketch {
                 );
             }
             (Shape::Line(line_a), Shape::Line(line_b)) => {
-                let new_point_id = temp_sketch.add_point(point.x, point.y);
+                let collision_point_id =
+                    match (&collision.shape_a_degeneracy, &collision.shape_b_degeneracy) {
+                        (IsStart, None) => line_a.start,
+                        (IsEnd, None) => line_a.end,
+                        (None, IsStart) => line_b.start,
+                        (None, IsEnd) => line_b.end,
+                        (None, None) => temp_sketch.add_point(point.x, point.y),
+                        (Complete, Complete) => {
+                            println!("COMPLETE degeneracy found. Removing line {}", shape_b_id);
+                            all_shapes.remove_item(shape_b_id);
+                            return;
+                        }
+                        (_, _) => {
+                            println!("One line continues the other. Nothing to be done!");
+                            return;
+                        }
+                    };
 
-                let (line_a1, line_a2) = self.split_line_at_point(&line_a, &new_point_id, &point);
-                let (line_b1, line_b2) = self.split_line_at_point(&line_b, &new_point_id, &point);
+                if collision.shape_a_degeneracy == None {
+                    let (line_a1, line_a2) =
+                        temp_sketch.split_line_at_point(&line_a, &collision_point_id, &point);
 
-                new_shapes.push(all_shapes.add_item(Shape::Line(line_a1)));
-                new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
-                new_shapes.push(all_shapes.add_item(Shape::Line(line_b1)));
-                new_shapes.push(all_shapes.add_item(Shape::Line(line_b2)));
+                    new_shapes.push(all_shapes.add_item(Shape::Line(line_a1)));
+                    new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
+                    recently_deleted.push(all_shapes.remove_item(shape_a_id));
+                    println!(
+                        "Replaced line {} with lines {} and {}",
+                        shape_a_id, new_shapes[0], new_shapes[1]
+                    );
+                }
 
-                recently_deleted.push(all_shapes.remove_item(shape_a_id));
-                recently_deleted.push(all_shapes.remove_item(shape_b_id));
+                if collision.shape_b_degeneracy == None {
+                    let (line_b1, line_b2) =
+                        temp_sketch.split_line_at_point(&line_b, &collision_point_id, &point);
 
-                println!("replaced two lines with four lines");
-                println!(
-                    "Replaced line {} with lines {} and {}",
-                    shape_a_id, new_shapes[0], new_shapes[1]
-                );
-
-                println!(
-                    "Replaced line {} with lines {} and {}",
-                    shape_b_id, new_shapes[2], new_shapes[3]
-                );
+                    new_shapes.push(all_shapes.add_item(Shape::Line(line_b1)));
+                    new_shapes.push(all_shapes.add_item(Shape::Line(line_b2)));
+                    recently_deleted.push(all_shapes.remove_item(shape_b_id));
+                    println!(
+                        "Replaced line {} with lines {} and {}",
+                        shape_b_id, new_shapes[2], new_shapes[3]
+                    );
+                }
             }
         }
     }
@@ -265,7 +318,7 @@ impl Sketch {
     ) -> bool {
         // the bool we return indicates whether any work was done
 
-        println!("-----");
+        println!("----- Okay let's process:");
 
         if !recently_deleted.is_empty() {
             println!("Something was recently deleted, let's fix it");
@@ -416,7 +469,7 @@ impl Sketch {
         // While there's anything to do, step the process forward
         let mut count = 0;
         loop {
-            println!("\nstep: {}", count);
+            println!("\nstep: {} Here's the setup:", count);
             count += 1;
 
             println!("Pairs to check: {:?}", pairs_to_check);
@@ -424,6 +477,11 @@ impl Sketch {
             println!("Possible shape collisions: {:?}", possible_shape_collisions);
             println!("New shapes: {:?}", new_shapes);
             println!("Recently deleted: {:?}", recently_deleted);
+            // let mut input = String::new();
+            // io::stdin()
+            //     .read_line(&mut input)
+            //     .expect("error: unable to read user input");
+            // println!("{}", input);
 
             let result = self.step_process(
                 &mut temp_sketch,
@@ -434,6 +492,11 @@ impl Sketch {
                 &mut new_shapes,
                 &mut recently_deleted,
             );
+            // let mut input = String::new();
+            // io::stdin()
+            //     .read_line(&mut input)
+            //     .expect("error: unable to read user input");
+            // println!("{}", input);
             if result == false {
                 break;
             }
@@ -471,18 +534,17 @@ impl Sketch {
         line_b: &Line2,
         line_b_id: u64,
     ) -> Vec<Collision> {
+        // catch the case where the lines are completely degenerate
+        if line_a.start == line_b.start || line_a.start == line_b.end {
+            if line_a.end == line_b.start || line_a.end == line_b.end {
+                return vec![Collision::degenerate(line_a_id, line_b_id)];
+            }
+        }
+
         let a_start = self.points.get(&line_a.start).unwrap();
         let a_end = self.points.get(&line_a.end).unwrap();
         let b_start = self.points.get(&line_b.start).unwrap();
         let b_end = self.points.get(&line_b.end).unwrap();
-
-        let mut forbidden_points: Vec<Point2> = vec![];
-        if line_a.start == line_b.start || line_a.start == line_b.end {
-            forbidden_points.push(a_start.clone());
-        }
-        if line_a.end == line_b.end || line_a.end == line_b.start {
-            forbidden_points.push(a_end.clone());
-        }
 
         fn normal_form(start: &Point2, end: &Point2) -> (f64, f64, f64) {
             let a = start.y - end.y;
@@ -497,17 +559,6 @@ impl Sketch {
         let x_intercept = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
         let y_intercept = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1);
 
-        for forbidden_point in forbidden_points.iter() {
-            if points_almost_equal(forbidden_point, &Point2::new(x_intercept, y_intercept)) {
-                return vec![];
-            }
-        }
-
-        // println!(
-        //     "Computed X and Y intercept: {}, {}",
-        //     x_intercept, y_intercept
-        // );
-
         if x_intercept.is_infinite() || y_intercept.is_infinite() {
             // println!("Infinite intercept, so lines are parallel");
             return vec![];
@@ -515,7 +566,6 @@ impl Sketch {
 
         // it only counts as an intersection if it falls within both the segments
         // Check that the x-intercept is within the x-range of the first segment
-
         let epsilon = 1e-12;
         if within_range(x_intercept, a_start.x, a_end.x, epsilon)
             && within_range(y_intercept, a_start.y, a_end.y, epsilon)
@@ -523,11 +573,21 @@ impl Sketch {
             if within_range(x_intercept, b_start.x, b_end.x, epsilon)
                 && within_range(y_intercept, b_start.y, b_end.y, epsilon)
             {
-                return vec![Collision {
-                    point: Point2::new(x_intercept, y_intercept),
-                    shape_a: line_a_id,
-                    shape_b: line_b_id,
-                }];
+                let collision_point = Point2::new(x_intercept, y_intercept);
+                let mut collision = Collision::new(collision_point.clone(), line_a_id, line_b_id);
+                if points_almost_equal(&a_start, &collision_point) {
+                    collision.shape_a_degeneracy = Degeneracy::IsStart;
+                }
+                if points_almost_equal(&a_end, &collision_point) {
+                    collision.shape_a_degeneracy = Degeneracy::IsEnd;
+                }
+                if points_almost_equal(&b_start, &collision_point) {
+                    collision.shape_b_degeneracy = Degeneracy::IsStart;
+                }
+                if points_almost_equal(&b_end, &collision_point) {
+                    collision.shape_b_degeneracy = Degeneracy::IsEnd;
+                }
+                return vec![collision];
             }
         }
 
@@ -685,22 +745,14 @@ impl Sketch {
 
         if within_range(x1, start.x, end.x, epsilon) && within_range(y1, start.y, end.y, epsilon) {
             println!("Added that point!");
-            valid_collisions.push(Collision {
-                point: Point2::new(x1, y1),
-                shape_a: line_a_id,
-                shape_b: circle_b_id,
-            });
+            valid_collisions.push(Collision::new(Point2::new(x1, y1), line_a_id, circle_b_id));
         }
 
         println!("Checking that X {} is within {} {}", x2, start.x, end.x);
         println!("Checking that Y {} is within {} {}", y2, start.y, end.y);
         if within_range(x2, start.x, end.x, epsilon) && within_range(y2, start.y, end.y, epsilon) {
             println!("Added that point!");
-            valid_collisions.push(Collision {
-                point: Point2::new(x2, y2),
-                shape_a: line_a_id,
-                shape_b: circle_b_id,
-            });
+            valid_collisions.push(Collision::new(Point2::new(x2, y2), line_a_id, circle_b_id));
         }
 
         valid_collisions
@@ -734,14 +786,14 @@ impl Sketch {
         let epsilon = 1e-10;
         if center_dist > r_a + r_b - epsilon && center_dist < r_a + r_b + epsilon {
             // draw a straight line from a to b, of length r_a
-            let collision = Collision {
-                point: Point2::new(
+            let collision = Collision::new(
+                Point2::new(
                     center_a.x + r_a * center_dx / center_dist,
                     center_a.y + r_a * center_dy / center_dist,
                 ),
-                shape_a: circle_a_id,
-                shape_b: circle_b_id,
-            };
+                circle_a_id,
+                circle_b_id,
+            );
             return vec![collision];
         }
 
@@ -761,17 +813,9 @@ impl Sketch {
         let iy1 = fy + gy;
         let iy2 = fy - gy;
 
-        let collision_a = Collision {
-            point: Point2::new(ix1, iy1),
-            shape_a: circle_a_id,
-            shape_b: circle_b_id,
-        };
+        let collision_a = Collision::new(Point2::new(ix1, iy1), circle_a_id, circle_b_id);
 
-        let collision_b = Collision {
-            point: Point2::new(ix2, iy2),
-            shape_a: circle_a_id,
-            shape_b: circle_b_id,
-        };
+        let collision_b = Collision::new(Point2::new(ix2, iy2), circle_a_id, circle_b_id);
 
         return vec![collision_a, collision_b];
     }
@@ -1096,7 +1140,7 @@ fn within_range(x: f64, a: f64, b: f64, epsilon: f64) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::project::Project;
+    use crate::project::{Plane, Project, Workbench};
 
     use super::*;
 
@@ -1317,16 +1361,8 @@ mod tests {
         assert_eq!(
             collisions,
             vec![
-                Collision {
-                    point: Point2::new(0.5, -0.8660254037844386),
-                    shape_a: 7,
-                    shape_b: 8,
-                },
-                Collision {
-                    point: Point2::new(0.5, 0.8660254037844386),
-                    shape_a: 7,
-                    shape_b: 8,
-                }
+                Collision::new(Point2::new(0.5, -0.8660254037844386), 7, 8,),
+                Collision::new(Point2::new(0.5, 0.8660254037844386), 7, 8,)
             ]
         );
 
@@ -1350,11 +1386,7 @@ mod tests {
         let collisions = sketch.circle_circle_collisions(&circle_a, 7, &circle_b, 8);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(2.0, 0.0),
-                shape_a: 7,
-                shape_b: 8,
-            }]
+            vec![Collision::new(Point2::new(2.0, 0.0), 7, 8,)]
         );
 
         println!("Two circles not touching--too far away");
@@ -1399,6 +1431,55 @@ mod tests {
     }
 
     #[test]
+    fn line_line_overlap() {
+        let mut w = Workbench::new("Workbench 1");
+
+        let top_plane_id = w.add_plane("Top", Plane::top());
+        w.add_plane("Front", Plane::front());
+        w.add_plane("Right", Plane::right());
+        let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
+        let sketch = w.get_sketch_mut("Sketch 1").unwrap();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(0.0, -2.0);
+        let c = sketch.add_point(2.0, -2.0);
+        let d = sketch.add_point(2.0, 0.0);
+        let e = sketch.add_point(3.0, 0.0);
+        let f = sketch.add_point(3.0, -1.0);
+        let g = sketch.add_point(2.0, -1.0);
+
+        // big one
+        sketch.add_segment(a, b);
+        sketch.add_segment(b, c);
+        sketch.add_segment(c, d);
+        sketch.add_segment(d, a);
+
+        // small one
+        sketch.add_segment(d, e);
+        sketch.add_segment(e, f);
+        sketch.add_segment(f, g);
+        sketch.add_segment(g, d);
+
+        let mut p = Project::new("A");
+        p.workbenches.push(w);
+        // let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
+        // assert_eq!(
+        //     collisions,
+        //     vec![Collision {
+        //         point: Point2::new(1.0, 0.0),
+        //         shape_a: 1,
+        //         shape_b: 2,
+        //     }]
+        // );
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 2);
+    }
+
+    #[test]
     fn line_circle_collisions() {
         let mut sketch = Sketch::new();
 
@@ -1415,11 +1496,7 @@ mod tests {
         let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(1.0, 0.0),
-                shape_a: 1,
-                shape_b: 2,
-            }]
+            vec![Collision::new(Point2::new(1.0, 0.0), 1, 2,)]
         );
 
         println!("simple crossing point horizontal line but backwards");
@@ -1435,11 +1512,7 @@ mod tests {
         let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(-1.0, 0.0),
-                shape_a: 1,
-                shape_b: 2,
-            }]
+            vec![Collision::new(Point2::new(-1.0, 0.0), 1, 2,)]
         );
 
         println!("simple crossing point 45 degree angle");
@@ -1455,11 +1528,11 @@ mod tests {
         let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(0.7071067811865476, 0.7071067811865476), // sqrt(2)/2
-                shape_a: 1,
-                shape_b: 2,
-            }]
+            vec![Collision::new(
+                Point2::new(0.7071067811865476, 0.7071067811865476), // sqrt(2)/2
+                1,
+                2,
+            )]
         );
 
         println!("simple crossing point 45 degree angle but away from origin");
@@ -1475,11 +1548,11 @@ mod tests {
         let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(10.7071067811865476, 10.7071067811865476),
-                shape_a: 1,
-                shape_b: 2,
-            }]
+            vec![Collision::new(
+                Point2::new(10.7071067811865476, 10.7071067811865476),
+                1,
+                2,
+            )]
         );
 
         println!("simple crossing point vertical line");
@@ -1495,11 +1568,7 @@ mod tests {
         let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(0.0, 1.0),
-                shape_a: 1,
-                shape_b: 2,
-            }]
+            vec![Collision::new(Point2::new(0.0, 1.0), 1, 2,)]
         );
     }
 
@@ -1518,15 +1587,11 @@ mod tests {
         let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
         assert_eq!(
             collisions,
-            vec![Collision {
-                point: Point2::new(0.0, 0.0),
-                shape_a: 1,
-                shape_b: 2,
-            }]
+            vec![Collision::new(Point2::new(0.0, 0.0), 1, 2,)]
         );
 
         // a T
-        println!("a T");
+        println!("an upside down T");
         let a = sketch.add_point(-1.0, 0.0);
         let b = sketch.add_point(1.0, 0.0);
         let c = sketch.add_point(0.0, 0.0);
@@ -1534,14 +1599,11 @@ mod tests {
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
         let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
-        assert_eq!(
-            collisions,
-            vec![Collision {
-                point: Point2::new(0.0, 0.0),
-                shape_a: 1,
-                shape_b: 2,
-            }]
-        );
+        let mut expected_collision = Collision::new(Point2::new(0.0, 0.0), 1, 2);
+        expected_collision.shape_b_degeneracy = IsStart;
+
+        // println!("Got this collision: {:?}", collisions[0]);
+        assert_eq!(collisions, vec![expected_collision]);
 
         // parallel horizontal
         println!("parallel horizontal");
@@ -1585,14 +1647,10 @@ mod tests {
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
         let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
-        assert_eq!(
-            collisions,
-            vec![Collision {
-                point: Point2::new(0.0, 0.0),
-                shape_a: 1,
-                shape_b: 2,
-            }]
-        );
+        let mut expected_collision = Collision::new(Point2::new(0.0, 0.0), 1, 2);
+        expected_collision.shape_a_degeneracy = IsEnd;
+        expected_collision.shape_b_degeneracy = IsStart;
+        assert_eq!(collisions, vec![expected_collision]);
 
         // share 1 point in the == sense
         println!("share 1 point in the == sense");
@@ -1602,7 +1660,10 @@ mod tests {
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: b, end: d };
         let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
-        assert_eq!(collisions, vec![]);
+        let mut expected_collision = Collision::new(Point2::new(0.0, 0.0), 1, 2);
+        expected_collision.shape_a_degeneracy = IsEnd;
+        expected_collision.shape_b_degeneracy = IsStart;
+        assert_eq!(collisions, vec![expected_collision]);
 
         // colinear, horizontal no intersection
         println!("colinear horizontal no intersection");
