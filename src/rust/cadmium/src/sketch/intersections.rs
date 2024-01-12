@@ -269,6 +269,9 @@ impl Sketch {
                         (Complete, Complete) => {
                             println!("COMPLETE degeneracy found. Removing line {}", shape_b_id);
                             all_shapes.remove_item(shape_b_id);
+
+                            recently_deleted.push(shape_b_id);
+
                             return;
                         }
                         (_, _) => {
@@ -299,8 +302,24 @@ impl Sketch {
                     recently_deleted.push(all_shapes.remove_item(shape_b_id));
                     println!(
                         "Replaced line {} with lines {} and {}",
-                        shape_b_id, new_shapes[2], new_shapes[3]
+                        shape_b_id,
+                        new_shapes[new_shapes.len() - 2],
+                        new_shapes[new_shapes.len() - 1]
                     );
+                }
+
+                if collision.shape_a_degeneracy == IsEnd || collision.shape_a_degeneracy == IsStart
+                {
+                    if !possible_shape_collisions.contains(&collision.shape_a) {
+                        possible_shape_collisions.push(collision.shape_a);
+                    }
+                }
+
+                if collision.shape_b_degeneracy == IsEnd || collision.shape_b_degeneracy == IsStart
+                {
+                    if !possible_shape_collisions.contains(&collision.shape_b) {
+                        possible_shape_collisions.push(collision.shape_b);
+                    }
                 }
             }
         }
@@ -534,7 +553,7 @@ impl Sketch {
         line_b: &Line2,
         line_b_id: u64,
     ) -> Vec<Collision> {
-        // catch the case where the lines are completely degenerate
+        // catch the case where the lines are completely degenerate-their start and end points are the same
         if line_a.start == line_b.start || line_a.start == line_b.end {
             if line_a.end == line_b.start || line_a.end == line_b.end {
                 return vec![Collision::degenerate(line_a_id, line_b_id)];
@@ -556,11 +575,75 @@ impl Sketch {
         let (a1, b1, c1) = normal_form(&a_start, &a_end);
         let (a2, b2, c2) = normal_form(&b_start, &b_end);
 
+        println!("a1, b1, c1: {} {} {}", a1, b1, c1);
+        println!("a2, b2, c2: {} {} {}", a2, b2, c2);
+
         let x_intercept = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
         let y_intercept = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1);
 
+        println!("Intercept: {} {}", x_intercept, y_intercept);
+
+        if x_intercept.is_nan() || y_intercept.is_nan() {
+            // something degenerate happened. The lines may be parallel.
+            println!("NAN intercept, so lines are be parallel");
+
+            let tol = 1e-8;
+            let a_start_colinear_with_b = (a2 * a_start.x + b2 * a_start.y + c2).abs() < tol;
+            let a_end_colinear_with_b = (a2 * a_end.x + b2 * a_end.y + c2).abs() < tol;
+
+            if a_start_colinear_with_b && a_end_colinear_with_b {
+                println!("The lines are perfectly colinear!");
+
+                let mut collisions: Vec<Collision> = vec![];
+
+                // it is possible these lines overlap somewhat.
+                if within_range(a_start.x, b_start.x, b_end.x, -tol)
+                    && within_range(a_start.y, b_start.y, b_end.y, -tol)
+                {
+                    // a_start is WITHIN b!
+                    println!("A start is within B");
+                    let mut collision = Collision::new(a_start.clone(), line_a_id, line_b_id);
+                    collision.shape_a_degeneracy = IsStart;
+                    collisions.push(collision);
+                }
+                if within_range(a_end.x, b_start.x, b_end.x, -tol)
+                    && within_range(a_end.y, b_start.y, b_end.y, -tol)
+                {
+                    // a_end is WITHIN b!
+                    println!("A end is within B");
+                    let mut collision = Collision::new(a_end.clone(), line_a_id, line_b_id);
+                    collision.shape_a_degeneracy = IsEnd;
+                    collisions.push(collision);
+                }
+
+                if within_range(b_start.x, a_start.x, a_end.x, -tol)
+                    && within_range(b_start.y, a_start.y, a_end.y, -tol)
+                {
+                    // b_start is WITHIN a!
+                    println!("B start is within A");
+                    let mut collision = Collision::new(b_start.clone(), line_a_id, line_b_id);
+                    collision.shape_b_degeneracy = IsStart;
+                    collisions.push(collision);
+                }
+                if within_range(b_end.x, a_start.x, a_end.x, -tol)
+                    && within_range(b_end.y, a_start.y, a_end.y, -tol)
+                {
+                    // b_end is WITHIN a!
+                    println!("B end is within A");
+                    let mut collision = Collision::new(b_end.clone(), line_a_id, line_b_id);
+                    collision.shape_b_degeneracy = IsEnd;
+                    collisions.push(collision);
+                }
+
+                return collisions;
+            } else {
+                // If the lines are parallel but not colinear, then they can have no collisions
+                return vec![];
+            }
+        }
+
         if x_intercept.is_infinite() || y_intercept.is_infinite() {
-            // println!("Infinite intercept, so lines are parallel");
+            println!("Infinite intercept, so lines are parallel");
             return vec![];
         }
 
@@ -1131,11 +1214,16 @@ fn normal_form(start: &Point2, end: &Point2) -> (f64, f64, f64) {
 }
 
 fn within_range(x: f64, a: f64, b: f64, epsilon: f64) -> bool {
-    if a < b {
-        return x >= a - epsilon && x <= b + epsilon;
-    } else {
-        return x >= b - epsilon && x <= a + epsilon;
+    if a == b && b == x {
+        return true;
     }
+    let mut retval;
+    if a < b {
+        retval = x >= a - epsilon && x <= b + epsilon;
+    } else {
+        retval = x >= b - epsilon && x <= a + epsilon;
+    }
+    retval
 }
 
 #[cfg(test)]
@@ -1431,7 +1519,7 @@ mod tests {
     }
 
     #[test]
-    fn line_line_overlap() {
+    fn line_line_overlap_shared_point() {
         let mut w = Workbench::new("Workbench 1");
 
         let top_plane_id = w.add_plane("Top", Plane::top());
@@ -1462,21 +1550,58 @@ mod tests {
 
         let mut p = Project::new("A");
         p.workbenches.push(w);
-        // let collisions = sketch.line_circle_collisions(&line_ab, 1, &circle_a, 2);
-        // assert_eq!(
-        //     collisions,
-        //     vec![Collision {
-        //         point: Point2::new(1.0, 0.0),
-        //         shape_a: 1,
-        //         shape_b: 2,
-        //     }]
-        // );
 
         let realized = p.get_realization(0, 1000);
         let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
 
         println!("Number of faces: {:?}", sketch_split.faces.len());
         assert_eq!(sketch_split.faces.len(), 2);
+
+        assert_eq!(sketch_split.line_segments.len(), 8);
+    }
+
+    #[test]
+    fn line_line_overlap_no_shared_point() {
+        let mut w = Workbench::new("Workbench 1");
+
+        let top_plane_id = w.add_plane("Top", Plane::top());
+        w.add_plane("Front", Plane::front());
+        w.add_plane("Right", Plane::right());
+        let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
+        let sketch = w.get_sketch_mut("Sketch 1").unwrap();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(2.0, 0.0);
+        let c = sketch.add_point(2.0, 2.0);
+        let d = sketch.add_point(0.0, 2.0);
+
+        let e = sketch.add_point(2.0, 0.5);
+        let f = sketch.add_point(3.0, 0.5);
+        let g = sketch.add_point(3.0, 1.5);
+        let h = sketch.add_point(2.0, 1.5);
+
+        // big one
+        sketch.add_segment(a, b);
+        sketch.add_segment(b, c);
+        sketch.add_segment(c, d);
+        sketch.add_segment(d, a);
+
+        // small one
+        sketch.add_segment(e, f);
+        sketch.add_segment(f, g);
+        sketch.add_segment(g, h);
+        sketch.add_segment(h, e);
+
+        let mut p = Project::new("A");
+        p.workbenches.push(w);
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 2);
+
+        assert_eq!(sketch_split.line_segments.len(), 9);
     }
 
     #[test]
