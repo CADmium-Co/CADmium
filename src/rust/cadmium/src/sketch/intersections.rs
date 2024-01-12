@@ -1520,6 +1520,13 @@ mod tests {
 
     #[test]
     fn line_line_overlap_shared_point() {
+        /*
+        |--------|----|
+        |        |    |
+        |        |----|
+        |        |
+        |--------|
+         */
         let mut w = Workbench::new("Workbench 1");
 
         let top_plane_id = w.add_plane("Top", Plane::top());
@@ -1561,7 +1568,14 @@ mod tests {
     }
 
     #[test]
-    fn line_line_overlap_no_shared_point() {
+    fn line_line_overlap_one_segment_is_a_subset() {
+        /*
+        |--------|
+        |        |----|
+        |        |    |
+        |        |----|
+        |--------|
+         */
         let mut w = Workbench::new("Workbench 1");
 
         let top_plane_id = w.add_plane("Top", Plane::top());
@@ -1579,6 +1593,59 @@ mod tests {
         let f = sketch.add_point(3.0, 0.5);
         let g = sketch.add_point(3.0, 1.5);
         let h = sketch.add_point(2.0, 1.5);
+
+        // big one
+        sketch.add_segment(a, b);
+        sketch.add_segment(b, c);
+        sketch.add_segment(c, d);
+        sketch.add_segment(d, a);
+
+        // small one
+        sketch.add_segment(e, f);
+        sketch.add_segment(f, g);
+        sketch.add_segment(g, h);
+        sketch.add_segment(h, e);
+
+        let mut p = Project::new("A");
+        p.workbenches.push(w);
+
+        let realized = p.get_realization(0, 1000);
+        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+
+        println!("Number of faces: {:?}", sketch_split.faces.len());
+        assert_eq!(sketch_split.faces.len(), 2);
+
+        assert_eq!(sketch_split.line_segments.len(), 9);
+    }
+
+    #[test]
+    fn line_line_overlap_no_shared_points_only_overlap() {
+        /*
+                 |--------|
+                 |        |
+        |--------|        |
+        |        |        |
+        |        |--------|
+        |        |
+        |--------|
+         */
+        let mut w = Workbench::new("Workbench 1");
+
+        let top_plane_id = w.add_plane("Top", Plane::top());
+        w.add_plane("Front", Plane::front());
+        w.add_plane("Right", Plane::right());
+        let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
+        let sketch = w.get_sketch_mut("Sketch 1").unwrap();
+
+        let a = sketch.add_point(0.0, 0.0);
+        let b = sketch.add_point(2.0, 0.0);
+        let c = sketch.add_point(2.0, 2.0);
+        let d = sketch.add_point(0.0, 2.0);
+
+        let e = sketch.add_point(2.0, 1.0);
+        let f = sketch.add_point(4.0, 1.0);
+        let g = sketch.add_point(4.0, 3.0);
+        let h = sketch.add_point(2.0, 3.0);
 
         // big one
         sketch.add_segment(a, b);
