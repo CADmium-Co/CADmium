@@ -88,12 +88,12 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [x] Allow snapping to Origin
   - [x] Adjust point snapping to be zoom invariant
   - [x] Show line/circle/arc previews before committing to them
+  - [x] Fix crash that occurs when two lines overlap but don't intersect
   - [ ] Faster way to select lots of lines/arcs/circles
   - [ ] Ability to create a sketch on the face of a solid
   - [ ] Ability to create and modify constraints
   - [ ] Automatic solving of constraints (hide the step/solve buttons)
   - [ ] Handle point on line constraints and resulting face geometry
-  - [ ] Fix crash that occurs when two lines overlap but don't intersect
   - [ ] Allow some lines to be construction lines
 - [ ] Extrusion
   - [x] Ability to create a new extrusion and select faces for it
