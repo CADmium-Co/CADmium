@@ -1,11 +1,26 @@
 <script>
 	import * as THREE from 'three'
 	import { T } from '@threlte/core'
+	import SelectableSurface from './SelectableSurface.svelte'
 
 	export let name
 	export let indices
 	export let vertices
 	export let normals
+	export let truckSolid
+
+	let truck_vertices, truck_edges, truck_faces
+
+	$: {
+		let boundaries = truckSolid.boundaries[0]
+		truck_vertices = boundaries.vertices
+		truck_edges = boundaries.edges
+		truck_faces = boundaries.faces
+
+		console.log('vertices', truck_vertices)
+		console.log('edges', truck_edges)
+		console.log('faces', truck_faces)
+	}
 
 	const geometry = new THREE.BufferGeometry()
 
@@ -33,4 +48,8 @@
 <T.Group>
 	<T.Mesh {geometry} {material} />
 	<T.LineSegments geometry={edges} material={mat} />
+
+	{#each truck_faces as truck_face}
+		<SelectableSurface {truck_face} {truck_vertices} {truck_edges} />
+	{/each}
 </T.Group>

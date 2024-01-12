@@ -181,6 +181,7 @@
 		indices={solid.indices}
 		vertices={solid.vertices}
 		normals={solid.normals}
+		truckSolid={solid.truck_solid}
 	/>
 {/each}
 
