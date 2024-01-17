@@ -182,6 +182,12 @@
 		vertices={solid.vertices}
 		normals={solid.normals}
 		truckSolid={solid.truck_solid}
+		{solidLineMaterial}
+		{solidHoveredMaterial}
+		{solidSelectedMaterial}
+		{dashedHoveredMaterial}
+		{dashedLineMaterial}
+		{collisionLineMaterial}
 	/>
 {/each}
 

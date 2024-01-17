@@ -8,6 +8,12 @@
 	export let vertices
 	export let normals
 	export let truckSolid
+	export let dashedLineMaterial,
+		dashedHoveredMaterial,
+		solidLineMaterial,
+		solidHoveredMaterial,
+		solidSelectedMaterial,
+		collisionLineMaterial
 
 	let truck_vertices, truck_edges, truck_faces
 
@@ -46,10 +52,20 @@
 </script>
 
 <T.Group>
-	<T.Mesh {geometry} {material} />
-	<T.LineSegments geometry={edges} material={mat} />
+	<!-- <T.Mesh {geometry} {material} /> -->
+	<!-- <T.LineSegments geometry={edges} material={mat} /> -->
 
 	{#each truck_faces as truck_face}
-		<SelectableSurface {truck_face} {truck_vertices} {truck_edges} />
+		<SelectableSurface
+			{truck_face}
+			{truck_vertices}
+			{truck_edges}
+			{solidLineMaterial}
+			{solidHoveredMaterial}
+			{solidSelectedMaterial}
+			{dashedHoveredMaterial}
+			{dashedLineMaterial}
+			{collisionLineMaterial}
+		/>
 	{/each}
 </T.Group>
