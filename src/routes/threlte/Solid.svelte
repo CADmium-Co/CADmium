@@ -52,8 +52,8 @@
 </script>
 
 <T.Group>
-	<!-- <T.Mesh {geometry} {material} /> -->
-	<!-- <T.LineSegments geometry={edges} material={mat} /> -->
+	<T.Mesh {geometry} {material} />
+	<T.LineSegments geometry={edges} material={mat} />
 
 	{#each truck_faces as truck_face}
 		<SelectableSurface

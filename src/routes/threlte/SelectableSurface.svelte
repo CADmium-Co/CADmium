@@ -5,6 +5,7 @@
 		ShapeGeometry,
 		Vector3,
 		Vector2,
+		Path,
 		MeshStandardMaterial,
 		DoubleSide,
 		Euler,
@@ -57,19 +58,6 @@
 		let q = new Vector3(plane.q.x, plane.q.y, plane.q.z)
 		let u = p.clone().sub(o).normalize()
 		let v = q.clone().sub(o).normalize()
-		// console.log('o', o)
-		// console.log('u', u)
-		// console.log('v', v)
-
-		const boundaries = truck_face.boundaries
-		const exterior_bounds = boundaries[0]
-		// console.log('Boundaries: ', boundaries)
-		let points = curveToPoints(exterior_bounds)
-		exterior = new LineGeometry()
-		exterior.setPositions(points)
-
-		let projectedPoints = project(points, u, v, o)
-		shape.setFromPoints(projectedPoints)
 
 		// Build some Three.js vectors from the props
 		const primary = u
@@ -81,6 +69,17 @@
 		rotationMatrix.makeBasis(primary, secondary, tertiary)
 		eulerAngles = new Euler(0, 0, 0, 'XYZ')
 		eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
+
+		const boundaries = truck_face.boundaries
+		const exterior_bounds = boundaries[0]
+		// console.log('Boundaries: ', boundaries)
+		let points = curveToPoints(exterior_bounds)
+		exterior = new LineGeometry()
+		exterior.setPositions(points)
+
+		let projectedPoints = project(points, u, v, o)
+		shape.setFromPoints(projectedPoints)
+
 		// console.log('Projected points', projectedPoints)
 
 		// shape.setFromPoints(points)
@@ -110,6 +109,11 @@
 			let ring = new LineGeometry()
 			ring.setPositions(points)
 			interiors.push(ring)
+
+			let projectedPoints = project(points, u, v, o)
+			const path = new Path()
+			path.setFromPoints(projectedPoints)
+			shape.holes.push(path)
 		})
 	}
 
