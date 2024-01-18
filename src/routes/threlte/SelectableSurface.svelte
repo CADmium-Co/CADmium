@@ -1,6 +1,15 @@
 <script>
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-	import { Shape, ShapeGeometry, Vector3, MeshStandardMaterial, DoubleSide } from 'three'
+	import {
+		Shape,
+		ShapeGeometry,
+		Vector3,
+		Vector2,
+		MeshStandardMaterial,
+		DoubleSide,
+		Euler,
+		Matrix4
+	} from 'three'
 	import { T } from '@threlte/core'
 	import { flatten, promoteTo3 } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
@@ -32,18 +41,48 @@
 	let plane
 	let exterior
 	let interiors = []
+	let eulerAngles = {}
+	let origin = new Vector3(0, 0, 0)
 
 	const shape = new Shape()
 
 	if ('Plane' in surface) {
 		// cool, this surface is planar. let's extract its boundaries
 		// boundaries is an array like [0, 1] where the indices point to the truck_edges array
+
+		plane = surface.Plane
+		let o = new Vector3(plane.o.x, plane.o.y, plane.o.z)
+		origin = o
+		let p = new Vector3(plane.p.x, plane.p.y, plane.p.z)
+		let q = new Vector3(plane.q.x, plane.q.y, plane.q.z)
+		let u = p.clone().sub(o).normalize()
+		let v = q.clone().sub(o).normalize()
+		// console.log('o', o)
+		// console.log('u', u)
+		// console.log('v', v)
+
 		const boundaries = truck_face.boundaries
 		const exterior_bounds = boundaries[0]
-		console.log('Boundaries: ', boundaries)
+		// console.log('Boundaries: ', boundaries)
 		let points = curveToPoints(exterior_bounds)
 		exterior = new LineGeometry()
 		exterior.setPositions(points)
+
+		let projectedPoints = project(points, u, v, o)
+		shape.setFromPoints(projectedPoints)
+
+		// Build some Three.js vectors from the props
+		const primary = u
+		const secondary = v
+		const tertiary = u.clone().cross(v)
+
+		// Use those to make the rotation matrix and euler angles
+		const rotationMatrix = new Matrix4()
+		rotationMatrix.makeBasis(primary, secondary, tertiary)
+		eulerAngles = new Euler(0, 0, 0, 'XYZ')
+		eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
+		// console.log('Projected points', projectedPoints)
+
 		// shape.setFromPoints(points)
 
 		/*
@@ -72,16 +111,29 @@
 			ring.setPositions(points)
 			interiors.push(ring)
 		})
-
-		plane = surface.Plane
 	}
 
 	const geometry = new ShapeGeometry(shape)
 
+	function project(points, u, v, o) {
+		let retval = []
+		// console.log('Points to project:', points)
+		for (let i = 0; i < points.length; i += 3) {
+			let point3D = new Vector3(points[i], points[i + 1], points[i + 2])
+			point3D.x = point3D.x - o.x
+			point3D.y = point3D.y - o.y
+			point3D.z = point3D.z - o.z
+			let xComponent = point3D.dot(u)
+			let yComponent = point3D.dot(v)
+			retval.push(new Vector2(xComponent, yComponent))
+		}
+		return retval
+	}
+
 	function curveToPoints(exterior) {
 		let points = []
 		for (let { index, orientation } of exterior) {
-			console.log('grabbing edge: ', index, orientation)
+			// console.log('grabbing edge: ', index, orientation)
 			const edge = truck_edges[index]
 			const curve = edge.curve
 
@@ -170,6 +222,15 @@
 			/>
 		{/each}
 
-		<T.Mesh {geometry} material={standardMaterial} />
+		<T.Group
+			rotation.x={eulerAngles.x}
+			rotation.y={eulerAngles.y}
+			rotation.z={eulerAngles.z}
+			position.x={origin.x}
+			position.y={origin.y}
+			position.z={origin.z}
+		>
+			<T.Mesh {geometry} material={standardMaterial} />
+		</T.Group>
 	{/if}
 </T.Group>
