@@ -66,6 +66,39 @@ pub struct Solid {
     >,
 }
 
+impl Solid {
+    pub fn get_face_by_normal(&self, normal: &Vector3) -> Option<TruckFace> {
+        let truck_solid = &self.truck_solid;
+        let boundaries = &truck_solid.boundaries()[0];
+
+        let mut candidate_faces: Vec<TruckFace> = vec![];
+
+        boundaries.face_iter().for_each(|face| {
+            let oriented_surface = face.oriented_surface();
+
+            match oriented_surface {
+                truck_modeling::geometry::Surface::Plane(p) => {
+                    let this_face_normal = p.normal();
+
+                    if (normal.x - this_face_normal.x).abs() < 0.0001
+                        && (normal.y - this_face_normal.y).abs() < 0.0001
+                        && (normal.z - this_face_normal.z).abs() < 0.0001
+                    {
+                        candidate_faces.push(face.clone());
+                    }
+                }
+                _ => {}
+            }
+        });
+
+        match candidate_faces.len() {
+            0 => None,
+            1 => Some(candidate_faces[0].clone()),
+            _ => panic!("More than one face with the same normal!"),
+        }
+    }
+}
+
 pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
     let mut retval = vec![];
     for (a, face_a) in faces.iter().enumerate() {

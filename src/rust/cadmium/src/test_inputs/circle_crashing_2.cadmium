@@ -48,8 +48,8 @@
                                 "z": 1.0
                             }
                         },
-                        "width": 100.0,
-                        "height": 100.0
+                        "width": 1.0,
+                        "height": 1.0
                     }
                 },
                 {
@@ -81,8 +81,8 @@
                                 "z": 0.0
                             }
                         },
-                        "width": 100.0,
-                        "height": 100.0
+                        "width": 1.0,
+                        "height": 1.0
                     }
                 },
                 {
@@ -114,8 +114,8 @@
                                 "z": 0.0
                             }
                         },
-                        "width": 100.0,
-                        "height": 100.0
+                        "width": 1.0,
+                        "height": 1.0
                     }
                 },
                 {
@@ -131,9 +131,20 @@
                         "height": 0.75,
                         "sketch": {
                             "points": {
-                                "4": {
-                                    "x": -15.420312499999994,
-                                    "y": 13.9,
+                                "10": {
+                                    "x": -0.5,
+                                    "y": 0.04999999999999999,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": true
+                                },
+                                "11": {
+                                    "x": -0.8,
+                                    "y": -0.25,
                                     "m": 1.0,
                                     "dx": 0.0,
                                     "dy": 0.0,
@@ -142,9 +153,20 @@
                                     "fixed": false,
                                     "hidden": false
                                 },
-                                "8": {
-                                    "x": -28.620312499999997,
-                                    "y": 26.300000000000004,
+                                "12": {
+                                    "x": -0.8,
+                                    "y": 0.04999999999999999,
+                                    "m": 1.0,
+                                    "dx": 0.0,
+                                    "dy": 0.0,
+                                    "fx": 0.0,
+                                    "fy": 0.0,
+                                    "fixed": false,
+                                    "hidden": true
+                                },
+                                "9": {
+                                    "x": -0.5,
+                                    "y": -0.25,
                                     "m": 1.0,
                                     "dx": 0.0,
                                     "dy": 0.0,
@@ -153,64 +175,20 @@
                                     "fixed": false,
                                     "hidden": false
                                 },
-                                "2": {
-                                    "x": 15.379687499999989,
-                                    "y": 13.9,
+                                "26": {
+                                    "x": 0.8842030883410672,
+                                    "y": 0.28417164690623054,
                                     "m": 1.0,
                                     "dx": 0.0,
                                     "dy": 0.0,
                                     "fx": 0.0,
                                     "fy": 0.0,
                                     "fixed": false,
-                                    "hidden": false
+                                    "hidden": true
                                 },
-                                "1": {
-                                    "x": -15.420312499999994,
-                                    "y": -14.500000000000009,
-                                    "m": 1.0,
-                                    "dx": 0.0,
-                                    "dy": 0.0,
-                                    "fx": 0.0,
-                                    "fy": 0.0,
-                                    "fixed": false,
-                                    "hidden": false
-                                },
-                                "6": {
-                                    "x": 28.379687500000003,
-                                    "y": 26.3,
-                                    "m": 1.0,
-                                    "dx": 0.0,
-                                    "dy": 0.0,
-                                    "fx": 0.0,
-                                    "fy": 0.0,
-                                    "fixed": false,
-                                    "hidden": false
-                                },
-                                "3": {
-                                    "x": 15.379687499999989,
-                                    "y": -14.500000000000009,
-                                    "m": 1.0,
-                                    "dx": 0.0,
-                                    "dy": 0.0,
-                                    "fx": 0.0,
-                                    "fy": 0.0,
-                                    "fixed": false,
-                                    "hidden": false
-                                },
-                                "5": {
-                                    "x": -28.620312499999997,
-                                    "y": -26.1,
-                                    "m": 1.0,
-                                    "dx": 0.0,
-                                    "dy": 0.0,
-                                    "fx": 0.0,
-                                    "fy": 0.0,
-                                    "fixed": false,
-                                    "hidden": false
-                                },
-                                "7": {
-                                    "x": 28.379687500000003,
-                                    "y": -26.1,
+                                "25": {
+                                    "x": 0.8959629088949441,
+                                    "y": 0.1005193519453087,
                                     "m": 1.0,
                                     "dx": 0.0,
                                     "dy": 0.0,
@@ -220,66 +198,31 @@
                                     "hidden": false
                                 }
                             },
-                            "highest_point_id": 8,
-                            "line_segments": {
-                                "7": {
-                                    "start": 6,
-                                    "end": 7
-                                },
-                                "2": {
-                                    "start": 4,
-                                    "end": 2
-                                },
-                                "4": {
-                                    "start": 3,
-                                    "end": 1
+                            "highest_point_id": 26,
+                            "line_segments": {},
+                            "highest_line_segment_id": 12,
+                            "circles": {
+                                "3": {
+                                    "center": 25,
+                                    "radius": 0.18402841852244675,
+                                    "top": 26
                                 },
                                 "1": {
-                                    "start": 1,
-                                    "end": 4
+                                    "center": 9,
+                                    "radius": 0.3,
+                                    "top": 10
                                 },
-                                "3": {
-                                    "start": 2,
-                                    "end": 3
-                                },
-                                "5": {
-                                    "start": 5,
-                                    "end": 8
-                                },
-                                "6": {
-                                    "start": 8,
-                                    "end": 6
-                                },
-                                "8": {
-                                    "start": 7,
-                                    "end": 5
+                                "2": {
+                                    "center": 11,
+                                    "radius": 0.3,
+                                    "top": 12
                                 }
                             },
-                            "highest_line_segment_id": 8,
-                            "circles": {},
-                            "highest_circle_id": 0,
+                            "highest_circle_id": 3,
                             "arcs": {},
-                            "highest_arc_id": 0,
+                            "highest_arc_id": 4,
                             "constraints": {},
                             "highest_constraint_id": 0
-                        }
-                    }
-                },
-                {
-                    "name": "Extrusion 1",
-                    "unique_id": "Extrusion-0",
-                    "suppressed": false,
-                    "data": {
-                        "type": "Extrusion",
-                        "extrusion": {
-                            "sketch_id": "Sketch-0",
-                            "face_ids": [
-                                0,
-                                1
-                            ],
-                            "length": 25.0,
-                            "offset": 0.0,
-                            "direction": "Normal"
                         }
                     }
                 }

@@ -7,6 +7,8 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 
+use truck_modeling::Plane as TruckPlane;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Project {
     pub name: String,
@@ -283,14 +285,21 @@ impl Project {
                     if step.unique_id == *sketch_id {
                         match &mut step.data {
                             StepData::Sketch {
-                                plane_id: pn2,
+                                plane_description,
                                 width,
                                 height,
                                 sketch,
                             } => {
-                                *pn2 = pid.to_owned();
-
-                                return Ok(format!("\"plane_id\": \"{}\"", pid));
+                                match plane_description {
+                                    PlaneDescription::PlaneId(plane_id) => {
+                                        *plane_id = pid.to_owned();
+                                        return Ok(format!("\"plane_id\": \"{}\"", pid));
+                                    }
+                                    _ => {
+                                        panic!("Not implemented yet");
+                                    }
+                                }
+                                // *pn2 = pid.to_owned();
                             }
                             _ => {}
                         }
@@ -467,7 +476,7 @@ impl Workbench {
         for step in self.history.iter_mut() {
             match &mut step.data {
                 StepData::Sketch {
-                    plane_id: _,
+                    plane_description: _,
                     width: _,
                     height: _,
                     sketch,
@@ -486,7 +495,7 @@ impl Workbench {
         for step in self.history.iter_mut() {
             match &mut step.data {
                 StepData::Sketch {
-                    plane_id: _,
+                    plane_description: _,
                     width: _,
                     height: _,
                     sketch,
@@ -671,6 +680,26 @@ impl Workbench {
         None
     }
 
+    pub fn add_sketch_to_solid_face(
+        &mut self,
+        new_sketch_name: &str,
+        solid_id: &str,
+        normal: Vector3,
+    ) -> String {
+        // TODO: maybe this shouldn't just take in a normal. Maybe it should take in the o, p, q points as well
+        // that way it could try to match even if there are multiple faces on this solid which have the same normal vector
+        println!("New Normal! {:?}", normal);
+        // called like: wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
+
+        let counter = self.step_counters.get_mut("Sketch").unwrap();
+        let new_step = Step::new_sketch_on_solid_face(&new_sketch_name, solid_id, normal, *counter);
+        let new_step_id = new_step.unique_id.clone();
+        self.history.push(new_step);
+        *counter += 1;
+
+        new_step_id
+    }
+
     pub fn add_sketch_to_plane(&mut self, name: &str, plane_id: &str) -> String {
         if plane_id != "" {
             // if the plane id is specified, check to make sure a plane with that ID exists
@@ -762,30 +791,75 @@ impl Workbench {
                 StepData::Sketch {
                     width,
                     height,
-                    plane_id,
+                    plane_description,
                     sketch,
-                } => {
-                    if plane_id == "" {
-                        println!("Sketch {} has no plane", step.name);
-                        continue;
-                    }
+                } => match plane_description {
+                    PlaneDescription::PlaneId(plane_id) => {
+                        if plane_id == "" {
+                            println!("Sketch {} has no plane", step.name);
+                            continue;
+                        }
 
-                    let plane = &realized.planes[plane_id];
+                        let plane = &realized.planes[plane_id];
 
-                    realized.sketches.insert(
-                        step.unique_id.to_owned(),
-                        (
-                            RealSketch::new(&plane.name, plane_id, plane, sketch),
-                            RealSketch::new(
-                                &plane.name,
-                                plane_id,
-                                plane,
-                                &sketch.split_intersections(),
+                        realized.sketches.insert(
+                            step.unique_id.to_owned(),
+                            (
+                                RealSketch::new(&plane.name, plane_id, plane, sketch),
+                                RealSketch::new(
+                                    &plane.name,
+                                    plane_id,
+                                    plane,
+                                    &sketch.split_intersections(),
+                                ),
+                                step.name.clone(),
                             ),
-                            step.name.clone(),
-                        ),
-                    );
-                }
+                        );
+                    }
+                    PlaneDescription::SolidFace { solid_id, normal } => {
+                        let solid = &realized.solids[solid_id];
+                        let face = solid.get_face_by_normal(normal).unwrap();
+                        let oriented_surface = face.oriented_surface();
+
+                        println!("Surface: {:?}", oriented_surface);
+                        let mut sketch_plane;
+                        match oriented_surface {
+                            truck_modeling::geometry::Surface::Plane(p) => {
+                                let plane = Plane::from_truck(p);
+                                println!("Plane: {:?}", plane);
+                                sketch_plane = plane;
+                            }
+                            _ => {
+                                panic!("I only know how to put sketches on planes");
+                            }
+                        }
+
+                        let new_plane_id = format!("_derived:{}", step.name);
+
+                        let rp = RealPlane {
+                            plane: sketch_plane.clone(),
+                            width: *width,
+                            height: *height,
+                            name: new_plane_id.clone(),
+                        };
+                        realized.planes.insert(new_plane_id.clone(), rp);
+                        let rp = &realized.planes[&new_plane_id];
+
+                        realized.sketches.insert(
+                            step.unique_id.to_owned(),
+                            (
+                                RealSketch::new(&new_plane_id, &new_plane_id, &rp, sketch),
+                                RealSketch::new(
+                                    &new_plane_id,
+                                    &new_plane_id,
+                                    &rp,
+                                    &sketch.split_intersections(),
+                                ),
+                                step.name.clone(),
+                            ),
+                        );
+                    }
+                },
                 StepData::Extrusion { extrusion } => {
                     let (_sketch, split_sketch, _name) = &realized.sketches[&extrusion.sketch_id];
                     let plane = &realized.planes[&split_sketch.plane_id];
@@ -885,7 +959,29 @@ impl Step {
             unique_id: format!("Sketch-{}", sketch_id),
             suppressed: false,
             data: StepData::Sketch {
-                plane_id: plane_id.to_owned(),
+                plane_description: PlaneDescription::PlaneId(plane_id.to_owned()),
+                width: 1.25,
+                height: 0.75,
+                sketch: Sketch::new(),
+            },
+        }
+    }
+
+    pub fn new_sketch_on_solid_face(
+        name: &str,
+        solid_id: &str,
+        normal: Vector3,
+        sketch_id: u64,
+    ) -> Self {
+        Step {
+            name: name.to_owned(),
+            unique_id: format!("Sketch-{}", sketch_id),
+            suppressed: false,
+            data: StepData::Sketch {
+                plane_description: PlaneDescription::SolidFace {
+                    solid_id: solid_id.to_owned(),
+                    normal,
+                },
                 width: 1.25,
                 height: 0.75,
                 sketch: Sketch::new(),
@@ -915,7 +1011,7 @@ pub enum StepData {
         height: f64,
     },
     Sketch {
-        plane_id: String,
+        plane_description: PlaneDescription,
         width: f64,
         height: f64,
         sketch: Sketch,
@@ -923,6 +1019,12 @@ pub enum StepData {
     Extrusion {
         extrusion: Extrusion,
     },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum PlaneDescription {
+    PlaneId(String),
+    SolidFace { solid_id: String, normal: Vector3 },
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -983,6 +1085,19 @@ impl Plane {
             primary: Vector3::new(0.0, 1.0, 0.0),
             secondary: Vector3::new(0.0, 0.0, 1.0),
             tertiary: Vector3::new(1.0, 0.0, 0.0),
+        }
+    }
+
+    pub fn from_truck(tp: TruckPlane) -> Self {
+        let o = tp.origin();
+        let u = tp.u_axis();
+        let v = tp.v_axis();
+        let n = tp.normal();
+        Plane {
+            origin: Point3::new(o.x, o.y, o.z),
+            primary: Vector3::new(u.x, u.y, u.z),
+            secondary: Vector3::new(v.x, v.y, v.z),
+            tertiary: Vector3::new(n.x, n.y, n.z),
         }
     }
 
@@ -1444,18 +1559,19 @@ mod tests {
         let realization = p.get_realization(0, 1000);
     }
 
-    #[test]
-    fn to_and_from_json() {
-        // let mut p = Project::new("Test Project");
-        // p.add_defaults();
+    // Removed because this seems pretty redundant with all the other tests that read .cadmium files
+    // #[test]
+    // fn to_and_from_json() {
+    //     // let mut p = Project::new("Test Project");
+    //     // p.add_defaults();
 
-        let file_contents =
-            std::fs::read_to_string("/Users/matthewferraro/Downloads/first_project.cadmium")
-                .unwrap();
+    //     let file_contents =
+    //         std::fs::read_to_string("/Users/matthewferraro/Downloads/first_project.cadmium")
+    //             .unwrap();
 
-        let p2 = Project::from_json(&file_contents);
-        println!("{:?}", p2);
-    }
+    //     let p2 = Project::from_json(&file_contents);
+    //     println!("{:?}", p2);
+    // }
 
     #[test]
     fn circle_crashing() {
@@ -1463,12 +1579,91 @@ mod tests {
         // p.add_defaults();
 
         let file_contents =
-            std::fs::read_to_string("/Users/matthewferraro/Downloads/circle_crashing_2.cadmium")
-                .unwrap();
+            std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
         let p2 = Project::from_json(&file_contents);
 
         let realization = p2.get_realization(0, 1000);
         println!("{:?}", realization);
+    }
+
+    #[test]
+    fn secondary_extrusion() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+        let mut wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
+        let mut s = wb.get_sketch_mut("Sketch 1").unwrap();
+        let ll = s.add_point(0.0, 0.0);
+        let lr = s.add_point(40.0, 0.0);
+        let ul = s.add_point(0.0, 40.0);
+        let ur = s.add_point(40.0, 40.0);
+        s.add_segment(ll, lr);
+        s.add_segment(lr, ur);
+        s.add_segment(ur, ul);
+        s.add_segment(ul, ll);
+
+        let extrusion = Extrusion {
+            sketch_id: "Sketch-0".to_owned(),
+            face_ids: vec![0],
+            length: 25.0,
+            offset: 0.0,
+            direction: Direction::Normal,
+        };
+        wb.add_extrusion("Ext1", extrusion);
+
+        // let realization = p.get_realization(0, 1000);
+        // let solids = realization.solids;
+        // let ext_1_0 = &solids["Ext1:0"];
+
+        // let truck_solid = &ext_1_0.truck_solid;
+        // in our case there is only one solid object so just take the first
+        // let boundaries = &truck_solid.boundaries()[0];
+
+        // boundaries.face_iter().for_each(|face| {
+        //     let surface = face.get_surface();
+        //     let oriented_surface = face.oriented_surface();
+
+        //     match oriented_surface {
+        //         truck_modeling::geometry::Surface::Plane(p) => {
+        //             let normal = p.normal();
+        //             println!("Plane: {:?} ", p);
+        //             println!("Normal: {:?}", normal);
+        //         }
+        //         _ => {}
+        //     }
+        // });
+
+        // let result = serde_json::to_string(boundaries).unwrap();
+        // println!("Boundaries: {}", &result);
+
+        let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
+        let mut s2 = wb.get_sketch_mut("Sketch-2").unwrap();
+
+        let ll = s2.add_point(15.0, 15.0);
+        let lr = s2.add_point(25.0, 15.0);
+        let ul = s2.add_point(15.0, 25.0);
+        let ur = s2.add_point(25.0, 25.0);
+        s2.add_segment(ll, lr);
+        s2.add_segment(lr, ur);
+        s2.add_segment(ur, ul);
+        s2.add_segment(ul, ll);
+
+        println!("S2: {:?}", s2);
+
+        let extrusion2 = Extrusion {
+            sketch_id: s2_id.to_owned(),
+            face_ids: vec![0],
+            length: 25.0,
+            offset: 0.0,
+            direction: Direction::Normal,
+        };
+        wb.add_extrusion("Ext2", extrusion2);
+
+        let realization = p.get_realization(0, 1000);
+        let solids = realization.solids;
+
+        let as_json = serde_json::to_string(&p).unwrap();
+        println!("As json: {}", as_json);
     }
 }

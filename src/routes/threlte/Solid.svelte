@@ -55,8 +55,9 @@
 	<T.Mesh {geometry} {material} />
 	<T.LineSegments geometry={edges} material={mat} />
 
-	{#each truck_faces as truck_face}
+	{#each truck_faces as truck_face, i (i)}
 		<SelectableSurface
+			id={i}
 			{truck_face}
 			{truck_vertices}
 			{truck_edges}

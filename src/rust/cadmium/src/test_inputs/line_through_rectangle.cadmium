@@ -124,7 +124,9 @@
                     "suppressed": false,
                     "data": {
                         "type": "Sketch",
-                        "plane_id": "Plane-0",
+                        "plane_description": {
+                            "PlaneId": "Plane-0"
+                        },
                         "width": 1.25,
                         "height": 0.75,
                         "sketch": {

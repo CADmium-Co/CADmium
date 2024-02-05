@@ -12,12 +12,18 @@
 		Matrix4
 	} from 'three'
 	import { T } from '@threlte/core'
-	import { flatten, promoteTo3 } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import { flatten } from './projectUtils'
+	import {
+		currentlySelected,
+		currentlyMousedOver,
+		selectingFor,
+		selectionMax,
+		selectionMin
+	} from './stores'
 
 	import nurbs from 'nurbs'
 
-	export let truck_face, truck_vertices, truck_edges
+	export let truck_face, truck_vertices, truck_edges, id
 	export let dashedLineMaterial,
 		dashedHoveredMaterial,
 		solidLineMaterial,
@@ -31,6 +37,19 @@
 		metalness: 0.0,
 		transparent: true,
 		opacity: 0.1,
+		depthWrite: false,
+		depthTest: true,
+		wireframe: false,
+		polygonOffset: true,
+		polygonOffsetFactor: -4
+	})
+
+	const hoveredMaterial = new MeshStandardMaterial({
+		color: '#ff0000',
+		side: DoubleSide,
+		metalness: 0.0,
+		transparent: true,
+		opacity: 0.5,
 		depthWrite: false,
 		depthTest: true,
 		wireframe: false,
@@ -204,6 +223,12 @@
 
 		return points
 	}
+
+	let hovered = false
+	let selected = false
+	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
+
+	const type = 'meshFace'
 </script>
 
 <T.Group>
@@ -234,7 +259,54 @@
 			position.y={origin.y}
 			position.z={origin.z}
 		>
-			<T.Mesh {geometry} material={standardMaterial} />
+			<T.Mesh
+				{geometry}
+				material={hovered ? hoveredMaterial : standardMaterial}
+				on:pointerenter={(e) => {
+					console.log('On Pointer Enter!')
+					if ($selectingFor.includes(type)) {
+						console.log('On enter and includes type')
+						e.stopPropagation()
+						hovered = true
+						$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+					}
+				}}
+				on:pointerleave={() => {
+					console.log('On Pointer Leave!')
+					if ($selectingFor.includes(type)) {
+						hovered = false
+						$currentlyMousedOver = $currentlyMousedOver.filter(
+							(item) => !(item.id === id && item.type === type)
+						)
+					} else {
+						hovered = false
+					}
+				}}
+				on:click={(e) => {
+					if ($selectingFor.includes(type)) {
+						e.stopPropagation()
+						if ($currentlySelected.some((e) => e.id === id && e.type === type)) {
+							if ($currentlySelected.length - 1 < $selectionMin) {
+								// we can't deselect if doing so puts us below the minimum
+								// number of selected entities
+								return
+							}
+
+							$currentlySelected = $currentlySelected.filter(
+								(item) => !(item.id === id && item.type === type)
+							)
+						} else {
+							if ($currentlySelected.length + 1 > $selectionMax) {
+								// if selecting this entity puts us above the maximum
+								// number of selected entities, boot the oldest one
+								$currentlySelected.shift()
+							}
+
+							$currentlySelected = [...$currentlySelected, { type: type, id: id }]
+						}
+					}
+				}}
+			/>
 		</T.Group>
 	{/if}
 </T.Group>
