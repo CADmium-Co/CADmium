@@ -435,7 +435,7 @@ mod tests {
 
         sketch.save_svg("test_svgs/two_intersecting_squares_unsplit.svg");
 
-        let sketch = sketch.split_intersections();
+        let sketch = sketch.split_intersections(false);
         sketch.save_svg("test_svgs/two_intersecting_squares_split.svg");
     }
 
@@ -454,7 +454,7 @@ mod tests {
         sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
 
         // Split the intersections, creating a new and different sketch
-        let sketch = sketch.split_intersections();
+        let sketch = sketch.split_intersections(false);
 
         // Save this one as an SVG, it will have three non-overlapping paths of two arcs each
         sketch.save_svg("test_svgs/two_intersecting_circles_split.svg");

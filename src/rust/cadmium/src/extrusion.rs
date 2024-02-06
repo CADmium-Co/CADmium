@@ -164,23 +164,23 @@ pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
         .map(|face| sketch.face_as_polygon(face))
         .collect::<Vec<_>>();
     for (new_face_idx, face) in all_sketch_faces.iter().enumerate() {
-        println!("\nNew face: {}: {:?}", new_face_idx, face);
+        // println!("\nNew face: {}: {:?}", new_face_idx, face);
 
         let as_geo_polygon = sketch.face_as_polygon(face);
-        println!("as_geo_polygon: {:?}", as_geo_polygon);
+        // println!("as_geo_polygon: {:?}", as_geo_polygon);
 
         let random_point_on_face = as_geo_polygon
             .interior_point()
             .expect("Every polygon should be able to yield an interior point");
-        println!("Random point on face: {:?}", random_point_on_face);
+        // println!("Random point on face: {:?}", random_point_on_face);
 
         let mut located = false;
         for (old_face_idx, old_face) in old_faces_as_polygons.iter().enumerate() {
             if old_face.contains(&random_point_on_face) {
-                println!(
-                    "Old face {} contains point {:?}",
-                    old_face_idx, random_point_on_face
-                );
+                // println!(
+                //     "Old face {} contains point {:?}",
+                //     old_face_idx, random_point_on_face
+                // );
                 // this means the old face contains the random point on the new face
                 // so we can keep this new face
                 located = true;
@@ -188,10 +188,10 @@ pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
             }
         }
         if !located {
-            println!(
-                "Random point from new face {} is not contained by any old faces",
-                new_face_idx
-            );
+            // println!(
+            //     "Random point from new face {} is not contained by any old faces",
+            //     new_face_idx
+            // );
             faces_to_remove.push(new_face_idx);
         }
     }
@@ -199,12 +199,12 @@ pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
     // remove the faces that we don't want
     faces_to_remove.sort();
     faces_to_remove.reverse();
-    println!("New Faces to remove: {:?}", faces_to_remove);
+    // println!("New Faces to remove: {:?}", faces_to_remove);
     for face_to_remove in faces_to_remove {
         all_sketch_faces.remove(face_to_remove);
     }
 
-    println!("Merge faces 2 output: {}", faces.len());
+    // println!("Merge faces 2 output: {}", faces.len());
     all_sketch_faces
 }
 

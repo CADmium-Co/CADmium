@@ -6,6 +6,7 @@ use crate::{
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
+use truck_polymesh::InnerSpace;
 
 use truck_modeling::Plane as TruckPlane;
 use truck_shapeops::and as solid_and;
@@ -692,7 +693,7 @@ impl Workbench {
     ) -> String {
         // TODO: maybe this shouldn't just take in a normal. Maybe it should take in the o, p, q points as well
         // that way it could try to match even if there are multiple faces on this solid which have the same normal vector
-        println!("New Normal! {:?}", normal);
+        // println!("New Normal! {:?}", normal);
         // called like: wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
 
         let counter = self.step_counters.get_mut("Sketch").unwrap();
@@ -814,7 +815,7 @@ impl Workbench {
                                     &plane.name,
                                     plane_id,
                                     plane,
-                                    &sketch.split_intersections(),
+                                    &sketch.split_intersections(false),
                                 ),
                                 step.name.clone(),
                             ),
@@ -838,12 +839,12 @@ impl Workbench {
                             }
                         }
 
-                        let new_plane_id = format!("_derived:{}", step.name);
+                        let new_plane_id = format!("derived_plane_for:{}", step.name);
 
                         let rp = RealPlane {
                             plane: sketch_plane.clone(),
-                            width: *width,
-                            height: *height,
+                            width: 90.0,
+                            height: 60.0,
                             name: new_plane_id.clone(),
                         };
                         realized.planes.insert(new_plane_id.clone(), rp);
@@ -857,7 +858,7 @@ impl Workbench {
                                     &new_plane_id,
                                     &new_plane_id,
                                     &rp,
-                                    &sketch.split_intersections(),
+                                    &sketch.split_intersections(false),
                                 ),
                                 step.name.clone(),
                             ),
@@ -888,27 +889,31 @@ impl Workbench {
                                 for (_, solid) in solids.iter() {
                                     // let ts = solid.truck_solid;
 
-                                    let result = solid_or(
-                                        &existing_solid.truck_solid,
-                                        &solid.truck_solid,
-                                        0.01,
-                                    );
+                                    // let result = solid_or(
+                                    //     &existing_solid.truck_solid,
+                                    //     &solid.truck_solid,
+                                    //     0.01,
+                                    // );
 
-                                    println!("MERGE OR Result: {:?}", result);
+                                    // println!("MERGE OR Result: {:?}", result);
 
-                                    let result = solid_and(
-                                        &existing_solid.truck_solid,
-                                        &solid.truck_solid,
-                                        0.01,
-                                    );
+                                    // let result = solid_and(
+                                    //     &existing_solid.truck_solid,
+                                    //     &solid.truck_solid,
+                                    //     0.01,
+                                    // );
 
-                                    println!("MERGE AND Result: {:?}", result);
+                                    // println!("MERGE AND Result: {:?}", result);
                                     // ts.add(&existing_solid.truck_solid);
 
                                     // realized
                                     //     .solids
                                     //     .insert(name, Solid::from_truck_solid(name, ts));
                                 }
+                            }
+
+                            for (name, solid) in solids {
+                                realized.solids.insert(name, solid);
                             }
 
                             // for (name, solid) in solids {
@@ -1044,8 +1049,8 @@ impl Step {
                     solid_id: solid_id.to_owned(),
                     normal,
                 },
-                width: 1.25,
-                height: 0.75,
+                width: 12.5,
+                height: 7.5,
                 sketch: Sketch::new(),
             },
         }
@@ -1152,9 +1157,9 @@ impl Plane {
 
     pub fn from_truck(tp: TruckPlane) -> Self {
         let o = tp.origin();
-        let u = tp.u_axis();
-        let v = tp.v_axis();
-        let n = tp.normal();
+        let u = tp.u_axis().normalize();
+        let v = tp.v_axis().normalize();
+        let n = tp.normal().normalize();
         Plane {
             origin: Point3::new(o.x, o.y, o.z),
             primary: Vector3::new(u.x, u.y, u.z),
@@ -1385,7 +1390,6 @@ impl RealSketch {
                 .insert(*constraint_id, real_constraint);
         }
 
-        println!("Finding faces?");
         let (faces, unused_segments) = sketch.find_faces();
         real_sketch.faces = faces;
 
@@ -1704,15 +1708,15 @@ mod tests {
         let mut s2 = wb.get_sketch_mut("Sketch-2").unwrap();
 
         // smaller
-        // let ll = s2.add_point(15.0, 15.0);
-        // let lr = s2.add_point(25.0, 15.0);
-        // let ul = s2.add_point(15.0, 25.0);
-        // let ur = s2.add_point(25.0, 25.0);
+        let ll = s2.add_point(15.0, 15.0);
+        let lr = s2.add_point(25.0, 15.0);
+        let ul = s2.add_point(15.0, 25.0);
+        let ur = s2.add_point(25.0, 25.0);
         // bigger!
-        let ll = s2.add_point(-10.0, -10.0);
-        let lr = s2.add_point(50.0, -10.0);
-        let ul = s2.add_point(-10.0, 50.0);
-        let ur = s2.add_point(50.0, 50.0);
+        // let ll = s2.add_point(-10.0, -10.0);
+        // let lr = s2.add_point(50.0, -10.0);
+        // let ul = s2.add_point(-10.0, 50.0);
+        // let ur = s2.add_point(50.0, 50.0);
         s2.add_segment(ll, lr);
         s2.add_segment(lr, ur);
         s2.add_segment(ur, ul);
@@ -1736,7 +1740,7 @@ mod tests {
         let num_solids = solids.len();
         println!("Num Solids: {:?}", num_solids);
 
-        // let as_json = serde_json::to_string(&p).unwrap();
-        // println!("As json: {}", as_json);
+        let as_json = serde_json::to_string(&p).unwrap();
+        println!("As json: {}", as_json);
     }
 }

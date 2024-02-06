@@ -68,10 +68,10 @@ impl Sketch {
     pub fn from_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Self {
         let mut new_sketch = Sketch::new();
 
-        println!("Creating a sketch just from faces");
-        for face in faces {
-            println!("Face: {:?}", face);
-        }
+        // println!("Creating a sketch just from faces");
+        // for face in faces {
+        //     println!("Face: {:?}", face);
+        // }
 
         new_sketch.points = real_sketch.points_2d.clone();
 

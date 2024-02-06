@@ -88,12 +88,15 @@ impl Sketch {
         all_shapes: &IncrementingMap<Shape>,
         shape_a_id: u64,
         shape_b_id: u64,
+        debug: bool,
     ) -> Vec<Collision> {
         let shape_a = all_shapes.items.get(&(shape_a_id)).unwrap();
         let shape_b = all_shapes.items.get(&(shape_b_id)).unwrap();
 
-        println!("Shape A ({}): {:?}", shape_a_id, shape_a);
-        println!("Shape B ({}): {:?}", shape_b_id, shape_b);
+        if (debug) {
+            println!("Shape A ({}): {:?}", shape_a_id, shape_a);
+            println!("Shape B ({}): {:?}", shape_b_id, shape_b);
+        }
 
         match (shape_a, shape_b) {
             (Shape::Circle(circle_a), Shape::Circle(circle_b)) => {
@@ -121,7 +124,7 @@ impl Sketch {
                 temp_sketch.line_arc_collisions(line_a, shape_a_id, arc_b, shape_b_id)
             }
             (Shape::Line(line_a), Shape::Line(line_b)) => {
-                temp_sketch.line_line_collisions(line_a, shape_a_id, line_b, shape_b_id)
+                temp_sketch.line_line_collisions(line_a, shape_a_id, line_b, shape_b_id, false)
             }
         }
     }
@@ -134,8 +137,11 @@ impl Sketch {
         new_shapes: &mut Vec<u64>,
         recently_deleted: &mut Vec<u64>,
         collision: Collision,
+        debug: bool,
     ) {
-        println!("Processing collision: {:?}", collision);
+        if (debug) {
+            println!("Processing collision: {:?}", collision);
+        }
 
         let shape_a_id = collision.shape_a;
         let shape_b_id = collision.shape_b;
@@ -155,7 +161,9 @@ impl Sketch {
                 all_shapes.items.insert(shape_a_id, Shape::Arc(arc_a));
                 all_shapes.items.insert(shape_b_id, Shape::Arc(arc_b));
 
-                println!("Replaced two circles with two arcs, keeping the same IDs");
+                if (debug) {
+                    println!("Replaced two circles with two arcs, keeping the same IDs");
+                }
             }
             (Shape::Circle(circle_a), Shape::Arc(arc_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
@@ -176,11 +184,13 @@ impl Sketch {
                 new_shapes.push(new_arc_b2_id);
                 recently_deleted.push(all_shapes.remove_item(shape_b_id));
 
-                println!("Replaced a circle with an arc ({})", shape_a_id);
-                println!(
-                    "AND replaced an arc ({}) with 2 arcs ({}), ({})",
-                    shape_b_id, new_arc_b1_id, new_arc_b2_id
-                );
+                if (debug) {
+                    println!("Replaced a circle with an arc ({})", shape_a_id);
+                    println!(
+                        "AND replaced an arc ({}) with 2 arcs ({}), ({})",
+                        shape_b_id, new_arc_b1_id, new_arc_b2_id
+                    );
+                }
             }
             (Shape::Circle(_), Shape::Line(_)) => todo!(),
             (Shape::Arc(_), Shape::Circle(_)) => todo!(),
@@ -200,16 +210,18 @@ impl Sketch {
                 recently_deleted.push(all_shapes.remove_item(shape_a_id));
                 recently_deleted.push(all_shapes.remove_item(shape_b_id));
 
-                println!("replaced two arcs with four arcs");
-                println!(
-                    "Replaced arc {} with arcs {} and {}",
-                    shape_a_id, new_shapes[0], new_shapes[1]
-                );
+                if (debug) {
+                    println!("replaced two arcs with four arcs");
+                    println!(
+                        "Replaced arc {} with arcs {} and {}",
+                        shape_a_id, new_shapes[0], new_shapes[1]
+                    );
 
-                println!(
-                    "Replaced arc {} with arcs {} and {}",
-                    shape_b_id, new_shapes[2], new_shapes[3]
-                );
+                    println!(
+                        "Replaced arc {} with arcs {} and {}",
+                        shape_b_id, new_shapes[2], new_shapes[3]
+                    );
+                }
             }
             (Shape::Arc(_), Shape::Line(_)) => todo!(),
             (Shape::Line(line_a), Shape::Circle(circle_b)) => {
@@ -227,11 +239,13 @@ impl Sketch {
                 new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
                 recently_deleted.push(all_shapes.remove_item(shape_a_id));
 
-                println!(
-                    "Broke line {} into {} and {}",
-                    shape_a_id, new_shapes[0], new_shapes[1]
-                );
-                println!("Replaced circle {} with arc in place", shape_b_id);
+                if (debug) {
+                    println!(
+                        "Broke line {} into {} and {}",
+                        shape_a_id, new_shapes[0], new_shapes[1]
+                    );
+                    println!("Replaced circle {} with arc in place", shape_b_id);
+                }
             }
             (Shape::Line(line_a), Shape::Arc(arc_b)) => {
                 let new_point_id = temp_sketch.add_point(point.x, point.y);
@@ -249,14 +263,16 @@ impl Sketch {
                 recently_deleted.push(all_shapes.remove_item(shape_a_id));
                 recently_deleted.push(all_shapes.remove_item(shape_b_id));
 
-                println!(
-                    "Replaced line {} with {} and {}",
-                    recently_deleted[0], new_shapes[0], new_shapes[1]
-                );
-                println!(
-                    "Replaced arc {} with {} and {}",
-                    recently_deleted[1], new_shapes[2], new_shapes[3]
-                );
+                if (debug) {
+                    println!(
+                        "Replaced line {} with {} and {}",
+                        recently_deleted[0], new_shapes[0], new_shapes[1]
+                    );
+                    println!(
+                        "Replaced arc {} with {} and {}",
+                        recently_deleted[1], new_shapes[2], new_shapes[3]
+                    );
+                }
             }
             (Shape::Line(line_a), Shape::Line(line_b)) => {
                 let collision_point_id =
@@ -267,7 +283,9 @@ impl Sketch {
                         (None, IsEnd) => line_b.end,
                         (None, None) => temp_sketch.add_point(point.x, point.y),
                         (Complete, Complete) => {
-                            println!("COMPLETE degeneracy found. Removing line {}", shape_b_id);
+                            if (debug) {
+                                println!("COMPLETE degeneracy found. Removing line {}", shape_b_id);
+                            }
                             all_shapes.remove_item(shape_b_id);
 
                             recently_deleted.push(shape_b_id);
@@ -275,7 +293,9 @@ impl Sketch {
                             return;
                         }
                         (_, _) => {
-                            println!("One line continues the other. Nothing to be done!");
+                            if (debug) {
+                                println!("One line continues the other. Nothing to be done!");
+                            }
                             return;
                         }
                     };
@@ -287,10 +307,12 @@ impl Sketch {
                     new_shapes.push(all_shapes.add_item(Shape::Line(line_a1)));
                     new_shapes.push(all_shapes.add_item(Shape::Line(line_a2)));
                     recently_deleted.push(all_shapes.remove_item(shape_a_id));
-                    println!(
-                        "Replaced line {} with lines {} and {}",
-                        shape_a_id, new_shapes[0], new_shapes[1]
-                    );
+                    if (debug) {
+                        println!(
+                            "Replaced line {} with lines {} and {}",
+                            shape_a_id, new_shapes[0], new_shapes[1]
+                        );
+                    }
                 }
 
                 if collision.shape_b_degeneracy == None {
@@ -300,12 +322,14 @@ impl Sketch {
                     new_shapes.push(all_shapes.add_item(Shape::Line(line_b1)));
                     new_shapes.push(all_shapes.add_item(Shape::Line(line_b2)));
                     recently_deleted.push(all_shapes.remove_item(shape_b_id));
-                    println!(
-                        "Replaced line {} with lines {} and {}",
-                        shape_b_id,
-                        new_shapes[new_shapes.len() - 2],
-                        new_shapes[new_shapes.len() - 1]
-                    );
+                    if (debug) {
+                        println!(
+                            "Replaced line {} with lines {} and {}",
+                            shape_b_id,
+                            new_shapes[new_shapes.len() - 2],
+                            new_shapes[new_shapes.len() - 1]
+                        );
+                    }
                 }
 
                 if collision.shape_a_degeneracy == IsEnd || collision.shape_a_degeneracy == IsStart
@@ -334,10 +358,13 @@ impl Sketch {
         possible_shape_collisions: &mut Vec<u64>,
         new_shapes: &mut Vec<u64>,
         recently_deleted: &mut Vec<u64>,
+        debug: bool,
     ) -> bool {
         // the bool we return indicates whether any work was done
 
-        println!("----- Okay let's process:");
+        if (debug) {
+            println!("----- Okay let's process:");
+        }
 
         if !recently_deleted.is_empty() {
             println!("Something was recently deleted, let's fix it");
@@ -404,7 +431,9 @@ impl Sketch {
         }
 
         if !possible_shape_collisions.is_empty() || !new_shapes.is_empty() {
-            println!("Possible shape collisions + new shapes! Let's add some pairs to check");
+            if (debug) {
+                println!("Possible shape collisions + new shapes! Let's add some pairs to check");
+            }
             for possible_shape_id in possible_shape_collisions.iter() {
                 for new_shape_id in new_shapes.iter() {
                     pairs_to_check.push_front((*possible_shape_id, *new_shape_id));
@@ -416,7 +445,9 @@ impl Sketch {
         }
 
         if !collisions.is_empty() {
-            println!("We have a collision to process");
+            if (debug) {
+                println!("We have a collision to process");
+            }
             let collision = collisions.pop_front().unwrap();
             self.process_collision(
                 temp_sketch,
@@ -425,18 +456,24 @@ impl Sketch {
                 new_shapes,
                 recently_deleted,
                 collision,
+                debug,
             );
 
             return true;
         }
 
         if !pairs_to_check.is_empty() {
-            println!("We have pairs to check!");
+            if (debug) {
+                println!("We have pairs to check!");
+            }
             let (shape_a_id, shape_b_id) = pairs_to_check.pop_front().unwrap();
 
             let new_collisions =
-                self.identify_collisions(temp_sketch, all_shapes, shape_a_id, shape_b_id);
-            println!("Adding {} collisions", new_collisions.len());
+                self.identify_collisions(temp_sketch, all_shapes, shape_a_id, shape_b_id, debug);
+
+            if (debug) {
+                println!("Adding {} collisions", new_collisions.len());
+            }
             for c in new_collisions {
                 // println!("Adding a collision");
                 collisions.push_back(c);
@@ -444,11 +481,13 @@ impl Sketch {
             return true;
         }
 
-        println!("There was nothing to do!\n");
+        if (debug) {
+            println!("There was nothing to do!\n");
+        }
         return false;
     }
 
-    pub fn split_intersections(&self) -> Self {
+    pub fn split_intersections(&self, debug: bool) -> Self {
         let mut temp_sketch = self.clone();
 
         // set up the necessary data structures:
@@ -488,14 +527,18 @@ impl Sketch {
         // While there's anything to do, step the process forward
         let mut count = 0;
         loop {
-            println!("\nstep: {} Here's the setup:", count);
+            if (debug) {
+                println!("\nstep: {} Here's the setup:", count);
+            }
             count += 1;
 
-            println!("Pairs to check: {:?}", pairs_to_check);
-            println!("Collisions: {:?}", collisions);
-            println!("Possible shape collisions: {:?}", possible_shape_collisions);
-            println!("New shapes: {:?}", new_shapes);
-            println!("Recently deleted: {:?}", recently_deleted);
+            if (debug) {
+                println!("Pairs to check: {:?}", pairs_to_check);
+                println!("Collisions: {:?}", collisions);
+                println!("Possible shape collisions: {:?}", possible_shape_collisions);
+                println!("New shapes: {:?}", new_shapes);
+                println!("Recently deleted: {:?}", recently_deleted);
+            }
             // let mut input = String::new();
             // io::stdin()
             //     .read_line(&mut input)
@@ -510,6 +553,7 @@ impl Sketch {
                 &mut possible_shape_collisions,
                 &mut new_shapes,
                 &mut recently_deleted,
+                debug,
             );
             // let mut input = String::new();
             // io::stdin()
@@ -539,9 +583,11 @@ impl Sketch {
                 _ => {}
             }
         }
-        println!("So, in summary I've generated these shapes:");
-        for shape in all_shapes.items.iter() {
-            println!("{:?}", shape);
+        if (debug) {
+            println!("So, in summary I've generated these shapes:");
+            for shape in all_shapes.items.iter() {
+                println!("{:?}", shape);
+            }
         }
         final_sketch
     }
@@ -552,6 +598,7 @@ impl Sketch {
         line_a_id: u64,
         line_b: &Line2,
         line_b_id: u64,
+        debug: bool,
     ) -> Vec<Collision> {
         // catch the case where the lines are completely degenerate-their start and end points are the same
         if line_a.start == line_b.start || line_a.start == line_b.end {
@@ -575,24 +622,32 @@ impl Sketch {
         let (a1, b1, c1) = normal_form(&a_start, &a_end);
         let (a2, b2, c2) = normal_form(&b_start, &b_end);
 
-        println!("a1, b1, c1: {} {} {}", a1, b1, c1);
-        println!("a2, b2, c2: {} {} {}", a2, b2, c2);
+        if (debug) {
+            println!("a1, b1, c1: {} {} {}", a1, b1, c1);
+            println!("a2, b2, c2: {} {} {}", a2, b2, c2);
+        }
 
         let x_intercept = (b1 * c2 - b2 * c1) / (a1 * b2 - a2 * b1);
         let y_intercept = (c1 * a2 - c2 * a1) / (a1 * b2 - a2 * b1);
 
-        println!("Intercept: {} {}", x_intercept, y_intercept);
+        if (debug) {
+            println!("Intercept: {} {}", x_intercept, y_intercept);
+        }
 
         if x_intercept.is_nan() || y_intercept.is_nan() {
             // something degenerate happened. The lines may be parallel.
-            println!("NAN intercept, so lines are be parallel");
+            if (debug) {
+                println!("NAN intercept, so lines are be parallel");
+            }
 
             let tol = 1e-8;
             let a_start_colinear_with_b = (a2 * a_start.x + b2 * a_start.y + c2).abs() < tol;
             let a_end_colinear_with_b = (a2 * a_end.x + b2 * a_end.y + c2).abs() < tol;
 
             if a_start_colinear_with_b && a_end_colinear_with_b {
-                println!("The lines are perfectly colinear!");
+                if (debug) {
+                    println!("The lines are perfectly colinear!");
+                }
 
                 let mut collisions: Vec<Collision> = vec![];
 
@@ -601,7 +656,9 @@ impl Sketch {
                     && within_range(a_start.y, b_start.y, b_end.y, -tol)
                 {
                     // a_start is WITHIN b!
-                    println!("A start is within B");
+                    if (debug) {
+                        println!("A start is within B");
+                    }
                     let mut collision = Collision::new(a_start.clone(), line_a_id, line_b_id);
                     collision.shape_a_degeneracy = IsStart;
                     collisions.push(collision);
@@ -610,7 +667,9 @@ impl Sketch {
                     && within_range(a_end.y, b_start.y, b_end.y, -tol)
                 {
                     // a_end is WITHIN b!
-                    println!("A end is within B");
+                    if (debug) {
+                        println!("A end is within B");
+                    }
                     let mut collision = Collision::new(a_end.clone(), line_a_id, line_b_id);
                     collision.shape_a_degeneracy = IsEnd;
                     collisions.push(collision);
@@ -620,7 +679,9 @@ impl Sketch {
                     && within_range(b_start.y, a_start.y, a_end.y, -tol)
                 {
                     // b_start is WITHIN a!
-                    println!("B start is within A");
+                    if (debug) {
+                        println!("B start is within A");
+                    }
                     let mut collision = Collision::new(b_start.clone(), line_a_id, line_b_id);
                     collision.shape_b_degeneracy = IsStart;
                     collisions.push(collision);
@@ -629,7 +690,9 @@ impl Sketch {
                     && within_range(b_end.y, a_start.y, a_end.y, -tol)
                 {
                     // b_end is WITHIN a!
-                    println!("B end is within A");
+                    if (debug) {
+                        println!("B end is within A");
+                    }
                     let mut collision = Collision::new(b_end.clone(), line_a_id, line_b_id);
                     collision.shape_b_degeneracy = IsEnd;
                     collisions.push(collision);
@@ -643,7 +706,9 @@ impl Sketch {
         }
 
         if x_intercept.is_infinite() || y_intercept.is_infinite() {
-            println!("Infinite intercept, so lines are parallel");
+            if (debug) {
+                println!("Infinite intercept, so lines are parallel");
+            }
             return vec![];
         }
 
@@ -1776,7 +1841,7 @@ mod tests {
         let d = sketch.add_point(0.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         assert_eq!(
             collisions,
             vec![Collision::new(Point2::new(0.0, 0.0), 1, 2,)]
@@ -1790,7 +1855,7 @@ mod tests {
         let d = sketch.add_point(0.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         let mut expected_collision = Collision::new(Point2::new(0.0, 0.0), 1, 2);
         expected_collision.shape_b_degeneracy = IsStart;
 
@@ -1805,7 +1870,7 @@ mod tests {
         let d = sketch.add_point(1.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         assert_eq!(collisions, vec![]);
 
         // parallel vertical
@@ -1816,7 +1881,7 @@ mod tests {
         let d = sketch.add_point(1.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         assert_eq!(collisions, vec![]);
 
         // perpendicular but not intersecting
@@ -1827,7 +1892,7 @@ mod tests {
         let d = sketch.add_point(3.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         assert_eq!(collisions, vec![]);
 
         // share 1 point but only in the === sense not the == sense
@@ -1838,7 +1903,7 @@ mod tests {
         let d = sketch.add_point(1.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         let mut expected_collision = Collision::new(Point2::new(0.0, 0.0), 1, 2);
         expected_collision.shape_a_degeneracy = IsEnd;
         expected_collision.shape_b_degeneracy = IsStart;
@@ -1851,7 +1916,7 @@ mod tests {
         let d = sketch.add_point(1.0, 1.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: b, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         let mut expected_collision = Collision::new(Point2::new(0.0, 0.0), 1, 2);
         expected_collision.shape_a_degeneracy = IsEnd;
         expected_collision.shape_b_degeneracy = IsStart;
@@ -1865,7 +1930,7 @@ mod tests {
         let d = sketch.add_point(2.0, 0.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         assert_eq!(collisions, vec![]);
 
         // colinear, vertical no intersection
@@ -1876,7 +1941,7 @@ mod tests {
         let d = sketch.add_point(0.0, 3.0);
         let line_ab = Line2 { start: a, end: b };
         let line_cd = Line2 { start: c, end: d };
-        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         assert_eq!(collisions, vec![]);
 
         // Lines are exactly equal
@@ -1884,7 +1949,7 @@ mod tests {
         // let a = sketch.add_point(0.0, 0.0);
         // let b = sketch.add_point(0.0, 1.0);
         // let line_ab = Line2 { start: a, end: b };
-        // let collisions = sketch.line_line_collisions(&line_ab, 1, &line_ab, 2);
+        // let collisions = sketch.line_line_collisions(&line_ab, 1, &line_ab, 2, false);
         // assert_eq!(
         //     collisions,
         //     Intersection::Line(Point2::new(0.0, 0.0), Point2::new(0.0, 1.0))
@@ -1899,7 +1964,7 @@ mod tests {
         // let d = sketch.add_point(0.0, 3.0);
         // let line_ab = Line2 { start: a, end: b };
         // let line_cd = Line2 { start: c, end: d };
-        // let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2);
+        // let collisions = sketch.line_line_collisions(&line_ab, 1, &line_cd, 2, false);
         // assert_eq!(
         //     collisions,
         //     Intersection::Line(Point2::new(0.0, 2.0), Point2::new(0.0, 1.0))
