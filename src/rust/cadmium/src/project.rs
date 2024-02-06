@@ -8,6 +8,8 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 
 use truck_modeling::Plane as TruckPlane;
+use truck_shapeops::and as solid_and;
+use truck_shapeops::or as solid_or;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Project {
@@ -868,17 +870,66 @@ impl Workbench {
                     let solids =
                         Solid::from_extrusion(step.name.clone(), plane, split_sketch, extrusion);
 
-                    // if this extrusion is in mode "New" then this old behavior is correct!
+                    match &extrusion.mode {
+                        ExtrusionMode::New => {
+                            // if this extrusion is in mode "New" then this old behavior is correct!
+                            for (name, solid) in solids {
+                                realized.solids.insert(name, solid);
+                            }
+                        }
+                        ExtrusionMode::Add(merge_scope) => {
+                            // if this extrusion is in mode "Add" Then we need to merge the resulting solid
+                            // with each of the solids listed in the merge scope
 
-                    // if this extrusion is in mode "Add" Then we need to merge the resulting solid
-                    // with each of the solids listed in the merge scope
+                            for existing_solid in merge_scope {
+                                let mut existing_solid = &realized.solids[existing_solid].clone();
+                                // merge this existing solid with as many of the new solids as possible
 
-                    // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
-                    // with each of the solids listed in the merge scope
+                                for (_, solid) in solids.iter() {
+                                    // let ts = solid.truck_solid;
 
-                    for (name, solid) in solids {
-                        realized.solids.insert(name, solid);
+                                    let result = solid_or(
+                                        &existing_solid.truck_solid,
+                                        &solid.truck_solid,
+                                        0.01,
+                                    );
+
+                                    println!("MERGE OR Result: {:?}", result);
+
+                                    let result = solid_and(
+                                        &existing_solid.truck_solid,
+                                        &solid.truck_solid,
+                                        0.01,
+                                    );
+
+                                    println!("MERGE AND Result: {:?}", result);
+                                    // ts.add(&existing_solid.truck_solid);
+
+                                    // realized
+                                    //     .solids
+                                    //     .insert(name, Solid::from_truck_solid(name, ts));
+                                }
+                            }
+
+                            // for (name, solid) in solids {
+
+                            // realized.solids.insert(name, solid);
+                            // }
+                        }
+
+                        ExtrusionMode::Remove(merge_scope) => {
+                            // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
+                            // with each of the solids listed in the merge scope
+                            // for (name, solid) in solids {
+                            // let mut ts = solid.truck_solid.clone();
+                            // ts.not();
+                            // }
+                        }
                     }
+
+                    // for (name, solid) in solids {
+                    //     realized.solids.insert(name, solid);
+                    // }
                 }
                 _ => println!("Unknown step type"),
             }
@@ -1652,10 +1703,16 @@ mod tests {
         let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
         let mut s2 = wb.get_sketch_mut("Sketch-2").unwrap();
 
-        let ll = s2.add_point(15.0, 15.0);
-        let lr = s2.add_point(25.0, 15.0);
-        let ul = s2.add_point(15.0, 25.0);
-        let ur = s2.add_point(25.0, 25.0);
+        // smaller
+        // let ll = s2.add_point(15.0, 15.0);
+        // let lr = s2.add_point(25.0, 15.0);
+        // let ul = s2.add_point(15.0, 25.0);
+        // let ur = s2.add_point(25.0, 25.0);
+        // bigger!
+        let ll = s2.add_point(-10.0, -10.0);
+        let lr = s2.add_point(50.0, -10.0);
+        let ul = s2.add_point(-10.0, 50.0);
+        let ur = s2.add_point(50.0, 50.0);
         s2.add_segment(ll, lr);
         s2.add_segment(lr, ur);
         s2.add_segment(ur, ul);

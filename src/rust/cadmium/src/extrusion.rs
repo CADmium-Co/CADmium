@@ -77,7 +77,7 @@ pub enum Direction {
     Specified(Vector3),
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Solid {
     pub name: String,
     pub crc32: String,
