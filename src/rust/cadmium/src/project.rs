@@ -8,7 +8,10 @@ use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 use truck_polymesh::InnerSpace;
 
+// use truck_base::math::Vector3 as truck_vector3;
+use truck_modeling::builder::translated;
 use truck_modeling::Plane as TruckPlane;
+use truck_modeling::Vector3 as TruckVector3;
 use truck_shapeops::and as solid_and;
 use truck_shapeops::or as solid_or;
 
@@ -889,26 +892,37 @@ impl Workbench {
                                 for (_, solid) in solids.iter() {
                                     // let ts = solid.truck_solid;
 
-                                    // let result = solid_or(
-                                    //     &existing_solid.truck_solid,
-                                    //     &solid.truck_solid,
-                                    //     0.01,
-                                    // );
+                                    println!("MERGE SCOPE: {:?}", existing_solid.truck_solid);
 
-                                    // println!("MERGE OR Result: {:?}", result);
+                                    println!("New candidate: {:?}", solid.truck_solid);
 
-                                    // let result = solid_and(
-                                    //     &existing_solid.truck_solid,
-                                    //     &solid.truck_solid,
-                                    //     0.01,
-                                    // );
+                                    let new_candidate = translated(
+                                        &solid.truck_solid,
+                                        TruckVector3::new(0.0, 0.0, -1.0),
+                                    );
+                                    println!("Translated new candidate: {:?}", new_candidate);
 
-                                    // println!("MERGE AND Result: {:?}", result);
+                                    let result =
+                                        solid_or(&existing_solid.truck_solid, &new_candidate, 0.1);
+
+                                    println!("MERGE OR Result: {:?}", result);
+
+                                    let result =
+                                        solid_and(&existing_solid.truck_solid, &new_candidate, 0.1);
+
+                                    println!("MERGE AND Result: {:?}", result);
                                     // ts.add(&existing_solid.truck_solid);
 
-                                    // realized
-                                    //     .solids
-                                    //     .insert(name, Solid::from_truck_solid(name, ts));
+                                    // match result {
+                                    //     Some(s) => {
+                                    //         realized
+                                    //             .solids
+                                    //             .insert("merge AND result".to_string(), s);
+                                    //     }
+                                    //     None => {
+                                    //         println!("Failed to merge");
+                                    //     }
+                                    // }
                                 }
                             }
 

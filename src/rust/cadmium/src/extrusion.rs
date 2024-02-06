@@ -94,6 +94,65 @@ pub struct Solid {
 }
 
 impl Solid {
+    pub fn from_truck_solid(
+        name: String,
+        truck_solid: truck_topology::Solid<
+            truck_meshalgo::prelude::cgmath::Point3<f64>,
+            truck_modeling::Curve,
+            truck_modeling::Surface,
+        >,
+    ) -> Self {
+        let mut solid = Solid {
+            name,
+            crc32: "".to_owned(),
+            vertices: vec![],
+            normals: vec![],
+            triangles: vec![],
+            uvs: vec![],
+            indices: vec![],
+            truck_solid,
+        };
+        let mut mesh = solid.truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
+        mesh.put_together_same_attrs();
+
+        // the mesh is prepared for obj export, but we need to convert it
+        // to a format compatible for rendering
+        // We have to brute force this. Go through every single triangle
+        // and emit three positions, three normals, and three uvs.
+        let mut index = 0 as usize;
+        for face in mesh.tri_faces() {
+            for v in face.iter() {
+                let vertex_index = v.pos;
+                let normal_index = v.nor.unwrap();
+                let uv_index = v.uv.unwrap();
+                let vertex = mesh.positions()[vertex_index];
+                let normal = mesh.normals()[normal_index];
+                let uv = mesh.uv_coords()[uv_index];
+
+                let pt = Vector3::new(vertex.x, vertex.y, vertex.z);
+                solid.vertices.push(pt);
+                solid
+                    .normals
+                    .push(Vector3::new(normal.x, normal.y, normal.z));
+                solid.uvs.push(Vector2::new(uv.x, uv.y));
+                solid.indices.push(index);
+
+                index += 1;
+            }
+        }
+
+        // compute the crc32 of the vertices
+        let mut hasher = crc32fast::Hasher::new();
+        for vertex in solid.vertices.iter() {
+            hasher.update(&vertex.x.to_be_bytes());
+            hasher.update(&vertex.y.to_be_bytes());
+            hasher.update(&vertex.z.to_be_bytes());
+        }
+        solid.crc32 = format!("{:x}", hasher.finalize());
+
+        solid
+    }
+
     pub fn get_face_by_normal(&self, normal: &Vector3) -> Option<TruckFace> {
         let truck_solid = &self.truck_solid;
         let boundaries = &truck_solid.boundaries()[0];
@@ -323,8 +382,6 @@ impl Solid {
         let extrusion_vector = extrusion_direction.times(extrusion.length);
         let vector = TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
 
-        let mut truck_solids = vec![];
-
         // Sometimes the chosen faces are touching, or one even envelops another. Let's
         // merge those faces together so that we have single solid wherever possible
         let unmerged_faces: Vec<Face> = extrusion
@@ -350,88 +407,13 @@ impl Solid {
             }
 
             let face = builder::try_attach_plane(&wires).unwrap();
-            // println!("A Face: {:?}", face);
 
             let truck_solid = builder::tsweep(&face, vector);
-            // println!("A Solid: {:?}", truck_solid);
-            let cloned_ts = truck_solid.clone();
-            truck_solids.push(cloned_ts);
 
-            let mut solid = Solid {
-                name: format!("{}:{}", name, f_index),
-                crc32: "".to_owned(),
-                vertices: vec![],
-                normals: vec![],
-                triangles: vec![],
-                uvs: vec![],
-                indices: vec![],
-                truck_solid,
-            };
-
-            let mut mesh = solid.truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
-            mesh.put_together_same_attrs();
-
-            // the mesh is prepared for obj export, but we need to convert it
-            // to a format compatible for rendering
-            // We have to brute force this. Go through every single triangle
-            // and emit three positions, three normals, and three uvs.
-            let mut index = 0 as usize;
-            for face in mesh.tri_faces() {
-                for v in face.iter() {
-                    let vertex_index = v.pos;
-                    let normal_index = v.nor.unwrap();
-                    let uv_index = v.uv.unwrap();
-                    let vertex = mesh.positions()[vertex_index];
-                    let normal = mesh.normals()[normal_index];
-                    let uv = mesh.uv_coords()[uv_index];
-
-                    let pt = Vector3::new(vertex.x, vertex.y, vertex.z);
-                    solid.vertices.push(pt);
-                    solid
-                        .normals
-                        .push(Vector3::new(normal.x, normal.y, normal.z));
-                    solid.uvs.push(Vector2::new(uv.x, uv.y));
-                    solid.indices.push(index);
-
-                    index += 1;
-                }
-            }
-
-            // compute the crc32 of the vertices
-            let mut hasher = crc32fast::Hasher::new();
-            for vertex in solid.vertices.iter() {
-                hasher.update(&vertex.x.to_be_bytes());
-                hasher.update(&vertex.y.to_be_bytes());
-                hasher.update(&vertex.z.to_be_bytes());
-            }
-            solid.crc32 = format!("{:x}", hasher.finalize());
+            let solid = Solid::from_truck_solid(format!("{}:{}", name, f_index), truck_solid);
 
             retval.insert(format!("{}:{}", name, f_index), solid);
         }
-
-        // now we have a bunch of solids, but we need to merge them into a single solid
-        // we can do that using a nested for loop to compare each solid against every other solid
-        // and merge them if they are adjacent
-        // for i in 0..truck_solids.len() {
-        //     for j in 0..truck_solids.len() {
-        //         // if i == j {
-        //         //     continue;
-        //         // }
-        //         let solid_i = &truck_solids[i];
-        //         let solid_j = &truck_solids[j];
-
-        //         let new_solid = or(solid_i, solid_j, 0.0001);
-
-        //         match new_solid {
-        //             Some(new_shape) => {
-        //                 println!("{} and {} merged!", i, j)
-        //             }
-        //             None => {
-        //                 println!("{} and {} did not merge!", i, j)
-        //             }
-        //         }
-        //     }
-        // }
 
         retval
     }
