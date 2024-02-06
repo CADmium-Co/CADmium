@@ -867,6 +867,15 @@ impl Workbench {
                     let plane = &realized.planes[&split_sketch.plane_id];
                     let solids =
                         Solid::from_extrusion(step.name.clone(), plane, split_sketch, extrusion);
+
+                    // if this extrusion is in mode "New" then this old behavior is correct!
+
+                    // if this extrusion is in mode "Add" Then we need to merge the resulting solid
+                    // with each of the solids listed in the merge scope
+
+                    // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
+                    // with each of the solids listed in the merge scope
+
                     for (name, solid) in solids {
                         realized.solids.insert(name, solid);
                     }
@@ -1660,14 +1669,17 @@ mod tests {
             25.0,
             0.0,
             Direction::Normal,
-            ExtrusionMode::New,
+            ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
         );
         wb.add_extrusion("Ext2", extrusion2);
 
         let realization = p.get_realization(0, 1000);
         let solids = realization.solids;
 
-        let as_json = serde_json::to_string(&p).unwrap();
-        println!("As json: {}", as_json);
+        let num_solids = solids.len();
+        println!("Num Solids: {:?}", num_solids);
+
+        // let as_json = serde_json::to_string(&p).unwrap();
+        // println!("As json: {}", as_json);
     }
 }
