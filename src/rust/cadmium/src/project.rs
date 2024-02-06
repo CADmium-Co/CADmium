@@ -1,6 +1,6 @@
 use crate::sketch::constraints::Constraint;
 use crate::{
-    extrusion::{Direction, Extrusion, Solid},
+    extrusion::{Direction, Extrusion, ExtrusionMode, Solid},
     sketch::{Face, Point2, Sketch},
 };
 use itertools::Itertools;
@@ -338,13 +338,14 @@ impl Project {
                 direction,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
-                let extrusion = Extrusion {
-                    sketch_id: sketch_id.to_owned(),
-                    face_ids: face_ids.to_owned(),
-                    length: *length,
-                    offset: *offset,
-                    direction: direction.to_owned(),
-                };
+                let extrusion = Extrusion::new(
+                    sketch_id.to_owned(),
+                    face_ids.to_owned(),
+                    *length,
+                    *offset,
+                    direction.to_owned(),
+                    ExtrusionMode::New,
+                );
                 let extrusion_id = workbench.add_extrusion(extrusion_name, extrusion);
                 Ok(format!("\"id\": \"{}\"", extrusion_id))
             }
@@ -359,13 +360,14 @@ impl Project {
                 direction,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
-                let extrusion = Extrusion {
-                    sketch_id: sketch_id.to_owned(),
-                    face_ids: face_ids.to_owned(),
-                    length: *length,
-                    offset: *offset,
-                    direction: direction.to_owned(),
-                };
+                let extrusion = Extrusion::new(
+                    sketch_id.to_owned(),
+                    face_ids.to_owned(),
+                    *length,
+                    *offset,
+                    direction.to_owned(),
+                    ExtrusionMode::New,
+                );
                 let as_step_data = StepData::Extrusion { extrusion };
                 workbench.update_step_data(extrusion_id, as_step_data);
                 Ok(format!("\"id\": \"{}\"", extrusion_id))
@@ -1603,13 +1605,14 @@ mod tests {
         s.add_segment(ur, ul);
         s.add_segment(ul, ll);
 
-        let extrusion = Extrusion {
-            sketch_id: "Sketch-0".to_owned(),
-            face_ids: vec![0],
-            length: 25.0,
-            offset: 0.0,
-            direction: Direction::Normal,
-        };
+        let extrusion = Extrusion::new(
+            "Sketch-0".to_owned(),
+            vec![0],
+            25.0,
+            0.0,
+            Direction::Normal,
+            ExtrusionMode::New,
+        );
         wb.add_extrusion("Ext1", extrusion);
 
         // let realization = p.get_realization(0, 1000);
@@ -1651,13 +1654,14 @@ mod tests {
 
         println!("S2: {:?}", s2);
 
-        let extrusion2 = Extrusion {
-            sketch_id: s2_id.to_owned(),
-            face_ids: vec![0],
-            length: 25.0,
-            offset: 0.0,
-            direction: Direction::Normal,
-        };
+        let extrusion2 = Extrusion::new(
+            s2_id.to_owned(),
+            vec![0],
+            25.0,
+            0.0,
+            Direction::Normal,
+            ExtrusionMode::New,
+        );
         wb.add_extrusion("Ext2", extrusion2);
 
         let realization = p.get_realization(0, 1000);

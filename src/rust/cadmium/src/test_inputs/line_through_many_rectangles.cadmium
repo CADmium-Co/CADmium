@@ -344,7 +344,8 @@
                             "face_ids": [],
                             "length": 25.0,
                             "offset": 0.0,
-                            "direction": "Normal"
+                            "direction": "Normal",
+                            "mode": "New"
                         }
                     }
                 }

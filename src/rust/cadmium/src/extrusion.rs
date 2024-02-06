@@ -41,7 +41,34 @@ pub struct Extrusion {
     pub length: f64,
     pub offset: f64,
     pub direction: Direction,
-    // TODO: add a "mode" field for "new" vs "add" vs "remove"
+    pub mode: ExtrusionMode,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ExtrusionMode {
+    New,
+    Add(Vec<String>),
+    Remove(Vec<String>),
+}
+
+impl Extrusion {
+    pub fn new(
+        sketch_id: String,
+        face_ids: Vec<u64>,
+        length: f64,
+        offset: f64,
+        direction: Direction,
+        mode: ExtrusionMode,
+    ) -> Self {
+        Extrusion {
+            sketch_id,
+            face_ids,
+            length,
+            offset,
+            direction,
+            mode,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
