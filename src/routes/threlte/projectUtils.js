@@ -292,7 +292,7 @@ realizationIsStale.subscribe((value) => {
 		let wasmReal = wasmProj.get_realization(workbenchIdx, get(featureIndex) + 1)
 		wasmRealization.set(wasmReal)
 		realization.set(JSON.parse(wasmReal.to_json()))
-		// console.log('new realization:', get(realization))
+		console.log('new realization:', get(realization))
 
 		realizationIsStale.set(false)
 	}

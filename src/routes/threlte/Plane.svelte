@@ -24,7 +24,7 @@
 	const { size, dpr } = useThrelte()
 
 	// Build some Three.js vectors from the props
-	origin = new Vector3(origin.x, origin.y, origin.z)
+	let origin_point = new Vector3(origin.x, origin.y, origin.z)
 	primary = new Vector3(primary.x, primary.y, primary.z)
 	secondary = new Vector3(secondary.x, secondary.y, secondary.z)
 	tertiary = new Vector3(tertiary.x, tertiary.y, tertiary.z)
@@ -117,7 +117,15 @@
 	$: if ($currentlyMousedOver.length === 0) hovered = false
 </script>
 
-<T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
+<T.Group
+	rotation.x={eulerAngles.x}
+	rotation.y={eulerAngles.y}
+	rotation.z={eulerAngles.z}
+	position.x={origin_point.x}
+	position.y={origin_point.y}
+	position.z={origin_point.z}
+	visible={!name.startsWith('derived_plane_for:')}
+>
 	<T.Mesh
 		material={hovered ? hoveredMaterial : standardMaterial}
 		on:pointerenter={(e) => {

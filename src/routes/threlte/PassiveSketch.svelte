@@ -86,6 +86,7 @@
 	}
 
 	// Build some Three.js vectors from the props
+	const origin_point = new Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
 	const primary = new Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
 	const secondary = new Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
 	const tertiary = new Vector3(plane.tertiary.x, plane.tertiary.y, plane.tertiary.z)
@@ -158,7 +159,14 @@
 </script>
 
 {#if !hidden}
-	<T.Group rotation.x={eulerAngles.x} rotation.y={eulerAngles.y} rotation.z={eulerAngles.z}>
+	<T.Group
+		rotation.x={eulerAngles.x}
+		rotation.y={eulerAngles.y}
+		rotation.z={eulerAngles.z}
+		position.x={origin_point.x}
+		position.y={origin_point.y}
+		position.z={origin_point.z}
+	>
 		<T.Mesh
 			material={planeMaterial}
 			on:click={(e) => {
