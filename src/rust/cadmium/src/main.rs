@@ -9,7 +9,7 @@ use truck_modeling::builder::{translated, tsweep, vertex};
 use truck_modeling::{Plane, Point3, Surface, Vector3};
 use truck_polymesh::{obj, InnerSpace, Invertible, ParametricSurface, Tolerance};
 use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
-use truck_topology::Solid;
+use truck_topology::{Shell, Solid};
 
 fn main() {
     let point_a = vertex(Point3::new(0.0, 0.0, 0.0));
@@ -17,9 +17,30 @@ fn main() {
     let square_a = tsweep(&line_a, Vector3::new(0.0, 1.0, 0.0));
     let cube_a = tsweep(&square_a, Vector3::new(0.0, 0.0, 1.0));
 
+    // simplest case!
+    // let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
+    // let line_b = tsweep(&point_b, Vector3::new(0.2, 0.0, 0.0));
+    // let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
+    // let cube_b: Solid<
+    //     truck_meshalgo::prelude::cgmath::Point3<f64>,
+    //     truck_modeling::Curve,
+    //     truck_modeling::Surface,
+    // > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
+
+    // one flush side!
+    // let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
+    // let line_b = tsweep(&point_b, Vector3::new(0.6, 0.0, 0.0));
+    // let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
+    // let cube_b: Solid<
+    //     truck_meshalgo::prelude::cgmath::Point3<f64>,
+    //     truck_modeling::Curve,
+    //     truck_modeling::Surface,
+    // > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
+
+    // two flush sides!
     let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
-    let line_b = tsweep(&point_b, Vector3::new(0.2, 0.0, 0.0));
-    let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
+    let line_b = tsweep(&point_b, Vector3::new(0.6, 0.0, 0.0));
+    let square_b = tsweep(&line_b, Vector3::new(0.0, 0.6, 0.0));
     let cube_b: Solid<
         truck_meshalgo::prelude::cgmath::Point3<f64>,
         truck_modeling::Curve,
@@ -58,25 +79,45 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     assert!(solid0_boundaries.len() == 1);
     assert!(solid1_boundaries.len() == 1);
 
-    for (face_0_idx, face_0) in solid0_boundaries[0].face_iter().enumerate() {
-        println!("face 0: {:?}", face_0_idx);
+    let boundary0 = &solid0_boundaries[0];
+    let boundary1 = &solid1_boundaries[0];
+    let fusable_faces = find_coplanar_face_pairs(boundary0, boundary1, true);
+    println!("fusable_faces: {:?}", fusable_faces);
+
+    let secondary_mergeable_faces = find_coplanar_face_pairs(boundary0, boundary1, false);
+    println!("secondary_mergeable_faces: {:?}", secondary_mergeable_faces);
+
+    None
+}
+
+fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+    boundary0: &Shell<Point3, C, Surface>,
+    boundary1: &Shell<Point3, C, Surface>,
+    flip_second: bool,
+) -> Vec<(usize, usize)> {
+    let mut coplanar_faces: Vec<(usize, usize)> = vec![];
+    for (face_0_idx, face_0) in boundary0.face_iter().enumerate() {
+        // println!("face 0: {:?}", face_0_idx);
         let surface_0 = face_0.oriented_surface();
 
         match surface_0 {
             Surface::Plane(p0) => {
-                for (face_1_idx, face_1) in solid1_boundaries[0].face_iter().enumerate() {
-                    print!("\tface 1: {:?}", face_1_idx);
-                    let surface_1 = face_1.oriented_surface().inverse();
+                for (face_1_idx, face_1) in boundary1.face_iter().enumerate() {
+                    // print!("\tface 1: {:?}", face_1_idx);
+                    let mut surface_1 = face_1.oriented_surface();
+
+                    if flip_second {
+                        surface_1 = surface_1.inverse();
+                    }
 
                     match surface_1 {
                         Surface::Plane(p1) => {
                             if are_coplanar(p0, p1) {
-                                println!(" coplanar!");
+                                // println!(" coplanar!");
+                                coplanar_faces.push((face_0_idx, face_1_idx));
                             } else {
-                                println!(" not coplanar!");
+                                // println!(" not coplanar!");
                             }
-                            // print!(" {:?} vs {:?}", normal0, normal1);
-                            // println!("{}", normal0.near(&normal1));
                         }
                         _ => {}
                     }
@@ -86,7 +127,7 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
         }
     }
 
-    None
+    coplanar_faces
 }
 
 fn are_coplanar(p0: Plane, p1: Plane) -> bool {
