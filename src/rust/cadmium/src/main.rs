@@ -88,15 +88,16 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
 
     // There's only one fused solid at the end. Create it by cloning solid0
     // and then removing the fusable face from it.
-    let mut combined = solid0.clone();
+    // let mut combined = solid0.clone();
+    let mut combined = boundary0.clone();
+    // a solid is just a struct with a field called boundaries which is a vec of Shells.
+    // and in our case there's only one relevant shell, so let's work with shells not solids.
 
     // Meanwhile, make a copy of solid1 and remove the fusable face from it too.
-    let mut solid1_copy = solid1.clone();
+    let mut boundary1_copy = boundary1.clone();
 
     // Then, add every face from solid1 to the combined solid.
-    for face in solid1_copy.face_iter() {
-        // combined.add_face(face);
-    }
+    combined.append(&mut boundary1_copy);
 
     // Lastly, merge the two fusable faces together. This is complicated because
     // one might be bigger than the other, or they might be the same size, or
@@ -107,7 +108,7 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // After that, we need to merge the secondary_mergeable_faces together.
 
     // And then we're done!
-    Some(combined)
+    Some(Solid::new(vec![combined]))
 }
 
 fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
