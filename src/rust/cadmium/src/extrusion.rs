@@ -11,10 +11,20 @@ use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
 use truck_modeling::builder::translated;
+use truck_modeling::Plane;
+use truck_modeling::Surface;
 use truck_polymesh::obj;
+use truck_polymesh::InnerSpace;
+use truck_polymesh::Invertible;
 use truck_polymesh::Rad;
+use truck_polymesh::Tolerance;
+use truck_shapeops::ShapeOpsCurve;
+use truck_shapeops::ShapeOpsSurface;
 use truck_stepio::out;
+use truck_topology::Shell;
 // use truck_polymesh::cgmath::Point3 as TruckPoint3;
+
+use truck_topology::Solid as TruckSolid;
 
 use crate::project::Point3;
 use crate::project::Project;
@@ -701,4 +711,126 @@ mod tests {
     //     // now delete that file
     //     // std::fs::remove_file("test.obj").unwrap();
     // }
+}
+
+pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt::Debug>(
+    solid0: &TruckSolid<TruckPoint3, C, Surface>,
+    solid1: &TruckSolid<TruckPoint3, C, Surface>,
+) -> Option<TruckSolid<TruckPoint3, C, Surface>> {
+    println!("Okay let's fuse!");
+
+    let solid0_boundaries = solid0.boundaries();
+    let solid1_boundaries = solid1.boundaries();
+    assert!(solid0_boundaries.len() == 1);
+    assert!(solid1_boundaries.len() == 1);
+
+    let boundary0 = &solid0_boundaries[0];
+    let boundary1 = &solid1_boundaries[0];
+    let fusable_faces = find_coplanar_face_pairs(boundary0, boundary1, true);
+    assert!(fusable_faces.len() == 1);
+    let fusable_faces = fusable_faces[0];
+    // TODO: support the case where more than one is fusable
+    println!("fusable_faces: {:?}", fusable_faces);
+
+    let secondary_mergeable_faces = find_coplanar_face_pairs(boundary0, boundary1, false);
+    println!("secondary_mergeable_faces: {:?}", secondary_mergeable_faces);
+
+    // There's only one fused solid at the end. Create it by cloning solid0
+    // and then removing the fusable face from it.
+    let mut combined = boundary0.clone();
+    combined.remove(fusable_faces.0);
+
+    // Meanwhile, make a copy of solid1 and remove the fusable face from it too.
+    let mut boundary1_copy = boundary1.clone();
+    boundary1_copy.remove(fusable_faces.1);
+
+    // Then, add every face from solid1 to the combined solid.
+    combined.append(&mut boundary1_copy);
+
+    // Lastly, merge the two fusable faces together. This is complicated because
+    // one might be bigger than the other, or they might be the same size, or
+    // they might overlap somewhat. We'll need to figure out how to merge them.
+
+    // println!("How do I merge these two? {:?}", fusable_faces);
+    // println!("First:");
+    // for edge in boundary0[fusable_faces.0].edge_iter() {
+    //     println!(
+    //         "Edge: {:?} to {:?}",
+    //         edge.front().get_point(),
+    //         edge.back().get_point()
+    //     );
+    // }
+
+    // println!("Second:");
+    // for edge in boundary1[fusable_faces.1].edge_iter() {
+    //     println!(
+    //         "Edge: {:?} to {:?}",
+    //         edge.front().get_point(),
+    //         edge.back().get_point()
+    //     );
+    // }
+
+    let mut outer_face = boundary0[fusable_faces.0].clone();
+    let inner_face = boundary1[fusable_faces.1].clone();
+    outer_face.add_boundary(inner_face.boundaries().first().unwrap().clone());
+
+    // println!("Merged: {:?}", outer_face);
+
+    combined.push(outer_face);
+
+    // Then add that merged face to the solid and we've fused!
+
+    // After that, we need to merge the secondary_mergeable_faces together.
+
+    // And then we're done!
+    // None
+    Some(TruckSolid::new(vec![combined]))
+}
+
+fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
+    boundary0: &Shell<TruckPoint3, C, Surface>,
+    boundary1: &Shell<TruckPoint3, C, Surface>,
+    flip_second: bool,
+) -> Vec<(usize, usize)> {
+    let mut coplanar_faces: Vec<(usize, usize)> = vec![];
+    for (face_0_idx, face_0) in boundary0.face_iter().enumerate() {
+        let surface_0 = face_0.oriented_surface();
+
+        match surface_0 {
+            Surface::Plane(p0) => {
+                for (face_1_idx, face_1) in boundary1.face_iter().enumerate() {
+                    let mut surface_1 = face_1.oriented_surface();
+
+                    if flip_second {
+                        surface_1 = surface_1.inverse();
+                    }
+
+                    match surface_1 {
+                        Surface::Plane(p1) => {
+                            if are_coplanar(p0, p1) {
+                                coplanar_faces.push((face_0_idx, face_1_idx));
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    coplanar_faces
+}
+
+fn are_coplanar(p0: Plane, p1: Plane) -> bool {
+    let normal0 = p0.normal();
+    let normal1 = p1.normal();
+
+    if !normal0.near(&normal1) {
+        return false;
+    }
+
+    let difference = p0.origin() - p1.origin();
+    let dot = normal0.dot(difference);
+    dot.abs() < 0.0001
 }

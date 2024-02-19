@@ -1,3 +1,4 @@
+use crate::extrusion::fuse;
 use crate::sketch::constraints::Constraint;
 use crate::{
     extrusion::{Direction, Extrusion, ExtrusionMode, Solid},
@@ -891,42 +892,55 @@ impl Workbench {
                             // if this extrusion is in mode "Add" Then we need to merge the resulting solids
                             // with each of the solids listed in the merge scope
 
-                            // this is some bullshit, but bear with me. To make the solids merge properly we need to
-                            // lengthen the extrusion a tiny bit, basically build in some buffer
-                            let mut longer_extrusion = extrusion.clone();
-                            longer_extrusion.length += 0.001;
-                            longer_extrusion.offset -= 0.001;
-                            let solids = Solid::from_extrusion(
+                            let new_solids = Solid::from_extrusion(
                                 step.name.clone(),
                                 plane,
                                 split_sketch,
-                                &longer_extrusion,
+                                extrusion,
                             );
 
+                            // NO LONGER NEEDED
+                            // // this is some bullshit, but bear with me. To make the solids merge properly we need to
+                            // // lengthen the extrusion a tiny bit, basically build in some buffer
+                            // let mut longer_extrusion = extrusion.clone();
+                            // longer_extrusion.length += 0.001;
+                            // longer_extrusion.offset -= 0.001;
+                            // let solids = Solid::from_extrusion(
+                            //     step.name.clone(),
+                            //     plane,
+                            //     split_sketch,
+                            //     &longer_extrusion,
+                            // );
+
                             for existing_solid_name in merge_scope {
-                                let mut existing_solid =
+                                let mut existing_solid_to_merge_with =
                                     realized.solids.remove(existing_solid_name).unwrap();
 
                                 // merge this existing solid with as many of the new solids as possible
-                                for (_, solid) in solids.iter() {
+                                for (_, new_solid) in new_solids.iter() {
                                     // println!("\nMERGE SCOPE: {:?}", existing_solid.truck_solid);
                                     // println!("\nNew candidate: {:?}", solid.truck_solid);
 
-                                    let new_candidate = translated(
-                                        &solid.truck_solid,
-                                        TruckVector3::new(0.0, 0.0, 1.0),
-                                    );
+                                    // let new_candidate = translated(
+                                    //     &solid.truck_solid,
+                                    //     TruckVector3::new(0.0, 0.0, 1.0),
+                                    // );
                                     // println!("\nTranslated new candidate: {:?}", new_candidate);
 
-                                    let result =
-                                        solid_or(&existing_solid.truck_solid, &new_candidate, 0.1);
+                                    // let result =
+                                    //     solid_or(&existing_solid.truck_solid, &new_candidate, 0.1);
 
-                                    println!("\nMERGE OR Result: {:?}", result);
+                                    let fused = fuse(
+                                        &existing_solid_to_merge_with.truck_solid,
+                                        &new_solid.truck_solid,
+                                    );
 
-                                    match result {
+                                    match fused {
                                         Some(s) => {
-                                            existing_solid =
-                                                Solid::from_truck_solid("hello1".to_string(), s);
+                                            existing_solid_to_merge_with = Solid::from_truck_solid(
+                                                existing_solid_name.to_owned(),
+                                                s,
+                                            );
                                         }
                                         None => {
                                             println!("Failed to merge with OR");
@@ -934,9 +948,10 @@ impl Workbench {
                                     }
                                 }
 
-                                realized
-                                    .solids
-                                    .insert("merged OR result".to_string(), existing_solid);
+                                realized.solids.insert(
+                                    "fused solid".to_string(),
+                                    existing_solid_to_merge_with,
+                                );
                             }
                         }
 
@@ -1757,8 +1772,9 @@ mod tests {
 
         let num_solids = solids.len();
         println!("Num Solids: {:?}", num_solids);
+        assert!(num_solids == 1);
 
-        let as_json = serde_json::to_string(&p).unwrap();
-        println!("As json: {}", as_json);
+        // let as_json = serde_json::to_string(&p).unwrap();
+        // println!("As json: {}", as_json);
     }
 }
