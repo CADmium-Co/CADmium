@@ -17,24 +17,24 @@ fn main() {
     let cube_a = tsweep(&square_a, Vector3::new(0.0, 0.0, 1.0));
 
     // simplest case!
-    let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
-    let line_b = tsweep(&point_b, Vector3::new(0.2, 0.0, 0.0));
-    let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
-    let cube_b: Solid<
-        truck_meshalgo::prelude::cgmath::Point3<f64>,
-        truck_modeling::Curve,
-        truck_modeling::Surface,
-    > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
-
-    // one flush side!
     // let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
-    // let line_b = tsweep(&point_b, Vector3::new(0.6, 0.0, 0.0));
+    // let line_b = tsweep(&point_b, Vector3::new(0.2, 0.0, 0.0));
     // let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
     // let cube_b: Solid<
     //     truck_meshalgo::prelude::cgmath::Point3<f64>,
     //     truck_modeling::Curve,
     //     truck_modeling::Surface,
     // > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
+
+    // one flush side!
+    let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
+    let line_b = tsweep(&point_b, Vector3::new(0.6, 0.0, 0.0));
+    let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
+    let cube_b: Solid<
+        truck_meshalgo::prelude::cgmath::Point3<f64>,
+        truck_modeling::Curve,
+        truck_modeling::Surface,
+    > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
 
     // two flush sides!
     // let point_b = vertex(Point3::new(0.4, 0.4, 1.0));

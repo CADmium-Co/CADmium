@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
+use truck_modeling::builder::translated;
 use truck_polymesh::obj;
 use truck_polymesh::Rad;
 use truck_stepio::out;
@@ -379,8 +380,11 @@ impl Solid {
             Direction::Specified(vector) => vector.clone(),
         };
 
-        let extrusion_vector = extrusion_direction.times(extrusion.length);
+        let extrusion_vector = extrusion_direction.times(extrusion.length - extrusion.offset);
+        let offset_vector = extrusion_direction.times(extrusion.offset);
+
         let vector = TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
+        let offset_vector = TruckVector3::new(offset_vector.x, offset_vector.y, offset_vector.z);
 
         // Sometimes the chosen faces are touching, or one even envelops another. Let's
         // merge those faces together so that we have single solid wherever possible
@@ -409,6 +413,7 @@ impl Solid {
             let face = builder::try_attach_plane(&wires).unwrap();
 
             let truck_solid = builder::tsweep(&face, vector);
+            let truck_solid = translated(&truck_solid, offset_vector);
 
             let solid = Solid::from_truck_solid(format!("{}:{}", name, f_index), truck_solid);
 
