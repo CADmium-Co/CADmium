@@ -54,17 +54,17 @@ fn main() {
     // let combined_big = or(&cube_a, &cube_b, 0.01).unwrap();
 
     // let combined = or(&cube_a, &cube_b, 0.01).unwrap();
-    let combined = fuse(&cube_a, &cube_b);
+    let combined = fuse(&cube_a, &cube_b).unwrap();
 
-    // println!(
-    //     "combined_cube_or has {:?} shell boundaries",
-    //     combined.boundaries().len()
-    // );
+    println!(
+        "combined_cube_or has {:?} shell boundaries",
+        combined.boundaries().len()
+    );
 
-    // let mut mesh = combined.triangulation(0.01).to_polygon();
-    // mesh.put_together_same_attrs();
-    // let file = std::fs::File::create("combined_cube.obj").unwrap();
-    // obj::write(&mesh, file).unwrap();
+    let mut mesh = combined.triangulation(0.01).to_polygon();
+    mesh.put_together_same_attrs();
+    let file = std::fs::File::create("combined_cube.obj").unwrap();
+    obj::write(&mesh, file).unwrap();
 }
 
 pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt::Debug>(
@@ -81,6 +81,9 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     let boundary0 = &solid0_boundaries[0];
     let boundary1 = &solid1_boundaries[0];
     let fusable_faces = find_coplanar_face_pairs(boundary0, boundary1, true);
+    assert!(fusable_faces.len() == 1);
+    let fusable_faces = fusable_faces[0];
+    // TODO: support the case where more than one is fusable
     println!("fusable_faces: {:?}", fusable_faces);
 
     let secondary_mergeable_faces = find_coplanar_face_pairs(boundary0, boundary1, false);
@@ -88,13 +91,12 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
 
     // There's only one fused solid at the end. Create it by cloning solid0
     // and then removing the fusable face from it.
-    // let mut combined = solid0.clone();
     let mut combined = boundary0.clone();
-    // a solid is just a struct with a field called boundaries which is a vec of Shells.
-    // and in our case there's only one relevant shell, so let's work with shells not solids.
+    combined.remove(fusable_faces.0);
 
     // Meanwhile, make a copy of solid1 and remove the fusable face from it too.
     let mut boundary1_copy = boundary1.clone();
+    boundary1_copy.remove(fusable_faces.1);
 
     // Then, add every face from solid1 to the combined solid.
     combined.append(&mut boundary1_copy);
@@ -103,11 +105,39 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // one might be bigger than the other, or they might be the same size, or
     // they might overlap somewhat. We'll need to figure out how to merge them.
 
+    // println!("How do I merge these two? {:?}", fusable_faces);
+    // println!("First:");
+    // for edge in boundary0[fusable_faces.0].edge_iter() {
+    //     println!(
+    //         "Edge: {:?} to {:?}",
+    //         edge.front().get_point(),
+    //         edge.back().get_point()
+    //     );
+    // }
+
+    // println!("Second:");
+    // for edge in boundary1[fusable_faces.1].edge_iter() {
+    //     println!(
+    //         "Edge: {:?} to {:?}",
+    //         edge.front().get_point(),
+    //         edge.back().get_point()
+    //     );
+    // }
+
+    let mut outer_face = boundary0[fusable_faces.0].clone();
+    let inner_face = boundary1[fusable_faces.1].clone();
+    outer_face.add_boundary(inner_face.boundaries().first().unwrap().clone());
+
+    // println!("Merged: {:?}", outer_face);
+
+    combined.push(outer_face);
+
     // Then add that merged face to the solid and we've fused!
 
     // After that, we need to merge the secondary_mergeable_faces together.
 
     // And then we're done!
+    // None
     Some(Solid::new(vec![combined]))
 }
 
