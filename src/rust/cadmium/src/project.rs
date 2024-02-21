@@ -918,9 +918,6 @@ impl Workbench {
 
                                 // merge this existing solid with as many of the new solids as possible
                                 for (_, new_solid) in new_solids.iter() {
-                                    // println!("\nMERGE SCOPE: {:?}", existing_solid.truck_solid);
-                                    // println!("\nNew candidate: {:?}", solid.truck_solid);
-
                                     // let new_candidate = translated(
                                     //     &solid.truck_solid,
                                     //     TruckVector3::new(0.0, 0.0, 1.0),
@@ -949,7 +946,7 @@ impl Workbench {
                                 }
 
                                 realized.solids.insert(
-                                    "fused solid".to_string(),
+                                    existing_solid_name.to_owned(),
                                     existing_solid_to_merge_with,
                                 );
                             }
@@ -958,16 +955,64 @@ impl Workbench {
                         ExtrusionMode::Remove(merge_scope) => {
                             // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
                             // with each of the solids listed in the merge scope
-                            // for (name, solid) in solids {
-                            // let mut ts = solid.truck_solid.clone();
-                            // ts.not();
-                            // }
+                            println!("Okay, let's remove");
+                            let new_solids = Solid::from_extrusion(
+                                step.name.clone(),
+                                plane,
+                                split_sketch,
+                                extrusion,
+                            );
+
+                            for existing_solid_name in merge_scope {
+                                let mut existing_solid_to_merge_with =
+                                    realized.solids.remove(existing_solid_name).unwrap();
+
+                                // merge this existing solid with as many of the new solids as possible
+                                for (_, new_solid) in new_solids.iter() {
+                                    // let translated_solid = translated(
+                                    //     &solid.truck_solid,
+                                    //     TruckVector3::new(0.0, 0.0, 1.0),
+                                    // );
+                                    // println!("\nTranslated new candidate: {:?}", new_candidate);
+
+                                    // let result =
+                                    //     solid_or(&existing_solid.truck_solid, &new_candidate, 0.1);
+
+                                    let mut punch = new_solid.truck_solid.clone();
+                                    // punch.not();
+                                    println!("Have a punch");
+
+                                    let cleared = solid_and(
+                                        &existing_solid_to_merge_with.truck_solid,
+                                        &punch,
+                                        0.1,
+                                    );
+
+                                    println!("have cleared");
+
+                                    match cleared {
+                                        Some(s) => {
+                                            println!("Merged with AND");
+                                            // println!("{:?}", s);
+                                            existing_solid_to_merge_with = Solid::from_truck_solid(
+                                                existing_solid_name.to_owned(),
+                                                s,
+                                            );
+                                        }
+                                        None => {
+                                            println!("Failed to merge with AND");
+                                        }
+                                    }
+                                }
+
+                                realized.solids.insert(
+                                    existing_solid_name.to_owned(),
+                                    existing_solid_to_merge_with,
+                                );
+                                println!("inserted the solid back in")
+                            }
                         }
                     }
-
-                    // for (name, solid) in solids {
-                    //     realized.solids.insert(name, solid);
-                    // }
                 }
                 _ => println!("Unknown step type"),
             }
@@ -1574,6 +1619,12 @@ impl Message {
 
 #[cfg(test)]
 mod tests {
+    use truck_meshalgo::{
+        filters::OptimizingFilter,
+        tessellation::{MeshableShape, MeshedShape},
+    };
+    use truck_polymesh::obj;
+
     use super::*;
 
     #[test]
@@ -1687,16 +1738,16 @@ mod tests {
     }
 
     #[test]
-    fn secondary_extrusion() {
+    fn bruno() {
         let mut p = Project::new("Test Project");
         p.add_defaults();
         let mut wb = p.workbenches.get_mut(0).unwrap();
         wb.add_sketch_to_plane("Sketch 1", "Plane-0");
         let mut s = wb.get_sketch_mut("Sketch 1").unwrap();
-        let ll = s.add_point(0.0, 0.0);
-        let lr = s.add_point(40.0, 0.0);
-        let ul = s.add_point(0.0, 40.0);
-        let ur = s.add_point(40.0, 40.0);
+        let ll = s.add_point(2.0, 2.0);
+        let lr = s.add_point(42.0, 2.0);
+        let ul = s.add_point(2.0, 42.0);
+        let ur = s.add_point(42.0, 42.0);
         s.add_segment(ll, lr);
         s.add_segment(lr, ur);
         s.add_segment(ur, ul);
@@ -1712,39 +1763,14 @@ mod tests {
         );
         wb.add_extrusion("Ext1", extrusion);
 
-        // let realization = p.get_realization(0, 1000);
-        // let solids = realization.solids;
-        // let ext_1_0 = &solids["Ext1:0"];
-
-        // let truck_solid = &ext_1_0.truck_solid;
-        // in our case there is only one solid object so just take the first
-        // let boundaries = &truck_solid.boundaries()[0];
-
-        // boundaries.face_iter().for_each(|face| {
-        //     let surface = face.get_surface();
-        //     let oriented_surface = face.oriented_surface();
-
-        //     match oriented_surface {
-        //         truck_modeling::geometry::Surface::Plane(p) => {
-        //             let normal = p.normal();
-        //             println!("Plane: {:?} ", p);
-        //             println!("Normal: {:?}", normal);
-        //         }
-        //         _ => {}
-        //     }
-        // });
-
-        // let result = serde_json::to_string(boundaries).unwrap();
-        // println!("Boundaries: {}", &result);
-
         let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
         let mut s2 = wb.get_sketch_mut("Sketch-2").unwrap();
 
         // smaller
-        let ll = s2.add_point(15.0, 15.0);
-        let lr = s2.add_point(25.0, 15.0);
-        let ul = s2.add_point(15.0, 25.0);
-        let ur = s2.add_point(25.0, 25.0);
+        let ll = s2.add_point(12.0, 12.0);
+        let lr = s2.add_point(32.0, 12.0);
+        let ul = s2.add_point(12.0, 32.0);
+        let ur = s2.add_point(32.0, 32.0);
         // bigger!
         // let ll = s2.add_point(-10.0, -10.0);
         // let lr = s2.add_point(50.0, -10.0);
@@ -1755,7 +1781,98 @@ mod tests {
         s2.add_segment(ur, ul);
         s2.add_segment(ul, ll);
 
-        println!("S2: {:?}", s2);
+        // println!("S2: {:?}", s2);
+
+        let extrusion2 = Extrusion::new(
+            s2_id.to_owned(),
+            vec![0],
+            25.0,
+            0.0,
+            Direction::Normal,
+            ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
+        );
+        wb.add_extrusion("Ext2", extrusion2);
+
+        wb.add_sketch_to_plane("Sketch 3", "Plane-1");
+        let mut s3 = wb.get_sketch_mut("Sketch 3").unwrap();
+        let center = s3.add_point(20.0, 15.0);
+        s3.add_circle(center, 5.0);
+
+        let extrusion3 = Extrusion::new(
+            "Sketch-2".to_owned(),
+            vec![0],
+            50.0,
+            0.0,
+            Direction::NegativeNormal,
+            ExtrusionMode::Remove(vec!["Ext1:0".to_string()]),
+        );
+        wb.add_extrusion("Ext3", extrusion3);
+
+        let realization = p.get_realization(0, 1000);
+        let solids = realization.solids;
+
+        let num_solids = solids.len();
+        println!("Num Solids: {:?}", num_solids);
+        assert!(num_solids == 1);
+
+        let final_solid = &solids["Ext1:0"];
+        println!("Final solid: {:?}", final_solid.truck_solid);
+        let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
+        mesh.put_together_same_attrs();
+        let file = std::fs::File::create("bruno.obj").unwrap();
+        obj::write(&mesh, file).unwrap();
+
+        let as_json = serde_json::to_string(&p).unwrap();
+        let file = std::fs::File::create("bruno.json").unwrap();
+        // println!("As json: {}", as_json);
+        serde_json::to_writer(file, &p).unwrap();
+    }
+
+    #[test]
+    fn secondary_extrusion_simple() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+        let mut wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
+        let mut s = wb.get_sketch_mut("Sketch 1").unwrap();
+        let ll = s.add_point(2.0, 2.0);
+        let lr = s.add_point(42.0, 2.0);
+        let ul = s.add_point(2.0, 42.0);
+        let ur = s.add_point(42.0, 42.0);
+        s.add_segment(ll, lr);
+        s.add_segment(lr, ur);
+        s.add_segment(ur, ul);
+        s.add_segment(ul, ll);
+
+        let extrusion = Extrusion::new(
+            "Sketch-0".to_owned(),
+            vec![0],
+            25.0,
+            0.0,
+            Direction::Normal,
+            ExtrusionMode::New,
+        );
+        wb.add_extrusion("Ext1", extrusion);
+
+        let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
+        let mut s2 = wb.get_sketch_mut("Sketch-2").unwrap();
+
+        // smaller
+        let ll = s2.add_point(12.0, 12.0);
+        let lr = s2.add_point(32.0, 12.0);
+        let ul = s2.add_point(12.0, 32.0);
+        let ur = s2.add_point(32.0, 32.0);
+        // bigger!
+        // let ll = s2.add_point(-10.0, -10.0);
+        // let lr = s2.add_point(50.0, -10.0);
+        // let ul = s2.add_point(-10.0, 50.0);
+        // let ur = s2.add_point(50.0, 50.0);
+        s2.add_segment(ll, lr);
+        s2.add_segment(lr, ur);
+        s2.add_segment(ur, ul);
+        s2.add_segment(ul, ll);
+
+        // println!("S2: {:?}", s2);
 
         let extrusion2 = Extrusion::new(
             s2_id.to_owned(),
@@ -1774,7 +1891,85 @@ mod tests {
         println!("Num Solids: {:?}", num_solids);
         assert!(num_solids == 1);
 
-        // let as_json = serde_json::to_string(&p).unwrap();
+        let final_solid = &solids["Ext1:0"];
+        let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
+        mesh.put_together_same_attrs();
+        let file = std::fs::File::create("secondary_extrusion.obj").unwrap();
+        obj::write(&mesh, file).unwrap();
+
+        let as_json = serde_json::to_string(&p).unwrap();
+        let file = std::fs::File::create("secondary_extrusion.json").unwrap();
         // println!("As json: {}", as_json);
+        serde_json::to_writer(file, &p).unwrap();
+    }
+
+    #[test]
+    fn secondary_extrusion_with_merge() {
+        let mut p = Project::new("Test Project");
+        p.add_defaults();
+        let mut wb = p.workbenches.get_mut(0).unwrap();
+        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
+        let mut s = wb.get_sketch_mut("Sketch 1").unwrap();
+        let ll = s.add_point(2.0, 2.0);
+        let lr = s.add_point(42.0, 2.0);
+        let ul = s.add_point(2.0, 42.0);
+        let ur = s.add_point(42.0, 42.0);
+        s.add_segment(ll, lr);
+        s.add_segment(lr, ur);
+        s.add_segment(ur, ul);
+        s.add_segment(ul, ll);
+
+        let extrusion = Extrusion::new(
+            "Sketch-0".to_owned(),
+            vec![0],
+            25.0,
+            0.0,
+            Direction::Normal,
+            ExtrusionMode::New,
+        );
+        wb.add_extrusion("Ext1", extrusion);
+
+        let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
+        let mut s2 = wb.get_sketch_mut("Sketch-2").unwrap();
+
+        // smaller
+        let ll = s2.add_point(12.0, 0.0);
+        let lr = s2.add_point(32.0, 0.0);
+        let ul = s2.add_point(12.0, 32.0);
+        let ur = s2.add_point(32.0, 32.0);
+        s2.add_segment(ll, lr);
+        s2.add_segment(lr, ur);
+        s2.add_segment(ur, ul);
+        s2.add_segment(ul, ll);
+
+        // println!("S2: {:?}", s2);
+
+        let extrusion2 = Extrusion::new(
+            s2_id.to_owned(),
+            vec![0],
+            25.0,
+            0.0,
+            Direction::Normal,
+            ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
+        );
+        wb.add_extrusion("Ext2", extrusion2);
+
+        let realization = p.get_realization(0, 1000);
+        let solids = realization.solids;
+
+        let num_solids = solids.len();
+        println!("Num Solids: {:?}", num_solids);
+        assert!(num_solids == 1);
+
+        let final_solid = &solids["Ext1:0"];
+        let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
+        mesh.put_together_same_attrs();
+        let file = std::fs::File::create("secondary_extrusion.obj").unwrap();
+        obj::write(&mesh, file).unwrap();
+
+        let as_json = serde_json::to_string(&p).unwrap();
+        let file = std::fs::File::create("secondary_extrusion.json").unwrap();
+        // println!("As json: {}", as_json);
+        serde_json::to_writer(file, &p).unwrap();
     }
 }

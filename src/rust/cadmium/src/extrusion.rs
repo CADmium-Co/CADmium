@@ -85,6 +85,7 @@ impl Extrusion {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Direction {
     Normal,
+    NegativeNormal,
     Specified(Vector3),
 }
 
@@ -387,6 +388,7 @@ impl Solid {
 
         let extrusion_direction = match &extrusion.direction {
             Direction::Normal => plane.plane.tertiary.clone(),
+            Direction::NegativeNormal => plane.plane.tertiary.times(-1.0),
             Direction::Specified(vector) => vector.clone(),
         };
 
@@ -750,7 +752,6 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // Lastly, merge the two fusable faces together. This is complicated because
     // one might be bigger than the other, or they might be the same size, or
     // they might overlap somewhat. We'll need to figure out how to merge them.
-
     // println!("How do I merge these two? {:?}", fusable_faces);
     // println!("First:");
     // for edge in boundary0[fusable_faces.0].edge_iter() {
@@ -760,27 +761,20 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     //         edge.back().get_point()
     //     );
     // }
-
-    // println!("Second:");
-    // for edge in boundary1[fusable_faces.1].edge_iter() {
-    //     println!(
-    //         "Edge: {:?} to {:?}",
-    //         edge.front().get_point(),
-    //         edge.back().get_point()
-    //     );
-    // }
-
     let mut outer_face = boundary0[fusable_faces.0].clone();
     let inner_face = boundary1[fusable_faces.1].clone();
     outer_face.add_boundary(inner_face.boundaries().first().unwrap().clone());
 
-    // println!("Merged: {:?}", outer_face);
-
+    // Then add that merged face to the solid and we've fused!
     combined.push(outer_face);
 
-    // Then add that merged face to the solid and we've fused!
-
     // After that, we need to merge the secondary_mergeable_faces together.
+    for (face_0_idx, face_1_idx) in secondary_mergeable_faces {
+        let mut face_0 = boundary0[face_0_idx].clone();
+        let face_1 = boundary1[face_1_idx].clone();
+        face_0.add_boundary(face_1.boundaries().first().unwrap().clone());
+        combined.push(face_0);
+    }
 
     // And then we're done!
     // None
