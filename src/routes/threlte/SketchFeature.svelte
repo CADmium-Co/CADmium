@@ -79,9 +79,17 @@
 		if (!selectingForSketchPlane) return
 		if (!id) return
 		if (!$currentlySelected.length) return
-		// console.log('CS changed when selecting for Sketch Plane:', $currentlySelected)
+		console.log('CS changed when selecting for Sketch Plane:', $currentlySelected)
 
-		setSketchPlane(id, $currentlySelected[0].id)
+		let thingSelected = $currentlySelected[0]
+		if (thingSelected.type === 'plane') {
+			setSketchPlane(id, thingSelected.id)
+		} else if (thingSelected.type === 'meshFace') {
+			console.log('HOW DO I HANDLE THIS?')
+			console.log(thingSelected)
+			// setSketchPlane(id, $currentlySelected[0].id)
+		}
+
 		disengageSearchForPlane()
 	})
 </script>

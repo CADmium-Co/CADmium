@@ -23,9 +23,9 @@
 		truck_edges = boundaries.edges
 		truck_faces = boundaries.faces
 
-		console.log('vertices', truck_vertices)
-		console.log('edges', truck_edges)
-		console.log('faces', truck_faces)
+		// console.log('vertices', truck_vertices)
+		// console.log('edges', truck_edges)
+		// console.log('faces', truck_faces)
 	}
 
 	const geometry = new THREE.BufferGeometry()
