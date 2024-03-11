@@ -1,10 +1,10 @@
 {
-	"name": "cadmium",
+	"name": "cadmium-app",
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"build:wasm:dev": "wasm-pack build --target web src/rust/cadmium --dev --no-typescript",
-		"build:wasm": "wasm-pack build --target web src/rust/cadmium",
+		"build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
+		"build:wasm": "wasm-pack build --target web packages/cadmium",
 		"dev": "vite dev",
 		"build": "vite build",
 		"build:serve": "npm run build && serve -p 5173 dist",
@@ -41,6 +41,7 @@
 		"@threlte/core": "^7.2.1",
 		"@threlte/extras": "^8.10.1",
 		"@types/three": "^0.162.0",
+		"cadmium": "workspace:*",
 		"camera-controls": "^2.8.3",
 		"gsap": "^3.12.5",
 		"js-file-download": "^0.4.12",
