@@ -1,20 +1,22 @@
-<script>
+<script lang="ts">
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { Vector2 } from 'three'
 	import { T } from '@threlte/core'
 	import { flatten, arcToPoints, promoteTo3 } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import type { EntityType } from '../../types'
 
-	export let id, center, start, end
+	export let id: string, center, start, end
 
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
 
-	const type = 'arc'
+	const type: EntityType = 'arc'
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
@@ -23,7 +25,7 @@
 	const start2 = new Vector2(start.twoD.x, start.twoD.y)
 	const end2 = new Vector2(end.twoD.x, end.twoD.y)
 
-	const points = flatten(promoteTo3(arcToPoints(center2, start2, end2)))
+	const points = flatten(promoteTo3(arcToPoints(center2, start2, end2, /** implicit false */))) // defaulted false in function todo ask Matt
 
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)

@@ -342,7 +342,7 @@ export function readFile(e: WithTarget<Event, HTMLInputElement>) {
 	reader.readAsText(file)
 }
 
-export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clockwise: boolean) {
+export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clockwise: boolean = false) {
 	log("[arcToPoints] center, start, end, clockwise", center, start, end, clockwise)
 	// see https://math.stackexchange.com/a/4132095/816177
 	const tolerance = CIRCLE_TOLERANCE // in meters

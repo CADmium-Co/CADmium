@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { Matrix4, Euler, MeshStandardMaterial, DoubleSide, Vector2, Vector3 } from 'three'
 	import { T, extend, useThrelte } from '@threlte/core'
 	import { Text, Suspense } from '@threlte/extras'
@@ -14,9 +14,15 @@
 		selectionMin,
 		selectionMax
 	} from './stores'
+	import type { EntityType } from '../../types'
 
-	export let name, id
-	export let width, height
+	const log = (function () {
+		const context = '[Plane.svelte]'
+		return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:gray;")
+	})()
+
+	export let name: string, id: string
+	export let width: number, height: number
 	export let origin, primary, secondary, tertiary
 
 	extend({ Line2 })
@@ -102,7 +108,7 @@
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
 
-	const type = 'plane'
+	const type: EntityType = 'plane'
 
 	let hovered = false
 	let selected = false
@@ -110,7 +116,7 @@
 	// 	// if (!id) return
 	// 	// if (!$currentlySelected.length) return
 	// 	selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
-	// 	console.log('recomputed whether plane', id, 'was selected: ', selected)
+	// 	log('recomputed whether plane', id, 'was selected: ', selected)
 	// })
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 

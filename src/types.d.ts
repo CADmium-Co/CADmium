@@ -1,3 +1,5 @@
+import type Point3D from "./routes/threlte/Point3D.svelte"
+
 declare module "nurbs"
 
 export type WithTarget<Event, Target> = Event & { currentTarget: Target }
@@ -12,139 +14,15 @@ export type EntityType =
   "point3D" |
   "meshFace"
 
-export interface MousedOver {
-  type: EntityType, id: string
+export interface Entity {
+  id: string
+  type: EntityType
 }
 
-const example = {
-  "name": "First Project",
-  "assemblies": [],
-  "workbenches": [
-    {
-      "name": "Workbench 1",
-      "history": [
-        {
-          "name": "Origin",
-          "unique_id": "Point-0",
-          "suppressed": false,
-          "data": {
-            "type": "Point",
-            "point": {
-              "x": 0,
-              "y": 0,
-              "z": 0,
-              "hidden": false
-            }
-          }
-        },
-        {
-          "name": "Top",
-          "unique_id": "Plane-0",
-          "suppressed": false,
-          "data": {
-            "type": "Plane",
-            "plane": {
-              "origin": {
-                "x": 0,
-                "y": 0,
-                "z": 0,
-                "hidden": false
-              },
-              "primary": {
-                "x": 1,
-                "y": 0,
-                "z": 0
-              },
-              "secondary": {
-                "x": 0,
-                "y": 1,
-                "z": 0
-              },
-              "tertiary": {
-                "x": 0,
-                "y": 0,
-                "z": 1
-              }
-            },
-            "width": 100,
-            "height": 100
-          }
-        },
-        {
-          "name": "Front",
-          "unique_id": "Plane-1",
-          "suppressed": false,
-          "data": {
-            "type": "Plane",
-            "plane": {
-              "origin": {
-                "x": 0,
-                "y": 0,
-                "z": 0,
-                "hidden": false
-              },
-              "primary": {
-                "x": 1,
-                "y": 0,
-                "z": 0
-              },
-              "secondary": {
-                "x": 0,
-                "y": 0,
-                "z": 1
-              },
-              "tertiary": {
-                "x": 0,
-                "y": -1,
-                "z": 0
-              }
-            },
-            "width": 100,
-            "height": 100
-          }
-        },
-        {
-          "name": "Right",
-          "unique_id": "Plane-2",
-          "suppressed": false,
-          "data": {
-            "type": "Plane",
-            "plane": {
-              "origin": {
-                "x": 0,
-                "y": 0,
-                "z": 0,
-                "hidden": false
-              },
-              "primary": {
-                "x": 0,
-                "y": 1,
-                "z": 0
-              },
-              "secondary": {
-                "x": 0,
-                "y": 0,
-                "z": 1
-              },
-              "tertiary": {
-                "x": 1,
-                "y": 0,
-                "z": 0
-              }
-            },
-            "width": 100,
-            "height": 100
-          }
-        }
-      ],
-      "step_counters": {
-        "Extrusion": 0,
-        "Sketch": 0,
-        "Point": 1,
-        "Plane": 3
-      }
-    }
-  ]
+export interface Point {
+  twoD: Vector2
+  threeD: Vector3
+  pointId: string
 }
 
 export interface Project {
@@ -165,19 +43,125 @@ export interface HistoryStep {
   name: string
   suppressed: boolean
   unique_id: string
-  data: any // todo tighten up
+  data: HistoryStepData
 }
 
-export interface Entity {
-  id: string
-  type: EntityType
+export type HistoryStepData =
+  | PointData
+  | PlaneData
+  | ExtrusionData
+  | SketchData
+
+interface Point3 {
+  x: number
+  y: number
+  z: number
 }
+interface Point3Hideable {
+  x: number
+  y: number
+  z: number
+  hidden: boolean
+}
+
+interface PointWithDelta {
+  x: number
+  y: number
+  m: number
+  dx: number
+  dy: number
+  fx: number
+  fy: number
+  fixed: boolean
+  hidden: boolean
+}
+
+export interface SnapPoints {
+  twoD: PointWithDelta
+  threeD: Point3Hideable
+  pointId: string // todo is number string - maybe change to number
+}
+
+interface PointData {
+  type: "Point"
+  point: Point3Hideable
+}
+
+interface PlaneData {
+  type: "Plane"
+  plane: {
+    origin: Point3Hideable
+    primary: Point3
+    secondary: Point3
+    tertiary: Point3
+  },
+  width: number  // %
+  height: number // %
+}
+
+interface ExtrusionData {
+  type: "Extrusion"
+  extrusion: {
+    sketch_id: string
+    face_ids: number[]
+    length: number
+    offset: number
+    direction: string // e.g "Normal"  todo enums
+    mode: string // e,g "New"  todo enums
+  }
+}
+
+interface IDictionary<TValue> {
+  [id: string]: TValue
+}
+
+interface SegmentId {
+  start: number
+  end: number
+}
+
+interface Circle {
+  center: number
+  radius: number
+  top: number
+}
+
+interface SketchData {
+  type: "Sketch",
+  plane_description: {
+    PlaneId: string
+  },
+  width: number
+  height: number
+  sketch: {
+    points: IDictionary<PointWithDelta>
+    highest_point_id: number
+    line_segments: IDictionary<SegmentId>
+    highest_line_segment_id: number
+    circles: IDictionary<Circle>
+    highest_circle_id: number
+    arcs: object // todo
+    highest_arc_id: number
+    constraints: object // todo
+    highest_constraint_id: number
+  }
+}
+
 
 export interface Realization {
   planes: object
   points: object
   sketches: object
   solids: object
+}
+
+export interface ExtrusionSketchData {
+  sketch_id: string
+  face_ids: string[]
+  length: string // todo change to number
+  offset: number
+  direction: string
+  mode: string
 }
 
 // rust expects:

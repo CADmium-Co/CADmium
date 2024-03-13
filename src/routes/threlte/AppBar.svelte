@@ -1,15 +1,30 @@
-<script>
+<script lang="ts">
 	import fileDownload from 'js-file-download'
-	import { projectIsStale, wasmProject, messageHistory } from './stores'
+	import { wasmProject, messageHistory } from './stores'
+	import type { Project } from 'cadmium'
 
 	import Download from 'phosphor-svelte/lib/Download'
 	import Upload from 'phosphor-svelte/lib/Upload'
 	import Bug from 'phosphor-svelte/lib/Bug'
+	import type { WithTarget } from "../../types"
 
 	export let userName = 'mattferraro.dev'
-	export let project = {}
+	export let project: Project
 
 	export let newFileContent = null
+
+	function fileInput(e: WithTarget<Event, HTMLInputElement>) {
+		const target = e.target as HTMLInputElement
+		const file = target.files![0]
+		if (!file) return
+		const reader = new FileReader()
+		reader.onload = function (e) {
+			// Note that this field is bound by the +page.svelte component,
+			// which kicks off some changes as a result of this value changing.
+			newFileContent = e.target?.result
+		}
+		reader.readAsText(file)
+	}
 </script>
 
 <div class="bg-gray-200 h-[45px]">
@@ -19,7 +34,7 @@
 			<img class="object-cover h-10 w-10 ml-4" alt="logo" src="/cadmium_logo_min.svg" />
 		</div>
 		<div class="select-none">CADmium</div>
-		<div class="text-xl font-medium">{project.name || ''}</div>
+		<div class="text-xl font-medium">{project.name ?? ''}</div>
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="hover:bg-gray-300 rounded p-1"
@@ -37,22 +52,7 @@
 			<!-- <input id="file-inp" type="file" style="visibility:hidden;" onchange="readFile(event)" /> -->
 			<label for="file-inp">
 				<Upload class="h-6 w-6" />
-				<input
-					id="file-inp"
-					type="file"
-					hidden
-					on:change={(e) => {
-						var file = e.target.files[0]
-						if (!file) return
-						var reader = new FileReader()
-						reader.onload = function (e) {
-							// Note that this field is bound by the +page.svelte component,
-							// which kicks off some changes as a result of this value changing.
-							newFileContent = e.target.result
-						}
-						reader.readAsText(file)
-					}}
-				/>
+				<input id="file-inp" type="file" hidden on:change={fileInput} />
 			</label>
 		</div>
 

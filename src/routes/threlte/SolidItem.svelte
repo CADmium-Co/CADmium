@@ -1,9 +1,15 @@
-<script>
+<script lang="ts">
 	import fileDownload from 'js-file-download'
 	import FileArrowDown from 'phosphor-svelte/lib/FileArrowDown'
 	import { getObj } from './projectUtils'
+	import type { WithTarget } from "../../types"
 
-	export let name
+	const log = (function () {
+		const context = '[SolidItem.svelte]'
+		return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:gray;")
+	})()
+
+	export let name: string
 
 	let source = '/actions/part.svg'
 	let contextMenuVisible = false
@@ -11,11 +17,11 @@
 	// pos is cursor position when right click occur
 	let pos = { x: 0, y: 0 }
 	// menu is dimension (height and width) of context menu
-	let menu = { h: 0, y: 0 }
+	let menu = { h: 0, w: 0 }
 	// browser/window dimension (height and width)
-	let browser_size = { h: 0, y: 0 }
+	let browser_size = { h: 0, w: 0 }
 
-	function getContextMenuDimension(node) {
+	function getContextMenuDimension(node: HTMLElement) {
 		// This function will get context menu dimension
 		// when navigation is shown => showMenu = true
 		let height = node.offsetHeight
@@ -26,7 +32,7 @@
 		}
 	}
 
-	export function rightClickContextMenu(e) {
+	export function rightClickContextMenu(e: WithTarget<MouseEvent, HTMLElement>) {
 		contextMenuVisible = true
 		browser_size = {
 			w: window.innerWidth,
@@ -53,14 +59,14 @@
 		contextMenuVisible = false
 	}
 	const exportSolidSTEP = () => {
-		console.log('export solid STEP')
+		log('export solid STEP')
 		contextMenuVisible = false
 		// let step_string = $realization_rust.solid_to_step(solid_name)
-		// console.log(step_string)
+		// log(step_string)
 		// fileDownload(step_string, solid_name + '.step')
 	}
 
-	function onWindowClick(e) {
+	function onWindowClick() {
 		contextMenuVisible = false
 	}
 </script>
@@ -71,7 +77,7 @@
 	role="button"
 	tabindex="0"
 	on:contextmenu|preventDefault={(e) => {
-		console.log('solid', e)
+		log('solid', e)
 		rightClickContextMenu(e)
 	}}
 >

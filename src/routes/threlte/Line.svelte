@@ -1,20 +1,22 @@
-<script>
+<script lang="ts">
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
 	import { Vector2 } from 'three'
 	import { T } from '@threlte/core'
 	import { flatten, promoteTo3 } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import type { EntityType } from '../../types'
 
-	export let id, start, end
+	export let id: string, start, end
 
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
 
-	const type = 'line'
+	const type: EntityType = 'line'
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false

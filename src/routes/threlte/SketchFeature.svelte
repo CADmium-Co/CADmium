@@ -1,7 +1,7 @@
-<script>
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
-	import { renameStep, setSketchPlane } from './projectUtils'
+<script lang="ts">
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
+	import { renameStep, setSketchPlane } from "./projectUtils"
 	import {
 		hiddenSketches,
 		featureIndex,
@@ -12,47 +12,63 @@
 		sketchBeingEdited,
 		sketchTool,
 		currentlyMousedOver
-	} from './stores.js'
-	import EyeSlash from 'phosphor-svelte/lib/EyeSlash'
-	import Eye from 'phosphor-svelte/lib/Eye'
-	import X from 'phosphor-svelte/lib/X'
+	} from "./stores"
+	import EyeSlash from "phosphor-svelte/lib/EyeSlash"
+	import Eye from "phosphor-svelte/lib/Eye"
+	import X from "phosphor-svelte/lib/X"
+	import type { Entity } from "../../types"
 
-	export let name, index, id, plane_id
+	const log = (function () {
+		const context = "[SketchFeature.svelte]"
+		return Function.prototype.bind.call(
+			console.log,
+			console,
+			`%c${context}`,
+			"font-weight:bold;color:gray;"
+		)
+	})()
 
-	let source = '/actions/sketch_min.svg'
+	export let name: string, index: number, id: string, plane_id: string
 
-	let surface = null
+	$: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
+
+	let source = "/actions/sketch_min.svg"
+
+	let surface: Entity | null = null
 	let selectingForSketchPlane = false
 
 	$: {
-		if (plane_id !== '') {
-			surface = { type: 'plane', id: plane_id }
+		if (plane_id !== "") {
+			surface = { type: "plane", id: plane_id }
 		} else {
 			surface = null
 			engageSearchForPlane()
 		}
 	}
-	console.log('A Sketch Feature: ', name, index, id, plane_id)
+	log("A Sketch Feature: ", name, index, id, plane_id)
+
+	$: $featureIndex, log("[$featureIndex]", typeof $featureIndex, $featureIndex)
 
 	const closeAndRefresh = () => {
-		console.log('closing, refreshing')
+		log("closing, refreshing")
 		$featureIndex = 1000
-		$sketchBeingEdited = null
-		$sketchTool = null
+		$sketchBeingEdited = ""
+		$sketchTool = ""
 		$selectingFor = []
 		$selectionMax = 1000
 		$selectionMin = 0
 		$currentlySelected = []
 	}
 
-	$: if ($featureIndex === index) {
-		$sketchBeingEdited = id
-	}
+	$: if ($featureIndex === index) $sketchBeingEdited = id
+
+	$: $sketchBeingEdited,
+		log("[$sketchBeingEdited]", `${$sketchBeingEdited === "" ? "empty" : ""}`, $sketchBeingEdited)
 
 	const engageSearchForPlane = () => {
-		console.log('engage search!')
-		$sketchTool = null
-		$selectingFor = ['plane', 'meshFace']
+		log("engage search!")
+		$sketchTool = ""
+		$selectingFor = ["plane", "meshFace"]
 		$selectionMax = 1
 		$selectionMin = 1
 
@@ -60,33 +76,33 @@
 			$currentlySelected = [surface]
 		}
 		selectingForSketchPlane = true
-		console.log('search is engaged')
+		log("search is engaged")
 	}
 
 	const disengageSearchForPlane = () => {
-		console.log('Disengage search!')
+		log("Disengage search!")
 		$currentlySelected = []
 		$selectingFor = []
 		$selectionMax = 1000
 		$selectionMin = 0
 		selectingForSketchPlane = false
-		$sketchTool = 'select'
+		$sketchTool = "select"
 		$currentlyMousedOver = []
-		console.log('search is disengaged')
+		log("search is disengaged")
 	}
 
 	currentlySelected.subscribe(() => {
 		if (!selectingForSketchPlane) return
 		if (!id) return
 		if (!$currentlySelected.length) return
-		console.log('CS changed when selecting for Sketch Plane:', $currentlySelected)
+		log("CS changed when selecting for Sketch Plane:", $currentlySelected)
 
 		let thingSelected = $currentlySelected[0]
-		if (thingSelected.type === 'plane') {
+		if (thingSelected.type === "plane") {
 			setSketchPlane(id, thingSelected.id)
-		} else if (thingSelected.type === 'meshFace') {
-			console.log('HOW DO I HANDLE THIS?')
-			console.log(thingSelected)
+		} else if (thingSelected.type === "meshFace") {
+			log("HOW DO I HANDLE THIS?")
+			log(thingSelected)
 			// setSketchPlane(id, $currentlySelected[0].id)
 		}
 
@@ -103,7 +119,7 @@
 			closeAndRefresh()
 		} else {
 			$featureIndex = index
-			$sketchTool = 'select'
+			$sketchTool = "select"
 		}
 	}}
 >
@@ -142,7 +158,7 @@
 </div>
 
 {#if $featureIndex === index}
-	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
+	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
 				// editing = false

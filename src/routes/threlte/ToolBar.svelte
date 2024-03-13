@@ -11,6 +11,11 @@
 	} from './stores'
 	import { newExtrusion, newSketchOnPlane } from './projectUtils'
 
+	const log = (function () {
+		const context = '[ToolBar.svelte]'
+		return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:gray;")
+	})()
+
 	let solving = false
 	const solveSketch = () => {}
 	const createNewExtrusion = () => {
@@ -19,7 +24,7 @@
 		$featureIndex = $workbench.history.length - 1
 	}
 	const createNewSketch = () => {
-		console.log('Create new sketch')
+		log('Create new sketch')
 		newSketchOnPlane()
 		$featureIndex = $workbench.history.length - 1
 	}
@@ -47,7 +52,7 @@
 </script>
 
 <div class="col-span-2 flex flex-none items-center gap-1 bg-gray-100 h-[45px] select-none">
-	{#if $sketchBeingEdited}
+	{#if $sketchBeingEdited !== ""}
 		{#each sketchActions as action}
 			<button
 				class="inline-flex items-center p-1 {$sketchTool === action.alt

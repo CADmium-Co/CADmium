@@ -1,13 +1,14 @@
-<script>
+<script lang="ts">
 	import { T } from '@threlte/core'
 	import { Path, Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry } from 'three'
 	import { circleToPoints, arcToPoints } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
+	import type { EntityType } from '../../types'
 
-	export let face, id
-	export let pointsById
+	export let face, id: string
+	export let pointsById: { [index: string]: any }
 
-	const type = 'face'
+	const type: EntityType = 'face'
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
@@ -23,7 +24,8 @@
 	// .center which is a point ID, .radius which is a float, and .top which is a point ID
 	// holes is an array of wires
 
-	function writeWireToShape(wire, shape) {
+	// todo type wire properly
+	function writeWireToShape(wire: { Circle: any; Segments: any }, shape: Path) {
 		if (wire.Circle) {
 			let circle = wire.Circle
 			let center = pointsById[circle.center]

@@ -1,7 +1,6 @@
 import { Project as WasmProject, Realization as WasmRealization } from 'cadmium'
 import { writable } from 'svelte/store'
-import type { WorkBench, MessageHistory, Project, Realization } from "../../types"
-import type { MousedOver } from "../../types"
+import type { WorkBench, MessageHistory, Project, Realization, Entity, EntityType, SnapPoints } from "../../types"
 
 // @ts-ignore
 export const wasmProject = writable<WasmProject>({})
@@ -9,32 +8,32 @@ export const project = writable<Project>(emptyProject())
 export const projectIsStale = writable(false)
 
 export const workbenchIndex = writable(0)
-export const wasmWorkbench = writable()
-export const workbench = writable<WorkBench>(emptyBench())
+export const workbench = writable<WorkBench>(emptyWorkBench())
 export const workbenchIsStale = writable(false)
 
-export const featureIndex = writable(1000)
+export const featureIndex = writable<number>(1000)
+export const extrusionFeatures = writable<Entity[]>([])
 export const wasmRealization = writable<WasmRealization>()
 export const realization = writable<Realization>(emptyRealization())
 export const realizationIsStale = writable(false)
 
-export const hiddenSketches = writable([])
-export const sketchBeingEdited = writable(null)
-export const sketchTool = writable(null)
+export const hiddenSketches = writable<string[]>([])
+export const sketchBeingEdited = writable("")
+export const sketchTool = writable("")
 
 // could be looking for 'face' or 'plane' or other things
-export const selectingFor = writable([])
+export const selectingFor = writable<EntityType[]>([])
 export const selectionMax = writable(1000)
 export const selectionMin = writable(0)
 
-export const currentlyMousedOver = writable<MousedOver[]>([])
-export const currentlySelected = writable([])
-export const snapPoints = writable([])
+export const currentlyMousedOver = writable<Entity[]>([])
+export const currentlySelected = writable<Entity[]>([])
+export const snapPoints = writable<SnapPoints[]>([])
 export const previewGeometry = writable([])
 
 export const messageHistory = writable<MessageHistory[]>([])
 
-function emptyBench(): WorkBench {
+function emptyWorkBench(): WorkBench {
   return {
     name: "",
     history: [],

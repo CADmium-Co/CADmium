@@ -1,24 +1,39 @@
-<script>
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-	import { T } from '@threlte/core'
-	import { flatten, circleToPoints, promoteTo3 } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+<script lang="ts">
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
+	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
+	import { T } from "@threlte/core"
+	import { flatten, circleToPoints, promoteTo3 } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
+	import type { EntityType } from "../../types"
 
-	export let id, center, radius
+	const log = (function () {
+		const context = "[Circle.svelte]"
+		return Function.prototype.bind.call(
+			console.log,
+			console,
+			`%c${context}`,
+			"font-weight:bold;color:gray;"
+		)
+	})()
 
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	export let id: string, center, radius
 
-	const type = 'circle'
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
+
+	const type: EntityType = "circle"
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
+	// list of x,y,z points
 	let points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
+
+	// $: points, log("[points]", points)
 
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
@@ -28,9 +43,7 @@
 	<T.Line2
 		geometry={lineGeometry}
 		material={hovered ? dashedHoveredMaterial : dashedLineMaterial}
-		on:create={({ ref }) => {
-			ref.computeLineDistances()
-		}}
+		on:create={({ ref }) => ref.computeLineDistances()}
 	/>
 	<T.Line2
 		geometry={lineGeometry}
@@ -46,13 +59,14 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = true
-				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
+				log("$currentlyMousedOver", $currentlyMousedOver)
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === type)

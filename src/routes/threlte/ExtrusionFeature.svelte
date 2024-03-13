@@ -1,37 +1,50 @@
-<script>
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
-	import { arraysEqual, renameStep, updateExtrusion } from './projectUtils'
+<script lang="ts">
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
+	import { arraysEqual, renameStep, updateExtrusion } from "./projectUtils"
 	import {
 		selectingFor,
 		workbenchIsStale,
 		featureIndex,
 		currentlySelected,
 		hiddenSketches
-	} from './stores.js'
-	import X from 'phosphor-svelte/lib/X'
+	} from "./stores"
+	import X from "phosphor-svelte/lib/X"
+	import type { ExtrusionSketchData } from "../../types"
 
-	export let name, index, id, data
-	// data looks like: {sketch_id: 'Sketch-0', face_ids: Array(0), length: 0.25, offset: 0, direction: 'Normal'}
+	const log = (function () {
+		const context = "[ExtrusionFeature.svelte]"
+		return Function.prototype.bind.call(
+			console.log,
+			console,
+			`%c${context}`,
+			"font-weight:bold;color:pink;"
+		)
+	})()
 
+	export let name: string, index: number, id: string, data: ExtrusionSketchData
+
+	$: data, log("[props] name:", name, "index:", index, "id:", id, "data:", data)
+
+	// todo ids should be number or string not both!
 	let faceIdsFromInputs = data.face_ids.sort()
 
 	$: {
 		if (data && data.face_ids) {
-			faceIdsFromInputs = data.face_ids.map((e) => e + '').sort()
+			faceIdsFromInputs = data.face_ids.map((e) => e + "").sort() // coerce to strings
 		}
 	}
 
 	let length = data.length
 
 	const closeAndRefresh = () => {
-		console.log('extrusion feature closing')
+		log("extrusion feature closing")
 		$featureIndex = 1000
 		$currentlySelected = []
 		$selectingFor = []
 		// hide the sketch that this extrusion uses
 		if (!$hiddenSketches.includes(data.sketch_id)) {
-			console.log("Oh, we're hiding the sketch that this extrusion uses")
+			log("Oh, we're hiding the sketch that this extrusion uses")
 			$hiddenSketches = [...$hiddenSketches, data.sketch_id]
 		}
 
@@ -41,7 +54,7 @@
 	function sendUpdate() {
 		// updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
 		const faceIdsFromSelection = $currentlySelected
-			.filter((e) => e.type === 'face')
+			.filter((e) => e.type === "face")
 			.map((e) => e.id)
 			.sort()
 		updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
@@ -50,29 +63,33 @@
 	currentlySelected.subscribe((e) => {
 		if ($featureIndex !== index) return
 
+		log("[$currentlySelected]", $currentlySelected)
+		log("[$featureIndex]", typeof $featureIndex, $featureIndex)
+
 		const faceIdsFromSelection = $currentlySelected
-			.filter((e) => e.type === 'face')
+			.filter((e) => e.type === "face")
 			.map((e) => e.id)
 			.sort()
 
-		console.log('ids from inputs and from selection:', faceIdsFromInputs, faceIdsFromSelection)
+		log("ids from inputs and from selection:", faceIdsFromInputs, faceIdsFromSelection)
 
 		if (arraysEqual(faceIdsFromInputs, faceIdsFromSelection)) {
-			console.log('face ids are the same, no update')
+			log("face ids are the same, no update")
 		} else {
-			console.log('triggering update to new face Ids:', faceIdsFromSelection)
+			log("triggering update to new face Ids:", faceIdsFromSelection)
 			sendUpdate()
 		}
 	})
 
-	// $: console.log($currentlySelected)
+	// $: log($currentlySelected)
 	// $: faceIds = $currentlySelected.filter((e) => e.type === 'face').map((e) => e.id)
 
-	let source = '/actions/extrude_min.svg'
+	let source = "/actions/extrude_min.svg"
 
 	$: if ($featureIndex === index) {
-		$selectingFor = ['face']
-		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: 'face', id }))
+		$selectingFor = ["face"]
+		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: "face", id }))
+		log("[$currentlySelected]", $currentlySelected)
 	}
 </script>
 
@@ -99,7 +116,7 @@
 </div>
 
 {#if $featureIndex === index}
-	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
+	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
 				closeAndRefresh()
@@ -142,7 +159,7 @@
 						{faceId}<button
 							on:click|preventDefault={() => {
 								$currentlySelected = $currentlySelected.filter(
-									(item) => !(item.id === faceId && item.type === 'face')
+									(item) => !(item.id === faceId && item.type === "face")
 								)
 							}}><X /></button
 						>
