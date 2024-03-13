@@ -76,7 +76,7 @@ I am not currently able to handle contributions. After the 0.1 release in April 
   - Start and administer a 1-person SAAS business
   - Generate income using a code base which is open source
 
-If you feel like you would be willing and able to help, please join [my discord](https://discord.gg/MQbBNyNQFf)!
+If you feel like you would be willing and able to help, please join [my discord](https://discord.gg/Ybjy882QV6)!
 
 ## TODO for MVP (0.1 Release)
 
