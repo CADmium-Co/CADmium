@@ -1,15 +1,17 @@
-<script>
+<script lang="ts">
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
 	import { useTexture } from '@threlte/extras'
 	import { BufferGeometry, Float32BufferAttribute, PointsMaterial, Vector2 } from 'three'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
 	import { flatten, promoteTo3 } from './projectUtils'
 	import { T } from '@threlte/core'
+	import type { EntityType } from '../../types'
 
-	export let x, y, hidden, id
+	export let x, y, hidden: boolean, id: string
 	export let isPreview = false
 
-	export let collisionLineMaterial
+	export let collisionLineMaterial: LineMaterial
 
 	let source = '/actions/just_a_point.svg'
 	let outlineSource = '/actions/point_outline.svg'
@@ -17,7 +19,7 @@
 	const pointTexture = useTexture(source)
 	const outlineTexture = useTexture(outlineSource)
 
-	const type = 'point'
+	const type: EntityType = 'point'
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
@@ -46,7 +48,7 @@
 					if (isPreview) return
 					if (validTools.includes($sketchTool)) {
 						hovered = true
-						$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+						$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 					}
 				}}
 				on:pointerout={() => {

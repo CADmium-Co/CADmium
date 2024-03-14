@@ -1,28 +1,25 @@
 import type Point3D from "./routes/threlte/Point3D.svelte"
+import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 declare module "nurbs"
 
 export type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
+export type SetCameraFocus = (goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void
+
 export type EntityType =
-  "circle" |
-  "arc" |
-  "face" |
-  "line" |
-  "plane" |
-  "point" |
-  "point3D" |
-  "meshFace"
+  | "circle"
+  | "arc"
+  | "face"
+  | "line"
+  | "plane"
+  | "point"
+  | "point3D"
+  | "meshFace"
 
 export interface Entity {
   id: string
   type: EntityType
-}
-
-export interface Point {
-  twoD: Vector2
-  threeD: Vector3
-  pointId: string
 }
 
 export interface Project {
@@ -52,12 +49,58 @@ export type HistoryStepData =
   | ExtrusionData
   | SketchData
 
-interface Point3 {
-  x: number
-  y: number
-  z: number
+
+export interface PreviewGeometry {
+  type: EntityType
+  center: PointLikeById
+  radius: number
+  uuid: string
 }
-interface Point3Hideable {
+
+export interface Plane {
+  origin: Vector3Hideable
+  primary: Vector3Like
+  secondary: Vector3Like
+  tertiary: Vector3Like
+}
+
+export interface Point {
+  twoD: Vector2
+  threeD: Vector3
+}
+
+export interface PointById {
+  twoD: PointWithDelta
+  threeD: Vector3Hideable
+  pointId: string // todo is number string - maybe change to number?
+}
+
+export interface PointLikeById {
+  twoD: Vector2Like | PointWithDelta
+  threeD: Vector3Like | Vector3Hideable
+  pointId: string | null // todo is number string - maybe change to number?
+}
+
+export type PointsById = IDictionary<PointById>
+export type PointsLikeById = IDictionary<PointLikeById>
+
+// export interface SnapPoint {
+//   twoD: Vector2Like
+//   threeD: Vector3Like
+//   pointId: string | null // todo
+// }
+
+export interface SnapEntity {
+  id: string
+  type: EntityType
+  x?: number
+  y?: number
+  z?: number
+}
+
+export type ProjectToPlane = (point3D: Vector3) => Vector2
+
+interface Vector3Hideable {
   x: number
   y: number
   z: number
@@ -76,24 +119,18 @@ interface PointWithDelta {
   hidden: boolean
 }
 
-export interface SnapPoints {
-  twoD: PointWithDelta
-  threeD: Point3Hideable
-  pointId: string // todo is number string - maybe change to number
-}
-
 interface PointData {
   type: "Point"
-  point: Point3Hideable
+  point: Vector3Hideable
 }
 
 interface PlaneData {
   type: "Plane"
   plane: {
-    origin: Point3Hideable
-    primary: Point3
-    secondary: Point3
-    tertiary: Point3
+    origin: Vector3Hideable
+    primary: Vector3Like
+    secondary: Vector3Like
+    tertiary: Vector3Like
   },
   width: number  // %
   height: number // %

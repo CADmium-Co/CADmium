@@ -1,6 +1,6 @@
 import { Project as WasmProject, Realization as WasmRealization } from 'cadmium'
 import { writable } from 'svelte/store'
-import type { WorkBench, MessageHistory, Project, Realization, Entity, EntityType, SnapPoints } from "../../types"
+import type { WorkBench, MessageHistory, Project, Realization, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry } from "../../types"
 
 // @ts-ignore
 export const wasmProject = writable<WasmProject>({})
@@ -26,10 +26,10 @@ export const selectingFor = writable<EntityType[]>([])
 export const selectionMax = writable(1000)
 export const selectionMin = writable(0)
 
-export const currentlyMousedOver = writable<Entity[]>([])
+export const currentlyMousedOver = writable<SnapEntity[]>([])
 export const currentlySelected = writable<Entity[]>([])
-export const snapPoints = writable<SnapPoints[]>([])
-export const previewGeometry = writable([])
+export const snapPoints = writable<PointLikeById[]>([])
+export const previewGeometry = writable<PreviewGeometry[]>([])
 
 export const messageHistory = writable<MessageHistory[]>([])
 

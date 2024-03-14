@@ -1,11 +1,20 @@
-<script>
-	import { currentlyMousedOver, currentlySelected } from './stores'
-	import { deleteEntities } from './projectUtils'
+<script lang="ts">
+	import { currentlyMousedOver, currentlySelected } from "./stores"
+	import { deleteEntities } from "./projectUtils"
 
-	export let sketchIndex
-	export let active
+	const log = (function () {
+		const context = "[SelectTool.svelte]"
+		return Function.prototype.bind.call(
+			console.log,
+			console,
+			`%c${context}`,
+			"font-weight:bold;color:pink;"
+		)
+	})()
 
-	export function click(event, projected) {
+	export let sketchIndex: string, active: boolean
+
+	export function click(_event: Event, _projected: any) {
 		if ($currentlyMousedOver.length === 0) {
 			// they clicked off into empty space. deselect everything
 			currentlySelected.set([])
@@ -25,20 +34,20 @@
 			}
 		}
 
-		console.log('already selected', alreadySelected)
+		log("already selected", alreadySelected)
 		currentlySelected.set(alreadySelected)
 	}
 
 	// export a function to handle keyboard events
 	// if the user presses the delete key, then we should delete the currently selected things
 	// if the user presses the escape key, then we should deselect the currently selected things
-	export function onKeyDown(event) {
+	export function onKeyDown(event: KeyboardEvent) {
 		if (!active) return
 
-		// console.log('key press', event)
-		if (event.key === 'Escape') {
+		// log('key press', event)
+		if (event.key === "Escape") {
 			currentlySelected.set([])
-		} else if (event.key === 'Delete' || event.key === 'Backspace') {
+		} else if (event.key === "Delete" || event.key === "Backspace") {
 			// delete the currently selected things
 			deleteEntities(sketchIndex, $currentlySelected)
 			currentlyMousedOver.set([])

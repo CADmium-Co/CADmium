@@ -1,16 +1,25 @@
-<script>
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
-	import { renameStep } from './projectUtils'
-	import { workbenchIsStale, featureIndex } from './stores.js'
+<script lang="ts">
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
+	import { renameStep } from "./projectUtils"
+	import { workbenchIsStale, featureIndex } from "./stores"
 
-	export let name
-	export let index
+	const log = (function () {
+		const context = "[PointFeature.svelte]"
+		return Function.prototype.bind.call(
+			console.log,
+			console,
+			`%c${context}`,
+			"font-weight:bold;color:gray;"
+		)
+	})()
 
-	let source = '/actions/point_min_icon.svg'
+	export let name: string, index: number
+
+	let source = "/actions/point_min_icon.svg"
 
 	const closeAndRefresh = () => {
-		console.log('closing, refreshing')
+		log("closing, refreshing")
 		workbenchIsStale.set(true)
 		$featureIndex = 1000
 	}
@@ -33,7 +42,7 @@
 </div>
 
 {#if $featureIndex === index}
-	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
+	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
 				closeAndRefresh()

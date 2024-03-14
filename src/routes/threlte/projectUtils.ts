@@ -12,7 +12,7 @@ import {
 	messageHistory
 } from './stores'
 import { get } from 'svelte/store'
-import { Vector2, Vector3 } from "three"
+import { Vector2, Vector3, type Vector2Like } from "three"
 import type { Entity, Message, WithTarget, WorkBench } from "../../types"
 import type { Realization as WasmRealization } from "cadmium"
 
@@ -218,6 +218,7 @@ export function addRectangleBetweenPoints(sketchIdx: string, point1: string, poi
 }
 
 export function addCircleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
+	log("[addCircleBetweenPoints]", "sketchIdx:", sketchIdx, "point1:", point1, "point2", point2)
 	const messageObj: Message = {
 		NewCircleBetweenPoints: {
 			workbench_id: get(workbenchIndex),
@@ -245,7 +246,7 @@ export function addLineToSketch(sketchIdx: string, point1: string, point2: strin
 	workbenchIsStale.set(true)
 }
 
-export function addPointToSketch(sketchIdx: string, point: Vector2, hidden: boolean) {
+export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: boolean) {
 	// log("[addPointToSketch] sketchIdx, point, hidden", sketchIdx, point, hidden)
 	const messageObj: Message = {
 		NewPointOnSketch2: {
