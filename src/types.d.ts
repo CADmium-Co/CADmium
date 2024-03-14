@@ -1,8 +1,6 @@
 import type Point3D from "./routes/threlte/Point3D.svelte"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
-declare module "nurbs"
-
 export type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
 export type SetCameraFocus = (goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void
@@ -163,6 +161,77 @@ interface Circle {
   top: number
 }
 
+interface TruckFaceEdgeIndex {
+  index: number
+  orientation: boolean
+}
+
+type TruckFaceBoundary = TruckFaceEdgeIndex[]
+type TruckFaceBoundaries = TruckFaceBoundary[]
+
+interface TruckNurbsPoint {
+  x: number
+  y: number
+  z: number
+  w: number
+}
+
+type TruckNurbsSurfaceControlPoint = [TruckNurbsPoint, TruckNurbsPoint] // [start, end] ?
+type TruckNurbsSurfaceControlPoints = TruckNurbsSurfaceControlPoint[]
+type TruckNurbsCurveControlPoints = TruckNurbsPoint[]
+
+interface TruckNurbsSurface {
+  NURBSSurface: {
+    knot_vecs: number[][]
+    // knot_vecs: [                              // todo type strongly
+    //   [0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1],    // Vector3Like[] ?
+    //   [0, 0, 1, 1]                            // similar to NurbsPoint? [x,y,z,w] ?
+    // ],
+    control_points: TruckNurbsSurfaceControlPoints
+  }
+}
+
+interface TruckPlaneSurface {
+  Plane: {
+    o: Vector3Like
+    p: Vector3Like
+    q: Vector3Like
+  }
+}
+
+type TruckSurface = TruckNurbsSurface | TruckPlaneSurface
+
+interface TruckFace {
+  boundaries: TruckFaceBoundaries
+  orientation: boolean
+  surface: TruckSurface
+}
+
+interface TruckNurbsCurve {
+  NURBSCurve: {
+    knot_vec: number[]
+    // "knot_vec": [0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1], // todo type strongly
+    control_points: TruckNurbsCurveControlPoints
+  }
+}
+
+type TruckVertexTuple = [number, number] // [startIndex, EndIndex] ?
+
+interface TruckEdge {
+  vertices: TruckVertexTuple
+  curve: TruckCurve
+}
+
+type TruckLineTuple = [Vector3Like, Vector3Like] // [{y,y,z}, {y,y,z}] // [start, end]
+
+interface TruckLine {
+  Line: TruckLineTuple
+}
+
+type TruckCurve = TruckNurbsCurve | TruckLine
+
+type TruckEdges = TruckEdge[]
+
 interface SketchData {
   type: "Sketch",
   plane_description: {
@@ -183,7 +252,6 @@ interface SketchData {
     highest_constraint_id: number
   }
 }
-
 
 export interface Realization {
   planes: object
