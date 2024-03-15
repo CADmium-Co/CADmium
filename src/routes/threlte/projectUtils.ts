@@ -13,7 +13,7 @@ import {
 } from './stores'
 import { get } from 'svelte/store'
 import { Vector2, Vector3, type Vector2Like } from "three"
-import type { Entity, Message, WithTarget, WorkBench } from "../../types"
+import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, PlaneHistoryStep, PointHistoryStep, SketchHistoryStep, WithTarget, WorkBench } from "../../types"
 import type { Realization as WasmRealization } from "cadmium"
 
 const log = (function () {
@@ -32,6 +32,19 @@ if (!DEBUG) {
 
 export const CIRCLE_TOLERANCE = 0.05
 
+export function isPoint(feature: HistoryStep): feature is PointHistoryStep {
+	return feature.data.type === "Point"
+}
+export function isPlane(feature: HistoryStep): feature is PlaneHistoryStep {
+	return feature.data.type === "Plane"
+}
+export function isExtrusion(feature: HistoryStep): feature is ExtrusionHistoryStep {
+	return feature.data.type === "Extrusion"
+}
+export function isSketch(feature: HistoryStep): feature is SketchHistoryStep {
+	return feature.data.type === "Sketch"
+}
+
 export function arraysEqual(a: any[], b: any[]) {
 	if (a.length !== b.length) return false
 	for (let i = 0; i < a.length; i++) {
@@ -43,7 +56,7 @@ export function arraysEqual(a: any[], b: any[]) {
 function sendWasmMessage(message: Message) {
 	let wp = get(wasmProject)
 	const messageStr = JSON.stringify(message)
-	log("[sendWasmMessage] sending message:", messageStr)
+	log("[sendWasmMessage] sending message:", message)
 	let reply = wp.send_message(messageStr)
 	log("[sendWasmMessage] reply:", reply)
 	let result = JSON.parse(reply)
@@ -57,13 +70,13 @@ function sendWasmMessage(message: Message) {
 	return result
 }
 
-export function updateExtrusion(extrusionId: string, sketchId: string, length: string, faces: string[]) {
+export function updateExtrusion(extrusionId: string, sketchId: string, length: number, faceIds: number[]) {
 	const messageObj: Message = {
 		UpdateExtrusion: {
 			workbench_id: get(workbenchIndex),
 			sketch_id: sketchId,
-			face_ids: faces.map((f) => parseInt(f)),
-			length: parseFloat(length),
+			face_ids: faceIds.map(id => +id), // hack - errant strings getting through. todo fix.
+			length,
 			offset: 0.0,
 			extrusion_name: 'Extra',
 			direction: 'Normal',
@@ -143,17 +156,17 @@ export function deleteEntities(sketchIdx: string, selection: Entity[]) {
 	deleteLines(
 		workbenchIdx,
 		sketchIdx,
-		lines.map((e) => parseInt(e.id))
+		lines.map((e) => +e.id)
 	)
 	deleteArcs(
 		workbenchIdx,
 		sketchIdx,
-		arcs.map((e) => parseInt(e.id))
+		arcs.map((e) => +e.id)
 	)
 	deleteCircles(
 		workbenchIdx,
 		sketchIdx,
-		circles.map((e) => parseInt(e.id))
+		circles.map((e) => +e.id)
 	)
 
 	// only refresh the workbench once, after all deletions are done

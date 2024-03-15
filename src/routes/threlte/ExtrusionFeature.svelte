@@ -10,7 +10,7 @@
 		hiddenSketches
 	} from "./stores"
 	import X from "phosphor-svelte/lib/X"
-	import type { ExtrusionSketchData } from "../../types"
+	import type { ExtrusionData } from "../../types"
 
 	const log = (function () {
 		const context = "[ExtrusionFeature.svelte]"
@@ -22,16 +22,17 @@
 		)
 	})()
 
-	export let name: string, index: number, id: string, data: ExtrusionSketchData
+	export let name: string, index: number, id: number, data: ExtrusionData["data"]["extrusion"]
 
-	$: data, log("[props] name:", name, "index:", index, "id:", id, "data:", data)
+	$: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
 
 	// todo ids should be number or string not both!
 	let faceIdsFromInputs = data.face_ids.sort()
 
 	$: {
 		if (data && data.face_ids) {
-			faceIdsFromInputs = data.face_ids.map((e) => e + "").sort() // coerce to strings
+			// one can access objects with a string or a number so probably don't need this? todo ask Matt
+			// (faceIdsFromInputs as string[]) = data.face_ids.map((e) => e + "").sort() // coerce to strings
 		}
 	}
 
@@ -140,6 +141,7 @@
 					autocomplete="off"
 					data-1p-ignore
 					class="shadow appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:border focus:border-sky-500"
+					type="number"
 					bind:value={length}
 					on:input={() => {
 						sendUpdate()

@@ -1,11 +1,15 @@
 import type Point3D from "./routes/threlte/Point3D.svelte"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
-export type WithTarget<Event, Target> = Event & { currentTarget: Target }
+interface IDictionary<TValue> {
+  [id: string]: TValue
+}
 
-export type SetCameraFocus = (goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void
+type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
-export type EntityType =
+type SetCameraFocus = (goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void
+
+type EntityType =
   | "circle"
   | "arc"
   | "face"
@@ -15,18 +19,18 @@ export type EntityType =
   | "point3D"
   | "meshFace"
 
-export interface Entity {
-  id: string
+interface Entity {
+  id: number
   type: EntityType
 }
 
-export interface Project {
+interface Project {
   name: string
   assemblies: []
   workbenches: WorkBench[]
 }
 
-export interface WorkBench {
+interface WorkBench {
   name: string
   history: HistoryStep[]
   step_counters: {
@@ -34,61 +38,47 @@ export interface WorkBench {
   }
 }
 
-export interface HistoryStep {
-  name: string
-  suppressed: boolean
-  unique_id: string
-  data: HistoryStepData
-}
-
-export type HistoryStepData =
-  | PointData
-  | PlaneData
-  | ExtrusionData
-  | SketchData
-
-
-export interface PreviewGeometry {
+interface PreviewGeometry {
   type: EntityType
   center: PointLikeById
   radius: number
   uuid: string
 }
 
-export interface Plane {
+interface Plane {
   origin: Vector3Hideable
   primary: Vector3Like
   secondary: Vector3Like
   tertiary: Vector3Like
 }
 
-export interface Point {
+interface Point {
   twoD: Vector2
   threeD: Vector3
 }
 
-export interface PointById {
+interface PointById {
   twoD: PointWithDelta
   threeD: Vector3Hideable
   pointId: string // todo is number string - maybe change to number?
 }
 
-export interface PointLikeById {
+interface PointLikeById {
   twoD: Vector2Like | PointWithDelta
   threeD: Vector3Like | Vector3Hideable
   pointId: string | null // todo is number string - maybe change to number?
 }
 
-export type PointsById = IDictionary<PointById>
-export type PointsLikeById = IDictionary<PointLikeById>
+type PointsById = IDictionary<PointById>
+type PointsLikeById = IDictionary<PointLikeById>
 
-// export interface SnapPoint {
+//  interface SnapPoint {
 //   twoD: Vector2Like
 //   threeD: Vector3Like
 //   pointId: string | null // todo
 // }
 
-export interface SnapEntity {
+interface SnapEntity {
   id: string
   type: EntityType
   x?: number
@@ -96,7 +86,7 @@ export interface SnapEntity {
   z?: number
 }
 
-export type ProjectToPlane = (point3D: Vector3) => Vector2
+type ProjectToPlane = (point3D: Vector3) => Vector2
 
 interface Vector3Hideable {
   x: number
@@ -117,37 +107,81 @@ interface PointWithDelta {
   hidden: boolean
 }
 
+
+interface HistoryStep {
+  name: string
+  suppressed: boolean
+  unique_id: string
+  data: PointData["data"] | PlaneData["data"] | ExtrusionData["data"] | SketchData["data"]
+}
+
+type HistoryStepType =
+  | "Point"
+  | "Plane"
+  | "Extrusion"
+  | "Sketch"
+
+type PointHistoryStep = HistoryStep & PointData
+type PlaneHistoryStep = HistoryStep & PlaneData
+type ExtrusionHistoryStep = HistoryStep & ExtrusionData
+type SketchHistoryStep = HistoryStep & SketchData
+
 interface PointData {
-  type: "Point"
-  point: Vector3Hideable
-}
-
-interface PlaneData {
-  type: "Plane"
-  plane: {
-    origin: Vector3Hideable
-    primary: Vector3Like
-    secondary: Vector3Like
-    tertiary: Vector3Like
-  },
-  width: number  // %
-  height: number // %
-}
-
-interface ExtrusionData {
-  type: "Extrusion"
-  extrusion: {
-    sketch_id: string
-    face_ids: number[]
-    length: number
-    offset: number
-    direction: string // e.g "Normal"  todo enums
-    mode: string // e,g "New"  todo enums
+  data: {
+    type: HistoryStepType = "Point"
+    point: Vector3Hideable
   }
 }
 
-interface IDictionary<TValue> {
-  [id: string]: TValue
+interface PlaneData {
+  data: {
+    type: HistoryStepType = "Plane"
+    plane: {
+      origin: Vector3Hideable
+      primary: Vector3Like
+      secondary: Vector3Like
+      tertiary: Vector3Like
+    },
+    width: number  // %
+    height: number // %
+  }
+}
+
+interface ExtrusionData {
+  data: {
+    type: HistoryStepType = "Extrusion"
+    extrusion: {
+      sketch_id: string
+      face_ids: number[]
+      length: number
+      offset: number
+      direction: string // e.g "Normal"  todo enums
+      mode: string // e,g "New"  todo enums
+    }
+  }
+}
+
+interface SketchData {
+  data: {
+    type: HistoryStepType = "Sketch"
+    plane_description: {
+      PlaneId: string
+    }
+    width: number
+    height: number
+    sketch: {
+      points: IDictionary<PointWithDelta>
+      highest_point_id: number
+      line_segments: IDictionary<SegmentId>
+      highest_line_segment_id: number
+      circles: IDictionary<Circle>
+      highest_circle_id: number
+      arcs: object // todo
+      highest_arc_id: number
+      constraints: object // todo
+      highest_constraint_id: number
+    }
+  }
 }
 
 interface SegmentId {
@@ -232,35 +266,14 @@ type TruckCurve = TruckNurbsCurve | TruckLine
 
 type TruckEdges = TruckEdge[]
 
-interface SketchData {
-  type: "Sketch",
-  plane_description: {
-    PlaneId: string
-  },
-  width: number
-  height: number
-  sketch: {
-    points: IDictionary<PointWithDelta>
-    highest_point_id: number
-    line_segments: IDictionary<SegmentId>
-    highest_line_segment_id: number
-    circles: IDictionary<Circle>
-    highest_circle_id: number
-    arcs: object // todo
-    highest_arc_id: number
-    constraints: object // todo
-    highest_constraint_id: number
-  }
-}
-
-export interface Realization {
+interface Realization {
   planes: object
   points: object
   sketches: object
   solids: object
 }
 
-export interface ExtrusionSketchData {
+interface ExtrusionSketchData {
   sketch_id: string
   face_ids: string[]
   length: string // todo change to number
@@ -293,7 +306,7 @@ export interface ExtrusionSketchData {
 
 // todo these interfaces should be exported from rust with wasm bindgen ?
 
-// io messages sent to rust
+// ========= io messages sent to rust =========
 interface UpdateExtrusion {
   workbench_id: number
   sketch_id: string
@@ -302,7 +315,7 @@ interface UpdateExtrusion {
   offset: 0.0
   extrusion_name: "Extra"
   direction: "Normal"
-  extrusion_id: string
+  extrusion_id: number
 }
 
 interface SetSketchPlane {
@@ -380,7 +393,7 @@ interface RenameStep {
   new_name: string
 }
 
-export type Message =
+type Message =
   | { UpdateExtrusion: UpdateExtrusion }
   | { SetSketchPlane: SetSketchPlane }
   | { NewSketchOnPlane: NewSketchOnPlane }
@@ -394,7 +407,7 @@ export type Message =
   | { NewPointOnSketch2: NewPointOnSketch2 }
   | { RenameStep: RenameStep }
 
-export interface MessageHistory {
+interface MessageHistory {
   message: Message
   result: any
 }
