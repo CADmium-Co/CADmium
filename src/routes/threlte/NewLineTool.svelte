@@ -14,10 +14,10 @@
 		)
 	})()
 
-	export let pointsById: PointsById
-	export let sketchIndex: string
-	export let active: boolean
-	export let projectToPlane: ProjectToPlane
+	export let pointsById: PointsById,
+		sketchIndex: string,
+		active: boolean,
+		projectToPlane: ProjectToPlane
 
 	$: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
 
@@ -58,7 +58,8 @@
 				addLineToSketch(sketchIndex, previousPoint!.pointId!, point!.pointId!)
 			}
 		}
-		previousPoint = point // todo rework points
+		// @ts-ignore  todo rework points
+		previousPoint = point
 	}
 
 	export function click(_event: Event, projected: Point) {
