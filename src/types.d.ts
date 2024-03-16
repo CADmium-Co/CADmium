@@ -38,10 +38,16 @@ interface WorkBench {
   }
 }
 
+
+
 interface PreviewGeometry {
   type: EntityType
-  center: PointLikeById
-  radius: number
+  start?: PointLikeById
+  end?: PointLikeById
+  center?: PointLikeById
+  radius?: number
+  x?: number
+  y?: number
   uuid: string
 }
 
@@ -64,19 +70,14 @@ interface PointById {
 }
 
 interface PointLikeById {
-  twoD: Vector2Like | PointWithDelta
-  threeD: Vector3Like | Vector3Hideable
-  pointId: string | null // todo is number string - maybe change to number?
+  [x: string]: any // hack todo fix
+  twoD?: Vector2Like | PointWithDelta
+  threeD?: Vector3Like | Vector3Hideable
+  pointId?: string | null // todo is number string - maybe change to number?
 }
 
 type PointsById = IDictionary<PointById>
 type PointsLikeById = IDictionary<PointLikeById>
-
-//  interface SnapPoint {
-//   twoD: Vector2Like
-//   threeD: Vector3Like
-//   pointId: string | null // todo
-// }
 
 interface SnapEntity {
   id: string
@@ -136,12 +137,7 @@ interface PointData {
 interface PlaneData {
   data: {
     type: HistoryStepType = "Plane"
-    plane: {
-      origin: Vector3Hideable
-      primary: Vector3Like
-      secondary: Vector3Like
-      tertiary: Vector3Like
-    },
+    plane: Plane
     width: number  // %
     height: number // %
   }
@@ -159,6 +155,23 @@ interface ExtrusionData {
       mode: string // e,g "New"  todo enums
     }
   }
+}
+
+interface SketchRealized {
+  plane_id: string
+  plane_name: string
+  points: IDictionary<Vector3Hideable>
+  points_2d: IDictionary<PointWithDelta>
+  highest_point_id: number
+  line_segments: IDictionary<SegmentId>
+  highest_line_segment_id: number
+  circles: IDictionary<Circle>
+  highest_circle_id: number
+  arcs: object // todo
+  highest_arc_id: number
+  constraints: object // todo
+  highest_constraint_id: number
+  faces: array // todo
 }
 
 interface SketchData {
@@ -212,7 +225,6 @@ interface TruckNurbsPoint {
 
 type TruckNurbsSurfaceControlPoint = [TruckNurbsPoint, TruckNurbsPoint] // [start, end] ?
 type TruckNurbsSurfaceControlPoints = TruckNurbsSurfaceControlPoint[]
-type TruckNurbsCurveControlPoints = TruckNurbsPoint[]
 
 interface TruckNurbsSurface {
   NURBSSurface: {
@@ -225,7 +237,7 @@ interface TruckNurbsSurface {
   }
 }
 
-interface TruckPlaneSurface {
+interface TruckPlane {
   Plane: {
     o: Vector3Like
     p: Vector3Like
@@ -233,7 +245,7 @@ interface TruckPlaneSurface {
   }
 }
 
-type TruckSurface = TruckNurbsSurface | TruckPlaneSurface
+type TruckSurface = TruckNurbsSurface | TruckPlane
 
 interface TruckFace {
   boundaries: TruckFaceBoundaries
@@ -245,33 +257,64 @@ interface TruckNurbsCurve {
   NURBSCurve: {
     knot_vec: number[]
     // "knot_vec": [0, 0, 0, 0.25, 0.5, 0.75, 1, 1, 1], // todo type strongly
-    control_points: TruckNurbsCurveControlPoints
+    control_points: TruckNurbsPoint[]
   }
 }
 
-type TruckVertexTuple = [number, number] // [startIndex, EndIndex] ?
+type TruckEdgeEndpoints = [number, number] // [startIndex, EndIndex] ?
 
 interface TruckEdge {
-  vertices: TruckVertexTuple
+  vertices: TruckEdgeEndpoints
   curve: TruckCurve
 }
 
-type TruckLineTuple = [Vector3Like, Vector3Like] // [{y,y,z}, {y,y,z}] // [start, end]
+type TruckLineVectors = [Vector3Like, Vector3Like] // [{y,y,z}, {y,y,z}] // [start, end]
 
 interface TruckLine {
-  Line: TruckLineTuple
+  Line: TruckLineVectors
 }
 
 type TruckCurve = TruckNurbsCurve | TruckLine
 
-type TruckEdges = TruckEdge[]
-
 interface Realization {
-  planes: object
-  points: object
-  sketches: object
-  solids: object
+  planes: IDictionary<PlaneRealized>
+  points: IDictionary<Vector3Hideable>
+  sketches: IDictionary<[SketchRealized, SketchRealized, string]>
+  solids: IDictionary<SolidRealized>
 }
+
+interface PlaneRealized {
+  name: string
+  width: number
+  height: number
+  plane: Plane
+}
+
+interface TruckFaceEdgeIndex {
+  index: number
+  orientation: boolean
+}
+
+interface TruckBoundary {
+  vertices: Vector3Like[]
+  edges: TruckEdge[]
+  faces: TruckFace[]
+}
+
+interface TruckSolid {
+  boundaries: TruckBoundary[]
+}
+interface SolidRealized {
+  name: string
+  crc32: string
+  vertices: Vector3Like[]
+  normals: Vector3Like[]
+  uvs: Vector3Like[]
+  indices: number[]
+  triangles: array // todo
+  truck_solid: TruckSolid
+}
+
 
 interface ExtrusionSketchData {
   sketch_id: string
