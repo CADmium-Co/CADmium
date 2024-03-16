@@ -12,7 +12,7 @@
 			console.log,
 			console,
 			`%c${context}`,
-			"font-weight:bold;color:cyan;"
+			"font-weight:bold;color:gray;"
 		)
 	})()
 

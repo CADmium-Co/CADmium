@@ -1,16 +1,26 @@
-<script>
-	import { T, useThrelte } from '@threlte/core'
-	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
-	import { Vector2, Vector3 } from 'three'
-	import { interactivity } from '@threlte/extras'
-	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+<script lang="ts">
+	import { T, useThrelte } from "@threlte/core"
+	import { TrackballControls, Gizmo, Environment } from "@threlte/extras"
+	import { Vector2, Vector3, type Vector3Like } from "three"
+	import { interactivity } from "@threlte/extras"
+	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
 
-	import { realization, workbench, sketchBeingEdited } from './stores.js'
+	import { realization, workbench, sketchBeingEdited } from "./stores"
 
-	import Point3D from './Point3D.svelte'
-	import Plane from './Plane.svelte'
-	import Solid from './Solid.svelte'
-	import Sketch from './Sketch.svelte'
+	import Point3D from "./Point3D.svelte"
+	import Plane from "./Plane.svelte"
+	import Solid from "./Solid.svelte"
+	import Sketch from "./Sketch.svelte"
+
+	const log = (function () {
+		const context = "[Scene.svelte]"
+		return Function.prototype.bind.call(
+			console.log,
+			console,
+			`%c${context}`,
+			"font-weight:bold;color:lightgreen;"
+		)
+	})()
 
 	interactivity()
 
@@ -22,20 +32,32 @@
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
 
-	export function setCameraFocus(goTo, lookAt, up) {
+	$: $workbench, log("[$workbench]", $workbench)
+	$: points, log("[realization.points]", points)
+	$: planes, log("[realization.planes]", planes)
+	$: planesById, log("[planesById]", planesById)
+	$: solids, log("[realization.solids]", solids)
+	$: sketches, log("[realization.sketches]", sketches)
+
+	// @ts-ignore
+	if (!globalThis.realization) globalThis.realization = []
+	// @ts-ignore for debugging on window
+	$: $realization, (() => (globalThis.realization = [...globalThis.realization, $realization]))()
+
+	export function setCameraFocus(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like): void {
 		// TODO: make this tween nicely
 		const positionMultiple = 1000
-		goTo = new Vector3(goTo.x, goTo.y, goTo.z)
-		goTo.multiplyScalar(positionMultiple)
-		lookAt = new Vector3(lookAt.x, lookAt.y, lookAt.z)
-		up = new Vector3(up.x, up.y, up.z)
-		camera.current.position.set(goTo.x, goTo.y, goTo.z)
-		camera.current.lookAt(lookAt.x, lookAt.y, lookAt.z)
-		camera.current.up = up
+		const vector = new Vector3(goTo.x, goTo.y, goTo.z)
+		vector.multiplyScalar(positionMultiple)
+		const look = new Vector3(lookAt.x, lookAt.y, lookAt.z)
+		const lookup = new Vector3(up.x, up.y, up.z)
+		camera.current.position.set(vector.x, vector.y, vector.z)
+		camera.current.lookAt(look.x, look.y, look.z)
+		camera.current.up = lookup
 	}
 
 	$: dashedLineMaterial = new LineMaterial({
-		color: '#000000',
+		color: "#000000",
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
 		transparent: true,
@@ -47,7 +69,7 @@
 	})
 
 	$: dashedHoveredMaterial = new LineMaterial({
-		color: '#ffaa00',
+		color: "#ffaa00",
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
 		transparent: true,
@@ -59,7 +81,7 @@
 	})
 
 	$: solidLineMaterial = new LineMaterial({
-		color: '#000000',
+		color: "#000000",
 		linewidth: 1.5 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -68,7 +90,7 @@
 	})
 
 	$: solidHoveredMaterial = new LineMaterial({
-		color: '#88aa00',
+		color: "#88aa00",
 		linewidth: 5.5 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -77,7 +99,7 @@
 	})
 
 	$: solidSelectedMaterial = new LineMaterial({
-		color: '#ffaa00',
+		color: "#ffaa00",
 		linewidth: 5.5 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -86,7 +108,7 @@
 	})
 
 	$: collisionLineMaterial = new LineMaterial({
-		color: '#FFFFFF',
+		color: "#FFFFFF",
 		linewidth: 12.0 * $dpr,
 		depthTest: false,
 		depthWrite: false,

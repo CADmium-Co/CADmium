@@ -10,7 +10,10 @@
 		MeshStandardMaterial,
 		DoubleSide,
 		Euler,
-		Matrix4
+		Matrix4,
+
+		type Vector3Like
+
 	} from "three"
 	import { T } from "@threlte/core"
 	import { flatten } from "./projectUtils"
@@ -21,7 +24,7 @@
 		selectionMax,
 		selectionMin
 	} from "./stores"
-	import type { EntityType, TruckEdges, TruckFace, TruckFaceBoundary } from "../../types"
+	import type { EntityType, TruckEdge, TruckFace, TruckFaceBoundary } from "../../types"
 	import nurbs from "nurbs"
 
 	const log = (function () {
@@ -34,10 +37,17 @@
 		)
 	})()
 
-	export let truck_face: TruckFace, /** truck_vertices */ truck_edges: TruckEdges, id: number
+	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: number
 	log("[props]", "truck_face:", truck_face, "truck_edges:", truck_edges, "id:", id)
 
-	export let solidLineMaterial: LineMaterial
+	// svelte-ignore unused-export-let
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial,
+		truck_vertices
 
 	const standardMaterial = new MeshStandardMaterial({
 		color: "#525252",
@@ -80,12 +90,12 @@
 		// boundaries is an array like [0, 1] where the indices point to the truck_edges array
 
 		plane = surface.Plane
-		let o = new Vector3(plane.o.x, plane.o.y, plane.o.z)
+		const o = new Vector3(plane.o.x, plane.o.y, plane.o.z)
 		origin = o
-		let p = new Vector3(plane.p.x, plane.p.y, plane.p.z)
-		let q = new Vector3(plane.q.x, plane.q.y, plane.q.z)
-		let u = p.clone().sub(o).normalize()
-		let v = q.clone().sub(o).normalize()
+		const p = new Vector3(plane.p.x, plane.p.y, plane.p.z)
+		const q = new Vector3(plane.q.x, plane.q.y, plane.q.z)
+		const u = p.clone().sub(o).normalize()
+		const v = q.clone().sub(o).normalize()
 
 		// Build some Three.js vectors from the props
 		const primary = u
@@ -101,11 +111,11 @@
 		const boundaries = truck_face.boundaries
 		const exterior_bounds = boundaries[0]
 		// log('Boundaries: ', boundaries)
-		let points = curveToPoints(exterior_bounds)
+		const points = curveToPoints(exterior_bounds)
 		exterior = new LineGeometry()
 		exterior.setPositions(points)
 
-		let projectedPoints = project(points, u, v, o)
+		const projectedPoints = project(points, u, v, o)
 		shape.setFromPoints(projectedPoints)
 
 		// log('Projected points', projectedPoints)
@@ -148,67 +158,64 @@
 
 	const geometry = new ShapeGeometry(shape)
 
-	function project(points, u, v, o) {
-		let retval = []
+	function project(points: number[], u: Vector3Like, v: Vector3Like, o: Vector3Like) {
+		log("[project]", "points:", points, "u:", u, "v:", v, "o:", o)
+		const vectors = []
 		// log('Points to project:', points)
 		for (let i = 0; i < points.length; i += 3) {
-			let point3D = new Vector3(points[i], points[i + 1], points[i + 2])
+			const point3D = new Vector3(points[i], points[i + 1], points[i + 2])
 			point3D.x = point3D.x - o.x
 			point3D.y = point3D.y - o.y
 			point3D.z = point3D.z - o.z
-			let xComponent = point3D.dot(u)
-			let yComponent = point3D.dot(v)
-			retval.push(new Vector2(xComponent, yComponent))
+			const xComponent = point3D.dot(u)
+			const yComponent = point3D.dot(v)
+			vectors.push(new Vector2(xComponent, yComponent))
 		}
-		return retval
+		return vectors
 	}
 
 	function curveToPoints(exterior: TruckFaceBoundary) {
-		let points = []
+		const points = []
 		for (let { index, orientation } of exterior) {
 			// log('grabbing edge: ', index, orientation)
 			const edge = truck_edges[index]
 			const curve = edge.curve
 
 			if ("NURBSCurve" in curve) {
-				const NURBSCurve = curve.NURBSCurve
-				const knot = NURBSCurve.knot_vec
-				let controlPoints = NURBSCurve.control_points
-				let weights = controlPoints.map((point) => point.w)
-
-				controlPoints = controlPoints.map((point) => [
+				const { NURBSCurve } = curve
+				const weights = NURBSCurve.control_points.map((point) => point.w)
+				const controlPoints = NURBSCurve.control_points.map((point) => [
 					point.x / point.w,
 					point.y / point.w,
 					point.z / point.w
 				])
 
-				let nurbsCurve = nurbs({
+				const nurbsCurve = nurbs({
 					points: controlPoints,
 					weights: weights,
-					knots: knot,
+					knots: NURBSCurve.knot_vec,
 					degree: 2
 				})
 
-				let domain = nurbsCurve.domain[0]
+				const domain = nurbsCurve.domain[0]
 				// log('Spline Dimension:', curve.splineDimension)
 				// log('Dimension:', curve.dimension)
-				let a = []
-				let b = []
 
+				// todo find out how the nurbs library works. meantime ignore its wizardry
+				// @ts-ignore
+				const a = []
+				const b = []
 				for (let t = domain[0]; t <= domain[1]; t += 0.02) {
+					// @ts-ignore
 					nurbsCurve.evaluate(a, t)
-					let as_three = new Vector3(a[0], a[1], a[2])
-					b.push(as_three)
+					// @ts-ignore
+					b.push(new Vector3(a[0], a[1], a[2]))
 				}
 
-				let flattened = flatten(b)
-				for (let p of flattened) {
-					points.push(p)
-				}
+				const flattened = flatten(b)
+				for (let p of flattened) points.push(p)
 			} else if ("Line" in curve) {
 				const line = curve.Line
-				// log('Line:', line)
-
 				let startPoint = line[0]
 				let endPoint = line[1]
 
@@ -278,7 +285,7 @@
 						log("On enter and includes type")
 						e.stopPropagation()
 						hovered = true
-						$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+						$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 					}
 				}}
 				on:pointerleave={() => {
@@ -286,11 +293,9 @@
 					if ($selectingFor.includes(type)) {
 						hovered = false
 						$currentlyMousedOver = $currentlyMousedOver.filter(
-							(item) => !(item.id === id && item.type === type)
+							(item) => !(+item.id === +id && item.type === type)
 						)
-					} else {
-						hovered = false
-					}
+					} else hovered = false
 				}}
 				on:click={(e) => {
 					if ($selectingFor.includes(type)) {

@@ -80,7 +80,7 @@ type PointsById = IDictionary<PointById>
 type PointsLikeById = IDictionary<PointLikeById>
 
 interface SnapEntity {
-  id: string
+  id: number | string
   type: EntityType
   x?: number
   y?: number
