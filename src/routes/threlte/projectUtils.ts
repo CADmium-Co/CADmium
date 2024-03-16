@@ -21,15 +21,6 @@ const log = (function () {
 	return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:lightblue;")
 })()
 
-const DEBUG = true
-if (!DEBUG) {
-	const methods = ["log", "debug", "warn", "info"]
-	for (let i = 0; i < methods.length; i++) {
-		// @ts-ignore
-		console[methods[i]] = function () { }
-	}
-}
-
 export const CIRCLE_TOLERANCE = 0.05
 
 export function isPoint(feature: HistoryStep): feature is PointHistoryStep {
@@ -70,7 +61,7 @@ function sendWasmMessage(message: Message) {
 	return result
 }
 
-export function updateExtrusion(extrusionId: string, sketchId: string, length: number, faceIds: number[]) {
+export function updateExtrusion(extrusionId: number, sketchId: string, length: number, faceIds: number[]) {
 	const messageObj: Message = {
 		UpdateExtrusion: {
 			workbench_id: get(workbenchIndex),
@@ -215,14 +206,14 @@ function deleteCircles(workbenchIdx: number, sketchIdx: string, circleIds: numbe
 	sendWasmMessage(messageObj)
 }
 
-export function addRectangleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
+export function addRectangleBetweenPoints(sketchIdx: string, point1: number, point2: number) {
 	// log("[addRectangleBetweenPoints] sketchIdx, point1, point2", sketchIdx, point1, point2)
 	const messageObj: Message = {
 		NewRectangleBetweenPoints: {
 			workbench_id: get(workbenchIndex),
 			sketch_id: sketchIdx,
-			start_id: parseInt(point1),
-			end_id: parseInt(point2)
+			start_id: point1,
+			end_id: point2
 		}
 	}
 	sendWasmMessage(messageObj)
