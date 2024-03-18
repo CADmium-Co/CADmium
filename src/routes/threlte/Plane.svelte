@@ -24,15 +24,8 @@
 	} from "./stores"
 	import type { EntityType } from "../../types"
 
-	const log = (function () {
-		const context = "[Plane.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:gray;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[Plane.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let name: string,
 		id: string,
@@ -159,7 +152,7 @@
 			if ($selectingFor.includes(type)) {
 				e.stopPropagation()
 				hovered = true
-				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+				$currentlyMousedOver = [...$currentlyMousedOver, { type, id: id }]
 			}
 		}}
 		on:pointerleave={() => {
@@ -215,7 +208,7 @@
 								}
 					*/
 					// @ts-ignore
-					$currentlySelected = [...$currentlySelected, { type: type, id: id.toString() }]
+					$currentlySelected = [...$currentlySelected, { type, id: id.toString() }]
 				}
 			}
 		}}

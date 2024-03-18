@@ -11,9 +11,7 @@
 		DoubleSide,
 		Euler,
 		Matrix4,
-
 		type Vector3Like
-
 	} from "three"
 	import { T } from "@threlte/core"
 	import { flatten } from "./projectUtils"
@@ -27,26 +25,19 @@
 	import type { EntityType, TruckEdge, TruckFace, TruckFaceBoundary } from "../../types"
 	import nurbs from "nurbs"
 
-	const log = (function () {
-		const context = "[SelectableSurface.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:cyan;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[SelectableSurface.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: number
+	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: string
 	log("[props]", "truck_face:", truck_face, "truck_edges:", truck_edges, "id:", id)
 
-	// svelte-ignore unused-export-let
+	// svelte-ignore unused-export-let hmmm why does it not ignore?
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,
 		solidLineMaterial: LineMaterial,
 		solidHoveredMaterial: LineMaterial,
 		solidSelectedMaterial: LineMaterial,
-		collisionLineMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial ,
 		truck_vertices
 
 	const standardMaterial = new MeshStandardMaterial({
@@ -159,9 +150,8 @@
 	const geometry = new ShapeGeometry(shape)
 
 	function project(points: number[], u: Vector3Like, v: Vector3Like, o: Vector3Like) {
-		log("[project]", "points:", points, "u:", u, "v:", v, "o:", o)
+		// log("[project]", "Points to project:", "points:", points, "u:", u, "v:", v, "o:", o)
 		const vectors = []
-		// log('Points to project:', points)
 		for (let i = 0; i < points.length; i += 3) {
 			const point3D = new Vector3(points[i], points[i + 1], points[i + 2])
 			point3D.x = point3D.x - o.x
@@ -216,13 +206,8 @@
 				for (let p of flattened) points.push(p)
 			} else if ("Line" in curve) {
 				const line = curve.Line
-				let startPoint = line[0]
-				let endPoint = line[1]
-
-				if (orientation === false) {
-					startPoint = line[1]
-					endPoint = line[0]
-				}
+				const startPoint = orientation === true ? line[0] : line[1]
+				const endPoint = orientation === true ? line[1] : line[0]
 
 				points.push(startPoint.x)
 				points.push(startPoint.y)
@@ -282,7 +267,7 @@
 				on:pointerenter={(e) => {
 					// log('On Pointer Enter!')
 					if ($selectingFor.includes(type)) {
-						log("On enter and includes type")
+						log("On Pointer Enter and includes type")
 						e.stopPropagation()
 						hovered = true
 						$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
@@ -317,7 +302,7 @@
 								$currentlySelected.shift()
 							}
 
-							$currentlySelected = [...$currentlySelected, { type: type, id: id }]
+							$currentlySelected = [...$currentlySelected, { type, id: id }]
 						}
 					}
 				}}

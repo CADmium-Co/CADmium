@@ -20,8 +20,41 @@ type EntityType =
   | "meshFace"
 
 interface Entity {
-  id: number
+  id: string // perhaps we could do id:string index:number?  hmmm no there are entities that are strings not numbers represented as strings!
   type: EntityType
+}
+
+type CircleEntity = {
+  id: string
+  type: "circle"
+}
+type ArcEntity = {
+  id: string
+  type: "arc"
+}
+type FaceEntity = {
+  id: string
+  type: "face"
+}
+type LineEntity = {
+  id: string
+  type: "line"
+}
+type PlaneEntity = {
+  id: string
+  type: "plane"
+}
+type PointEntity = {
+  id: string
+  type: "point"
+}
+type Point3DEntity = {
+  id: string
+  type: "point3D"
+}
+type MeshFaceEntity = {
+  id: string
+  type: "meshFace"
 }
 
 interface Project {
@@ -37,8 +70,6 @@ interface WorkBench {
     Extrusion: number, Plane: number, Point: number, Sketch: number
   }
 }
-
-
 
 interface PreviewGeometry {
   type: EntityType
@@ -69,18 +100,36 @@ interface PointById {
   pointId: string // todo is number string - maybe change to number?
 }
 
+interface SketchPoint {
+  twoD: PointWithDelta
+  threeD: Vector3Hideable
+}
+
+interface SketchPointById {
+  twoD: PointWithDelta
+  threeD: Vector3Hideable
+  id: string // todo is number string - maybe change to number? no. keep all ids as string - some entity ids are not numeric
+}
+
+interface Vector2Vector3PointById {
+  twoD: Vector2
+  threeD: Vector3
+  id: string | null // todo !
+}
+
 interface PointLikeById {
   [x: string]: any // hack todo fix
-  twoD?: Vector2Like | PointWithDelta
-  threeD?: Vector3Like | Vector3Hideable
-  pointId?: string | null // todo is number string - maybe change to number?
+  twoD?: Vector2Like | Vector2 | PointWithDelta
+  threeD?: Vector3Like | Vector3 | Vector3Hideable
+  // pointId?: string | null // todo is number string - maybe change to number?
+  id?: number | string | null // todo make all ids = id i.e. remove pointId etc
 }
 
 type PointsById = IDictionary<PointById>
 type PointsLikeById = IDictionary<PointLikeById>
 
 interface SnapEntity {
-  id: number | string
+  id:  string
   type: EntityType
   x?: number
   y?: number
@@ -108,6 +157,57 @@ interface PointWithDelta {
   hidden: boolean
 }
 
+interface LineTuple {
+  id: string // string number todo convert to numbers
+  start: {
+    twoD: PointWithDelta
+    threeD: Vector3Hideable
+  },
+  end: {
+    twoD: PointWithDelta
+    threeD: Vector3Hideable
+  }
+}
+
+interface CircleTuple {
+  id: string // string number todo convert to numbers
+  center: {
+    twoD: PointWithDelta
+    threeD: Vector3Hideable
+  }
+  radius: number
+}
+
+interface ArcTuple {
+  id: string // string number todo convert to numbers
+  center: {
+    twoD: PointWithDelta
+    threeD: Vector3Hideable
+  }
+  start: {
+    twoD: PointWithDelta
+    threeD: Vector3Hideable
+  }
+  end: {
+    twoD: PointWithDelta
+    threeD: Vector3Hideable
+  }
+}
+
+interface FaceTuple {
+  id: string // string number todo convert to numbers
+  face: object // todo
+  // "face": {
+  //   "exterior": {
+  //     "Circle": {
+  //       "center": 5,
+  //       "radius": 13.76241291178012,
+  //       "top": 7
+  //     }
+  //   },
+  //   "holes": []
+  // }
+}
 
 interface HistoryStep {
   name: string
@@ -148,7 +248,7 @@ interface ExtrusionData {
     type: HistoryStepType = "Extrusion"
     extrusion: {
       sketch_id: string
-      face_ids: number[]
+      face_ids: number[] // todo should be string
       length: number
       offset: number
       direction: string // e.g "Normal"  todo enums
@@ -167,11 +267,18 @@ interface SketchRealized {
   highest_line_segment_id: number
   circles: IDictionary<Circle>
   highest_circle_id: number
-  arcs: object // todo
+  arcs: IDictionary<Arc> // todo key id is string should be number number
   highest_arc_id: number
   constraints: object // todo
   highest_constraint_id: number
   faces: array // todo
+}
+
+interface Arc {
+  center: number
+  start: number
+  end: number
+  clockwise: boolean
 }
 
 interface SketchData {
@@ -208,14 +315,6 @@ interface Circle {
   top: number
 }
 
-interface TruckFaceEdgeIndex {
-  index: number
-  orientation: boolean
-}
-
-type TruckFaceBoundary = TruckFaceEdgeIndex[]
-type TruckFaceBoundaries = TruckFaceBoundary[]
-
 interface TruckNurbsPoint {
   x: number
   y: number
@@ -246,9 +345,10 @@ interface TruckPlane {
 }
 
 type TruckSurface = TruckNurbsSurface | TruckPlane
+type TruckFaceBoundary = TruckFaceEdgeIndex[]
 
 interface TruckFace {
-  boundaries: TruckFaceBoundaries
+  boundaries: TruckFaceBoundary[]
   orientation: boolean
   surface: TruckSurface
 }
@@ -276,10 +376,11 @@ interface TruckLine {
 
 type TruckCurve = TruckNurbsCurve | TruckLine
 
+type SketchTuple = [SketchRealized, SketchRealized, string]
 interface Realization {
   planes: IDictionary<PlaneRealized>
   points: IDictionary<Vector3Hideable>
-  sketches: IDictionary<[SketchRealized, SketchRealized, string]>
+  sketches: IDictionary<SketchTuple>
   solids: IDictionary<SolidRealized>
 }
 
@@ -358,7 +459,7 @@ interface UpdateExtrusion {
   offset: 0.0
   extrusion_name: "Extra"
   direction: "Normal"
-  extrusion_id: number
+  extrusion_id: string
 }
 
 interface SetSketchPlane {

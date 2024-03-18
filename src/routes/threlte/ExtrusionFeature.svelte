@@ -12,29 +12,27 @@
 	import X from "phosphor-svelte/lib/X"
 	import type { ExtrusionData } from "../../types"
 
-	const log = (function () {
-		const context = "[ExtrusionFeature.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:pink;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, index: number, id: number, data: ExtrusionData["data"]["extrusion"]
+	export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
 
 	$: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
+	$: data, log("[props]", "typeof id:", typeof id, "id:", id)
+	$: data,
+		log(
+			"[props]",
+			"typeof data.face_ids[0]:",
+			typeof data.face_ids[0],
+			"data.face_ids:",
+			data.face_ids
+		)
 
-	// todo ids should be number or string not both!
-	let faceIdsFromInputs = data.face_ids.sort()
+	// coerce from number[] to string[] for frontend as we use strings for ids here
+	let faceIdsFromInputs = data.face_ids.sort().map((e) => e + "")
 
-	$: {
-		if (data && data.face_ids) {
-			// one can access objects with a string or a number so probably don't need this? todo ask Matt
-			// (faceIdsFromInputs as string[]) = data.face_ids.map((e) => e + "").sort() // coerce to strings
-		}
-	}
+	// reactive update of selected faces
+	$: if (data && data.face_ids) faceIdsFromInputs = data.face_ids.map((e) => e + "").sort()
 
 	let length = data.length
 
@@ -53,7 +51,6 @@
 	}
 
 	function sendUpdate() {
-		// updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
 		const faceIdsFromSelection = $currentlySelected
 			.filter((e) => e.type === "face")
 			.map((e) => e.id)

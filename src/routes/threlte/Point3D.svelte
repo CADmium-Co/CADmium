@@ -13,8 +13,8 @@
 
 	export let collisionLineMaterial: LineMaterial
 
-	let source = '/actions/point_min.svg'
-	let outlineSource = '/actions/point_outline.svg'
+	const source = '/actions/point_min.svg'
+	const outlineSource = '/actions/point_outline.svg'
 
 	const pointTexture = useTexture(source)
 	const outlineTexture = useTexture(outlineSource)
@@ -33,8 +33,8 @@
 	const lineGeometryV = new LineGeometry()
 	lineGeometryV.setPositions(pointsV)
 
-	let geom = new BufferGeometry()
-	let vertices = new Float32Array([x, y, z])
+	const geom = new BufferGeometry()
+	const vertices = new Float32Array([x, y, z])
 	geom.setAttribute('position', new Float32BufferAttribute(vertices, 3))
 
 	const validTools = ['select', 'line', 'circle', 'rectangle']
@@ -50,7 +50,7 @@
 						hovered = true
 						$currentlyMousedOver = [
 							...$currentlyMousedOver,
-							{ type: type, id: id, x: x, y: y, z: z }
+							{ type, id, x, y, z }
 						]
 					}
 				}}

@@ -3,63 +3,59 @@
 	import { addLineToSketch, addPointToSketch } from "./projectUtils"
 	import { Vector2, Vector3 } from "three"
 	import type {
+	IDictionary,
 		Point,
 		PointLikeById,
-		PointsById,
 		PreviewGeometry,
-		ProjectToPlane
+		ProjectToPlane,
+
+		SketchPoint
+
 	} from "../../types"
 
-	const log = (function () {
-		const context = "[NewLineTool.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:limegreen;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[NewLineTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let pointsById: PointsById,
+	export let pointsById: IDictionary<SketchPoint>,
 		sketchIndex: string,
 		active: boolean,
 		projectToPlane: ProjectToPlane
 
 	$: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
 
-	let previousPoint: { pointId: string | null; twoD: Vector2 } | null
+	let previousPoint: { id: string | null; twoD: Vector2 } | null
 
 	$: if ($sketchTool !== "line") {
 		previousPoint = null
 	}
 
-	function processPoint(point: PointLikeById | { pointId: string | null; twoD: Vector2 } | null) {
+	function processPoint(point: PointLikeById | null) {
 		if (!previousPoint && point) {
 			// if there is no anchor point, set one
-			if (point.pointId) {
+			if (point.id) {
 				// nothing to do, the point exists!
 				log("nothing to do the point exists!")
 			} else {
 				log("oh cool, creating point!")
-				point.pointId = null
+				point.id = null
 			}
 		} else {
 			// there WAS an anchor point, so we should create a line
 
 			// if the center point doesn't exist, then we should create a point
-			if (previousPoint?.pointId === null)
-				previousPoint.pointId = addPointToSketch(sketchIndex, previousPoint.twoD, false)
+			if (previousPoint?.id === null)
+				previousPoint.id = addPointToSketch(sketchIndex, previousPoint.twoD, false)
 
-			if (point?.pointId) {
+			if (point?.id) {
 				// if the point exists, then we should create a line
-				if (previousPoint?.pointId && point.pointId)
-					addLineToSketch(sketchIndex, previousPoint.pointId, point.pointId)
+				if (previousPoint?.id && point.id)
+					addLineToSketch(sketchIndex, +previousPoint.id, +point.id)
 				previousPoint = null
 				return
 			} else {
 				// if the point doesn't exist, then we should create a point and a line
-				point!.pointId = addPointToSketch(sketchIndex, point!.twoD!, false)
-				addLineToSketch(sketchIndex, previousPoint!.pointId!, point!.pointId!)
+				point!.id = addPointToSketch(sketchIndex, point!.twoD!, false)
+				addLineToSketch(sketchIndex, +previousPoint!.id!, +point!.id!)
 			}
 		}
 		// @ts-ignore  todo rework points
@@ -68,7 +64,7 @@
 
 	export function click(_event: Event, projected: Point) {
 		if ($snapPoints.length > 0) processPoint($snapPoints[0])
-		else processPoint({ twoD: projected.twoD, threeD: projected.threeD, pointId: null })
+		else processPoint({ twoD: projected.twoD, threeD: projected.threeD, id: null })
 	}
 
 	export function mouseMove(_event: Event, projected: { x: number; y: number }) {
@@ -85,7 +81,7 @@
 					const point: PointLikeById = {
 						twoD: { x: twoD.x, y: twoD.y },
 						threeD: { x: geom.x, y: geom.y, z: geom.z },
-						pointId: null
+						id: null
 					} satisfies PointLikeById
 					log("[point:PointById]", point)
 					snappedTo = point
@@ -97,7 +93,7 @@
 				snappedTo = {
 					twoD: point.twoD,
 					threeD: point.threeD,
-					pointId: geom.id
+					id: geom.id
 				} satisfies PointLikeById
 				log("[snappedTo]", snappedTo)
 				break // If there is a 2D point, prefer to use it rather than the 3D point
@@ -119,7 +115,7 @@
 				{ type: "point", x: end.twoD!.x, y: end.twoD!.y, uuid: `point-${end.twoD!.x}-${end.twoD!.y}` }
 			] satisfies PreviewGeometry[]
 
-			if (previousPoint.pointId === null) {
+			if (previousPoint.id === null) {
 				const p = {
 					type: "point",
 					x: previousPoint.twoD.x,

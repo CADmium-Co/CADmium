@@ -33,7 +33,7 @@
 	$: solids = $realization.solids ?? {}
 
 	$: $workbench, log("[$workbench]", $workbench)
-	$: $workbench.history, log("[history]", $workbench.history)
+	$: $workbench.history, log("[$workbench.history]", $workbench.history)
 	$: $realization, log("[$realization]", $realization)
 
 	export let setCameraFocus: SetCameraFocus

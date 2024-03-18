@@ -39,10 +39,9 @@
 	$: solids, log("[realization.solids]", solids)
 	$: sketches, log("[realization.sketches]", sketches)
 
-	// @ts-ignore
-	if (!globalThis.realization) globalThis.realization = []
-	// @ts-ignore for debugging on window
-	$: $realization, (() => (globalThis.realization = [...globalThis.realization, $realization]))()
+	// put it on window for debugging. todo remove
+	if (!(globalThis as any).realization) (globalThis as any).realization = []
+	$: $realization, (() => ((globalThis as any).realization = [...(globalThis as any).realization, $realization]))()
 
 	export function setCameraFocus(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like): void {
 		// TODO: make this tween nicely

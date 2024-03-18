@@ -1,13 +1,18 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-	import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
-	import { Vector2 } from 'three'
-	import { T } from '@threlte/core'
-	import { flatten, promoteTo3 } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
-	import type { EntityType } from '../../types'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
+	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
+	import { Vector2 } from "three"
+	import { T } from "@threlte/core"
+	import { flatten, promoteTo3 } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
+	import type { EntityType, SketchPoint } from "../../types"
+	import { isEntity } from "../../typeGuards"
 
-	export let id: string, start, end
+	// prettier-ignore
+	const log = (function () { const context = "[Line.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+
+	export let id: string, start: SketchPoint, end: SketchPoint
+	log("[props]", "id:", id, "start:", start, "end:", end)
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,
@@ -16,10 +21,22 @@
 		solidSelectedMaterial: LineMaterial,
 		collisionLineMaterial: LineMaterial
 
-	const type: EntityType = 'line'
+	const type: EntityType = "line"
 
 	let hovered = false
-	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
+	$: selected = $currentlySelected.some((e) => checkIsEntity(e) && e.id === id && e.type === type)
+		? true
+		: false
+
+	function checkIsEntity(e: unknown) {
+		// log("[checkIsEntity]", isEntity(e), e)
+		return isEntity(e)
+	}
+
+	// $: selected, log("[selected] an entity has been selected:", selected, "Line.id:", id)
+
+	// prettier-ignore
+	// $: $currentlySelected, ()=> {if (selected && !$currentlySelected.every((e) => isEntity(e))) log("ERROR [currentlySelected] are not all isEntity", $currentlySelected)}
 
 	const points = flatten(
 		promoteTo3([new Vector2(start.twoD.x, start.twoD.y), new Vector2(end.twoD.x, end.twoD.y)])
@@ -51,13 +68,13 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = true
-				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+				$currentlyMousedOver = [...$currentlyMousedOver, { type, id: id }]
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === type)

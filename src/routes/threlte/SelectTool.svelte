@@ -2,15 +2,8 @@
 	import { currentlyMousedOver, currentlySelected } from "./stores"
 	import { deleteEntities } from "./projectUtils"
 
-	const log = (function () {
-		const context = "[SelectTool.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:pink;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[SelectTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let sketchIndex: string, active: boolean
 

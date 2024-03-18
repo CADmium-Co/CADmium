@@ -4,19 +4,17 @@
 	import { T } from "@threlte/core"
 	import { flatten, circleToPoints, promoteTo3 } from "./projectUtils"
 	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
-	import type { EntityType } from "../../types"
+	import type { EntityType, Vector2Vector3PointById } from "../../types"
 
-	const log = (function () {
-		const context = "[Circle.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:gray;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[Circle.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let id: string, center, radius
+	const type: EntityType = "circle"
+
+	export let id: string, center: Vector2Vector3PointById, radius: number
+
+	log("[props]", "id:", id, "center:", center, "radius:", radius)
+	log("[props]", "center instanceof Vector2Like:", typeof center, "center:", center)
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,
@@ -25,15 +23,11 @@
 		solidSelectedMaterial: LineMaterial,
 		collisionLineMaterial: LineMaterial
 
-	const type: EntityType = "circle"
-
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
-	// list of x,y,z points
-	let points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
-
-	// $: points, log("[points]", points)
+	// array of x,y,z points
+	const points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
 
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
@@ -62,7 +56,7 @@
 			if ($sketchTool === "select") {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
-				log("$currentlyMousedOver", $currentlyMousedOver)
+				// log("$currentlyMousedOver", $currentlyMousedOver)
 			}
 		}}
 		on:pointerout={() => {

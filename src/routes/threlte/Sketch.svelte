@@ -1,39 +1,53 @@
-<script>
-	import PassiveSketch from './PassiveSketch.svelte'
-	import { currentlySelected, previewGeometry, sketchTool } from './stores.js'
+<script lang="ts">
+	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
+	import PassiveSketch from "./PassiveSketch.svelte"
+	import { currentlySelected, previewGeometry, sketchTool } from "./stores"
+	import type { PlaneRealized, SketchTuple } from "../../types"
 
-	export let uniqueId
-	export let name
-	export let sketchTuple
-	export let editing
-	export let plane
+	// prettier-ignore
+	const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	export let uniqueId: string,
+		name: string,
+		sketchTuple: SketchTuple,
+		editing: boolean,
+		plane: PlaneRealized
 
-	function onKeyDown(event) {
+	// prettier-ignore
+	log("[props]", "uniqueId:", uniqueId, "name:", name, "sketchTuple", sketchTuple, "editing", editing, "plane", plane)
+
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
+
+	function onKeyDown(event: KeyboardEvent) {
 		if (!editing) return
-
-		if (event.key === 'l') {
-			$sketchTool = 'line'
-			$currentlySelected = []
-			$previewGeometry = []
-		} else if (event.key === 'r') {
-			$sketchTool = 'rectangle'
-			$currentlySelected = []
-			$previewGeometry = []
-		} else if (event.key === 'c') {
-			$sketchTool = 'circle'
-			$currentlySelected = []
-			$previewGeometry = []
-		} else if (event.key === 'Escape') {
-			$sketchTool = 'select'
-			$currentlySelected = []
-			$previewGeometry = []
+		switch (event.key) {
+			case "l":
+				$sketchTool = "line"
+				$currentlySelected = []
+				$previewGeometry = []
+				break
+			case "r":
+				$sketchTool = "rectangle"
+				$currentlySelected = []
+				$previewGeometry = []
+				break
+			case "c":
+				$sketchTool = "circle"
+				$currentlySelected = []
+				$previewGeometry = []
+				break
+			case "Escape":
+				$sketchTool = "select"
+				$currentlySelected = []
+				$previewGeometry = []
+				break
+			default:
+				break
 		}
 	}
 </script>
