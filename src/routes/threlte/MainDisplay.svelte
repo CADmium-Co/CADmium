@@ -8,9 +8,9 @@
 	import { sketchTool, selectingFor } from "./stores"
 	import type { SetCameraFocus } from "../../types"
 
+	const minWidth = 150 
+	const maxWidth = 600
 	let width = 250 // px
-	let minWidth = 150
-	let maxWidth = 600
 	let initialWidth = width
 	let initialPosition = { x: 0, y: 0 }
 	let resizing = false
@@ -34,7 +34,7 @@
 	function onMouseMove(event: MouseEvent) {
 		if (!resizing) return
 
-		let delta = event.pageX - initialPosition.x
+		const delta = event.pageX - initialPosition.x
 		width = initialWidth + delta
 
 		if (width < minWidth) width = minWidth

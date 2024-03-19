@@ -132,7 +132,7 @@
 	// 	selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 	// 	log('recomputed whether plane', id, 'was selected: ', selected)
 	// })
-	$: selected = $currentlySelected.some((e) => +e.id === +id && e.type === type) ? true : false
+	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
 	$: if ($currentlyMousedOver.length === 0) hovered = false
 </script>
@@ -168,7 +168,7 @@
 		on:click={(e) => {
 			if ($selectingFor.includes(type)) {
 				e.stopPropagation()
-				if ($currentlySelected.some((e) => +e.id === +id && e.type === type)) {
+				if ($currentlySelected.some((e) => e.id === id && e.type === type)) {
 					if ($currentlySelected.length - 1 < $selectionMin) {
 						// we can't deselect if doing so puts us below the minimum
 						// number of selected entities
@@ -206,6 +206,9 @@
 									id: number
 									type: EntityType
 								}
+
+								edit: stick with strings in the ui - the dom only has strings and some of our ids are not numeric strings
+								simply convert to number before sending to rust as required
 					*/
 					// @ts-ignore
 					$currentlySelected = [...$currentlySelected, { type, id: id.toString() }]

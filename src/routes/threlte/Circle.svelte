@@ -14,7 +14,6 @@
 	export let id: string, center: Vector2Vector3PointById, radius: number
 
 	log("[props]", "id:", id, "center:", center, "radius:", radius)
-	log("[props]", "center instanceof Vector2Like:", typeof center, "center:", center)
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,

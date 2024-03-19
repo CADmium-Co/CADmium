@@ -11,7 +11,7 @@
 	export let userName = 'mattferraro.dev'
 	export let project: Project
 
-	export let newFileContent = null
+	export let newFileContent: string | null = null
 
 	function fileInput(e: WithTarget<Event, HTMLInputElement>) {
 		const target = e.target as HTMLInputElement
@@ -21,7 +21,7 @@
 		reader.onload = function (e) {
 			// Note that this field is bound by the +page.svelte component,
 			// which kicks off some changes as a result of this value changing.
-			newFileContent = e.target?.result
+			newFileContent = (e.target?.result as string)
 		}
 		reader.readAsText(file)
 	}

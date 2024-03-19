@@ -1,43 +1,43 @@
-<script>
-	import { browser } from '$app/environment'
-	import { onMount } from 'svelte'
+<script lang="ts">
+	import { browser } from "$app/environment"
+	import { onMount } from "svelte"
+	import { default as init, Project as WasmProject } from "cadmium"
+	import AppBar from "./AppBar.svelte"
+	import BottomBar from "./BottomBar.svelte"
+	import MainDisplay from "./MainDisplay.svelte"
+	import ToolBar from "./ToolBar.svelte"
+	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from "./stores"
 
-	import { default as init, Project } from 'cadmium'
+	// prettier-ignore
+	const log = (function () { const context = "[+page.svelte]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	import AppBar from './AppBar.svelte'
-	import BottomBar from './BottomBar.svelte'
-	import MainDisplay from './MainDisplay.svelte'
-	import ToolBar from './ToolBar.svelte'
-	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from './stores.js'
-
-	let userName = 'mattferraro.dev'
-	let newFileContent = null
+	let userName = "mattferraro.dev"
+	let newFileContent: string | null = null
 
 	if (browser) {
 		onMount(() => {
 			init().then(() => {
-				let p = new Project('First Project')
-				wasmProject.set(p)
-				// console.log('made a new project')
+				wasmProject.set(new WasmProject("First Project"))
+				// log('made a new project')
 				projectIsStale.set(true)
 			})
 		})
 	}
 
+	$: $wasmProject, log("[$wasmProject]", $wasmProject)
+	$: $project, log("[$project]", $project)
+
 	$: if (newFileContent) {
-		// console.log('received new file')
-		let newWasmProject = Project.from_json(newFileContent)
+		log("received new file", newFileContent)
+		const newWasmProject = WasmProject.from_json(newFileContent)
 		wasmProject.set(newWasmProject)
 		projectIsStale.set(true)
 		newFileContent = null
 	}
 
-	featureIndex.subscribe((val) => {
-		if ($wasmProject.get_workbench) {
-			// console.log('featureIndex changed to', val)
-			workbenchIsStale.set(true)
-		}
-	})
+	// log('featureIndex changed to', val)
+	// refresh workbench when featureIndex mutates
+	featureIndex.subscribe((val) => $wasmProject["get_workbench"] && workbenchIsStale.set(true))
 </script>
 
 <div class="w-[100vw] h-[100vh] block">

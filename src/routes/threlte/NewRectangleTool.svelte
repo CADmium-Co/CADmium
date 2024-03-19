@@ -3,7 +3,7 @@
 	import { addRectangleBetweenPoints, addPointToSketch } from "./projectUtils"
 	import { Vector3 } from "three"
 	import type { IDictionary, PointLikeById, ProjectToPlane, SketchPoint } from "../../types"
-	import Sketch from "./Sketch.svelte"
+	// import Sketch from "./Sketch.svelte"
 
 	// prettier-ignore
 	const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()

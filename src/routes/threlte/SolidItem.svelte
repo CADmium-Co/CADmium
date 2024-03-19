@@ -1,17 +1,15 @@
 <script lang="ts">
-	import fileDownload from 'js-file-download'
-	import FileArrowDown from 'phosphor-svelte/lib/FileArrowDown'
-	import { getObj } from './projectUtils'
+	import fileDownload from "js-file-download"
+	import FileArrowDown from "phosphor-svelte/lib/FileArrowDown"
+	import { getObjectString } from "./projectUtils"
 	import type { WithTarget } from "../../types"
 
-	const log = (function () {
-		const context = '[SolidItem.svelte]'
-		return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:gray;")
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[SolidItem.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let name: string
 
-	let source = '/actions/part.svg'
+	const source = "/actions/part.svg"
 	let contextMenuVisible = false
 
 	// pos is cursor position when right click occur
@@ -24,8 +22,8 @@
 	function getContextMenuDimension(node: HTMLElement) {
 		// This function will get context menu dimension
 		// when navigation is shown => showMenu = true
-		let height = node.offsetHeight
-		let width = node.offsetWidth
+		const height = node.offsetHeight
+		const width = node.offsetWidth
 		menu = {
 			h: height,
 			w: width
@@ -54,12 +52,12 @@
 
 	function exportSolidOBJ() {
 		contextMenuVisible = false
-		let asString = getObj(name)
+		const asString = getObjectString(name)
 		fileDownload(asString, `${name}.obj`)
 		contextMenuVisible = false
 	}
 	const exportSolidSTEP = () => {
-		log('export solid STEP')
+		log("export solid STEP")
 		contextMenuVisible = false
 		// let step_string = $realization_rust.solid_to_step(solid_name)
 		// log(step_string)
@@ -77,7 +75,7 @@
 	role="button"
 	tabindex="0"
 	on:contextmenu|preventDefault={(e) => {
-		log('solid', e)
+		log("solid", e)
 		rightClickContextMenu(e)
 	}}
 >

@@ -1,21 +1,24 @@
-<script>
-	import * as THREE from 'three'
-	import { T } from '@threlte/core'
-	import SelectableSurface from './SelectableSurface.svelte'
+<script lang="ts">
+	import * as THREE from "three"
+	import { T } from "@threlte/core"
+	import SelectableSurface from "./SelectableSurface.svelte"
+	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
+	import type { TruckBoundary, TruckEdge, TruckFace, TruckSolid } from "../../types"
+	import type { Vector3Like } from "three"
 
-	export let name
-	export let indices
-	export let vertices
-	export let normals
-	export let truckSolid
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	// prettier-ignore
+	const log = (function () { const context = "[Solid.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	let truck_vertices, truck_edges, truck_faces
+	export let name: string, indices, vertices, normals, truckSolid: TruckSolid
+
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
+
+	let truck_vertices: TruckBoundary["vertices"], truck_edges: TruckEdge[], truck_faces: TruckFace[]
 
 	$: {
 		let boundaries = truckSolid.boundaries[0]
@@ -23,32 +26,34 @@
 		truck_edges = boundaries.edges
 		truck_faces = boundaries.faces
 
-		// console.log('vertices', truck_vertices)
-		// console.log('edges', truck_edges)
-		// console.log('faces', truck_faces)
+		log("truckSolid.boundaries[0]", "boundaries:", boundaries)
+
+		// log('vertices', truck_vertices)
+		// log('edges', truck_edges)
+		// log('faces', truck_faces)
 	}
 
 	const geometry = new THREE.BufferGeometry()
 
-	const normalsArray = new Float32Array(normals.flatMap((v) => [v.x, v.y, v.z]))
-	const verticesArray = new Float32Array(vertices.flatMap((v) => [v.x, v.y, v.z]))
+	const normalsArray = new Float32Array(normals.flatMap((v: Vector3Like) => [v.x, v.y, v.z]))
+	const verticesArray = new Float32Array(vertices.flatMap((v: Vector3Like) => [v.x, v.y, v.z]))
 
-	console.log('Vertices: ', vertices.length)
+	log("Vertices: ", vertices.length)
 
 	geometry.setIndex(indices)
-	geometry.setAttribute('position', new THREE.Float32BufferAttribute(verticesArray, 3))
-	geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalsArray, 3))
+	geometry.setAttribute("position", new THREE.Float32BufferAttribute(verticesArray, 3))
+	geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normalsArray, 3))
 
 	const material = new THREE.MeshStandardMaterial({
-		color: '#999999',
+		color: "#999999",
 		side: THREE.DoubleSide,
 		wireframe: false,
 		metalness: 1.0,
 		roughness: 0.6
 	})
 
-	let edges = new THREE.EdgesGeometry(geometry, 15)
-	let mat = new THREE.LineBasicMaterial({ color: 0x000000 })
+	const edges = new THREE.EdgesGeometry(geometry, 15)
+	const mat = new THREE.LineBasicMaterial({ color: 0x000000 })
 </script>
 
 <T.Group>
@@ -57,7 +62,7 @@
 
 	{#each truck_faces as truck_face, i (i)}
 		<SelectableSurface
-			id={i}
+			id={i.toString()}
 			{truck_face}
 			{truck_vertices}
 			{truck_edges}
