@@ -1,4 +1,4 @@
-import type { IDictionary, WithTarget, SetCameraFocus, EntityType, Entity, Project, WorkBench, PreviewGeometry, Plane, Point, PointById, SketchPoint, SketchPointById, PointLikeById, PointsById, PointsLikeById, SnapEntity, ProjectToPlane, Vector3Hideable, PointWithDelta, LineTuple, CircleTuple, ArcTuple, FaceTuple, HistoryStep, HistoryStepType, PointHistoryStep, PlaneHistoryStep, ExtrusionHistoryStep, SketchHistoryStep, PointData, PlaneData, ExtrusionData, SketchRealized, Arc, SketchData, SegmentId, Circle, TruckNurbsPoint, TruckNurbsSurfaceControlPoint, TruckNurbsSurfaceControlPoints, TruckNurbsSurface, TruckPlane, TruckSurface, TruckFaceBoundary, TruckFace, TruckNurbsCurve, TruckEdgeEndpoints, TruckEdge, TruckLineVectors, TruckLine, TruckCurve, SketchTuple, Realization, PlaneRealized, TruckFaceEdgeIndex, TruckBoundary, TruckSolid, SolidRealized, ExtrusionSketchData, UpdateExtrusion, SetSketchPlane, NewSketchOnPlane, NewExtrusion, DeleteLines, DeleteArcs, DeleteCircles, NewRectangleBetweenPoints, NewCircleBetweenPoints, NewLineOnSketch, NewPointOnSketch2, RenameStep, Message, MessageHistory, LineEntity, ArcEntity, CircleEntity, FaceEntity, MeshFaceEntity, PlaneEntity, Point3DEntity, PointEntity } from "./types"
+import type { IDictionary, WithTarget, SetCameraFocus, EntityType, Entity, CircleEntity, ArcEntity, FaceEntity, LineEntity, PlaneEntity, PointEntity, Point3DEntity, MeshFaceEntity, Project, WorkBench, PreviewGeometry, Plane, Point, PointById, SketchPoint, SketchPointById, Vector2Vector3PointById, PointLikeById, PointsById, PointsLikeById, SnapEntity, ProjectToPlane, Vector3Hideable, PointWithDelta, LineTuple, CircleTuple, ArcTuple, FaceTuple, HistoryStep, HistoryStepType, PointHistoryStep, PlaneHistoryStep, ExtrusionHistoryStep, SketchHistoryStep, PointData, PlaneData, ExtrusionData, SketchRealized, Arc, SketchData, SegmentId, Circle, TruckNurbsPoint, TruckNurbsSurfaceControlPoint, TruckNurbsSurfaceControlPoints, TruckNurbsSurface, TruckPlane, TruckSurface, TruckFaceBoundary, TruckFace, TruckNurbsCurve, TruckEdgeEndpoints, TruckEdge, TruckLineVectors, TruckLine, TruckCurve, SketchTuple, Realization, PlaneRealized, TruckFaceEdgeIndex, TruckBoundary, TruckSolid, SolidRealized, ExtrusionSketchData, UpdateExtrusion, SetSketchPlane, NewSketchOnPlane, NewExtrusion, DeleteLines, DeleteArcs, DeleteCircles, NewRectangleBetweenPoints, NewCircleBetweenPoints, NewLineOnSketch, NewPointOnSketch2, RenameStep, Message, MessageHistory } from "./types"
 import { Vector2 } from "three"
 import { Vector3 } from "three"
 
@@ -48,15 +48,16 @@ export function isEntityType(obj: unknown): obj is EntityType {
 
 export function isEntity(obj: unknown): obj is Entity {
   const typedObj = obj as Entity
+  // console.log(typedObj.length)
   return (
     (typedObj !== null &&
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
     typeof typedObj["id"] === "string" &&
-    isEntityType(typedObj["type"]) as boolean
+    isEntityType(typedObj["type"]) as boolean &&
+    Object.keys(typedObj).length === 2
   )
 }
-
 
 export function isCircleEntity(obj: unknown): obj is CircleEntity {
   const typedObj = obj as CircleEntity
@@ -279,6 +280,19 @@ export function isSketchPointById(obj: unknown): obj is SketchPointById {
   )
 }
 
+export function isVector2Vector3PointById(obj: unknown): obj is Vector2Vector3PointById {
+  const typedObj = obj as Vector2Vector3PointById
+  return (
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typedObj["twoD"] instanceof Vector2 &&
+    typedObj["threeD"] instanceof Vector3 &&
+    (typedObj["id"] === null ||
+      typeof typedObj["id"] === "string")
+  )
+}
+
 export function isPointLikeById(obj: unknown): obj is PointLikeById {
   const typedObj = obj as PointLikeById
   return (
@@ -287,6 +301,7 @@ export function isPointLikeById(obj: unknown): obj is PointLikeById {
       typeof typedObj === "function") &&
     (typeof typedObj["twoD"] === "undefined" ||
       isPointWithDelta(typedObj["twoD"]) as boolean ||
+      typedObj["twoD"] instanceof Vector2 ||
       (typedObj["twoD"] !== null &&
         typeof typedObj["twoD"] === "object" ||
         typeof typedObj["twoD"] === "function") &&
@@ -299,7 +314,8 @@ export function isPointLikeById(obj: unknown): obj is PointLikeById {
         typeof typedObj["threeD"] === "function") &&
       typeof typedObj["threeD"]["x"] === "number" &&
       typeof typedObj["threeD"]["y"] === "number" &&
-      typeof typedObj["threeD"]["z"] === "number") &&
+      typeof typedObj["threeD"]["z"] === "number" ||
+      typedObj["threeD"] instanceof Vector3) &&
     (typeof typedObj["id"] === "undefined" ||
       typedObj["id"] === null ||
       typeof typedObj["id"] === "string" ||
@@ -340,8 +356,7 @@ export function isSnapEntity(obj: unknown): obj is SnapEntity {
     (typedObj !== null &&
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
-    (typeof typedObj["id"] === "string" ||
-      typeof typedObj["id"] === "number") &&
+    typeof typedObj["id"] === "string" &&
     isEntityType(typedObj["type"]) as boolean &&
     (typeof typedObj["x"] === "undefined" ||
       typeof typedObj["x"] === "number") &&
@@ -681,7 +696,7 @@ export function isSketchRealized(obj: unknown): obj is SketchRealized {
     typeof typedObj["highest_arc_id"] === "number" &&
     typeof typedObj["constraints"] === "object" &&
     typeof typedObj["highest_constraint_id"] === "number" &&
-    typeof typedObj["faces"] === "array"
+    Array.isArray(typedObj["faces"])
   )
 }
 
@@ -1105,7 +1120,7 @@ export function isSolidRealized(obj: unknown): obj is SolidRealized {
     typedObj["indices"].every((e: any) =>
       typeof e === "number"
     ) &&
-    typeof typedObj["triangles"] === "array" &&
+    Array.isArray(typedObj["triangles"]) &&
     isTruckSolid(typedObj["truck_solid"]) as boolean
   )
 }
@@ -1144,7 +1159,7 @@ export function isUpdateExtrusion(obj: unknown): obj is UpdateExtrusion {
     typedObj["offset"] === 0 &&
     typedObj["extrusion_name"] === "Extra" &&
     typedObj["direction"] === "Normal" &&
-    typeof typedObj["extrusion_id"] === "number"
+    typeof typedObj["extrusion_id"] === "string"
   )
 }
 
