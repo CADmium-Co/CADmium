@@ -13,14 +13,12 @@ import {
 } from './stores'
 import { get } from 'svelte/store'
 import { Vector2, Vector3, type Vector2Like } from "three"
-import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, PlaneHistoryStep, PointHistoryStep, SketchHistoryStep, WithTarget, WorkBench } from "../../types"
+import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, PlaneHistoryStep, PointHistoryStep, PointWithDelta, SketchHistoryStep, WithTarget, WorkBench } from "../../types"
 import type { Realization as WasmRealization } from "cadmium"
 import { isDeleteArcs, isDeleteCircles, isDeleteLines, isNewCircleBetweenPoints, isNewExtrusion, isNewLineOnSketch, isNewPointOnSketch2, isNewRectangleBetweenPoints, isNewSketchOnPlane, isRenameStep, isSetSketchPlane, isUpdateExtrusion } from "../../typeGuards"
 
-const log = (function () {
-	const context = "[projectUtils.ts]"
-	return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:lightblue;")
-})()
+// prettier-ignore
+const log = (function () { const context = "[projectUtils.ts]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 export const CIRCLE_TOLERANCE = 0.05
 
@@ -307,7 +305,7 @@ export function renameStep(stepIdx: number, newName: string): void {
 			new_name: newName
 		}
 	}
-	checkWasmMessage(message)
+	checkWasmMessage(message, false)
 	sendWasmMessage(message)
 }
 
@@ -410,7 +408,7 @@ export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clock
 	return lineVertices
 }
 
-export function circleToPoints(centerPoint: Vector2, radius: number): Vector2[] {
+export function circleToPoints(centerPoint: PointWithDelta, radius: number): Vector2[] {
 	// this is 2D function
 
 	// see https://math.stackexchange.com/a/4132095/816177

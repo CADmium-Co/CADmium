@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
+	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
-	import { T } from "@threlte/core"
-	import { flatten, circleToPoints, promoteTo3 } from "./projectUtils"
-	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
-	import type { EntityType, Vector2Vector3PointById } from "../../types"
+	import { T } from '@threlte/core'
+	import { flatten, circleToPoints, promoteTo3 } from './projectUtils'
+	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import type { CircleTuple, EntityType } from "../../types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Circle.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	const type: EntityType = "circle"
 
-	export let id: string, center: Vector2Vector3PointById, radius: number
+	export let id: string, center: CircleTuple["center"], radius: number
 
 	log("[props]", "id:", id, "center:", center, "radius:", radius)
 
@@ -52,14 +52,14 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === 'select') {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 				// log("$currentlyMousedOver", $currentlyMousedOver)
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === 'select') {
 				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === type)

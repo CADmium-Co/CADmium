@@ -1,6 +1,6 @@
 <script lang="ts">
-	import fileDownload from "js-file-download"
-	import FileArrowDown from "phosphor-svelte/lib/FileArrowDown"
+	import fileDownload from 'js-file-download'
+	import FileArrowDown from 'phosphor-svelte/lib/FileArrowDown'
 	import { getObjectString } from "./projectUtils"
 	import type { WithTarget } from "../../types"
 

@@ -1,17 +1,29 @@
 <script lang="ts">
 	import fileDownload from 'js-file-download'
 	import { wasmProject, messageHistory } from './stores'
-	import type { Project } from 'cadmium'
+	import type { Project } from "cadmium"
 
 	import Download from 'phosphor-svelte/lib/Download'
 	import Upload from 'phosphor-svelte/lib/Upload'
 	import Bug from 'phosphor-svelte/lib/Bug'
 	import type { WithTarget } from "../../types"
+	import { isProject } from "../../typeGuards"
+
+	// prettier-ignore
+	const log = (function () { const context = "[AppBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let userName = 'mattferraro.dev'
 	export let project: Project
 
 	export let newFileContent: string | null = null
+
+	$: project,
+		(() => {
+			log("[project]", project)
+			project &&
+				!isProject(project) &&
+				console.error("[AppBar.svelte] [project] fails isProject(project) typecheck", project)
+		})()
 
 	function fileInput(e: WithTarget<Event, HTMLInputElement>) {
 		const target = e.target as HTMLInputElement
@@ -21,7 +33,7 @@
 		reader.onload = function (e) {
 			// Note that this field is bound by the +page.svelte component,
 			// which kicks off some changes as a result of this value changing.
-			newFileContent = (e.target?.result as string)
+			newFileContent = e.target?.result as string
 		}
 		reader.readAsText(file)
 	}
@@ -34,7 +46,7 @@
 			<img class="object-cover h-10 w-10 ml-4" alt="logo" src="/cadmium_logo_min.svg" />
 		</div>
 		<div class="select-none">CADmium</div>
-		<div class="text-xl font-medium">{project.name ?? ''}</div>
+		<div class="text-xl font-medium">{project.name ?? ""}</div>
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="hover:bg-gray-300 rounded p-1"

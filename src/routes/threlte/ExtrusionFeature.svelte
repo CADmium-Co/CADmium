@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { slide } from "svelte/transition"
-	import { quintOut } from "svelte/easing"
-	import { arraysEqual, renameStep, updateExtrusion } from "./projectUtils"
+	import { slide } from 'svelte/transition'
+	import { quintOut } from 'svelte/easing'
+	import { arraysEqual, renameStep, updateExtrusion } from './projectUtils'
 	import {
 		selectingFor,
 		workbenchIsStale,
 		featureIndex,
 		currentlySelected,
 		hiddenSketches
-	} from "./stores"
-	import X from "phosphor-svelte/lib/X"
+	} from './stores'
+	import X from 'phosphor-svelte/lib/X'
 	import type { ExtrusionData } from "../../types"
 
 	// prettier-ignore
@@ -18,15 +18,8 @@
 	export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
 
 	$: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
-	$: data, log("[props]", "typeof id:", typeof id, "id:", id)
-	$: data,
-		log(
-			"[props]",
-			"typeof data.face_ids[0]:",
-			typeof data.face_ids[0],
-			"data.face_ids:",
-			data.face_ids
-		)
+	// $: data, log("[props]", "typeof id:", typeof id, "id:", id)
+	// $: data, log("[props]", "typeof data.face_ids[0]:", typeof data.face_ids[0], "data.face_ids:", data.face_ids)
 
 	// coerce from number[] to string[] for frontend as we use strings for ids here
 	let faceIdsFromInputs = data.face_ids.sort().map((e) => e + "")
@@ -52,7 +45,7 @@
 
 	function sendUpdate() {
 		const faceIdsFromSelection = $currentlySelected
-			.filter((e) => e.type === "face")
+			.filter((e) => e.type === 'face')
 			.map((e) => e.id)
 			.sort()
 		updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
@@ -65,7 +58,7 @@
 		log("[$featureIndex]", typeof $featureIndex, $featureIndex)
 
 		const faceIdsFromSelection = $currentlySelected
-			.filter((e) => e.type === "face")
+			.filter((e) => e.type === 'face')
 			.map((e) => e.id)
 			.sort()
 
@@ -82,7 +75,7 @@
 	// $: log($currentlySelected)
 	// $: faceIds = $currentlySelected.filter((e) => e.type === 'face').map((e) => e.id)
 
-	let source = "/actions/extrude_min.svg"
+	const source = "/actions/extrude_min.svg"
 
 	$: if ($featureIndex === index) {
 		$selectingFor = ["face"]
@@ -158,7 +151,7 @@
 						{faceId}<button
 							on:click|preventDefault={() => {
 								$currentlySelected = $currentlySelected.filter(
-									(item) => !(item.id === faceId && item.type === "face")
+									(item) => !(item.id === faceId && item.type === 'face')
 								)
 							}}><X /></button
 						>

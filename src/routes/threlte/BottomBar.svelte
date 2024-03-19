@@ -1,10 +1,8 @@
 <script>
 	import { project, workbenchIndex, workbenchIsStale } from './stores'
 
-	const log = (function () {
-		const context = '[BottomBar.svelte]'
-		return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:gray;")
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[BottomBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	$: workbenches = $project.workbenches ?? []
 </script>

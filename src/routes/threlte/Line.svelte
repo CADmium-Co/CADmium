@@ -1,17 +1,17 @@
 <script lang="ts">
-	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
+	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
-	import { Vector2 } from "three"
-	import { T } from "@threlte/core"
-	import { flatten, promoteTo3 } from "./projectUtils"
-	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
-	import type { EntityType, SketchPoint } from "../../types"
+	import { Vector2 } from 'three'
+	import { T } from '@threlte/core'
+	import { flatten, promoteTo3 } from './projectUtils'
+	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import type { EntityType, SketchPointById } from "../../types"
 	import { isEntity } from "../../typeGuards"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Line.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let id: string, start: SketchPoint, end: SketchPoint
+	export let id: string, start: SketchPointById, end: SketchPointById
 	log("[props]", "id:", id, "start:", start, "end:", end)
 
 	export let dashedLineMaterial: LineMaterial,
@@ -34,7 +34,6 @@
 	}
 
 	// $: selected, log("[selected] an entity has been selected:", selected, "Line.id:", id)
-
 	// prettier-ignore
 	// $: $currentlySelected, ()=> {if (selected && !$currentlySelected.every((e) => isEntity(e))) log("ERROR [currentlySelected] are not all isEntity", $currentlySelected)}
 
@@ -68,13 +67,13 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === 'select') {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id: id }]
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === 'select') {
 				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === type)

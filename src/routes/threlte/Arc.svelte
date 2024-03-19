@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
+	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
-	import { Vector2 } from "three"
-	import { T } from "@threlte/core"
-	import { flatten, arcToPoints, promoteTo3 } from "./projectUtils"
-	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
+	import { Vector2 } from 'three'
+	import { T } from '@threlte/core'
+	import { flatten, arcToPoints, promoteTo3 } from './projectUtils'
+	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
 	import type { EntityType, SketchPoint } from "../../types"
 	import { isEntity } from "../../typeGuards"
 
@@ -61,13 +61,13 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === 'select') {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === 'select') {
 				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter(
 					(item) => !(item.id === id && item.type === type)

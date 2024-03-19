@@ -1,17 +1,8 @@
 <script lang="ts">
-	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from "./stores"
-	import { addLineToSketch, addPointToSketch } from "./projectUtils"
-	import { Vector2, Vector3 } from "three"
-	import type {
-	IDictionary,
-		Point,
-		PointLikeById,
-		PreviewGeometry,
-		ProjectToPlane,
-
-		SketchPoint
-
-	} from "../../types"
+	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
+	import { addLineToSketch, addPointToSketch } from './projectUtils'
+	import { Vector3 } from 'three'
+	import type { IDictionary, Point, PointLikeById, PreviewGeometry, ProjectToPlane, SketchPoint } from "../../types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[NewLineTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -23,11 +14,9 @@
 
 	$: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
 
-	let previousPoint: { id: string | null; twoD: Vector2 } | null
+	let previousPoint: PointLikeById | null
 
-	$: if ($sketchTool !== "line") {
-		previousPoint = null
-	}
+	$: if ($sketchTool !== "line") previousPoint = null
 
 	function processPoint(point: PointLikeById | null) {
 		if (!previousPoint && point) {
@@ -44,7 +33,7 @@
 
 			// if the center point doesn't exist, then we should create a point
 			if (previousPoint?.id === null)
-				previousPoint.id = addPointToSketch(sketchIndex, previousPoint.twoD, false)
+				previousPoint.id = addPointToSketch(sketchIndex, previousPoint?.twoD!, false)
 
 			if (point?.id) {
 				// if the point exists, then we should create a line
@@ -75,7 +64,7 @@
 
 		for (const geom of $currentlyMousedOver) {
 			log("[geom of $currentlyMousedOver]", geom)
-			if (geom.type === "point3D") {
+			if (geom.type === 'point3D') {
 				if (geom.x && geom.y && geom.z) {
 					const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
 					const point: PointLikeById = {
@@ -87,7 +76,7 @@
 					snappedTo = point
 				}
 			}
-			if (geom.type === "point") {
+			if (geom.type === 'point') {
 				const point = pointsById[geom.id]
 				log("[pointsById]", pointsById)
 				snappedTo = {
@@ -118,9 +107,9 @@
 			if (previousPoint.id === null) {
 				const p = {
 					type: "point",
-					x: previousPoint.twoD.x,
-					y: previousPoint.twoD.y,
-					uuid: `point-null-${previousPoint.twoD.x}-${previousPoint.twoD.y}`
+					x: previousPoint.twoD!.x,
+					y: previousPoint.twoD!.y,
+					uuid: `point-null-${previousPoint.twoD!.x}-${previousPoint.twoD!.y}`
 				} satisfies PreviewGeometry
 				previewGeoms.push(p)
 			}
@@ -131,10 +120,10 @@
 
 	export function onKeyDown(event: KeyboardEvent) {
 		if (!active) return
-		if (event.key === "Escape") {
+		if (event.key === 'Escape') {
 			previewGeometry.set([])
 			previousPoint = null
-			$sketchTool = "select"
+			$sketchTool = 'select'
 		}
 	}
 </script>

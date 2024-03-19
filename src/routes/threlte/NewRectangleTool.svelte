@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from "./stores"
-	import { addRectangleBetweenPoints, addPointToSketch } from "./projectUtils"
-	import { Vector3 } from "three"
+	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
+	import { addRectangleBetweenPoints, addPointToSketch } from './projectUtils'
+	import { Vector3 } from 'three'
 	import type { IDictionary, PointLikeById, ProjectToPlane, SketchPoint } from "../../types"
 	// import Sketch from "./Sketch.svelte"
 
@@ -71,7 +71,7 @@
 		// so these snap points do not necessarily correspond to actual points in the sketch
 		let snappedTo
 		for (const geom of $currentlyMousedOver) {
-			if (geom.type === "point3D") {
+			if (geom.type === 'point3D') {
 				const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
 				const point = {
 					twoD: { x: twoD.x, y: twoD.y },
@@ -80,7 +80,7 @@
 				}
 				snappedTo = point
 			}
-			if (geom.type === "point") {
+			if (geom.type === 'point') {
 				const point = pointsById[geom.id]
 				// @ts-ignore  todo make point etc factory functions and tighten types - find different solution than nulling ids
 				snappedTo = { twoD: point.twoD, threeD: point.threeD, id: geom.id }
@@ -100,44 +100,44 @@
 
 			const previewGeoms = [
 				{
-					type: "point",
+					type: 'point',
 					x: upperLeft.twoD.x,
 					y: upperLeft.twoD.y,
 					uuid: `point-ul-${upperLeft.twoD.x}-${upperLeft.twoD.y}`
 				},
 				{
-					type: "point",
+					type: 'point',
 					x: lowerRight.twoD.x,
 					y: lowerRight.twoD.y,
 					uuid: `point-lr-${lowerRight.twoD.x}-${lowerRight.twoD.y}`
 				},
 				{
-					type: "point",
+					type: 'point',
 					x: end.twoD.x,
 					y: end.twoD.y,
 					uuid: `point-end-${end.twoD.x}-${end.twoD.y}`
 				},
 				{
-					type: "line",
+					type: 'line',
 					start: anchorPoint,
 					end: upperLeft,
 					uuid: `line-s-ul-${upperLeft.twoD.x}-${upperLeft.twoD.y}`
 				},
 
 				{
-					type: "line",
+					type: 'line',
 					start: anchorPoint,
 					end: lowerRight,
 					uuid: `line-s-lr-${lowerRight.twoD.x}-${lowerRight.twoD.y}`
 				},
 				{
-					type: "line",
+					type: 'line',
 					start: upperLeft,
 					end: end,
 					uuid: `line-ul-end-${end.twoD.x}-${end.twoD.y}`
 				},
 				{
-					type: "line",
+					type: 'line',
 					start: lowerRight,
 					end: end,
 					uuid: `line-lr-end-${end.twoD.x}-${end.twoD.y}`
@@ -146,7 +146,7 @@
 
 			if (anchorPoint.id === null) {
 				previewGeoms.push({
-					type: "point",
+					type: 'point',
 					x: anchorPoint.twoD?.x,
 					y: anchorPoint.twoD?.y,
 					uuid: `point-null-${anchorPoint.twoD?.x}-${anchorPoint.twoD?.y}`
@@ -159,10 +159,10 @@
 
 	export function onKeyDown(event: KeyboardEvent) {
 		if (!active) return
-		if (event.key === "Escape") {
+		if (event.key === 'Escape') {
 			previewGeometry.set([])
 			anchorPoint = null
-			$sketchTool = "select"
+			$sketchTool = 'select'
 		}
 	}
 </script>

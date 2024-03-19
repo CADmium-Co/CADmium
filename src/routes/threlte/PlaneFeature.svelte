@@ -1,25 +1,18 @@
 <script lang="ts">
-	import { slide } from "svelte/transition"
-	import { quintOut } from "svelte/easing"
-	import { renameStep } from "./projectUtils"
-	import { workbenchIsStale, projectIsStale, featureIndex } from "./stores"
-	import MagnifyingGlass from "phosphor-svelte/lib/MagnifyingGlass"
+	import { slide } from 'svelte/transition'
+	import { quintOut } from 'svelte/easing'
+	import { renameStep } from './projectUtils'
+	import { workbenchIsStale, featureIndex } from "./stores"
+	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
 	import type { Plane, SetCameraFocus } from "../../types"
 
-	const log = (function () {
-		const context = "[PlaneFeature.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:gray;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[PlaneFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let name: string, index: number, plane: Plane, setCameraFocus: SetCameraFocus
 	log("[props]", "name:", name, "index:", index, "plane:", plane, "setCameraFocus:", "(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void")
 
-	let source = "/actions/plane_min.svg"
+	const source = "/actions/plane_min.svg"
 
 	const closeAndRefresh = () => {
 		log("closing, refreshing")

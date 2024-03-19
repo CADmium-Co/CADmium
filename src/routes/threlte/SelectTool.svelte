@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { currentlyMousedOver, currentlySelected } from "./stores"
-	import { deleteEntities } from "./projectUtils"
+	import { currentlyMousedOver, currentlySelected } from './stores'
+	import { deleteEntities } from './projectUtils'
 
 	// prettier-ignore
 	const log = (function () { const context = "[SelectTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -38,9 +38,9 @@
 		if (!active) return
 
 		// log('key press', event)
-		if (event.key === "Escape") {
+		if (event.key === 'Escape') {
 			currentlySelected.set([])
-		} else if (event.key === "Delete" || event.key === "Backspace") {
+		} else if (event.key === 'Delete' || event.key === 'Backspace') {
 			// delete the currently selected things
 			deleteEntities(sketchIndex, $currentlySelected)
 			currentlyMousedOver.set([])

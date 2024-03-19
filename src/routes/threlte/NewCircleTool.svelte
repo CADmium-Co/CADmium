@@ -1,18 +1,11 @@
 <script lang="ts">
-	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from "./stores"
-	import { addCircleBetweenPoints, addPointToSketch } from "./projectUtils"
+	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
+	import { addCircleBetweenPoints, addPointToSketch } from './projectUtils'
 	import { Vector3, type Vector2Like, type Vector3Like } from "three"
-	import type { Point, PointLikeById, PointWithDelta, PointsLikeById, ProjectToPlane } from "../../types"
+	import type { PointLikeById, PointWithDelta, PointsLikeById, ProjectToPlane } from "../../types"
 
-	const log = (function () {
-		const context = "[NewCircleTool.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:gray;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let pointsById: PointsLikeById
 	export let sketchIndex: string
@@ -21,14 +14,10 @@
 
 	log("[props]", "pointsById:", pointsById, "sketchIndex:", sketchIndex, "active:", active)
 
-	// let centerPoint: { pointId: string | null; twoD: Vector2 } | null
 	let centerPoint: PointLikeById | null
 
-	$: if ($sketchTool !== "circle") {
-		centerPoint = null
-	}
-
-	$: centerPoint, log("[centerPoint]", centerPoint)
+	$: if ($sketchTool !== "circle") centerPoint = null
+	// $: centerPoint, log("[centerPoint]", centerPoint)
 
 	function processPoint(point: PointLikeById) {
 		if (!centerPoint) {
@@ -81,7 +70,7 @@
 		let snappedTo = null
 		for (const geom of $currentlyMousedOver) {
 			// log("[currentlyMousedOver geom]", geom)
-			if (geom.type === "point3D") {
+			if (geom.type === 'point3D') {
 				const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
 				// log("[projectToPlane twoD]", twoD)
 				const point = {
@@ -91,14 +80,14 @@
 				}
 				snappedTo = point
 			}
-			if (geom.type === "point") {
+			if (geom.type === 'point') {
 				// log("[currentlyMousedOver geom is type point]", geom)
 				const point = pointsById[geom.id]
 				// oops! point.twoD etc does not exist here, we have:
-				const example = {
-					type: "point",
-					id: "1"
-				}
+				// const example = {
+				// 	type: "point",
+				// 	id: "1"
+				// }
 				function querySnapPoint(id: string | null) {
 					const points = $snapPoints.filter((point) => id && point.pointId === id)
 					return points.length > 0 ? points[0] : false
@@ -125,7 +114,10 @@
 		}
 
 		if (centerPoint) {
-			function calcDeltas(a: Vector2Like | PointWithDelta | { x: number; y: number }, b: Vector2Like | undefined) {
+			function calcDeltas(
+				a: Vector2Like | PointWithDelta | { x: number; y: number },
+				b: Vector2Like | undefined
+			) {
 				const dx = a.x - b?.x!
 				const dy = a.y - b?.y!
 				return Math.hypot(dx, dy)
@@ -136,13 +128,13 @@
 
 			previewGeometry.set([
 				{
-					type: "circle",
+					type: 'circle',
 					center: centerPoint,
 					radius,
 					uuid: `circle-${centerPoint.twoD?.x}-${centerPoint.twoD?.y}-${radius}`
 				},
 				{
-					type: "point",
+					type: 'point',
 					x: centerPoint.twoD?.x,
 					y: centerPoint.twoD?.y,
 					uuid: `point-${centerPoint.twoD?.x}-${centerPoint.twoD?.y}`
@@ -155,10 +147,10 @@
 
 	export function onKeyDown(event: KeyboardEvent) {
 		if (!active) return
-		if (event.key === "Escape") {
+		if (event.key === 'Escape') {
 			previewGeometry.set([])
 			centerPoint = null
-			$sketchTool = "select"
+			$sketchTool = 'select'
 		}
 	}
 </script>

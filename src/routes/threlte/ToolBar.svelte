@@ -11,12 +11,11 @@
 	} from './stores'
 	import { newExtrusion, newSketchOnPlane } from './projectUtils'
 
-	const log = (function () {
-		const context = '[ToolBar.svelte]'
-		return Function.prototype.bind.call(console.log, console, `%c${context}`, "font-weight:bold;color:gray;")
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	let solving = false
+	// todo ask Matt why is this a no-op?
 	const solveSketch = () => {}
 	const createNewExtrusion = () => {
 		newExtrusion()
@@ -31,7 +30,7 @@
 	const stepSketch = () => {}
 	const debugging = false
 
-	let actions = [
+	const actions = [
 		{
 			alt: 'new sketch',
 			src: '/actions/sketch_min.svg',
@@ -42,7 +41,7 @@
 		// { alt: 'plane', src: '/actions/plane_min.svg' }
 	]
 
-	let sketchActions = [
+	const sketchActions = [
 		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solveSketch },
 		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: stepSketch },
 		{ alt: 'line', src: '/actions/line.svg', handler: () => ($sketchTool = 'line') },

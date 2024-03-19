@@ -1,19 +1,14 @@
 <script lang="ts">
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
-	import PassiveSketch from "./PassiveSketch.svelte"
-	import { currentlySelected, previewGeometry, sketchTool } from "./stores"
+	import PassiveSketch from './PassiveSketch.svelte'
+	import { currentlySelected, previewGeometry, sketchTool } from './stores'
 	import type { PlaneRealized, SketchTuple } from "../../types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let uniqueId: string,
-		name: string,
-		sketchTuple: SketchTuple,
-		editing: boolean,
-		plane: PlaneRealized
+	export let uniqueId: string, name: string, sketchTuple: SketchTuple, editing: boolean, plane: PlaneRealized
 
-	// prettier-ignore
 	log("[props]", "uniqueId:", uniqueId, "name:", name, "sketchTuple", sketchTuple, "editing", editing, "plane", plane)
 
 	export let dashedLineMaterial: LineMaterial,
@@ -23,28 +18,26 @@
 		solidSelectedMaterial: LineMaterial,
 		collisionLineMaterial: LineMaterial
 
+	function setTool(tool: string): void {
+		$sketchTool = tool
+		$currentlySelected = []
+		$previewGeometry = []
+	}
+
 	function onKeyDown(event: KeyboardEvent) {
 		if (!editing) return
 		switch (event.key) {
 			case "l":
-				$sketchTool = "line"
-				$currentlySelected = []
-				$previewGeometry = []
+				setTool("line")
 				break
 			case "r":
-				$sketchTool = "rectangle"
-				$currentlySelected = []
-				$previewGeometry = []
+				setTool("rectangle")
 				break
 			case "c":
-				$sketchTool = "circle"
-				$currentlySelected = []
-				$previewGeometry = []
+				setTool("circle")
 				break
 			case "Escape":
-				$sketchTool = "select"
-				$currentlySelected = []
-				$previewGeometry = []
+				setTool("select")
 				break
 			default:
 				break

@@ -1,26 +1,19 @@
 <script lang="ts">
-	import { workbench, realization } from "./stores"
-	import PointFeature from "./PointFeature.svelte"
-	import PlaneFeature from "./PlaneFeature.svelte"
-	import SketchFeature from "./SketchFeature.svelte"
-	import ExtrusionFeature from "./ExtrusionFeature.svelte"
-	import SolidItem from "./SolidItem.svelte"
+	import { workbench, realization } from './stores'
+	import PointFeature from './PointFeature.svelte'
+	import PlaneFeature from './PlaneFeature.svelte'
+	import SketchFeature from './SketchFeature.svelte'
+	import ExtrusionFeature from './ExtrusionFeature.svelte'
+	import SolidItem from './SolidItem.svelte'
 	import { isPoint, isPlane, isExtrusion, isSketch } from "./projectUtils"
 	import type { SetCameraFocus } from "../../types"
 
-	const log = (function () {
-		const context = "[FeatureHistory.svelte]"
-		return Function.prototype.bind.call(
-			console.log,
-			console,
-			`%c${context}`,
-			"font-weight:bold;color:gray;"
-		)
-	})()
+	// prettier-ignore
+	const log = (function () { const context = "[FeatureHistory.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
+	const minHeight = 30
+	const maxHeight = 1200
 	let height = 450
-	let minHeight = 30
-	let maxHeight = 1200
 	let initialHeight = height
 	let resizing = false
 	let initialPosition = { x: 0, y: 0 }
@@ -51,7 +44,7 @@
 	function onMouseMove(event: MouseEvent) {
 		if (!resizing) return
 
-		let delta = event.pageY - initialPosition.y
+		const delta = event.pageY - initialPosition.y
 		height = initialHeight + delta
 
 		if (height < minHeight) height = minHeight
@@ -63,7 +56,7 @@
 
 <div class="flex flex-col select-none">
 	<div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
-		<div class="font-bold text-sm px-2 py-2">History ({history.length})</div>
+		<div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
 		{#each history as feature, featureIdx (feature.data.type + ":" + feature.unique_id)}
 			<div>
 				{#if isPoint(feature)}

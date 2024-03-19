@@ -1,25 +1,25 @@
 <script lang="ts">
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-	import type { LineMaterial } from 'three/examples/jsm/lines/LineMaterial.js'
+	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
 	import { useTexture } from '@threlte/extras'
 	import { BufferGeometry, Float32BufferAttribute, PointsMaterial, Vector2 } from 'three'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
 	import { flatten, promoteTo3 } from './projectUtils'
 	import { T } from '@threlte/core'
-	import type { EntityType } from '../../types'
+	import type { EntityType } from "../../types"
 
 	export let x:number, y:number, z:number, hidden: boolean, id: string
 	export let isPreview = false
 
 	export let collisionLineMaterial: LineMaterial
 
-	const source = '/actions/point_min.svg'
-	const outlineSource = '/actions/point_outline.svg'
+	const source = "/actions/point_min.svg"
+	const outlineSource = "/actions/point_outline.svg"
 
 	const pointTexture = useTexture(source)
 	const outlineTexture = useTexture(outlineSource)
 
-	const type: EntityType = 'point3D'
+	const type: EntityType = "point3D"
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false

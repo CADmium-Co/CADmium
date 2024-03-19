@@ -2,10 +2,10 @@
 	// The main display includes the feature history, parts manager, and 3D viewport
 	// It is all contained in this file, which is imported by the main page
 	// It had to be done this way to manage the resizing of the feature history and viewport
-	import FeatureHistory from "./FeatureHistory.svelte"
-	import { Canvas } from "@threlte/core"
-	import Scene from "./Scene.svelte"
-	import { sketchTool, selectingFor } from "./stores"
+	import FeatureHistory from './FeatureHistory.svelte'
+	import { Canvas } from '@threlte/core'
+	import Scene from './Scene.svelte'
+	import { sketchTool, selectingFor } from './stores'
 	import type { SetCameraFocus } from "../../types"
 
 	const minWidth = 150 
