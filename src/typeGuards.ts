@@ -61,88 +61,88 @@ export function isEntity(obj: unknown): obj is Entity {
 export function isCircleEntity(obj: unknown): obj is CircleEntity {
   const typedObj = obj as CircleEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "circle"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "circle"
   )
 }
 
 export function isArcEntity(obj: unknown): obj is ArcEntity {
   const typedObj = obj as ArcEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "arc"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "arc"
   )
 }
 
 export function isFaceEntity(obj: unknown): obj is FaceEntity {
   const typedObj = obj as FaceEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "face"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "face"
   )
 }
 
 export function isLineEntity(obj: unknown): obj is LineEntity {
   const typedObj = obj as LineEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "line"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "line"
   )
 }
 
 export function isPlaneEntity(obj: unknown): obj is PlaneEntity {
   const typedObj = obj as PlaneEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "plane"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "plane"
   )
 }
 
 export function isPointEntity(obj: unknown): obj is PointEntity {
   const typedObj = obj as PointEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "point"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "point"
   )
 }
 
 export function isPoint3DEntity(obj: unknown): obj is Point3DEntity {
   const typedObj = obj as Point3DEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "point3D"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "point3D"
   )
 }
 
 export function isMeshFaceEntity(obj: unknown): obj is MeshFaceEntity {
   const typedObj = obj as MeshFaceEntity
   return (
-      (typedObj !== null &&
-          typeof typedObj === "object" ||
-          typeof typedObj === "function") &&
-      typeof typedObj["id"] === "string" &&
-      typedObj["type"] === "meshFace"
+    (typedObj !== null &&
+      typeof typedObj === "object" ||
+      typeof typedObj === "function") &&
+    typeof typedObj["id"] === "string" &&
+    typedObj["type"] === "meshFace"
   )
 }
 
