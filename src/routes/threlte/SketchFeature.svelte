@@ -23,7 +23,7 @@
 
 	export let name: string, index: number, id: string, plane_id: string
 
-	$: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
+	// $: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
 
 	const source = "/actions/sketch_min.svg"
 
@@ -38,9 +38,8 @@
 			engageSearchForPlane()
 		}
 	}
-	log("A Sketch Feature: ", name, index, id, plane_id)
 
-	$: $featureIndex, log("[$featureIndex]", typeof $featureIndex, $featureIndex)
+	// $: $featureIndex, log("[$featureIndex]", typeof $featureIndex, $featureIndex)
 
 	const closeAndRefresh = () => {
 		log("closing, refreshing")
@@ -55,11 +54,11 @@
 
 	$: if ($featureIndex === index) $sketchBeingEdited = id
 
-	$: $sketchBeingEdited,
-		log("[$sketchBeingEdited]", `${$sketchBeingEdited === "" ? "empty" : ""}`, $sketchBeingEdited)
+	// $: $sketchBeingEdited,
+	// 	log("[$sketchBeingEdited]", `${$sketchBeingEdited === "" ? "empty" : ""}`, $sketchBeingEdited)
 
 	const engageSearchForPlane = () => {
-		log("engage search!")
+		// log("engage search!")
 		$sketchTool = ""
 		$selectingFor = ['plane', 'meshFace']
 		$selectionMax = 1
@@ -69,11 +68,11 @@
 			$currentlySelected = [surface]
 		}
 		selectingForSketchPlane = true
-		log("search is engaged")
+		// log("search is engaged")
 	}
 
 	const disengageSearchForPlane = () => {
-		log("Disengage search!")
+		// log("Disengage search!")
 		$currentlySelected = []
 		$selectingFor = []
 		$selectionMax = 1000
@@ -81,14 +80,14 @@
 		selectingForSketchPlane = false
 		$sketchTool = 'select'
 		$currentlyMousedOver = []
-		log("search is disengaged")
+		// log("search is disengaged")
 	}
 
 	currentlySelected.subscribe(() => {
 		if (!selectingForSketchPlane) return
 		if (!id) return
 		if (!$currentlySelected.length) return
-		log("CS changed when selecting for Sketch Plane:", $currentlySelected)
+		// log("CS changed when selecting for Sketch Plane:", $currentlySelected)
 
 		let thingSelected = $currentlySelected[0]
 		if (thingSelected.type === 'plane') {

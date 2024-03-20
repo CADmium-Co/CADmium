@@ -7,7 +7,7 @@
 	// import Sketch from './Sketch.svelte'
 
 	// prettier-ignore
-	const log = (function () { const context = "[Face.svelte]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+	const log = (function () { const context = "[Face.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	// todo see docs below
 	// interface Face {
@@ -15,7 +15,7 @@
 	//   holes: wires[]
 	// }
 	export let face: any, id: string, pointsById: IDictionary<SketchPoint>
-	log("[props]", "face:", face, "id:", id, "pointsById:", pointsById)
+	// log("[props]", "face:", face, "id:", id, "pointsById:", pointsById)
 
 	const type: EntityType = "face"
 

@@ -36,7 +36,7 @@
 		uniqueId: string,
 		editing = false
 
-	log("[props]", "name:", name, "sketch:", sketch, "plane:", plane, "uniqueId:", uniqueId, "editing:", editing )
+	// log("[props]", "name:", name, "sketch:", sketch, "plane:", plane, "uniqueId:", uniqueId, "editing:", editing )
 
 	const { size, dpr } = useThrelte()
 
@@ -59,12 +59,12 @@
 	let faceTuples: FaceTuple[] = []
 	let pointsById: IDictionary<SketchPoint> = {}
 
-	$: pointTuples, log("[pointTuples]", pointTuples)
-	$: lineTuples, log("[lineTuples]", lineTuples)
-	$: circleTuples, log("[circleTuples]", circleTuples)
-	$: arcTuples, log("[arcTuples]", arcTuples)
-	$: faceTuples, log("[faceTuples]", faceTuples)
-	$: pointsById, log("[pointsById]", pointsById)
+	// $: pointTuples, log("[pointTuples]", pointTuples)
+	// $: lineTuples, log("[lineTuples]", lineTuples)
+	// $: circleTuples, log("[circleTuples]", circleTuples)
+	// $: arcTuples, log("[arcTuples]", arcTuples)
+	// $: faceTuples, log("[faceTuples]", faceTuples)
+	// $: pointsById, log("[pointsById]", pointsById)
 
 	$: {
 		const pointIds = Object.keys(sketch.points)
@@ -169,7 +169,7 @@
 	lineGeometry.setPositions(points)
 
 	$: hidden = $hiddenSketches.includes(uniqueId) && !editing
-	$: $hiddenSketches, log("[$hiddenSketches]", $hiddenSketches)
+	// $: $hiddenSketches, log("[$hiddenSketches]", $hiddenSketches)
 
 	$: if (editing) $sketchTool = "select"
 

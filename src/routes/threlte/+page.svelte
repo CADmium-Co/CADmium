@@ -9,7 +9,7 @@
 	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from './stores'
 
 	// prettier-ignore
-	const log = (function () { const context = "[+page.svelte]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+	const log = (function () { const context = "[+page.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	const userName = "mattferraro.dev"
 	let newFileContent: string | null = null
@@ -24,11 +24,11 @@
 		})
 	}
 
-	$: $wasmProject, log("[$wasmProject]", $wasmProject)
-	$: $project, log("[$project]", $project)
+	// $: $wasmProject, log("[$wasmProject]", $wasmProject)
+	// $: $project, log("[$project]", $project)
 
 	$: if (newFileContent) {
-		log("received new file", newFileContent)
+		log("[newFileContent] received new file", newFileContent)
 		const newWasmProject = WasmProject.from_json(newFileContent)
 		wasmProject.set(newWasmProject)
 		projectIsStale.set(true)

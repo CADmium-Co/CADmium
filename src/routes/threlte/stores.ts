@@ -5,7 +5,7 @@ import { isArcEntity, isCircleEntity, isEntity, isFaceEntity, isLineEntity, isMe
 import { _isDevelopment } from "../+layout"
 
 // prettier-ignore
-const log = (function () { const context = "[stores.ts]"; const color = "cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
+const log = (function () { const context = "[stores.ts]"; const color = "hotpink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
 
 // @ts-ignore
 export const wasmProject = writable<WasmProject>({})
@@ -38,7 +38,17 @@ export const previewGeometry = writable<PreviewGeometry[]>([])
 
 export const messageHistory = writable<MessageHistory[]>([])
 
-// if ((globalThis as any).process.env.NODE_ENV === "development") {
+project.subscribe(store => log("[project]", store))
+workbenchIndex.subscribe(store => log("[workbenchIndex]", store))
+workbench.subscribe(store => log("[workbench]", store))
+workbenchIsStale.subscribe(store => log("[workbenchIsStale]", store))
+featureIndex.subscribe(store => log("[featureIndex]", store))
+extrusionFeatures.subscribe(store => log("[extrusionFeatures]", store))
+realization.subscribe(store => log("[realization]", store))
+realizationIsStale.subscribe(store => log("[realizationIsStale]", store))
+sketchBeingEdited.subscribe(store => log("[sketchBeingEdited]", store))
+messageHistory.subscribe(store => log("[messageHistory]", store))
+
 if (_isDevelopment()) {
   currentlySelected.subscribe((store) => {
     log("[currentlySelected]", store)
@@ -46,7 +56,7 @@ if (_isDevelopment()) {
     const error = "[stores.ts] [currentlySelected] has invalid entities"
     if (!allValid) {
       console.error(error, store)
-      throw new Error(error)
+      // throw new Error(error)
     }
 
     const types = ["circle", "arc", "face", "line", "plane", "point", "point3D", "meshFace"] as EntityType[]

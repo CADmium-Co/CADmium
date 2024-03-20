@@ -12,7 +12,7 @@
 		active: boolean,
 		projectToPlane: ProjectToPlane
 
-	$: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
+	// $: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
 
 	let previousPoint: PointLikeById | null
 
@@ -23,9 +23,9 @@
 			// if there is no anchor point, set one
 			if (point.id) {
 				// nothing to do, the point exists!
-				log("nothing to do the point exists!")
+				log("[processPoint] nothing to do the point exists!")
 			} else {
-				log("oh cool, creating point!")
+				log("[processPoint] oh cool, creating point!")
 				point.id = null
 			}
 		} else {
@@ -63,7 +63,7 @@
 		let snappedTo: PointLikeById | null = null
 
 		for (const geom of $currentlyMousedOver) {
-			log("[geom of $currentlyMousedOver]", geom)
+			// log("[geom of $currentlyMousedOver]", geom)
 			if (geom.type === 'point3D') {
 				if (geom.x && geom.y && geom.z) {
 					const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
@@ -72,19 +72,19 @@
 						threeD: { x: geom.x, y: geom.y, z: geom.z },
 						id: null
 					} satisfies PointLikeById
-					log("[point:PointById]", point)
+					// log("[point:PointById]", point)
 					snappedTo = point
 				}
 			}
 			if (geom.type === 'point') {
 				const point = pointsById[geom.id]
-				log("[pointsById]", pointsById)
+				// log("[pointsById]", pointsById)
 				snappedTo = {
 					twoD: point.twoD,
 					threeD: point.threeD,
 					id: geom.id
 				} satisfies PointLikeById
-				log("[snappedTo]", snappedTo)
+				// log("[snappedTo]", snappedTo)
 				break // If there is a 2D point, prefer to use it rather than the 3D point
 			}
 		}

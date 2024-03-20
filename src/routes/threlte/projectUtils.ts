@@ -18,7 +18,7 @@ import type { Realization as WasmRealization } from "cadmium"
 import { isDeleteArcs, isDeleteCircles, isDeleteLines, isNewCircleBetweenPoints, isNewExtrusion, isNewLineOnSketch, isNewPointOnSketch2, isNewRectangleBetweenPoints, isNewSketchOnPlane, isRenameStep, isSetSketchPlane, isUpdateExtrusion } from "../../typeGuards"
 
 // prettier-ignore
-const log = (function () { const context = "[projectUtils.ts]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+const log = (function () { const context = "[projectUtils.ts]"; const color="aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 export const CIRCLE_TOLERANCE = 0.05
 
@@ -53,8 +53,8 @@ function sendWasmMessage(message: Message) {
 	// log("[sendWasmMessage] result:", result)
 
 	messageHistory.update((history) => {
-		log("[sendWasmMessage] messageHistory.update history:", history)
-		log("[sendWasmMessage] messageHistory.update update:", { message, result })
+		// log("[sendWasmMessage] [messageHistory.update] history:", history)
+		log("[sendWasmMessage] [messageHistory.update] update:", { message, result })
 		return [...history, { message, result }]
 	})
 	return result
@@ -108,7 +108,7 @@ export function newSketchOnPlane() {
 export function newExtrusion() {
 	const bench: WorkBench = get(workbench)
 	// log("[newExtrusion] workbench:", workbench)
-	log("[newExtrusion] bench:", bench)
+	// log("[newExtrusion] bench:", bench)
 
 	let sketchId = null
 	for (let step of bench.history) {
@@ -144,7 +144,7 @@ export function newExtrusion() {
 export function deleteEntities(sketchIdx: string, selection: Entity[]) {
 	const workbenchIdx = get(workbenchIndex)
 
-	log("[deleteEntities]", "sketchIdx:", sketchIdx, "selection:", selection, "workbenchIdx:", workbenchIdx, "sketchIdx:", sketchIdx, "selection:", selection)
+	// log("[deleteEntities]", "sketchIdx:", sketchIdx, "selection:", selection, "workbenchIdx:", workbenchIdx, "sketchIdx:", sketchIdx, "selection:", selection)
 	const lines = selection.filter((e) => e.type === 'line')
 	const arcs = selection.filter((e) => e.type === 'arc')
 	const circles = selection.filter((e) => e.type === 'circle')
@@ -261,7 +261,7 @@ export function addLineToSketch(sketchIdx: string, point1: number, point2: numbe
 }
 
 export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: boolean) {
-	// log("[addPointToSketch] sketchIdx, point, hidden", sketchIdx, point, hidden)
+	log("[addPointToSketch] sketchIdx, point, hidden", sketchIdx, point, hidden)
 	const message: Message = {
 		NewPointOnSketch2: {
 			workbench_id: get(workbenchIndex),
@@ -273,7 +273,7 @@ export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: 
 	}
 	checkWasmMessage(message, false)
 	const reply = sendWasmMessage(message)
-	log("[addPointToSketch sendWasmMessage]", "message:", message, "reply:", reply)
+	// log("[addPointToSketch sendWasmMessage]", "message:", message, "reply:", reply)
 
 	const exampleMessage = {
 		NewPointOnSketch2: {
@@ -319,7 +319,7 @@ projectIsStale.subscribe((value) => {
 		workbenchIsStale.set(true)
 		projectIsStale.set(false)
 		// @ts-ignore
-		log("Refreshing project", "value:", value, "wasmProject:", wp, "project:", project)
+		log("[projectIsStale] Refreshing project", "value:", value, "wasmProject:", wp, "project:", project)
 	}
 })
 
@@ -327,6 +327,7 @@ projectIsStale.subscribe((value) => {
 // Every time you edit any part of the feature history, for example
 workbenchIsStale.subscribe((value) => {
 	if (value) {
+		log("[workbenchIsStale] Workbench:", get(workbench))
 		const workbenchIdx = get(workbenchIndex)
 		const wasmProj = get(wasmProject)
 		const workbenchJson = wasmProj.get_workbench(workbenchIdx)
@@ -343,14 +344,14 @@ workbenchIsStale.subscribe((value) => {
 // Every time you edit any part of the feature history, for example
 realizationIsStale.subscribe((value) => {
 	if (value) {
-		log("Refreshing realization")
+		// log("[realizationIsStale] Refreshing realization")
 
 		const wasmProj = get(wasmProject)
 		const workbenchIdx = get(workbenchIndex)
 		const wasmReal: WasmRealization = wasmProj.get_realization(workbenchIdx, get(featureIndex) + 1)
 		wasmRealization.set(wasmReal)
 		realization.set(JSON.parse(wasmReal.to_json()))
-		log("New realization:", get(realization))
+		// log("[realizationIsStale] New realization:", get(realization))
 		// log("[wasmProj]", wasmProj)
 
 		realizationIsStale.set(false)
@@ -369,13 +370,13 @@ export function readFile(e: WithTarget<Event, HTMLInputElement>): void {
 	const file = target.files![0]
 	const reader = new FileReader()
 	reader.onload = function (e) {
-		log("file contents", e.target?.result)
+		// log("[readFile] file contents", e.target?.result)
 	}
 	reader.readAsText(file)
 }
 
 export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clockwise: boolean = false): Vector2[] {
-	log("[arcToPoints] center, start, end, clockwise", center, start, end, clockwise)
+	// log("[arcToPoints] center, start, end, clockwise", center, start, end, clockwise)
 	// see https://math.stackexchange.com/a/4132095/816177
 	const tolerance = CIRCLE_TOLERANCE // in meters
 	const radius = start.distanceTo(center)

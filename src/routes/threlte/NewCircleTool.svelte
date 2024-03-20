@@ -12,7 +12,7 @@
 	export let active: boolean
 	export let projectToPlane: ProjectToPlane
 
-	log("[props]", "pointsById:", pointsById, "sketchIndex:", sketchIndex, "active:", active)
+	// log("[props]", "pointsById:", pointsById, "sketchIndex:", sketchIndex, "active:", active)
 
 	let centerPoint: PointLikeById | null
 
@@ -58,7 +58,7 @@
 		}
 	}
 
-	$: $snapPoints, log("[$snapPoints]", $snapPoints)
+	// $: $snapPoints, log("[$snapPoints]", $snapPoints)
 
 	export function mouseMove(_event: Event, projected: { x: number; y: number }) {
 		// search through the existing points to see if we're close to one
@@ -101,7 +101,7 @@
 			}
 		}
 
-		if (snappedTo) log("[snappedTo]", snappedTo)
+		// if (snappedTo) log("[snappedTo]", snappedTo)
 
 		// only reset $snapPoints if something has changed
 		if (snappedTo) {

@@ -25,12 +25,12 @@
 	$: solids = $realization.solids ? Object.entries($realization.solids) : []
 	$: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
 
-	$: $workbench, log("[$workbench]", $workbench)
-	$: points, log("[realization.points]", points)
-	$: planes, log("[realization.planes]", planes)
-	$: planesById, log("[planesById]", planesById)
-	$: solids, log("[realization.solids]", solids)
-	$: sketches, log("[realization.sketches]", sketches)
+	// $: $workbench, log("[$workbench]", $workbench)
+	// $: points, log("[realization.points]", points)
+	// $: planes, log("[realization.planes]", planes)
+	// $: planesById, log("[planesById]", planesById)
+	// $: solids, log("[realization.solids]", solids)
+	// $: sketches, log("[realization.sketches]", sketches)
 
 	// put it on window for debugging. todo remove
 	if (!(globalThis as any).realization) (globalThis as any).realization = []

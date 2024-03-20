@@ -22,7 +22,7 @@
 		secondary: Vector3Like,
 		tertiary: Vector3Like
 
-	log("[props]","name:",name,"id:",id,"width:",width,"height:",height,"origin:",origin,"primary:",primary,"secondary:",secondary,"tertiary:",tertiary)
+	// log("[props]","name:",name,"id:",id,"width:",width,"height:",height,"origin:",origin,"primary:",primary,"secondary:",secondary,"tertiary:",tertiary)
 
 	extend({ Line2 })
 

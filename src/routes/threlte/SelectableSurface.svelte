@@ -23,7 +23,7 @@
 	const log = (function () { const context = "[SelectableSurface.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: string
-	log("[props]", "truck_face:", truck_face, "truck_edges:", truck_edges, "id:", id)
+	// log("[props]", "truck_face:", truck_face, "truck_edges:", truck_edges, "id:", id)
 
 	// svelte-ignore unused-export-let hmmm why does it not ignore?
 	export let dashedLineMaterial: LineMaterial,
@@ -131,7 +131,7 @@
 			let ring = new LineGeometry()
 			ring.setPositions(points)
 			interiors.push(ring)
-			log("[interiors]", interiors)
+			// log("[interiors]", interiors)
 
 			let projectedPoints = project(points, u, v, o)
 			const path = new Path()

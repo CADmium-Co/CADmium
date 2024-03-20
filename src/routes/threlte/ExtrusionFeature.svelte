@@ -17,7 +17,7 @@
 
 	export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
 
-	$: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
+	// $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
 	// $: data, log("[props]", "typeof id:", typeof id, "id:", id)
 	// $: data, log("[props]", "typeof data.face_ids[0]:", typeof data.face_ids[0], "data.face_ids:", data.face_ids)
 
@@ -30,13 +30,13 @@
 	let length = data.length
 
 	const closeAndRefresh = () => {
-		log("extrusion feature closing")
+		// log("[closeAndRefresh] extrusion feature closing")
 		$featureIndex = 1000
 		$currentlySelected = []
 		$selectingFor = []
 		// hide the sketch that this extrusion uses
 		if (!$hiddenSketches.includes(data.sketch_id)) {
-			log("Oh, we're hiding the sketch that this extrusion uses")
+			// log("[closeAndRefresh] Oh, we're hiding the sketch that this extrusion uses")
 			$hiddenSketches = [...$hiddenSketches, data.sketch_id]
 		}
 
@@ -54,20 +54,20 @@
 	currentlySelected.subscribe((e) => {
 		if ($featureIndex !== index) return
 
-		log("[$currentlySelected]", $currentlySelected)
-		log("[$featureIndex]", typeof $featureIndex, $featureIndex)
+		// log("[$currentlySelected]", $currentlySelected)
+		// log("[$featureIndex]", typeof $featureIndex, $featureIndex)
 
 		const faceIdsFromSelection = $currentlySelected
 			.filter((e) => e.type === 'face')
 			.map((e) => e.id)
 			.sort()
 
-		log("ids from inputs and from selection:", faceIdsFromInputs, faceIdsFromSelection)
+		// log("[closeAndRefresh] ids from inputs and from selection:", faceIdsFromInputs, faceIdsFromSelection)
 
 		if (arraysEqual(faceIdsFromInputs, faceIdsFromSelection)) {
-			log("face ids are the same, no update")
+			// log("[closeAndRefresh] face ids are the same, no update")
 		} else {
-			log("triggering update to new face Ids:", faceIdsFromSelection)
+			// log("[closeAndRefresh] triggering update to new face Ids:", faceIdsFromSelection)
 			sendUpdate()
 		}
 	})
@@ -80,7 +80,7 @@
 	$: if ($featureIndex === index) {
 		$selectingFor = ["face"]
 		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: "face", id }))
-		log("[$currentlySelected]", $currentlySelected)
+		// log("[$currentlySelected]", $currentlySelected)
 	}
 </script>
 

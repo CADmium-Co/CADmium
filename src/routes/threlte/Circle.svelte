@@ -13,7 +13,7 @@
 
 	export let id: string, center: CircleTuple["center"], radius: number
 
-	log("[props]", "id:", id, "center:", center, "radius:", radius)
+	// log("[props]", "id:", id, "center:", center, "radius:", radius)
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,

@@ -23,7 +23,7 @@
 		$featureIndex = $workbench.history.length - 1
 	}
 	const createNewSketch = () => {
-		log('Create new sketch')
+		// log('Create new sketch')
 		newSketchOnPlane()
 		$featureIndex = $workbench.history.length - 1
 	}

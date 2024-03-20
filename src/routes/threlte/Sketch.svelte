@@ -9,7 +9,7 @@
 
 	export let uniqueId: string, name: string, sketchTuple: SketchTuple, editing: boolean, plane: PlaneRealized
 
-	log("[props]", "uniqueId:", uniqueId, "name:", name, "sketchTuple", sketchTuple, "editing", editing, "plane", plane)
+	// log("[props]", "uniqueId:", uniqueId, "name:", name, "sketchTuple", sketchTuple, "editing", editing, "plane", plane)
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,

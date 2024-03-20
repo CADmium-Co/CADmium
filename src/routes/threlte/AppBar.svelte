@@ -19,7 +19,7 @@
 
 	$: project,
 		(() => {
-			log("[project]", project)
+			// log("[project]", project)
 			project &&
 				!isProject(project) &&
 				console.error("[AppBar.svelte] [project] fails isProject(project) typecheck", project)

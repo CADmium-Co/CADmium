@@ -25,7 +25,7 @@
 		truck_vertices = boundaries.vertices
 		truck_edges = boundaries.edges
 		truck_faces = boundaries.faces
-		log("truckSolid.boundaries[0]", "boundaries:", boundaries)
+		// log("truckSolid.boundaries[0]", "boundaries:", boundaries)
 	}
 
 	const geometry = new THREE.BufferGeometry()
@@ -33,7 +33,7 @@
 	const normalsArray = new Float32Array(normals.flatMap((v: Vector3Like) => [v.x, v.y, v.z]))
 	const verticesArray = new Float32Array(vertices.flatMap((v: Vector3Like) => [v.x, v.y, v.z]))
 
-	log("Vertices: ", vertices.length)
+	// log("Vertices: ", vertices.length)
 
 	geometry.setIndex(indices)
 	geometry.setAttribute('position', new THREE.Float32BufferAttribute(verticesArray, 3))

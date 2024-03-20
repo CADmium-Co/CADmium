@@ -6,14 +6,14 @@
 	// import Sketch from "./Sketch.svelte"
 
 	// prettier-ignore
-	const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="cyan"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+	const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let pointsById: IDictionary<SketchPoint>,
 		sketchIndex: string,
 		active: boolean,
 		projectToPlane: ProjectToPlane
 
-	log("[props]", pointsById, sketchIndex, active /** , projectToPlane */)
+	// log("[props]", pointsById, sketchIndex, active /** , projectToPlane */)
 
 	let anchorPoint: PointLikeById | null
 
@@ -30,7 +30,7 @@
 				// log('oh cool, creating point!')
 				else point.id = null // todo ask matt why do we set the id to null?
 
-				log("set anchor point", point)
+				// log("set anchor point", point)
 				anchorPoint = point
 			}
 		} else {

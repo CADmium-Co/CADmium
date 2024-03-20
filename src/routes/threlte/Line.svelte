@@ -12,7 +12,7 @@
 	const log = (function () { const context = "[Line.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let id: string, start: SketchPointById, end: SketchPointById
-	log("[props]", "id:", id, "start:", start, "end:", end)
+	// log("[props]", "id:", id, "start:", start, "end:", end)
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,
