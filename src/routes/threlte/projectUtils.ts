@@ -13,12 +13,12 @@ import {
 } from './stores'
 import { get } from 'svelte/store'
 import { Vector2, Vector3, type Vector2Like } from "three"
-import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, PlaneHistoryStep, PointHistoryStep, PointWithDelta, SketchHistoryStep, WithTarget, WorkBench } from "../../types"
+import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, PlaneHistoryStep, PointHistoryStep, PointWithDelta, SketchHistoryStep, UpdateExtrusion, WithTarget, WorkBench } from "../../types"
 import type { Realization as WasmRealization } from "cadmium"
 import { isDeleteArcs, isDeleteCircles, isDeleteLines, isNewCircleBetweenPoints, isNewExtrusion, isNewLineOnSketch, isNewPointOnSketch2, isNewRectangleBetweenPoints, isNewSketchOnPlane, isRenameStep, isSetSketchPlane, isUpdateExtrusion } from "../../typeGuards"
 
 // prettier-ignore
-const log = (function () { const context = "[projectUtils.ts]"; const color="aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+const log = (function () { const context = "[projectUtils.ts]"; const color = "aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
 
 export const CIRCLE_TOLERANCE = 0.05
 
@@ -74,8 +74,19 @@ export function updateExtrusion(extrusionId: string, sketchId: string, length: n
 			extrusion_id: extrusionId
 		}
 	}
-	checkWasmMessage(message, false)
+	const isValid = checkWasmMessage(message, false)
+	const hasFaceIds = notEmpty(message.UpdateExtrusion.face_ids)
+	if (isValid) {
+		// sendWasmMessage(message)
+		if(hasFaceIds) {
+			log("[updateExtrusion]", "[checkWasmMessage]", "is valid,", "sending message...", message)
+			// sendWasmMessage(message)
+		} else log("[updateExtrusion]", "[checkWasmMessage]", "is valid,", "but face_ids is empty," ,"NOT sending message:", message)
+	} else log("[updateExtrusion]", "[checkWasmMessage]", "is bogus,", "abort message send!", message)
+
 	sendWasmMessage(message)
+
+	// should this be set stale when not sending the wasm message? or only on typecheck of message? todo
 	workbenchIsStale.set(true)
 }
 
@@ -467,55 +478,56 @@ function notEmpty(array: unknown[]): boolean {
 
 function checkWasmMessage(message: Message, abort = true, logError = true): boolean {
 	const key = Object.keys(message)[0]
-	if (!message[key as keyof Message]) { console.error("[projectUtils.ts] [checkWasmMessage]", "messageType not found:", key, message); return false }
+	const command = message[key as keyof Message]
+	if (!command) { console.error("[projectUtils.ts] [checkWasmMessage]", "messageType not found:", key, message); return false }
 
 	switch (key) {
 		case "UpdateExtrusion":
-			if (!isUpdateExtrusion(message)) { logOrAbort(); return false }
+			if (!isUpdateExtrusion(command)) { logOrAbort(); return false }
 			return true
 
 		case "SetSketchPlane":
-			if (!isSetSketchPlane(message)) { logOrAbort(); return false }
+			if (!isSetSketchPlane(command)) { logOrAbort(); return false }
 			return true
 
 		case "NewSketchOnPlane":
-			if (!isNewSketchOnPlane(message)) { logOrAbort(); return false }
+			if (!isNewSketchOnPlane(command)) { logOrAbort(); return false }
 			return true
 
 		case "NewExtrusion":
-			if (!isNewExtrusion(message)) { logOrAbort(); return false }
+			if (!isNewExtrusion(command)) { logOrAbort(); return false }
 			return true
 
 		case "DeleteLines":
-			if (!isDeleteLines(message)) { logOrAbort(); return false }
+			if (!isDeleteLines(command)) { logOrAbort(); return false }
 			return true
 
 		case "DeleteArcs":
-			if (!isDeleteArcs(message)) { logOrAbort(); return false }
+			if (!isDeleteArcs(command)) { logOrAbort(); return false }
 			return true
 
 		case "DeleteCircles":
-			if (!isDeleteCircles(message)) { logOrAbort(); return false }
+			if (!isDeleteCircles(command)) { logOrAbort(); return false }
 			return true
 
 		case "NewRectangleBetweenPoints":
-			if (!isNewRectangleBetweenPoints(message)) { logOrAbort(); return false }
+			if (!isNewRectangleBetweenPoints(command)) { logOrAbort(); return false }
 			return true
 
 		case "NewCircleBetweenPoints":
-			if (!isNewCircleBetweenPoints(message)) { logOrAbort(); return false }
+			if (!isNewCircleBetweenPoints(command)) { logOrAbort(); return false }
 			return true
 
 		case "NewLineOnSketch":
-			if (!isNewLineOnSketch(message)) { logOrAbort(); return false }
+			if (!isNewLineOnSketch(command)) { logOrAbort(); return false }
 			return true
 
 		case "NewPointOnSketch2":
-			if (!isNewPointOnSketch2(message)) { logOrAbort(); return false }
+			if (!isNewPointOnSketch2(command)) { logOrAbort(); return false }
 			return true
 
 		case "RenameStep":
-			if (!isRenameStep(message)) { logOrAbort(); return false }
+			if (!isRenameStep(command)) { logOrAbort(); return false }
 			return true
 
 		default:
