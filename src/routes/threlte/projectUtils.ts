@@ -13,7 +13,7 @@ import {
 } from './stores'
 import { get } from 'svelte/store'
 import { Vector2, Vector3, type Vector2Like } from "three"
-import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, MessageHistory, PlaneHistoryStep, PointHistoryStep, PointWithDelta, SketchHistoryStep, WithTarget, WorkBench } from "../../types"
+import type { Entity, ExtrusionHistoryStep, HistoryStep, Message, MessageHistory, PlaneHistoryStep, PointHistoryStep, Point2D, SketchHistoryStep, WithTarget, WorkBench } from "../../types"
 import type { Realization as WasmRealization } from "cadmium"
 import { isDeleteArcs, isDeleteCircles, isDeleteLines, isNewCircleBetweenPoints, isNewExtrusion, isNewLineOnSketch, isNewPointOnSketch2, isNewRectangleBetweenPoints, isNewSketchOnPlane, isRenameStep, isSetSketchPlane, isUpdateExtrusion } from "../../typeGuards"
 import { _isDevelopment } from "../+layout"
@@ -419,7 +419,7 @@ export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clock
 	return lineVertices
 }
 
-export function circleToPoints(centerPoint: PointWithDelta, radius: number): Vector2[] {
+export function circleToPoints(centerPoint: Point2D, radius: number): Vector2[] {
 	// this is 2D function
 
 	// see https://math.stackexchange.com/a/4132095/816177

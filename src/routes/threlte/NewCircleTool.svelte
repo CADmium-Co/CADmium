@@ -2,7 +2,7 @@
 	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
 	import { addCircleBetweenPoints, addPointToSketch } from './projectUtils'
 	import { Vector3, type Vector2Like, type Vector3Like } from "three"
-	import type { PointLikeById, PointWithDelta, PointsLikeById, ProjectToPlane } from "../../types"
+	import type { PointLikeById, Point2D, PointsLikeById, ProjectToPlane } from "../../types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -115,7 +115,7 @@
 
 		if (centerPoint) {
 			function calcDeltas(
-				a: Vector2Like | PointWithDelta | { x: number; y: number },
+				a: Vector2Like | Point2D | { x: number; y: number },
 				b: Vector2Like | undefined
 			) {
 				const dx = a.x - b?.x!

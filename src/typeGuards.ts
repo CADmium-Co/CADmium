@@ -1,4 +1,4 @@
-import type { IDictionary, WithTarget, SetCameraFocus, EntityType, Entity, CircleEntity, ArcEntity, FaceEntity, LineEntity, PlaneEntity, PointEntity, Point3DEntity, MeshFaceEntity, Project, WorkBench, PreviewGeometry, Plane, Point, PointById, SketchPoint, SketchPointById, Vector2Vector3PointById, PointLikeById, PointsById, PointsLikeById, SnapEntity, ProjectToPlane, Vector3Hideable, PointWithDelta, LineTuple, CircleTuple, ArcTuple, FaceTuple, HistoryStep, HistoryStepType, PointHistoryStep, PlaneHistoryStep, ExtrusionHistoryStep, SketchHistoryStep, PointData, PlaneData, ExtrusionData, SketchRealized, Arc, SketchData, SegmentId, Circle, TruckNurbsPoint, TruckNurbsSurfaceControlPoint, TruckNurbsSurfaceControlPoints, TruckNurbsSurface, TruckPlane, TruckSurface, TruckFaceBoundary, TruckFace, TruckNurbsCurve, TruckEdgeEndpoints, TruckEdge, TruckLineVectors, TruckLine, TruckCurve, SketchTuple, Realization, PlaneRealized, TruckFaceEdgeIndex, TruckBoundary, TruckSolid, SolidRealized, ExtrusionSketchData, UpdateExtrusion, SetSketchPlane, NewSketchOnPlane, NewExtrusion, DeleteLines, DeleteArcs, DeleteCircles, NewRectangleBetweenPoints, NewCircleBetweenPoints, NewLineOnSketch, NewPointOnSketch2, RenameStep, Message, MessageHistory } from "./types"
+import type { IDictionary, WithTarget, SetCameraFocus, EntityType, Entity, CircleEntity, ArcEntity, FaceEntity, LineEntity, PlaneEntity, PointEntity, Point3DEntity, MeshFaceEntity, Project, WorkBench, PreviewGeometry, Plane, Point, PointById, SketchPoint, SketchPointById, Vector2Vector3PointById, PointLikeById, PointsById, PointsLikeById, SnapEntity, ProjectToPlane, Point3D, Point2D, LineTuple, CircleTuple, ArcTuple, FaceTuple, HistoryStep, HistoryStepType, PointHistoryStep, PlaneHistoryStep, ExtrusionHistoryStep, SketchHistoryStep, PointData, PlaneData, ExtrusionData, SketchRealized, Arc, SketchData, SegmentId, Circle, TruckNurbsPoint, TruckNurbsSurfaceControlPoint, TruckNurbsSurfaceControlPoints, TruckNurbsSurface, TruckPlane, TruckSurface, TruckFaceBoundary, TruckFace, TruckNurbsCurve, TruckEdgeEndpoints, TruckEdge, TruckLineVectors, TruckLine, TruckCurve, SketchTuple, Realization, PlaneRealized, TruckFaceEdgeIndex, TruckBoundary, TruckSolid, SolidRealized, ExtrusionSketchData, UpdateExtrusion, SetSketchPlane, NewSketchOnPlane, NewExtrusion, DeleteLines, DeleteArcs, DeleteCircles, NewRectangleBetweenPoints, NewCircleBetweenPoints, NewLineOnSketch, NewPointOnSketch2, RenameStep, Message, MessageHistory } from "./types"
 import { Vector2 } from "three"
 import { Vector3 } from "three"
 
@@ -212,7 +212,7 @@ export function isPlane(obj: unknown): obj is Plane {
     (typedObj !== null &&
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
-    isVector3Hideable(typedObj["origin"]) as boolean &&
+    isPoint3D(typedObj["origin"]) as boolean &&
     (typedObj["primary"] !== null &&
       typeof typedObj["primary"] === "object" ||
       typeof typedObj["primary"] === "function") &&
@@ -251,8 +251,8 @@ export function isPointById(obj: unknown): obj is PointById {
     (typedObj !== null &&
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
-    isPointWithDelta(typedObj["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["threeD"]) as boolean &&
+    isPoint2D(typedObj["twoD"]) as boolean &&
+    isPoint3D(typedObj["threeD"]) as boolean &&
     typeof typedObj["pointId"] === "string"
   )
 }
@@ -263,8 +263,8 @@ export function isSketchPoint(obj: unknown): obj is SketchPoint {
     (typedObj !== null &&
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
-    isPointWithDelta(typedObj["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["threeD"]) as boolean
+    isPoint2D(typedObj["twoD"]) as boolean &&
+    isPoint3D(typedObj["threeD"]) as boolean
   )
 }
 
@@ -274,8 +274,8 @@ export function isSketchPointById(obj: unknown): obj is SketchPointById {
     (typedObj !== null &&
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
-    isPointWithDelta(typedObj["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["threeD"]) as boolean &&
+    isPoint2D(typedObj["twoD"]) as boolean &&
+    isPoint3D(typedObj["threeD"]) as boolean &&
     typeof typedObj["id"] === "string"
   )
 }
@@ -300,7 +300,7 @@ export function isPointLikeById(obj: unknown): obj is PointLikeById {
       typeof typedObj === "object" ||
       typeof typedObj === "function") &&
     (typeof typedObj["twoD"] === "undefined" ||
-      isPointWithDelta(typedObj["twoD"]) as boolean ||
+      isPoint2D(typedObj["twoD"]) as boolean ||
       typedObj["twoD"] instanceof Vector2 ||
       (typedObj["twoD"] !== null &&
         typeof typedObj["twoD"] === "object" ||
@@ -308,7 +308,7 @@ export function isPointLikeById(obj: unknown): obj is PointLikeById {
       typeof typedObj["twoD"]["x"] === "number" &&
       typeof typedObj["twoD"]["y"] === "number") &&
     (typeof typedObj["threeD"] === "undefined" ||
-      isVector3Hideable(typedObj["threeD"]) as boolean ||
+      isPoint3D(typedObj["threeD"]) as boolean ||
       (typedObj["threeD"] !== null &&
         typeof typedObj["threeD"] === "object" ||
         typeof typedObj["threeD"] === "function") &&
@@ -374,8 +374,8 @@ export function isProjectToPlane(obj: unknown): obj is ProjectToPlane {
   )
 }
 
-export function isVector3Hideable(obj: unknown): obj is Vector3Hideable {
-  const typedObj = obj as Vector3Hideable
+export function isPoint3D(obj: unknown): obj is Point3D {
+  const typedObj = obj as Point3D
   return (
     (typedObj !== null &&
       typeof typedObj === "object" ||
@@ -387,8 +387,8 @@ export function isVector3Hideable(obj: unknown): obj is Vector3Hideable {
   )
 }
 
-export function isPointWithDelta(obj: unknown): obj is PointWithDelta {
-  const typedObj = obj as PointWithDelta
+export function isPoint2D(obj: unknown): obj is Point2D {
+  const typedObj = obj as Point2D
   return (
     (typedObj !== null &&
       typeof typedObj === "object" ||
@@ -415,13 +415,13 @@ export function isLineTuple(obj: unknown): obj is LineTuple {
     (typedObj["start"] !== null &&
       typeof typedObj["start"] === "object" ||
       typeof typedObj["start"] === "function") &&
-    isPointWithDelta(typedObj["start"]["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["start"]["threeD"]) as boolean &&
+    isPoint2D(typedObj["start"]["twoD"]) as boolean &&
+    isPoint3D(typedObj["start"]["threeD"]) as boolean &&
     (typedObj["end"] !== null &&
       typeof typedObj["end"] === "object" ||
       typeof typedObj["end"] === "function") &&
-    isPointWithDelta(typedObj["end"]["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["end"]["threeD"]) as boolean
+    isPoint2D(typedObj["end"]["twoD"]) as boolean &&
+    isPoint3D(typedObj["end"]["threeD"]) as boolean
   )
 }
 
@@ -435,8 +435,8 @@ export function isCircleTuple(obj: unknown): obj is CircleTuple {
     (typedObj["center"] !== null &&
       typeof typedObj["center"] === "object" ||
       typeof typedObj["center"] === "function") &&
-    isPointWithDelta(typedObj["center"]["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["center"]["threeD"]) as boolean &&
+    isPoint2D(typedObj["center"]["twoD"]) as boolean &&
+    isPoint3D(typedObj["center"]["threeD"]) as boolean &&
     typeof typedObj["radius"] === "number"
   )
 }
@@ -451,18 +451,18 @@ export function isArcTuple(obj: unknown): obj is ArcTuple {
     (typedObj["center"] !== null &&
       typeof typedObj["center"] === "object" ||
       typeof typedObj["center"] === "function") &&
-    isPointWithDelta(typedObj["center"]["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["center"]["threeD"]) as boolean &&
+    isPoint2D(typedObj["center"]["twoD"]) as boolean &&
+    isPoint3D(typedObj["center"]["threeD"]) as boolean &&
     (typedObj["start"] !== null &&
       typeof typedObj["start"] === "object" ||
       typeof typedObj["start"] === "function") &&
-    isPointWithDelta(typedObj["start"]["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["start"]["threeD"]) as boolean &&
+    isPoint2D(typedObj["start"]["twoD"]) as boolean &&
+    isPoint3D(typedObj["start"]["threeD"]) as boolean &&
     (typedObj["end"] !== null &&
       typeof typedObj["end"] === "object" ||
       typeof typedObj["end"] === "function") &&
-    isPointWithDelta(typedObj["end"]["twoD"]) as boolean &&
-    isVector3Hideable(typedObj["end"]["threeD"]) as boolean
+    isPoint2D(typedObj["end"]["twoD"]) as boolean &&
+    isPoint3D(typedObj["end"]["threeD"]) as boolean
   )
 }
 
@@ -490,7 +490,7 @@ export function isHistoryStep(obj: unknown): obj is HistoryStep {
       typeof typedObj["data"] === "object" ||
       typeof typedObj["data"] === "function") &&
       isHistoryStepType(typedObj["data"]["type"]) as boolean &&
-      isVector3Hideable(typedObj["data"]["point"]) as boolean ||
+      isPoint3D(typedObj["data"]["point"]) as boolean ||
       (typedObj["data"] !== null &&
         typeof typedObj["data"] === "object" ||
         typeof typedObj["data"] === "function") &&
@@ -531,7 +531,7 @@ export function isHistoryStep(obj: unknown): obj is HistoryStep {
         typeof typedObj["data"]["sketch"]["points"] === "object" ||
         typeof typedObj["data"]["sketch"]["points"] === "function") &&
       Object.entries<any>(typedObj["data"]["sketch"]["points"])
-        .every(([key, value]) => (isPointWithDelta(value) as boolean &&
+        .every(([key, value]) => (isPoint2D(value) as boolean &&
           typeof key === "string")) &&
       typeof typedObj["data"]["sketch"]["highest_point_id"] === "number" &&
       (typedObj["data"]["sketch"]["line_segments"] !== null &&
@@ -607,7 +607,7 @@ export function isPointData(obj: unknown): obj is PointData {
       typeof typedObj["data"] === "object" ||
       typeof typedObj["data"] === "function") &&
     isHistoryStepType(typedObj["data"]["type"]) as boolean &&
-    isVector3Hideable(typedObj["data"]["point"]) as boolean
+    isPoint3D(typedObj["data"]["point"]) as boolean
   )
 }
 
@@ -664,13 +664,13 @@ export function isSketchRealized(obj: unknown): obj is SketchRealized {
       typeof typedObj["points"] === "object" ||
       typeof typedObj["points"] === "function") &&
     Object.entries<any>(typedObj["points"])
-      .every(([key, value]) => (isVector3Hideable(value) as boolean &&
+      .every(([key, value]) => (isPoint3D(value) as boolean &&
         typeof key === "string")) &&
     (typedObj["points_2d"] !== null &&
       typeof typedObj["points_2d"] === "object" ||
       typeof typedObj["points_2d"] === "function") &&
     Object.entries<any>(typedObj["points_2d"])
-      .every(([key, value]) => (isPointWithDelta(value) as boolean &&
+      .every(([key, value]) => (isPoint2D(value) as boolean &&
         typeof key === "string")) &&
     typeof typedObj["highest_point_id"] === "number" &&
     (typedObj["line_segments"] !== null &&
@@ -736,7 +736,7 @@ export function isSketchData(obj: unknown): obj is SketchData {
       typeof typedObj["data"]["sketch"]["points"] === "object" ||
       typeof typedObj["data"]["sketch"]["points"] === "function") &&
     Object.entries<any>(typedObj["data"]["sketch"]["points"])
-      .every(([key, value]) => (isPointWithDelta(value) as boolean &&
+      .every(([key, value]) => (isPoint2D(value) as boolean &&
         typeof key === "string")) &&
     typeof typedObj["data"]["sketch"]["highest_point_id"] === "number" &&
     (typedObj["data"]["sketch"]["line_segments"] !== null &&
@@ -1001,7 +1001,7 @@ export function isRealization(obj: unknown): obj is Realization {
       typeof typedObj["points"] === "object" ||
       typeof typedObj["points"] === "function") &&
     Object.entries<any>(typedObj["points"])
-      .every(([key, value]) => (isVector3Hideable(value) as boolean &&
+      .every(([key, value]) => (isPoint3D(value) as boolean &&
         typeof key === "string")) &&
     (typedObj["sketches"] !== null &&
       typeof typedObj["sketches"] === "object" ||

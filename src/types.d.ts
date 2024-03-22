@@ -83,7 +83,7 @@ interface PreviewGeometry {
 }
 
 interface Plane {
-  origin: Vector3Hideable
+  origin: Point3D
   primary: Vector3Like
   secondary: Vector3Like
   tertiary: Vector3Like
@@ -95,19 +95,19 @@ interface Point {
 }
 
 interface PointById {
-  twoD: PointWithDelta
-  threeD: Vector3Hideable
+  twoD: Point2D
+  threeD: Point3D
   pointId: string // todo is number string - maybe change to number?
 }
 
 interface SketchPoint {
-  twoD: PointWithDelta
-  threeD: Vector3Hideable
+  twoD: Point2D
+  threeD: Point3D
 }
 
 interface SketchPointById {
-  twoD: PointWithDelta
-  threeD: Vector3Hideable
+  twoD: Point2D
+  threeD: Point3D
   id: string // todo is number string - maybe change to number? no. keep all ids as string - some entity ids are not numeric
 }
 
@@ -119,8 +119,8 @@ interface Vector2Vector3PointById {
 
 interface PointLikeById {
   [x: string]: any // hack todo fix
-  twoD?: Vector2Like | Vector2 | PointWithDelta
-  threeD?: Vector3Like | Vector3 | Vector3Hideable
+  twoD?: Vector2Like | Vector2 | Point2D
+  threeD?: Vector3Like | Vector3 | Point3D
   // pointId?: string | null // todo is number string - maybe change to number?
   id?: number | string | null // todo make all ids = id i.e. remove pointId etc
 }
@@ -138,14 +138,14 @@ interface SnapEntity {
 
 type ProjectToPlane = (point3D: Vector3) => Vector2
 
-interface Vector3Hideable {
+interface Point3D {
   x: number
   y: number
   z: number
   hidden: boolean
 }
 
-interface PointWithDelta {
+interface Point2D {
   x: number
   y: number
   m: number
@@ -160,20 +160,20 @@ interface PointWithDelta {
 interface LineTuple {
   id: string // string number todo convert to numbers
   start: {
-    twoD: PointWithDelta
-    threeD: Vector3Hideable
+    twoD: Point2D
+    threeD: Point3D
   },
   end: {
-    twoD: PointWithDelta
-    threeD: Vector3Hideable
+    twoD: Point2D
+    threeD: Point3D
   }
 }
 
 interface CircleTuple {
   id: string // string number todo convert to numbers
   center: {
-    twoD: PointWithDelta
-    threeD: Vector3Hideable
+    twoD: Point2D
+    threeD: Point3D
   }
   radius: number
 }
@@ -181,16 +181,16 @@ interface CircleTuple {
 interface ArcTuple {
   id: string // string number todo convert to numbers
   center: {
-    twoD: PointWithDelta
-    threeD: Vector3Hideable
+    twoD: Point2D
+    threeD: Point3D
   }
   start: {
-    twoD: PointWithDelta
-    threeD: Vector3Hideable
+    twoD: Point2D
+    threeD: Point3D
   }
   end: {
-    twoD: PointWithDelta
-    threeD: Vector3Hideable
+    twoD: Point2D
+    threeD: Point3D
   }
 }
 
@@ -230,7 +230,7 @@ type SketchHistoryStep = HistoryStep & SketchData
 interface PointData {
   data: {
     type: HistoryStepType = "Point"
-    point: Vector3Hideable
+    point: Point3D
   }
 }
 
@@ -260,8 +260,8 @@ interface ExtrusionData {
 interface SketchRealized {
   plane_id: string
   plane_name: string
-  points: IDictionary<Vector3Hideable>
-  points_2d: IDictionary<PointWithDelta>
+  points: IDictionary<Point3D>
+  points_2d: IDictionary<Point2D>
   highest_point_id: number
   line_segments: IDictionary<SegmentId>
   highest_line_segment_id: number
@@ -290,7 +290,7 @@ interface SketchData {
     width: number
     height: number
     sketch: {
-      points: IDictionary<PointWithDelta>
+      points: IDictionary<Point2D>
       highest_point_id: number
       line_segments: IDictionary<SegmentId>
       highest_line_segment_id: number
@@ -379,7 +379,7 @@ type TruckCurve = TruckNurbsCurve | TruckLine
 type SketchTuple = [SketchRealized, SketchRealized, string]
 interface Realization {
   planes: IDictionary<PlaneRealized>
-  points: IDictionary<Vector3Hideable>
+  points: IDictionary<Point3D>
   sketches: IDictionary<SketchTuple>
   solids: IDictionary<SolidRealized>
 }
@@ -456,9 +456,9 @@ interface UpdateExtrusion {
   sketch_id: string
   face_ids: number[]
   length: number
-  offset: 0.0
-  extrusion_name: "Extra"
-  direction: "Normal"
+  offset: number
+  extrusion_name: string
+  direction: string
   extrusion_id: string
 }
 
