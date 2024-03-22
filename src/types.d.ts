@@ -1,4 +1,4 @@
-import type Point3D from "./routes/threlte/Point3D.svelte"
+// import type Point3D from "./routes/threlte/Point3D.svelte"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 interface IDictionary<TValue> {
@@ -97,18 +97,12 @@ interface Point {
 interface PointById {
   twoD: Point2D
   threeD: Point3D
-  pointId: string // todo is number string - maybe change to number?
+  id: string
 }
 
 interface SketchPoint {
   twoD: Point2D
   threeD: Point3D
-}
-
-interface SketchPointById {
-  twoD: Point2D
-  threeD: Point3D
-  id: string // todo is number string - maybe change to number? no. keep all ids as string - some entity ids are not numeric
 }
 
 interface Vector2Vector3PointById {
@@ -121,15 +115,14 @@ interface PointLikeById {
   [x: string]: any // hack todo fix
   twoD?: Vector2Like | Vector2 | Point2D
   threeD?: Vector3Like | Vector3 | Point3D
-  // pointId?: string | null // todo is number string - maybe change to number?
-  id?: number | string | null // todo make all ids = id i.e. remove pointId etc
+  id?: string | null
 }
 
 type PointsById = IDictionary<PointById>
 type PointsLikeById = IDictionary<PointLikeById>
 
 interface SnapEntity {
-  id:  string
+  id: string
   type: EntityType
   x?: number
   y?: number

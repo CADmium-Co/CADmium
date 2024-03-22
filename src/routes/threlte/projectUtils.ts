@@ -419,7 +419,7 @@ export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clock
 	return lineVertices
 }
 
-export function circleToPoints(centerPoint: Point2D, radius: number): Vector2[] {
+export function circleToPoints(centerPoint: Vector2Like, radius: number): Vector2[] {
 	// this is 2D function
 
 	// see https://math.stackexchange.com/a/4132095/816177

@@ -22,30 +22,30 @@
 	function processPoint(point: PointLikeById) {
 		if (!centerPoint) {
 			// if there is no center point, set one
-			if (point.pointId) {
+			if (point.id) {
 				// nothing to do, the point exists!
 				// log('nothing to do the point exists!')
 			} else {
 				// again, don't actually DO anything yet to the sketch
-				point.pointId = null
+				point.id = null
 			}
 			centerPoint = point
 		} else {
 			// there WAS an center point, so we should create a circle!
 
 			// if the center point doesn't exist, then we should create a point
-			if (centerPoint.pointId === null)
-				centerPoint.pointId = addPointToSketch(sketchIndex, centerPoint.twoD!, false)
+			if (centerPoint.id === null)
+				centerPoint.id = addPointToSketch(sketchIndex, centerPoint.twoD!, false)
 
-			if (point.pointId && centerPoint.pointId) {
+			if (point.id && centerPoint.id) {
 				// if the point exists, then we should create a circle between the two existing points
-				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
+				addCircleBetweenPoints(sketchIndex, centerPoint.id, point.id)
 			} else {
 				// if the point doesn't exist, then we should create a point and a circle
-				point.pointId = addPointToSketch(sketchIndex, point.twoD!, true)
+				point.id = addPointToSketch(sketchIndex, point.twoD!, true)
 			}
-			if (point.pointId && centerPoint.pointId)
-				addCircleBetweenPoints(sketchIndex, centerPoint.pointId, point.pointId)
+			if (point.id && centerPoint.id)
+				addCircleBetweenPoints(sketchIndex, centerPoint.id, point.id)
 			centerPoint = null
 		}
 	}
@@ -53,7 +53,7 @@
 	export function click(_event: Event, projected: { twoD: Vector2Like; threeD: Vector3Like }) {
 		if ($snapPoints.length > 0) processPoint($snapPoints[0])
 		else {
-			let pt: PointLikeById = { twoD: projected.twoD, threeD: projected.threeD, pointId: null }
+			let pt: PointLikeById = { twoD: projected.twoD, threeD: projected.threeD, id: null }
 			processPoint(pt)
 		}
 	}
@@ -76,7 +76,7 @@
 				const point = {
 					twoD: { x: twoD.x, y: twoD.y },
 					threeD: { x: geom.x, y: geom.y, z: geom.z },
-					pointId: null
+					id: null
 				}
 				snappedTo = point
 			}
@@ -89,14 +89,14 @@
 				// 	id: "1"
 				// }
 				function querySnapPoint(id: string | null) {
-					const points = $snapPoints.filter((point) => id && point.pointId === id)
+					const points = $snapPoints.filter((point) => id && point.id === id)
 					return points.length > 0 ? points[0] : false
 				}
 				// see if we can retrieve it? unlikely
-				// log("[querySnapPoint found point:]", querySnapPoint(point?.pointId!))
+				// log("[querySnapPoint found point:]", querySnapPoint(point?.id!))
 				// have not seen a successful query yet! sort it out with an if:
 				if (point.twoD && point.threeD && geom.id)
-					snappedTo = { twoD: point.twoD, threeD: point.threeD, pointId: geom.id }
+					snappedTo = { twoD: point.twoD, threeD: point.threeD, id: geom.id }
 				break // If there is a 2D point, prefer to use it rather than the 3D point
 			}
 		}

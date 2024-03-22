@@ -1,4 +1,4 @@
-import type { IDictionary, WithTarget, SetCameraFocus, EntityType, Entity, CircleEntity, ArcEntity, FaceEntity, LineEntity, PlaneEntity, PointEntity, Point3DEntity, MeshFaceEntity, Project, WorkBench, PreviewGeometry, Plane, Point, PointById, SketchPoint, SketchPointById, Vector2Vector3PointById, PointLikeById, PointsById, PointsLikeById, SnapEntity, ProjectToPlane, Point3D, Point2D, LineTuple, CircleTuple, ArcTuple, FaceTuple, HistoryStep, HistoryStepType, PointHistoryStep, PlaneHistoryStep, ExtrusionHistoryStep, SketchHistoryStep, PointData, PlaneData, ExtrusionData, SketchRealized, Arc, SketchData, SegmentId, Circle, TruckNurbsPoint, TruckNurbsSurfaceControlPoint, TruckNurbsSurfaceControlPoints, TruckNurbsSurface, TruckPlane, TruckSurface, TruckFaceBoundary, TruckFace, TruckNurbsCurve, TruckEdgeEndpoints, TruckEdge, TruckLineVectors, TruckLine, TruckCurve, SketchTuple, Realization, PlaneRealized, TruckFaceEdgeIndex, TruckBoundary, TruckSolid, SolidRealized, ExtrusionSketchData, UpdateExtrusion, SetSketchPlane, NewSketchOnPlane, NewExtrusion, DeleteLines, DeleteArcs, DeleteCircles, NewRectangleBetweenPoints, NewCircleBetweenPoints, NewLineOnSketch, NewPointOnSketch2, RenameStep, Message, MessageHistory } from "./types"
+import type { IDictionary, WithTarget, SetCameraFocus, EntityType, Entity, CircleEntity, ArcEntity, FaceEntity, LineEntity, PlaneEntity, PointEntity, Point3DEntity, MeshFaceEntity, Project, WorkBench, PreviewGeometry, Plane, Point, PointById, SketchPoint, PointById, Vector2Vector3PointById, PointLikeById, PointsById, PointsLikeById, SnapEntity, ProjectToPlane, Point3D, Point2D, LineTuple, CircleTuple, ArcTuple, FaceTuple, HistoryStep, HistoryStepType, PointHistoryStep, PlaneHistoryStep, ExtrusionHistoryStep, SketchHistoryStep, PointData, PlaneData, ExtrusionData, SketchRealized, Arc, SketchData, SegmentId, Circle, TruckNurbsPoint, TruckNurbsSurfaceControlPoint, TruckNurbsSurfaceControlPoints, TruckNurbsSurface, TruckPlane, TruckSurface, TruckFaceBoundary, TruckFace, TruckNurbsCurve, TruckEdgeEndpoints, TruckEdge, TruckLineVectors, TruckLine, TruckCurve, SketchTuple, Realization, PlaneRealized, TruckFaceEdgeIndex, TruckBoundary, TruckSolid, SolidRealized, ExtrusionSketchData, UpdateExtrusion, SetSketchPlane, NewSketchOnPlane, NewExtrusion, DeleteLines, DeleteArcs, DeleteCircles, NewRectangleBetweenPoints, NewCircleBetweenPoints, NewLineOnSketch, NewPointOnSketch2, RenameStep, Message, MessageHistory } from "./types"
 import { Vector2 } from "three"
 import { Vector3 } from "three"
 
@@ -48,7 +48,6 @@ export function isEntityType(obj: unknown): obj is EntityType {
 
 export function isEntity(obj: unknown): obj is Entity {
   const typedObj = obj as Entity
-  // console.log(typedObj.length)
   return (
     (typedObj !== null &&
       typeof typedObj === "object" ||
@@ -253,7 +252,7 @@ export function isPointById(obj: unknown): obj is PointById {
       typeof typedObj === "function") &&
     isPoint2D(typedObj["twoD"]) as boolean &&
     isPoint3D(typedObj["threeD"]) as boolean &&
-    typeof typedObj["pointId"] === "string"
+    typeof typedObj["id"] === "string"
   )
 }
 
@@ -265,18 +264,6 @@ export function isSketchPoint(obj: unknown): obj is SketchPoint {
       typeof typedObj === "function") &&
     isPoint2D(typedObj["twoD"]) as boolean &&
     isPoint3D(typedObj["threeD"]) as boolean
-  )
-}
-
-export function isSketchPointById(obj: unknown): obj is SketchPointById {
-  const typedObj = obj as SketchPointById
-  return (
-    (typedObj !== null &&
-      typeof typedObj === "object" ||
-      typeof typedObj === "function") &&
-    isPoint2D(typedObj["twoD"]) as boolean &&
-    isPoint3D(typedObj["threeD"]) as boolean &&
-    typeof typedObj["id"] === "string"
   )
 }
 
@@ -318,8 +305,8 @@ export function isPointLikeById(obj: unknown): obj is PointLikeById {
       typedObj["threeD"] instanceof Vector3) &&
     (typeof typedObj["id"] === "undefined" ||
       typedObj["id"] === null ||
-      typeof typedObj["id"] === "string" ||
-      typeof typedObj["id"] === "number") &&
+      // typeof typedObj["id"] === "number" ||
+      typeof typedObj["id"] === "string") &&
     Object.entries<any>(typedObj)
       .filter(([key]) => !["twoD", "threeD", "id"].includes(key))
       .every(([key, _value]) => (typeof key === "string"))
@@ -1156,9 +1143,9 @@ export function isUpdateExtrusion(obj: unknown): obj is UpdateExtrusion {
       typeof e === "number"
     ) &&
     typeof typedObj["length"] === "number" &&
-    typedObj["offset"] === 0 &&
-    typedObj["extrusion_name"] === "Extra" &&
-    typedObj["direction"] === "Normal" &&
+    typeof typedObj["offset"] === "number" &&
+    typeof typedObj["extrusion_name"] === "string" &&
+    typeof typedObj["direction"] === "string" &&
     typeof typedObj["extrusion_id"] === "string"
   )
 }

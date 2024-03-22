@@ -5,13 +5,13 @@
 	import { T } from '@threlte/core'
 	import { flatten, promoteTo3 } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
-	import type { EntityType, SketchPointById } from "../../types"
+	import type { EntityType, PointById } from "../../types"
 	import { isEntity } from "../../typeGuards"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Line.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let id: string, start: SketchPointById, end: SketchPointById
+	export let id: string, start: PointById, end: PointById
 	// log("[props]", "id:", id, "start:", start, "end:", end)
 
 	export let dashedLineMaterial: LineMaterial,

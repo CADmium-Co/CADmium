@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
+	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3, type Vector3Like } from 'three'
 	import { T, useThrelte } from '@threlte/core'
 	import { Text, Suspense } from '@threlte/extras'
 	import { hiddenSketches, previewGeometry, sketchTool } from './stores'
@@ -23,7 +23,7 @@
 		PlaneData,
 		PreviewGeometry,
 		SketchPoint,
-		SketchPointById,
+		PointById,
 		SketchRealized
 	} from "../../types"
 
@@ -52,7 +52,7 @@
 		newRectangleTool: NewRectangleTool,
 		selectTool: SelectTool
 
-	let pointTuples: SketchPointById[] = []
+	let pointTuples: PointById[] = []
 	let lineTuples: LineTuple[] = []
 	let circleTuples: CircleTuple[] = []
 	let arcTuples: ArcTuple[] = []

@@ -72,7 +72,7 @@
 						threeD: { x: geom.x, y: geom.y, z: geom.z },
 						id: null
 					} satisfies PointLikeById
-					// log("[point:PointById]", point)
+					// log("[point:PointLikeById]", point)
 					snappedTo = point
 				}
 			}
