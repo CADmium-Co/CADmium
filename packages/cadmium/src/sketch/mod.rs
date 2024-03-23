@@ -1,9 +1,11 @@
 #![allow(unused)]
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+use serde_with::{serde_as, DisplayFromStr};
 use geo::line_intersection::{line_intersection, LineIntersection};
 use geo::Line;
 use geo::{point, Contains};
 use geo::{within, Intersects};
-use serde_with::{serde_as, DisplayFromStr};
 use truck_polymesh::stl::PolygonMeshSTLFaceIterator;
 
 use core::panic;
@@ -11,7 +13,6 @@ use geo::LineString;
 use geo::Polygon;
 use indexmap::IndexMap;
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::f64::consts::{PI, TAU};
@@ -26,7 +27,8 @@ mod svg;
 use crate::sketch::constraints::Constraint;
 
 #[serde_as]
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Sketch {
     #[serde_as(as = "HashMap<DisplayFromStr, _>")]
     pub points: HashMap<u64, Point2>,
@@ -1345,7 +1347,8 @@ impl<T> IncrementingMap<T> {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Point2 {
     pub x: f64,
     pub y: f64,
@@ -1429,7 +1432,8 @@ impl Point2 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Vector2 {
     pub x: f64,
     pub y: f64,
@@ -1441,7 +1445,8 @@ impl Vector2 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Circle2 {
     pub center: u64,
     pub radius: f64,
@@ -1458,7 +1463,8 @@ impl Circle2 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Arc2 {
     pub center: u64,
     pub start: u64,
@@ -1488,7 +1494,8 @@ impl Arc2 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Line2 {
     pub start: u64,
     pub end: u64,
@@ -1511,8 +1518,9 @@ impl Line2 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(tag = "type")]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Segment {
     Line(Line2),
     Arc(Arc2),
@@ -1554,7 +1562,8 @@ impl Segment {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Ring {
     Circle(Circle2),
     Segments(Vec<Segment>),
@@ -1642,7 +1651,8 @@ impl Ring {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Face {
     pub exterior: Ring,
     pub holes: Vec<Ring>,

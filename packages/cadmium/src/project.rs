@@ -1,3 +1,7 @@
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+use wasm_bindgen::prelude::*;
+
 use crate::extrusion::fuse;
 use crate::sketch::constraints::Constraint;
 use crate::{
@@ -5,7 +9,6 @@ use crate::{
     sketch::{Face, Point2, Sketch},
 };
 use itertools::Itertools;
-use serde::{Deserialize, Serialize};
 use std::{collections::HashMap, hash::Hash};
 use truck_polymesh::InnerSpace;
 
@@ -16,7 +19,8 @@ use truck_modeling::Vector3 as TruckVector3;
 use truck_shapeops::and as solid_and;
 use truck_shapeops::or as solid_or;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Project {
     pub name: String,
     pub assemblies: Vec<Assembly>,
@@ -402,12 +406,14 @@ impl Project {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Assembly {
     name: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
     name: String,
     history: Vec<Step>,
@@ -1022,7 +1028,8 @@ impl Workbench {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Realization {
     // a Realization is what you get if you apply the steps in a Workbench's
     // history and build a bunch of geometry
@@ -1065,7 +1072,8 @@ impl Realization {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
     name: String,
     unique_id: String,
@@ -1144,8 +1152,9 @@ impl Step {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
     Point {
         point: Point3,
@@ -1166,13 +1175,15 @@ pub enum StepData {
     },
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum PlaneDescription {
     PlaneId(String),
     SolidFace { solid_id: String, normal: Vector3 },
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Plane {
     pub origin: Point3,
     pub primary: Vector3,
@@ -1260,7 +1271,8 @@ impl Plane {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Vector3 {
     pub x: f64,
     pub y: f64,
@@ -1297,7 +1309,8 @@ impl Vector3 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Point3 {
     pub x: f64,
     pub y: f64,
@@ -1339,13 +1352,15 @@ impl Point3 {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Line3 {
     pub start: u64,
     pub end: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Arc3 {
     center: u64,
     start: u64,
@@ -1353,14 +1368,16 @@ pub struct Arc3 {
     clockwise: bool,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Circle3 {
     center: u64,
     radius: f64,
     top: u64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct RealSketch {
     pub plane_id: String,
     pub plane_name: String,
@@ -1475,7 +1492,8 @@ impl RealSketch {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct RealPlane {
     pub plane: Plane,
     pub name: String,
@@ -1483,7 +1501,8 @@ pub struct RealPlane {
     pub height: f64,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Message {
     RenameWorkbench {
         workbench_id: u64,
