@@ -1,13 +1,23 @@
-<script>
+<script lang="ts">
 	import { T } from '@threlte/core'
 	import { Path, Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry } from 'three'
 	import { circleToPoints, arcToPoints } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
+	import type { EntityType, IDictionary, SketchPoint } from "../../types"
+	// import Sketch from './Sketch.svelte'
 
-	export let face, id
-	export let pointsById
+	// prettier-ignore
+	const log = (function () { const context = "[Face.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	const type = 'face'
+	// todo see docs below
+	// interface Face {
+	// 	 exterior: wire
+	//   holes: wires[]
+	// }
+	export let face: any, id: string, pointsById: IDictionary<SketchPoint>
+	// log("[props]", "face:", face, "id:", id, "pointsById:", pointsById)
+
+	const type: EntityType = "face"
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
@@ -23,7 +33,8 @@
 	// .center which is a point ID, .radius which is a float, and .top which is a point ID
 	// holes is an array of wires
 
-	function writeWireToShape(wire, shape) {
+	// todo type wire properly
+	function writeWireToShape(wire: { Circle: any; Segments: any }, shape: Path) {
 		if (wire.Circle) {
 			let circle = wire.Circle
 			let center = pointsById[circle.center]
@@ -126,7 +137,7 @@
 		on:pointerenter={() => {
 			if ($selectingFor.includes(type)) {
 				hovered = true
-				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 			}
 		}}
 		on:pointerleave={() => {
@@ -145,7 +156,8 @@
 						(item) => !(item.id === id && item.type === type)
 					)
 				} else {
-					$currentlySelected = [...$currentlySelected, { type: type, id: id }]
+					// @ts-ignore todo make all numeric ids number type.
+					$currentlySelected = [...$currentlySelected, { type, id }]
 				}
 			}
 		}}

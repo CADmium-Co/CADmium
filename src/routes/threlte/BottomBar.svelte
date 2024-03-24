@@ -1,5 +1,9 @@
 <script>
 	import { project, workbenchIndex, workbenchIsStale } from './stores'
+
+	// prettier-ignore
+	const log = (function () { const context = "[BottomBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+
 	$: workbenches = $project.workbenches ?? []
 </script>
 
@@ -11,7 +15,7 @@
 				: 'bg-gray-200'} hover:bg-sky-300 text-gray-700 py-2 px-4"
 			type="button"
 			on:click={() => {
-				console.log('Setting new workbench index:', i)
+				log('Setting new workbench index:', i)
 				workbenchIndex.set(i)
 				workbenchIsStale.set(true)
 			}}>{wb.name}</button

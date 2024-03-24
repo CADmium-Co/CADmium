@@ -1,12 +1,12 @@
 {
 	"folders": [
 		{
-			"path": "../../.."
+			"path": "../.."
 		}
 	],
 	"settings": {
 		"rust-analyzer.linkedProjects": [
-			"./src/rust/cadmium/Cargo.toml"
+			"./packages/cadmium/Cargo.toml"
 		]
 	}
 }

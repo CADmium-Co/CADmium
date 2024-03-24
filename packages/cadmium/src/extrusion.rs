@@ -6,13 +6,11 @@ use geo::InteriorPoint;
 use geo::Polygon;
 
 use serde::{Deserialize, Serialize};
+use tsify::Tsify;
 
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
 use truck_meshalgo::tessellation::MeshedShape;
-use truck_modeling::builder::translated;
-use truck_modeling::Plane;
-use truck_modeling::Surface;
 use truck_polymesh::obj;
 use truck_polymesh::InnerSpace;
 use truck_polymesh::Invertible;
@@ -23,8 +21,6 @@ use truck_shapeops::ShapeOpsSurface;
 use truck_stepio::out;
 use truck_topology::Shell;
 // use truck_polymesh::cgmath::Point3 as TruckPoint3;
-
-use truck_topology::Solid as TruckSolid;
 
 use crate::project::Point3;
 use crate::project::Project;
@@ -40,12 +36,16 @@ use crate::sketch::Vector2;
 
 // use truck_meshalgo::prelude::*;
 use truck_modeling::{
-    builder, Edge, Face as TruckFace, Point3 as TruckPoint3, Vector3 as TruckVector3, Vertex, Wire,
+    builder, Edge, Face as TruckFace, Point3 as TruckPoint3, Vector3 as TruckVector3,
+    Vertex, Wire, Curve, Surface, Plane, builder::translated
 };
+
+use truck_topology::Solid as TruckSolid;
 
 const MESH_TOLERANCE: f64 = 0.1;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Extrusion {
     pub sketch_id: String,
     pub face_ids: Vec<u64>,
@@ -55,7 +55,8 @@ pub struct Extrusion {
     pub mode: ExtrusionMode,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum ExtrusionMode {
     New,
     Add(Vec<String>),
@@ -82,14 +83,16 @@ impl Extrusion {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Direction {
     Normal,
     NegativeNormal,
     Specified(Vector3),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Solid {
     pub name: String,
     pub crc32: String,
@@ -98,7 +101,7 @@ pub struct Solid {
     pub uvs: Vec<Vector2>,
     pub indices: Vec<usize>,
     pub triangles: Vec<Vec<u64>>,
-    pub truck_solid: truck_topology::Solid<
+    pub truck_solid: TruckSolid<
         truck_polymesh::cgmath::Point3<f64>,
         truck_modeling::Curve,
         truck_modeling::Surface,
@@ -108,7 +111,7 @@ pub struct Solid {
 impl Solid {
     pub fn from_truck_solid(
         name: String,
-        truck_solid: truck_topology::Solid<
+        truck_solid: TruckSolid<
             truck_meshalgo::prelude::cgmath::Point3<f64>,
             truck_modeling::Curve,
             truck_modeling::Surface,

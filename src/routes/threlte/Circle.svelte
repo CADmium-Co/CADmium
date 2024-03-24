@@ -1,24 +1,32 @@
-<script>
+<script lang="ts">
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
 	import { T } from '@threlte/core'
 	import { flatten, circleToPoints, promoteTo3 } from './projectUtils'
 	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import type { CircleTuple, EntityType } from "../../types"
 
-	export let id, center, radius
+	// prettier-ignore
+	const log = (function () { const context = "[Circle.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	const type: EntityType = "circle"
 
-	const type = 'circle'
+	export let id: string, center: CircleTuple["center"], radius: number
+
+	// log("[props]", "id:", id, "center:", center, "radius:", radius)
+
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
 
 	let hovered = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
-	let points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
+	// array of x,y,z points
+	const points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
 
 	const lineGeometry = new LineGeometry()
 	lineGeometry.setPositions(points)
@@ -28,9 +36,7 @@
 	<T.Line2
 		geometry={lineGeometry}
 		material={hovered ? dashedHoveredMaterial : dashedLineMaterial}
-		on:create={({ ref }) => {
-			ref.computeLineDistances()
-		}}
+		on:create={({ ref }) => ref.computeLineDistances()}
 	/>
 	<T.Line2
 		geometry={lineGeometry}
@@ -48,7 +54,8 @@
 		on:pointerover={() => {
 			if ($sketchTool === 'select') {
 				hovered = true
-				$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
+				// log("$currentlyMousedOver", $currentlyMousedOver)
 			}
 		}}
 		on:pointerout={() => {

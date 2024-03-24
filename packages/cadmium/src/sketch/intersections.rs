@@ -4,7 +4,12 @@ use crate::sketch::{Arc2, Circle2, IncrementingMap, Line2, Point2, Sketch};
 use itertools::Itertools;
 use std::f64::consts::{PI, TAU};
 
-#[derive(Debug, Clone, PartialEq)]
+use serde::{Deserialize, Serialize};
+use tsify::Tsify;
+
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Shape {
     Circle(Circle2),
     Arc(Arc2),
@@ -31,7 +36,8 @@ impl Shape {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Collision {
     point: Point2,
     shape_a: u64,
@@ -61,7 +67,8 @@ impl Collision {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Degeneracy {
     None,
     IsStart,
@@ -71,7 +78,8 @@ pub enum Degeneracy {
 
 use Degeneracy::*;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Intersection {
     None,
     OnePoint(Point2, bool),

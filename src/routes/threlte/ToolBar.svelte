@@ -11,7 +11,11 @@
 	} from './stores'
 	import { newExtrusion, newSketchOnPlane } from './projectUtils'
 
+	// prettier-ignore
+	const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+
 	let solving = false
+	// todo ask Matt why is this a no-op?
 	const solveSketch = () => {}
 	const createNewExtrusion = () => {
 		newExtrusion()
@@ -19,14 +23,14 @@
 		$featureIndex = $workbench.history.length - 1
 	}
 	const createNewSketch = () => {
-		console.log('Create new sketch')
+		// log('Create new sketch')
 		newSketchOnPlane()
 		$featureIndex = $workbench.history.length - 1
 	}
 	const stepSketch = () => {}
 	const debugging = false
 
-	let actions = [
+	const actions = [
 		{
 			alt: 'new sketch',
 			src: '/actions/sketch_min.svg',
@@ -37,7 +41,7 @@
 		// { alt: 'plane', src: '/actions/plane_min.svg' }
 	]
 
-	let sketchActions = [
+	const sketchActions = [
 		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solveSketch },
 		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: stepSketch },
 		{ alt: 'line', src: '/actions/line.svg', handler: () => ($sketchTool = 'line') },
@@ -47,7 +51,7 @@
 </script>
 
 <div class="col-span-2 flex flex-none items-center gap-1 bg-gray-100 h-[45px] select-none">
-	{#if $sketchBeingEdited}
+	{#if $sketchBeingEdited !== ""}
 		{#each sketchActions as action}
 			<button
 				class="inline-flex items-center p-1 {$sketchTool === action.alt

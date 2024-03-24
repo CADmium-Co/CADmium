@@ -1,10 +1,11 @@
 use serde::{Deserialize, Serialize};
+use tsify::Tsify;
 
 use crate::sketch::{Arc2, Circle2, IncrementingMap, Line2, Point2, Sketch};
 use std::collections::HashMap;
 use std::f64::consts::{PI, TAU};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Constraint {
     SegmentLength {

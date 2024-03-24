@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	// The main display includes the feature history, parts manager, and 3D viewport
 	// It is all contained in this file, which is imported by the main page
 	// It had to be done this way to manage the resizing of the feature history and viewport
@@ -6,34 +6,35 @@
 	import { Canvas } from '@threlte/core'
 	import Scene from './Scene.svelte'
 	import { sketchTool, selectingFor } from './stores'
+	import type { SetCameraFocus } from "../../types"
 
+	const minWidth = 150 
+	const maxWidth = 600
 	let width = 250 // px
-	let minWidth = 150
-	let maxWidth = 600
 	let initialWidth = width
-	let initialPosition
+	let initialPosition = { x: 0, y: 0 }
 	let resizing = false
 	let innerWidth = 0
 	let innerHeight = 0
 	$: viewportWidth = innerWidth - width - 10
 	$: height = innerHeight > 135 ? innerHeight - 45 * 3 : 300
 
-	let setCameraFocus
+	export let setCameraFocus: SetCameraFocus
 
-	function onMouseDown(event) {
+	function onMouseDown(event: MouseEvent) {
 		initialPosition = { x: event.pageX, y: event.pageY }
 		initialWidth = width
 		resizing = true
 	}
 
-	function onMouseUp(event) {
+	function onMouseUp(_event: MouseEvent) {
 		resizing = false
 	}
 
-	function onMouseMove(event) {
+	function onMouseMove(event: MouseEvent) {
 		if (!resizing) return
 
-		let delta = event.pageX - initialPosition.x
+		const delta = event.pageX - initialPosition.x
 		width = initialWidth + delta
 
 		if (width < minWidth) width = minWidth

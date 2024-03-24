@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { arraysEqual, renameStep, updateExtrusion } from './projectUtils'
@@ -8,30 +8,35 @@
 		featureIndex,
 		currentlySelected,
 		hiddenSketches
-	} from './stores.js'
+	} from './stores'
 	import X from 'phosphor-svelte/lib/X'
+	import type { ExtrusionData } from "../../types"
 
-	export let name, index, id, data
-	// data looks like: {sketch_id: 'Sketch-0', face_ids: Array(0), length: 0.25, offset: 0, direction: 'Normal'}
+	// prettier-ignore
+	const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	let faceIdsFromInputs = data.face_ids.sort()
+	export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
 
-	$: {
-		if (data && data.face_ids) {
-			faceIdsFromInputs = data.face_ids.map((e) => e + '').sort()
-		}
-	}
+	// $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
+	// $: data, log("[props]", "typeof id:", typeof id, "id:", id)
+	// $: data, log("[props]", "typeof data.face_ids[0]:", typeof data.face_ids[0], "data.face_ids:", data.face_ids)
+
+	// coerce from number[] to string[] for frontend as we use strings for ids here
+	let faceIdsFromInputs = data.face_ids.sort().map((e) => e + "")
+
+	// reactive update of selected faces
+	$: if (data && data.face_ids) faceIdsFromInputs = data.face_ids.map((e) => e + "").sort()
 
 	let length = data.length
 
 	const closeAndRefresh = () => {
-		console.log('extrusion feature closing')
+		// log("[closeAndRefresh] extrusion feature closing")
 		$featureIndex = 1000
 		$currentlySelected = []
 		$selectingFor = []
 		// hide the sketch that this extrusion uses
 		if (!$hiddenSketches.includes(data.sketch_id)) {
-			console.log("Oh, we're hiding the sketch that this extrusion uses")
+			// log("[closeAndRefresh] Oh, we're hiding the sketch that this extrusion uses")
 			$hiddenSketches = [...$hiddenSketches, data.sketch_id]
 		}
 
@@ -39,7 +44,6 @@
 	}
 
 	function sendUpdate() {
-		// updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
 		const faceIdsFromSelection = $currentlySelected
 			.filter((e) => e.type === 'face')
 			.map((e) => e.id)
@@ -50,29 +54,33 @@
 	currentlySelected.subscribe((e) => {
 		if ($featureIndex !== index) return
 
+		// log("[$currentlySelected]", $currentlySelected)
+		// log("[$featureIndex]", typeof $featureIndex, $featureIndex)
+
 		const faceIdsFromSelection = $currentlySelected
 			.filter((e) => e.type === 'face')
 			.map((e) => e.id)
 			.sort()
 
-		console.log('ids from inputs and from selection:', faceIdsFromInputs, faceIdsFromSelection)
+		// log("[closeAndRefresh] ids from inputs and from selection:", faceIdsFromInputs, faceIdsFromSelection)
 
 		if (arraysEqual(faceIdsFromInputs, faceIdsFromSelection)) {
-			console.log('face ids are the same, no update')
+			// log("[closeAndRefresh] face ids are the same, no update")
 		} else {
-			console.log('triggering update to new face Ids:', faceIdsFromSelection)
+			// log("[closeAndRefresh] triggering update to new face Ids:", faceIdsFromSelection)
 			sendUpdate()
 		}
 	})
 
-	// $: console.log($currentlySelected)
+	// $: log($currentlySelected)
 	// $: faceIds = $currentlySelected.filter((e) => e.type === 'face').map((e) => e.id)
 
-	let source = '/actions/extrude_min.svg'
+	const source = "/actions/extrude_min.svg"
 
 	$: if ($featureIndex === index) {
-		$selectingFor = ['face']
-		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: 'face', id }))
+		$selectingFor = ["face"]
+		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: "face", id }))
+		// log("[$currentlySelected]", $currentlySelected)
 	}
 </script>
 
@@ -99,7 +107,7 @@
 </div>
 
 {#if $featureIndex === index}
-	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
+	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
 				closeAndRefresh()
@@ -123,6 +131,7 @@
 					autocomplete="off"
 					data-1p-ignore
 					class="shadow appearance-none border w-full py-2 px-3 text-gray-700 leading-tight focus:border focus:border-sky-500"
+					type="number"
 					bind:value={length}
 					on:input={() => {
 						sendUpdate()

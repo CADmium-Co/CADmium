@@ -1,8 +1,11 @@
 {
     "rust-analyzer.linkedProjects": [
-        "./src/rust/cadmium/Cargo.toml",
+        "packages/cadmium/Cargo.toml",
     ],
     "[markdown]": {
         "editor.formatOnSave": false,
-    }
-}
+    },
+    "javascript.format.semicolons": "remove",
+    "typescript.preferences.quoteStyle": "double",
+    "javascript.preferences.quoteStyle": "double"
+} 

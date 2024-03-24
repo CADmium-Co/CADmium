@@ -1,19 +1,21 @@
-<script>
+<script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
-	import { workbenchIsStale, projectIsStale, featureIndex } from './stores.js'
+	import { workbenchIsStale, featureIndex } from "./stores"
 	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
+	import type { Plane, SetCameraFocus } from "../../types"
 
-	export let name
-	export let index
-	export let plane
-	export let setCameraFocus
+	// prettier-ignore
+	const log = (function () { const context = "[PlaneFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	let source = '/actions/plane_min.svg'
+	export let name: string, index: number, plane: Plane, setCameraFocus: SetCameraFocus
+	// log("[props]", "name:", name, "index:", index, "plane:", plane, "setCameraFocus:", "(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void")
+
+	const source = "/actions/plane_min.svg"
 
 	const closeAndRefresh = () => {
-		console.log('closing, refreshing')
+		log("closing, refreshing")
 		workbenchIsStale.set(true)
 		$featureIndex = 1000
 	}
@@ -53,7 +55,7 @@
 </div>
 
 {#if $featureIndex === index}
-	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
+	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
 				// editing = false
@@ -88,3 +90,4 @@
 		</form>
 	</div>
 {/if}
+

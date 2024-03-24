@@ -1,87 +1,111 @@
-<script>
-	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3 } from 'three'
+<script lang="ts">
+	import { Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3, type Vector3Like } from 'three'
 	import { T, useThrelte } from '@threlte/core'
 	import { Text, Suspense } from '@threlte/extras'
-	import { hiddenSketches, previewGeometry, sketchTool } from './stores.js'
-
+	import { hiddenSketches, previewGeometry, sketchTool } from './stores'
 	import Point2D from './Point2D.svelte'
 	import Line from './Line.svelte'
 	import Circle from './Circle.svelte'
 	import Arc from './Arc.svelte'
 	import Face from './Face.svelte'
-
-	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-
 	import NewLineTool from './NewLineTool.svelte'
 	import NewCircleTool from './NewCircleTool.svelte'
 	import NewRectangleTool from './NewRectangleTool.svelte'
 	import SelectTool from './SelectTool.svelte'
+	import type {
+		ArcTuple,
+		CircleTuple,
+		FaceTuple,
+		IDictionary,
+		LineTuple,
+		PlaneData,
+		PreviewGeometry,
+		SketchPoint,
+		PointById,
+		SketchRealized
+	} from "../../types"
+
+	// prettier-ignore
+	const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+
+	export let name: string,
+		sketch: SketchRealized,
+		plane: PlaneData["data"]["plane"],
+		uniqueId: string,
+		editing = false
+
+	// log("[props]", "name:", name, "sketch:", sketch, "plane:", plane, "uniqueId:", uniqueId, "editing:", editing )
 
 	const { size, dpr } = useThrelte()
 
-	export let name,
-		sketch,
-		plane,
-		uniqueId,
-		editing = false
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial
 
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	let newLineTool: NewLineTool,
+		newCircleTool: NewCircleTool,
+		newRectangleTool: NewRectangleTool,
+		selectTool: SelectTool
 
-	let newLineTool, newCircleTool, newRectangleTool, selectTool
+	let pointTuples: PointById[] = []
+	let lineTuples: LineTuple[] = []
+	let circleTuples: CircleTuple[] = []
+	let arcTuples: ArcTuple[] = []
+	let faceTuples: FaceTuple[] = []
+	let pointsById: IDictionary<SketchPoint> = {}
 
-	let pointTuples = []
-	let lineTuples = []
-	let circleTuples = []
-	let arcTuples = []
-	let faceTuples = []
-	let pointsById = {}
+	// $: pointTuples, log("[pointTuples]", pointTuples)
+	// $: lineTuples, log("[lineTuples]", lineTuples)
+	// $: circleTuples, log("[circleTuples]", circleTuples)
+	// $: arcTuples, log("[arcTuples]", arcTuples)
+	// $: faceTuples, log("[faceTuples]", faceTuples)
+	// $: pointsById, log("[pointsById]", pointsById)
 
 	$: {
 		const pointIds = Object.keys(sketch.points)
 		pointTuples = []
 		pointsById = {}
-		for (let pointId of pointIds) {
-			const point3D = sketch.points[pointId]
-			const point2D = sketch.points_2d[pointId]
-			pointTuples.push({ id: pointId, twoD: point2D, threeD: point3D })
-			pointsById[pointId] = { twoD: point2D, threeD: point3D }
+		for (const id of pointIds) {
+			const point3D = sketch.points[id]
+			const point2D = sketch.points_2d[id]
+			pointTuples.push({ id, twoD: point2D, threeD: point3D })
+			pointsById[id] = { twoD: point2D, threeD: point3D }
 		}
 
 		lineTuples = []
-		for (let lineId of Object.keys(sketch.line_segments)) {
-			const line = sketch.line_segments[lineId]
+		for (const id of Object.keys(sketch.line_segments)) {
+			const line = sketch.line_segments[id]
 			const start = pointsById[line.start]
 			const end = pointsById[line.end]
-			lineTuples.push({ id: lineId, start, end })
+			lineTuples.push({ id, start, end })
 		}
 
 		circleTuples = []
-		for (let circleId of Object.keys(sketch.circles)) {
-			const circle = sketch.circles[circleId]
+		for (const id of Object.keys(sketch.circles)) {
+			const circle = sketch.circles[id]
 			const center = pointsById[circle.center]
 			const radius = circle.radius
-			circleTuples.push({ id: circleId, center, radius })
+			circleTuples.push({ id, center, radius })
 		}
 
 		arcTuples = []
-		for (let arcId of Object.keys(sketch.arcs)) {
-			const arc = sketch.arcs[arcId]
+		for (const id of Object.keys(sketch.arcs)) {
+			const arc = sketch.arcs[id]
 			const center = pointsById[arc.center]
 			const start = pointsById[arc.start]
 			const end = pointsById[arc.end]
-			arcTuples.push({ id: arcId, center, start, end })
+			arcTuples.push({ id, center, start, end })
 		}
 
 		faceTuples = []
-		for (let faceId of Object.keys(sketch.faces)) {
-			const face = sketch.faces[faceId]
-			faceTuples.push({ id: faceId, face })
+		for (const id of Object.keys(sketch.faces)) {
+			const face = sketch.faces[id]
+			faceTuples.push({ id, face })
 		}
 	}
 
@@ -145,16 +169,19 @@
 	lineGeometry.setPositions(points)
 
 	$: hidden = $hiddenSketches.includes(uniqueId) && !editing
+	// $: $hiddenSketches, log("[$hiddenSketches]", $hiddenSketches)
 
-	$: if (editing) {
-		$sketchTool = 'select'
+	$: if (editing) $sketchTool = "select"
+
+	function projectToPlane(point3D: Vector3): Vector2 {
+		const xComponent = point3D.clone().sub(plane.origin).dot(primary)
+		const yComponent = point3D.clone().sub(plane.origin).dot(secondary)
+		return new Vector2(xComponent, yComponent)
 	}
 
-	function projectToPlane(point3D) {
-		// point3D is a Vector3
-		let xComponent = point3D.clone().sub(plane.origin).dot(primary)
-		let yComponent = point3D.clone().sub(plane.origin).dot(secondary)
-		return new Vector2(xComponent, yComponent)
+	function isGeomType(geom: PreviewGeometry, type: string) {
+		// log("[isGeomType]", type, geom)
+		return geom.type === type
 	}
 </script>
 
@@ -278,11 +305,11 @@
 		{/each}
 
 		{#each $previewGeometry as geom (geom.uuid)}
-			{#if geom.type === 'line'}
+			{#if isGeomType(geom, "line")}
 				<Line
 					start={geom.start}
 					end={geom.end}
-					id={null}
+					id={geom.uuid}
 					{solidLineMaterial}
 					{solidHoveredMaterial}
 					{solidSelectedMaterial}
@@ -290,11 +317,11 @@
 					{dashedLineMaterial}
 					{collisionLineMaterial}
 				/>
-			{:else if geom.type === 'circle'}
+			{:else if isGeomType(geom, "circle")}
 				<Circle
 					center={geom.center}
 					radius={geom.radius}
-					id={null}
+					id={geom.uuid}
 					{solidLineMaterial}
 					{solidHoveredMaterial}
 					{solidSelectedMaterial}
@@ -302,7 +329,7 @@
 					{dashedLineMaterial}
 					{collisionLineMaterial}
 				/>
-			{:else if geom.type === 'point'}
+			{:else if isGeomType(geom, "point")}
 				<Point2D
 					x={geom.x}
 					y={geom.y}

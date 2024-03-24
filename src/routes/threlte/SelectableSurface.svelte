@@ -1,5 +1,6 @@
-<script>
+<script lang="ts">
 	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
 	import {
 		Shape,
 		ShapeGeometry,
@@ -9,27 +10,29 @@
 		MeshStandardMaterial,
 		DoubleSide,
 		Euler,
-		Matrix4
+		Matrix4,
+		type Vector3Like
 	} from 'three'
 	import { T } from '@threlte/core'
 	import { flatten } from './projectUtils'
-	import {
-		currentlySelected,
-		currentlyMousedOver,
-		selectingFor,
-		selectionMax,
-		selectionMin
-	} from './stores'
-
+	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMax, selectionMin } from './stores'
+	import type { EntityType, TruckEdge, TruckFace, TruckFaceBoundary } from "../../types"
 	import nurbs from 'nurbs'
 
-	export let truck_face, truck_vertices, truck_edges, id
-	export let dashedLineMaterial,
-		dashedHoveredMaterial,
-		solidLineMaterial,
-		solidHoveredMaterial,
-		solidSelectedMaterial,
-		collisionLineMaterial
+	// prettier-ignore
+	const log = (function () { const context = "[SelectableSurface.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+
+	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: string
+	// log("[props]", "truck_face:", truck_face, "truck_edges:", truck_edges, "id:", id)
+
+	// svelte-ignore unused-export-let hmmm why does it not ignore?
+	export let dashedLineMaterial: LineMaterial,
+		dashedHoveredMaterial: LineMaterial,
+		solidLineMaterial: LineMaterial,
+		solidHoveredMaterial: LineMaterial,
+		solidSelectedMaterial: LineMaterial,
+		collisionLineMaterial: LineMaterial,
+		truck_vertices
 
 	const standardMaterial = new MeshStandardMaterial({
 		color: '#525252',
@@ -57,11 +60,11 @@
 		polygonOffsetFactor: -4
 	})
 
-	let surface = truck_face.surface
+	const surface = truck_face.surface
+	const interiors: LineGeometry[] = []
+	const eulerAngles: Euler = new Euler(0, 0, 0, "XYZ")
 	let plane
-	let exterior
-	let interiors = []
-	let eulerAngles = {}
+	let exterior: LineGeometry
 	let origin = new Vector3(0, 0, 0)
 
 	const shape = new Shape()
@@ -71,12 +74,12 @@
 		// boundaries is an array like [0, 1] where the indices point to the truck_edges array
 
 		plane = surface.Plane
-		let o = new Vector3(plane.o.x, plane.o.y, plane.o.z)
+		const o = new Vector3(plane.o.x, plane.o.y, plane.o.z)
 		origin = o
-		let p = new Vector3(plane.p.x, plane.p.y, plane.p.z)
-		let q = new Vector3(plane.q.x, plane.q.y, plane.q.z)
-		let u = p.clone().sub(o).normalize()
-		let v = q.clone().sub(o).normalize()
+		const p = new Vector3(plane.p.x, plane.p.y, plane.p.z)
+		const q = new Vector3(plane.q.x, plane.q.y, plane.q.z)
+		const u = p.clone().sub(o).normalize()
+		const v = q.clone().sub(o).normalize()
 
 		// Build some Three.js vectors from the props
 		const primary = u
@@ -86,20 +89,20 @@
 		// Use those to make the rotation matrix and euler angles
 		const rotationMatrix = new Matrix4()
 		rotationMatrix.makeBasis(primary, secondary, tertiary)
-		eulerAngles = new Euler(0, 0, 0, 'XYZ')
-		eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
+		// eulerAngles = new Euler(0, 0, 0, "XYZ")
+		eulerAngles.setFromRotationMatrix(rotationMatrix, "XYZ")
 
 		const boundaries = truck_face.boundaries
 		const exterior_bounds = boundaries[0]
-		// console.log('Boundaries: ', boundaries)
-		let points = curveToPoints(exterior_bounds)
+		// log('Boundaries: ', boundaries)
+		const points = curveToPoints(exterior_bounds)
 		exterior = new LineGeometry()
 		exterior.setPositions(points)
 
-		let projectedPoints = project(points, u, v, o)
+		const projectedPoints = project(points, u, v, o)
 		shape.setFromPoints(projectedPoints)
 
-		// console.log('Projected points', projectedPoints)
+		// log('Projected points', projectedPoints)
 
 		// shape.setFromPoints(points)
 
@@ -128,6 +131,7 @@
 			let ring = new LineGeometry()
 			ring.setPositions(points)
 			interiors.push(ring)
+			// log("[interiors]", interiors)
 
 			let projectedPoints = project(points, u, v, o)
 			const path = new Path()
@@ -138,74 +142,65 @@
 
 	const geometry = new ShapeGeometry(shape)
 
-	function project(points, u, v, o) {
-		let retval = []
-		// console.log('Points to project:', points)
+	function project(points: number[], u: Vector3Like, v: Vector3Like, o: Vector3Like) {
+		// log("[project]", "Points to project:", "points:", points, "u:", u, "v:", v, "o:", o)
+		const vectors = []
 		for (let i = 0; i < points.length; i += 3) {
-			let point3D = new Vector3(points[i], points[i + 1], points[i + 2])
+			const point3D = new Vector3(points[i], points[i + 1], points[i + 2])
 			point3D.x = point3D.x - o.x
 			point3D.y = point3D.y - o.y
 			point3D.z = point3D.z - o.z
-			let xComponent = point3D.dot(u)
-			let yComponent = point3D.dot(v)
-			retval.push(new Vector2(xComponent, yComponent))
+			const xComponent = point3D.dot(u)
+			const yComponent = point3D.dot(v)
+			vectors.push(new Vector2(xComponent, yComponent))
 		}
-		return retval
+		return vectors
 	}
 
-	function curveToPoints(exterior) {
-		let points = []
+	function curveToPoints(exterior: TruckFaceBoundary) {
+		const points = []
 		for (let { index, orientation } of exterior) {
-			// console.log('grabbing edge: ', index, orientation)
+			// log('grabbing edge: ', index, orientation)
 			const edge = truck_edges[index]
 			const curve = edge.curve
 
 			if ('NURBSCurve' in curve) {
-				const NURBSCurve = curve.NURBSCurve
-				const knot = NURBSCurve.knot_vec
-				let controlPoints = NURBSCurve.control_points
-				let weights = controlPoints.map((point) => point.w)
-
-				controlPoints = controlPoints.map((point) => [
+				const { NURBSCurve } = curve
+				const weights = NURBSCurve.control_points.map((point) => point.w)
+				const controlPoints = NURBSCurve.control_points.map((point) => [
 					point.x / point.w,
 					point.y / point.w,
 					point.z / point.w
 				])
 
-				let nurbsCurve = nurbs({
+				const nurbsCurve = nurbs({
 					points: controlPoints,
 					weights: weights,
-					knots: knot,
+					knots: NURBSCurve.knot_vec,
 					degree: 2
 				})
 
-				let domain = nurbsCurve.domain[0]
-				// console.log('Spline Dimension:', curve.splineDimension)
-				// console.log('Dimension:', curve.dimension)
-				let a = []
-				let b = []
+				const domain = nurbsCurve.domain[0]
+				// log('Spline Dimension:', curve.splineDimension)
+				// log('Dimension:', curve.dimension)
 
+				// todo find out how the nurbs library works. meantime ignore its wizardry
+				// @ts-ignore
+				const a = []
+				const b = []
 				for (let t = domain[0]; t <= domain[1]; t += 0.02) {
+					// @ts-ignore
 					nurbsCurve.evaluate(a, t)
-					let as_three = new Vector3(a[0], a[1], a[2])
-					b.push(as_three)
+					// @ts-ignore
+					b.push(new Vector3(a[0], a[1], a[2]))
 				}
 
-				let flattened = flatten(b)
-				for (let p of flattened) {
-					points.push(p)
-				}
+				const flattened = flatten(b)
+				for (let p of flattened) points.push(p)
 			} else if ('Line' in curve) {
 				const line = curve.Line
-				// console.log('Line:', line)
-
-				let startPoint = line[0]
-				let endPoint = line[1]
-
-				if (orientation === false) {
-					startPoint = line[1]
-					endPoint = line[0]
-				}
+				const startPoint = orientation === true ? line[0] : line[1]
+				const endPoint = orientation === true ? line[1] : line[0]
 
 				points.push(startPoint.x)
 				points.push(startPoint.y)
@@ -228,7 +223,7 @@
 	let selected = false
 	$: selected = $currentlySelected.some((e) => e.id === id && e.type === type) ? true : false
 
-	const type = 'meshFace'
+	const type: EntityType = "meshFace"
 </script>
 
 <T.Group>
@@ -263,24 +258,19 @@
 				{geometry}
 				material={hovered ? hoveredMaterial : standardMaterial}
 				on:pointerenter={(e) => {
-					console.log('On Pointer Enter!')
 					if ($selectingFor.includes(type)) {
-						console.log('On enter and includes type')
+						// log("On Pointer Enter and includes type")
 						e.stopPropagation()
 						hovered = true
-						$currentlyMousedOver = [...$currentlyMousedOver, { type: type, id: id }]
+						$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 					}
 				}}
 				on:pointerleave={() => {
-					console.log('On Pointer Leave!')
+					// log("On Pointer Leave!"")
 					if ($selectingFor.includes(type)) {
 						hovered = false
-						$currentlyMousedOver = $currentlyMousedOver.filter(
-							(item) => !(item.id === id && item.type === type)
-						)
-					} else {
-						hovered = false
-					}
+						$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(+item.id === +id && item.type === type))
+					} else hovered = false
 				}}
 				on:click={(e) => {
 					if ($selectingFor.includes(type)) {
@@ -292,9 +282,7 @@
 								return
 							}
 
-							$currentlySelected = $currentlySelected.filter(
-								(item) => !(item.id === id && item.type === type)
-							)
+							$currentlySelected = $currentlySelected.filter((item) => !(item.id === id && item.type === type))
 						} else {
 							if ($currentlySelected.length + 1 > $selectionMax) {
 								// if selecting this entity puts us above the maximum
@@ -302,7 +290,7 @@
 								$currentlySelected.shift()
 							}
 
-							$currentlySelected = [...$currentlySelected, { type: type, id: id }]
+							$currentlySelected = [...$currentlySelected, { type, id: id }]
 						}
 					}
 				}}

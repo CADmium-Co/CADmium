@@ -37,13 +37,14 @@ This software is offered under the [Elastic License 2.0](https://www.elastic.co/
 
 If you're just trying to kick the tires, [click here](https://cadmium-nine.vercel.app/threlte) to view the live web demo.
 
-To build locally:
+To build locally using pnpm workspace:
 
 ```
 git clone https://github.com/MattFerraro/CADmium.git
 cd CADmium
-npm run build:wasm
-npm run dev
+pnpm run build:wasm
+pnpm install
+pnpm run dev
 ```
 
 You will need rust and wasm-pack working locally. See `vercel_build.sh` for an example of installing these dependencies.

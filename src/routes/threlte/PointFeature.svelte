@@ -1,16 +1,18 @@
-<script>
+<script lang="ts">
 	import { slide } from 'svelte/transition'
 	import { quintOut } from 'svelte/easing'
 	import { renameStep } from './projectUtils'
-	import { workbenchIsStale, featureIndex } from './stores.js'
+	import { workbenchIsStale, featureIndex } from './stores'
 
-	export let name
-	export let index
+	// prettier-ignore
+	const log = (function () { const context = "[PointFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	let source = '/actions/point_min_icon.svg'
+	export let name: string, index: number
+
+	const source = "/actions/point_min_icon.svg"
 
 	const closeAndRefresh = () => {
-		console.log('closing, refreshing')
+		log("closing, refreshing")
 		workbenchIsStale.set(true)
 		$featureIndex = 1000
 	}

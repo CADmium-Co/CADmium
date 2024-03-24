@@ -12,6 +12,7 @@ license = "Elastic License 2.0"
 [dependencies]
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.87"
+tsify = "0.4.5"
 truck-meshalgo = "0.3.0"
 truck-modeling = "0.5.1"
 truck-shapeops = "0.3.0"
@@ -26,6 +27,9 @@ geo = "0.26.0"
 serde_with = "3.4.0"
 crc32fast = "1.3.2"
 indexmap = "2.1.0"
+
+[patch.crates-io]
+tsify = { git = "https://github.com/siefkenj/tsify" }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
