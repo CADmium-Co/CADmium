@@ -38,18 +38,19 @@ export const previewGeometry = writable<PreviewGeometry[]>([])
 
 export const messageHistory = writable<MessageHistory[]>([])
 
-project.subscribe(store => log("[project]", store))
-workbenchIndex.subscribe(store => log("[workbenchIndex]", store))
-workbench.subscribe(store => log("[workbench]", store))
-workbenchIsStale.subscribe(store => log("[workbenchIsStale]", store))
-featureIndex.subscribe(store => log("[featureIndex]", store))
-extrusionFeatures.subscribe(store => log("[extrusionFeatures]", store))
-realization.subscribe(store => log("[realization]", store))
-realizationIsStale.subscribe(store => log("[realizationIsStale]", store))
-sketchBeingEdited.subscribe(store => log("[sketchBeingEdited]", store))
-messageHistory.subscribe(store => log("[messageHistory]", store))
-
 if (_isDevelopment()) {
+
+  project.subscribe(store => log("[project]", store))
+  workbenchIndex.subscribe(store => log("[workbenchIndex]", store))
+  workbench.subscribe(store => log("[workbench]", store))
+  workbenchIsStale.subscribe(store => log("[workbenchIsStale]", store))
+  featureIndex.subscribe(store => log("[featureIndex]", store))
+  extrusionFeatures.subscribe(store => log("[extrusionFeatures]", store))
+  realization.subscribe(store => log("[realization]", store))
+  realizationIsStale.subscribe(store => log("[realizationIsStale]", store))
+  sketchBeingEdited.subscribe(store => log("[sketchBeingEdited]", store))
+  messageHistory.subscribe(store => log("[messageHistory]", store))
+
   currentlySelected.subscribe((store) => {
     log("[currentlySelected]", store)
     const allValid = store.every(entity => isEntity(entity))
@@ -65,6 +66,7 @@ if (_isDevelopment()) {
       if (isType) log(`[currentlySelected] entity is ${type === "arc" ? "an" : "a"} ${type}:`, entity)
     })
   })
+
 }
 
 function latestIsEntity(store: Entity[], type: EntityType) {
