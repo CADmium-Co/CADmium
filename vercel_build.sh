@@ -17,6 +17,12 @@ pnpm run build:wasm
 # Install npm packages
 pnpm install
 
+# Run tests
+echo "Running tests"
+pnpm exec playwright install
+pnpm run test
+
+
 echo "Build static frontend client..."
 # Build static html for the react client
 pnpm run build
