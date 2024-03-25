@@ -11,7 +11,7 @@ export function _isProduction() {
 }
 
 export function _setDevelopment(shouldSet: boolean): void {
-	(globalThis as any).process = (globalThis as any).process ?? {}
+	;(globalThis as any).process = (globalThis as any).process ?? {}
 	const env = (globalThis as any).process.env ?? {}
 	if (shouldSet) (globalThis as any).process.env = { ...env, NODE_ENV: "development" }
 	else (globalThis as any).process.env = { ...env, NODE_ENV: "production" }
@@ -22,6 +22,6 @@ if (_isProduction()) {
 	const methods = ["log", "debug", "warn", "info"]
 	for (let i = 0; i < methods.length; i++) {
 		// @ts-ignore
-		console[methods[i]] = function () { }
+		console[methods[i]] = function () {}
 	}
 }

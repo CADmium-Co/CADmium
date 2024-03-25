@@ -7,26 +7,26 @@
 		looking_for,
 		found,
 		project_rust
-	} from './stores'
+	} from "./stores"
 	sketch_being_edited.set(item.name)
 
-	let mode = 'Select'
-	let sketch_modes = [{ name: 'Select' }, { name: 'Draw' }, { name: 'Constrain' }]
+	let mode = "Select"
+	let sketch_modes = [{ name: "Select" }, { name: "Draw" }, { name: "Constrain" }]
 	let plane_name = item.data.plane_name
 
-	$: if (mode === 'Select') {
-		looking_for.set(['line', 'circle'])
+	$: if (mode === "Select") {
+		looking_for.set(["line", "circle"])
 	} else {
 		looking_for.set([])
 	}
 
 	const on_looking_for_plane = () => {
-		console.log('looking for plane')
-		looking_for.set(['plane'])
+		console.log("looking for plane")
+		looking_for.set(["plane"])
 	}
 
 	const on_no_longer_looking_for_plane = () => {
-		console.log('no longer looking for plane')
+		console.log("no longer looking for plane")
 		looking_for.set([])
 
 		let message_obj = {
@@ -37,14 +37,14 @@
 			}
 		}
 
-		console.log('sending message:', message_obj)
+		console.log("sending message:", message_obj)
 		$project_rust.send_message(JSON.stringify(message_obj))
 	}
 
 	found.subscribe((val) => {
 		if (val && val.length > 0) {
 			let new_plane = val[0]
-			console.log('Found a plane: ', new_plane)
+			console.log("Found a plane: ", new_plane)
 			item.data.plane_name = new_plane.name
 			plane_name = new_plane.name
 			looking_for.set([])
@@ -71,9 +71,7 @@
 	<div class="flex">
 		{#each sketch_modes as sketch_mode}
 			{#if sketch_mode.name === mode}
-				<div
-					class="text-sm py-1 bg-white flex-grow border-solid border-2 rounded border-sky-500 text-center"
-				>
+				<div class="text-sm py-1 bg-white flex-grow border-solid border-2 rounded border-sky-500 text-center">
 					{sketch_mode.name}
 				</div>
 			{:else}
@@ -91,15 +89,15 @@
 		{/each}
 	</div>
 
-	{#if mode === 'Select'}
+	{#if mode === "Select"}
 		<button
 			class="bg-gray-200 hover:bg-gray-100 py-1 px-1 rounded shadow"
 			on:click={() => {
-				console.log('deleting')
+				console.log("deleting")
 				const message_objs = []
-				console.log('item.data.line_segments', item.data.sketch.line_segments)
+				console.log("item.data.line_segments", item.data.sketch.line_segments)
 				for (const [segment_id, line_segment] of Object.entries(item.data.sketch.line_segments)) {
-					console.log('a segment:', line_segment)
+					console.log("a segment:", line_segment)
 				}
 
 				for (let i = 0; i < item.data.sketch.line_segments.length; i++) {
@@ -113,7 +111,7 @@
 								line_segment_id: line_segment.id
 							}
 						}
-						console.log('sending message:', message_obj)
+						console.log("sending message:", message_obj)
 						message_objs.push(message_obj)
 						// $project_rust.send_message(JSON.stringify(message_obj))
 					}

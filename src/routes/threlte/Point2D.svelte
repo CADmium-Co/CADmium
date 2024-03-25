@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
-	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
-	import { useTexture } from '@threlte/extras'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
+	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
+	import { useTexture } from "@threlte/extras"
 	import { BufferGeometry, Float32BufferAttribute, Vector2 } from "three"
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
-	import { flatten, promoteTo3 } from './projectUtils'
-	import { T } from '@threlte/core'
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
+	import { flatten, promoteTo3 } from "./projectUtils"
+	import { T } from "@threlte/core"
 	import type { EntityType } from "../../types"
 
 	export let x, y, hidden: boolean, id: string
@@ -35,9 +35,9 @@
 
 	const geom = new BufferGeometry()
 	const vertices = new Float32Array([x, y, 0])
-	geom.setAttribute('position', new Float32BufferAttribute(vertices, 3))
+	geom.setAttribute("position", new Float32BufferAttribute(vertices, 3))
 
-	const validTools = ['select', 'line', 'circle', 'rectangle']
+	const validTools = ["select", "line", "circle", "rectangle"]
 </script>
 
 {#if !hidden}
@@ -55,9 +55,7 @@
 					if (isPreview) return
 					if (validTools.includes($sketchTool)) {
 						hovered = false
-						$currentlyMousedOver = $currentlyMousedOver.filter(
-							(item) => !(item.id === id && item.type === type)
-						)
+						$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 					}
 				}}
 			>

@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 
 const ARC_TOLERANCE = 0.0001
 const CIRCLE_TOLERANCE = 0.0001

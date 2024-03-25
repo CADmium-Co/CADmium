@@ -1,14 +1,9 @@
 <script>
 	export let item
-	import {
-		step_being_edited,
-		project_rust,
-		active_workbench_index,
-		new_realization_needed
-	} from './stores'
+	import { step_being_edited, project_rust, active_workbench_index, new_realization_needed } from "./stores"
 	console.log(item)
 	const update_extrusion_length = (e) => {
-		console.log('updating length to: ', e.target.value)
+		console.log("updating length to: ", e.target.value)
 
 		let message = {
 			UpdateExtrusionLength: {
@@ -17,10 +12,10 @@
 				length: parseFloat(e.target.value)
 			}
 		}
-		console.log('message:', message)
+		console.log("message:", message)
 
 		let result = $project_rust.send_message(JSON.stringify(message))
-		console.log('updating extrusion length result: ', result)
+		console.log("updating extrusion length result: ", result)
 		new_realization_needed.set(true)
 	}
 </script>

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import * as THREE from 'three'
-	import { T } from '@threlte/core'
-	import SelectableSurface from './SelectableSurface.svelte'
+	import * as THREE from "three"
+	import { T } from "@threlte/core"
+	import SelectableSurface from "./SelectableSurface.svelte"
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
 	import type { TruckBoundary, TruckEdge, TruckFace, TruckSolid } from "../../types"
 	import type { Vector3Like } from "three"
@@ -36,11 +36,11 @@
 	// log("Vertices: ", vertices.length)
 
 	geometry.setIndex(indices)
-	geometry.setAttribute('position', new THREE.Float32BufferAttribute(verticesArray, 3))
-	geometry.setAttribute('normal', new THREE.Float32BufferAttribute(normalsArray, 3))
+	geometry.setAttribute("position", new THREE.Float32BufferAttribute(verticesArray, 3))
+	geometry.setAttribute("normal", new THREE.Float32BufferAttribute(normalsArray, 3))
 
 	const material = new THREE.MeshStandardMaterial({
-		color: '#999999',
+		color: "#999999",
 		side: THREE.DoubleSide,
 		wireframe: false,
 		metalness: 1.0,

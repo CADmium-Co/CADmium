@@ -170,7 +170,7 @@ export const project = {
 						height: 0.75,
 						sketch: {
 							points: {
-								"1": {
+								1: {
 									x: -52.95156757144787,
 									y: 7.317926785688712,
 									m: 1,
@@ -181,7 +181,7 @@ export const project = {
 									fixed: false,
 									hidden: false
 								},
-								"2": {
+								2: {
 									x: 76.03513162109667,
 									y: -45.27256950397148,
 									m: 1,
@@ -192,7 +192,7 @@ export const project = {
 									fixed: false,
 									hidden: false
 								},
-								"3": {
+								3: {
 									x: 76.03513162109667,
 									y: 7.317926785688712,
 									m: 1,
@@ -203,7 +203,7 @@ export const project = {
 									fixed: false,
 									hidden: false
 								},
-								"4": {
+								4: {
 									x: -52.95156757144787,
 									y: -45.27256950397148,
 									m: 1,
@@ -214,7 +214,7 @@ export const project = {
 									fixed: false,
 									hidden: false
 								},
-								"5": {
+								5: {
 									x: -9.20153199031077,
 									y: -21.640848057170956,
 									m: 1,
@@ -225,7 +225,7 @@ export const project = {
 									fixed: false,
 									hidden: false
 								},
-								"6": {
+								6: {
 									x: 3.837447277628939,
 									y: -26.044145549343227,
 									m: 1,
@@ -239,26 +239,26 @@ export const project = {
 							},
 							highest_point_id: 6,
 							line_segments: {
-								"1": {
+								1: {
 									start: 1,
 									end: 4
 								},
-								"2": {
+								2: {
 									start: 4,
 									end: 2
 								},
-								"3": {
+								3: {
 									start: 2,
 									end: 3
 								},
-								"4": {
+								4: {
 									start: 3,
 									end: 1
 								}
 							},
 							highest_line_segment_id: 4,
 							circles: {
-								"1": {
+								1: {
 									center: 5,
 									radius: 13.76241291178012,
 									top: 6
@@ -298,4 +298,3 @@ export const project = {
 		}
 	]
 }
-

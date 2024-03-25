@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { browser } from '$app/environment'
-	import { onMount } from 'svelte'
+	import { browser } from "$app/environment"
+	import { onMount } from "svelte"
 	import { default as init, Project as WasmProject } from "cadmium"
-	import AppBar from './AppBar.svelte'
-	import BottomBar from './BottomBar.svelte'
-	import MainDisplay from './MainDisplay.svelte'
-	import ToolBar from './ToolBar.svelte'
-	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from './stores'
+	import AppBar from "./AppBar.svelte"
+	import BottomBar from "./BottomBar.svelte"
+	import MainDisplay from "./MainDisplay.svelte"
+	import ToolBar from "./ToolBar.svelte"
+	import { workbenchIsStale, wasmProject, project, projectIsStale, featureIndex } from "./stores"
 
 	// prettier-ignore
 	const log = (function () { const context = "[+page.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()

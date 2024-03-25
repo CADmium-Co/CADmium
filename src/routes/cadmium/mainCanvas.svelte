@@ -1,27 +1,27 @@
 <script>
-	import { onMount } from 'svelte'
-	import { browser } from '$app/environment'
-	import { realization, looking_for, found, outlined_solids, sketch_being_edited } from './stores'
+	import { onMount } from "svelte"
+	import { browser } from "$app/environment"
+	import { realization, looking_for, found, outlined_solids, sketch_being_edited } from "./stores"
 
-	import * as THREE from 'three'
-	import { TrackballControls } from 'three/addons/controls/TrackballControls.js'
+	import * as THREE from "three"
+	import { TrackballControls } from "three/addons/controls/TrackballControls.js"
 
-	import gsap from 'gsap'
+	import gsap from "gsap"
 
-	import { Point } from '../../lib/point.js'
-	import { Plane } from '../../lib/plane.js'
-	import { Sketch } from '../../lib/sketch.js'
-	import { Solid } from '../../lib/solid.js'
+	import { Point } from "../../lib/point.js"
+	import { Plane } from "../../lib/plane.js"
+	import { Sketch } from "../../lib/sketch.js"
+	import { Solid } from "../../lib/solid.js"
 
-	import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js'
-	import { RenderPass } from 'three/addons/postprocessing/RenderPass.js'
-	import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js'
-	import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js'
-	import { OutputPass } from 'three/addons/postprocessing/OutputPass.js'
-	import { FXAAShader } from 'three/addons/shaders/FXAAShader.js'
+	import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js"
+	import { RenderPass } from "three/addons/postprocessing/RenderPass.js"
+	import { ShaderPass } from "three/addons/postprocessing/ShaderPass.js"
+	import { OutlinePass } from "three/addons/postprocessing/OutlinePass.js"
+	import { OutputPass } from "three/addons/postprocessing/OutputPass.js"
+	import { FXAAShader } from "three/addons/shaders/FXAAShader.js"
 
 	const on_found = (item) => {
-		console.log('found:', item)
+		console.log("found:", item)
 		found.set([item])
 	}
 
@@ -38,7 +38,7 @@
 	}
 
 	export function setCameraViewPlane2(plane) {
-		console.log('Setting view plane: ', plane)
+		console.log("Setting view plane: ", plane)
 		setCameraViewPlane(plane)
 	}
 
@@ -48,7 +48,7 @@
 
 	const onResize = (e) => {
 		// TODO: for some reason the canvas itself never gets resized...gotta fix this
-		console.log('Resized:', e)
+		console.log("Resized:", e)
 	}
 
 	let camera, scene, renderer, controls, outlinePass
@@ -102,30 +102,30 @@
 	const handleMouseover = () => {
 		// First just deselect everything. Start by deselecting all planes
 		for (let [plane_name, plane] of Object.entries(planes)) {
-			if (plane.selectionStatus === 'mouseOver') {
-				plane.setSelectionStatus('unselected')
+			if (plane.selectionStatus === "mouseOver") {
+				plane.setSelectionStatus("unselected")
 			}
 		}
 		// then deselect all solids, all lines, all points, etc
 		for (let [line_name, line] of Object.entries(lines)) {
-			if (line.selectionStatus === 'mouseOver') {
-				line.setSelectionStatus('unselected')
+			if (line.selectionStatus === "mouseOver") {
+				line.setSelectionStatus("unselected")
 			}
 		}
 
 		// Now check for intersections but only for things that we are looking_for
 		raycaster.setFromCamera(pointer, camera)
-		if ($looking_for.includes('plane')) {
+		if ($looking_for.includes("plane")) {
 			let just_meshes = Object.values(planes).map((plane) => plane.mesh)
 			const intersections = raycaster.intersectObjects(just_meshes)
 			if (intersections.length > 0) {
 				let first_intersection = intersections[0]
 				let plane_name = first_intersection.object.name
 				let plane = planes[plane_name]
-				plane.setSelectionStatus('mouseOver')
+				plane.setSelectionStatus("mouseOver")
 			}
 		}
-		if ($looking_for.includes('line')) {
+		if ($looking_for.includes("line")) {
 			let just_meshes = Object.values(lines).map((line) => line.mesh)
 			const intersections = raycaster.intersectObjects(just_meshes)
 			if (intersections.length > 0) {
@@ -136,11 +136,11 @@
 				let line = lines[line_name]
 				// console.log('line', line)
 
-				if (line.selectionStatus === 'selected') {
+				if (line.selectionStatus === "selected") {
 					return
 				}
 
-				line.setSelectionStatus('mouseOver')
+				line.setSelectionStatus("mouseOver")
 			}
 		}
 	}
@@ -153,20 +153,20 @@
 		// console.log('Clicked! Could be looking for anything:', looking_for)
 
 		raycaster.setFromCamera(pointer, camera)
-		if ($looking_for.includes('plane')) {
+		if ($looking_for.includes("plane")) {
 			let just_meshes = Object.values(planes).map((plane) => plane.mesh)
 			const intersections = raycaster.intersectObjects(just_meshes)
 			if (intersections.length > 0) {
 				let first_intersection = intersections[0]
 				let plane_name = first_intersection.object.name
 				let plane = planes[plane_name]
-				plane.setSelectionStatus('selected')
-				selected.push({ type: 'plane', name: plane_name, object: plane })
-				on_found({ type: 'plane', name: plane_name, object: plane })
+				plane.setSelectionStatus("selected")
+				selected.push({ type: "plane", name: plane_name, object: plane })
+				on_found({ type: "plane", name: plane_name, object: plane })
 			}
 		}
 
-		if ($looking_for.includes('line')) {
+		if ($looking_for.includes("line")) {
 			let just_meshes = Object.values(lines).map((line) => line.mesh)
 			const intersections = raycaster.intersectObjects(just_meshes)
 			if (intersections.length > 0) {
@@ -174,12 +174,12 @@
 				let line_name = first_intersection.object.name
 				let line = lines[line_name]
 
-				if (line.selectionStatus === 'selected') {
-					line.setSelectionStatus('unselected')
+				if (line.selectionStatus === "selected") {
+					line.setSelectionStatus("unselected")
 				} else {
-					line.setSelectionStatus('selected')
+					line.setSelectionStatus("selected")
 				}
-				selected.push({ type: 'line', name: line_name, object: line })
+				selected.push({ type: "line", name: line_name, object: line })
 				// on_found({ type: 'line', name: line_name, object: line })
 			}
 		}
@@ -198,22 +198,15 @@
 			pulsePeriod: 0,
 			rotate: false,
 			usePatternTexture: false,
-			visibleEdgeColor: '#00a7ff',
-			hiddenEdgeColor: '#00a7ff'
+			visibleEdgeColor: "#00a7ff",
+			hiddenEdgeColor: "#00a7ff"
 		}
 
 		const { width, height } = el.getBoundingClientRect()
 		const aspectRatio = width / height
 		const worldWidth = 3
 		const worldHeight = worldWidth / aspectRatio
-		camera = new THREE.OrthographicCamera(
-			worldWidth / -2,
-			worldWidth / 2,
-			worldHeight / 2,
-			worldHeight / -2,
-			0.1,
-			1000
-		)
+		camera = new THREE.OrthographicCamera(worldWidth / -2, worldWidth / 2, worldHeight / 2, worldHeight / -2, 0.1, 1000)
 
 		camera.position.x = 16.8
 		camera.position.y = -25.8
@@ -284,7 +277,7 @@
 			})
 			renderer.setPixelRatio(window.devicePixelRatio)
 			renderer.setSize(width, height)
-			renderer.setClearColor('#F8F8F8')
+			renderer.setClearColor("#F8F8F8")
 
 			composer = new EffectComposer(renderer)
 			const renderPass = new RenderPass(scene, camera)
@@ -304,7 +297,7 @@
 			outlinePass.overlayMaterial.blending = THREE.SubtractiveBlending
 
 			const effectFXAA = new ShaderPass(FXAAShader)
-			effectFXAA.uniforms['resolution'].value.set(
+			effectFXAA.uniforms["resolution"].value.set(
 				1 / width / window.devicePixelRatio,
 				1 / height / window.devicePixelRatio
 			)
@@ -317,22 +310,22 @@
 			render()
 		}
 
-		window.addEventListener('resize', resize)
+		window.addEventListener("resize", resize)
 
-		el.addEventListener('pointermove', onPointerMove)
-		el.addEventListener('pointerdown', (event) => {
+		el.addEventListener("pointermove", onPointerMove)
+		el.addEventListener("pointerdown", (event) => {
 			event.preventDefault()
 			// event.stopImmediatePropagation()
 		})
-		el.addEventListener('click', onPointerClick)
+		el.addEventListener("click", onPointerClick)
 
 		getStarted(el)
 	}
 
 	export const setRealization = (realization, sketch_being_edited) => {
-		console.log('setting realization')
+		console.log("setting realization")
 		if (!element) {
-			console.log('element is not set!', element, renderer)
+			console.log("element is not set!", element, renderer)
 			return
 		}
 
@@ -368,17 +361,7 @@
 			let split = sketch[1]
 			let plane_name = sketch[0].plane_name
 			let real_plane = realization.planes[plane_name]
-			sketches[name] = new Sketch(
-				name,
-				split,
-				real_plane,
-				points,
-				lines,
-				arcs,
-				circles,
-				faces,
-				element
-			)
+			sketches[name] = new Sketch(name, split, real_plane, points, lines, arcs, circles, faces, element)
 			sketches[name].addTo(scene)
 
 			if (sketch_being_edited === name) {

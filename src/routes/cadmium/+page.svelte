@@ -1,9 +1,9 @@
 <script>
-	import MainCanvas from './mainCanvas.svelte'
-	import { browser } from '$app/environment'
-	import { onMount } from 'svelte'
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
+	import MainCanvas from "./mainCanvas.svelte"
+	import { browser } from "$app/environment"
+	import { onMount } from "svelte"
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
 	import {
 		project_rust,
 		project,
@@ -15,14 +15,14 @@
 		step_being_edited,
 		new_realization_needed,
 		sketch_being_edited
-	} from './stores.js'
+	} from "./stores.js"
 	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
-	import { default as init, Project } from 'cadmium'
-	import StepContextMenu from './stepContextMenu.svelte'
-	import SolidContextMenu from './solidContextMenu.svelte'
-	import ExtrudeForm from './extrudeForm.svelte'
-	import SketchForm from './sketchForm.svelte'
-	import PlaneForm from './planeForm.svelte'
+	import { default as init, Project } from "cadmium"
+	import StepContextMenu from "./stepContextMenu.svelte"
+	import SolidContextMenu from "./solidContextMenu.svelte"
+	import ExtrudeForm from "./extrudeForm.svelte"
+	import SketchForm from "./sketchForm.svelte"
+	import PlaneForm from "./planeForm.svelte"
 
 	let num_steps_applied = 1000
 	// let realization = {}
@@ -43,7 +43,7 @@
 	if (browser) {
 		onMount(() => {
 			init().then(() => {
-				let p = new Project('First Project')
+				let p = new Project("First Project")
 				project_rust.set(p)
 				active_workbench_index.set(0)
 
@@ -52,10 +52,10 @@
 		})
 	}
 
-	let username = 'mattferraro.dev'
+	let username = "mattferraro.dev"
 
 	$: if ($new_realization_needed) {
-		console.log('getting new realization')
+		console.log("getting new realization")
 		//console.log('raw form:', $project_rust.json)
 		project.set(JSON.parse($project_rust.json))
 		workbench.set($project.workbenches[$active_workbench_index])
@@ -72,8 +72,8 @@
 		let message_obj = {
 			NewSketch: {
 				workbench_id: $active_workbench_index,
-				sketch_name: '',
-				plane_name: ''
+				sketch_name: "",
+				plane_name: ""
 			}
 		}
 		let result = $project_rust.send_message(JSON.stringify(message_obj))
@@ -89,7 +89,7 @@
 			{
 				NewPointOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					point_id: 100,
 					x: -0.6,
 					y: 0.5
@@ -98,7 +98,7 @@
 			{
 				NewPointOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					point_id: 101,
 					x: -0.2,
 					y: 0.4
@@ -107,7 +107,7 @@
 			{
 				NewPointOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					point_id: 102,
 					x: -0.2,
 					y: 0.1
@@ -116,7 +116,7 @@
 			{
 				NewPointOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					point_id: 103,
 					x: -0.6,
 					y: 0.1
@@ -125,7 +125,7 @@
 			{
 				NewLineOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					line_id: 100,
 					start_point_id: 100,
 					end_point_id: 101
@@ -134,7 +134,7 @@
 			{
 				NewLineOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					line_id: 101,
 					start_point_id: 101,
 					end_point_id: 102
@@ -143,7 +143,7 @@
 			{
 				NewLineOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					line_id: 102,
 					start_point_id: 102,
 					end_point_id: 103
@@ -152,7 +152,7 @@
 			{
 				NewLineOnSketch: {
 					workbench_id: 0,
-					sketch_name: 'Sketch 1',
+					sketch_name: "Sketch 1",
 					line_id: 103,
 					start_point_id: 103,
 					end_point_id: 100
@@ -162,10 +162,10 @@
 		let overall_success = true
 		for (let message_obj of messages) {
 			let result = $project_rust.send_message(JSON.stringify(message_obj))
-			if (result === 'success') {
-				console.log('success of message: ', result)
+			if (result === "success") {
+				console.log("success of message: ", result)
 			} else {
-				console.log('failure of message: ', result)
+				console.log("failure of message: ", result)
 				overall_success = false
 				break
 			}
@@ -176,7 +176,7 @@
 
 	const step_sketch = () => {
 		// console.log('Step sketch')
-		let message_obj = { StepSketch: { workbench_id: 0, sketch_name: 'Sketch 1', steps: 1 } }
+		let message_obj = { StepSketch: { workbench_id: 0, sketch_name: "Sketch 1", steps: 1 } }
 		let result = $project_rust.send_message(JSON.stringify(message_obj))
 		let max_change = parseFloat(result)
 
@@ -191,7 +191,7 @@
 			if (!stop_early && --times) {
 				window.setTimeout(repeater, every)
 			} else {
-				console.log('done!')
+				console.log("done!")
 				fn2()
 			}
 		}
@@ -205,7 +205,7 @@
 		})
 	}
 	const create_new_extrusion = () => {
-		console.log('okay!')
+		console.log("okay!")
 	}
 
 	const highlightSolid = (solid_id) => {
@@ -218,26 +218,26 @@
 
 	let actions = [
 		{
-			alt: 'new sketch',
-			src: '/actions/sketch_min.svg',
-			text: 'New Sketch',
+			alt: "new sketch",
+			src: "/actions/sketch_min.svg",
+			text: "New Sketch",
 			handler: create_new_sketch
 		},
-		{ alt: 'extrude', src: '/actions/extrude_min.svg', handler: create_new_extrusion },
-		{ alt: 'plane', src: '/actions/plane_min.svg' },
-		{ alt: 'step', src: '/actions/step_min.svg', text: 'Step', handler: step_sketch },
-		{ alt: 'solve', src: '/actions/solve_min.svg', text: 'Solve', handler: solve_sketch }
+		{ alt: "extrude", src: "/actions/extrude_min.svg", handler: create_new_extrusion },
+		{ alt: "plane", src: "/actions/plane_min.svg" },
+		{ alt: "step", src: "/actions/step_min.svg", text: "Step", handler: step_sketch },
+		{ alt: "solve", src: "/actions/solve_min.svg", text: "Solve", handler: solve_sketch }
 	]
 
 	let icon_mapping = {
-		Sketch: '/actions/sketch_min.svg',
-		Plane: '/actions/plane_min.svg',
-		Point: '/actions/point_min_icon.svg',
-		Extrusion: '/actions/extrude_min.svg'
+		Sketch: "/actions/sketch_min.svg",
+		Plane: "/actions/plane_min.svg",
+		Point: "/actions/point_min_icon.svg",
+		Extrusion: "/actions/extrude_min.svg"
 	}
 
 	const history_item_onclick = (item) => {
-		if (item?.data?.type === 'Plane') {
+		if (item?.data?.type === "Plane") {
 			main_canvas.setCameraViewPlane2(item)
 		}
 	}
@@ -261,7 +261,7 @@
 				<img class="object-cover h-10 w-10 ml-4" alt="logo" src="/cadmium_logo_min.svg" />
 			</div>
 			<div class="select-none">CADmium</div>
-			<div class="text-xl font-medium">{$project.name || ''}</div>
+			<div class="text-xl font-medium">{$project.name || ""}</div>
 
 			<div class="flex-grow flex flex-row-reverse gap-4 mr-4">
 				<div>
@@ -276,12 +276,10 @@
 	<toolbar class="col-span-2 flex items-center gap-1">
 		{#each actions as action}
 			<button
-				class="inline-flex items-center {action.text === 'Solve' && solving
-					? 'bg-gray-400'
-					: ''} hover:bg-gray-200 p-1"
+				class="inline-flex items-center {action.text === 'Solve' && solving ? 'bg-gray-400' : ''} hover:bg-gray-200 p-1"
 				on:click={action.handler}
 			>
-				<img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ''}
+				<img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ""}
 			</button>
 		{/each}
 	</toolbar>
@@ -308,17 +306,17 @@
 						tabindex="0"
 					>
 						<img class="h-8 w-8 px-1" src={icon_mapping[item.data.type]} alt={item.name} />
-						{item['name']}
+						{item["name"]}
 					</div>
 					{#if item_index === $step_being_edited}
-						<div transition:slide={{ delay: 0, duration: 300, easing: quintOut, axis: 'y' }}>
-							{#if item.data.type === 'Extrusion'}
+						<div transition:slide={{ delay: 0, duration: 300, easing: quintOut, axis: "y" }}>
+							{#if item.data.type === "Extrusion"}
 								<ExtrudeForm {item} />
 							{/if}
-							{#if item.data.type === 'Sketch'}
+							{#if item.data.type === "Sketch"}
 								<SketchForm {item} />
 							{/if}
-							{#if item.data.type === 'Plane'}
+							{#if item.data.type === "Plane"}
 								<PlaneForm {item} />
 							{/if}
 						</div>

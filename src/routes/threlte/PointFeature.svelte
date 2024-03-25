@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
-	import { renameStep } from './projectUtils'
-	import { workbenchIsStale, featureIndex } from './stores'
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
+	import { renameStep } from "./projectUtils"
+	import { workbenchIsStale, featureIndex } from "./stores"
 
 	// prettier-ignore
 	const log = (function () { const context = "[PointFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -35,7 +35,7 @@
 </div>
 
 {#if $featureIndex === index}
-	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: 'y' }}>
+	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
 				closeAndRefresh()

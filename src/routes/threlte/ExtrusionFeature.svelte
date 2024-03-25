@@ -1,15 +1,9 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
-	import { arraysEqual, renameStep, updateExtrusion } from './projectUtils'
-	import {
-		selectingFor,
-		workbenchIsStale,
-		featureIndex,
-		currentlySelected,
-		hiddenSketches
-	} from './stores'
-	import X from 'phosphor-svelte/lib/X'
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
+	import { arraysEqual, renameStep, updateExtrusion } from "./projectUtils"
+	import { selectingFor, workbenchIsStale, featureIndex, currentlySelected, hiddenSketches } from "./stores"
+	import X from "phosphor-svelte/lib/X"
 	import type { ExtrusionData } from "../../types"
 
 	// prettier-ignore
@@ -45,7 +39,7 @@
 
 	function sendUpdate() {
 		const faceIdsFromSelection = $currentlySelected
-			.filter((e) => e.type === 'face')
+			.filter((e) => e.type === "face")
 			.map((e) => e.id)
 			.sort()
 		updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
@@ -58,7 +52,7 @@
 		// log("[$featureIndex]", typeof $featureIndex, $featureIndex)
 
 		const faceIdsFromSelection = $currentlySelected
-			.filter((e) => e.type === 'face')
+			.filter((e) => e.type === "face")
 			.map((e) => e.id)
 			.sort()
 
@@ -150,9 +144,7 @@
 					<div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
 						{faceId}<button
 							on:click|preventDefault={() => {
-								$currentlySelected = $currentlySelected.filter(
-									(item) => !(item.id === faceId && item.type === 'face')
-								)
+								$currentlySelected = $currentlySelected.filter((item) => !(item.id === faceId && item.type === "face"))
 							}}><X /></button
 						>
 					</div>

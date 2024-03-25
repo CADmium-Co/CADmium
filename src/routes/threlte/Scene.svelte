@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { T, useThrelte } from '@threlte/core'
-	import { TrackballControls, Gizmo, Environment } from '@threlte/extras'
+	import { T, useThrelte } from "@threlte/core"
+	import { TrackballControls, Gizmo, Environment } from "@threlte/extras"
 	import { Vector2, Vector3, type Vector3Like } from "three"
-	import { interactivity } from '@threlte/extras'
-	import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
+	import { interactivity } from "@threlte/extras"
+	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
 
-	import { realization, workbench, sketchBeingEdited } from './stores'
+	import { realization, workbench, sketchBeingEdited } from "./stores"
 
-	import Point3D from './Point3D.svelte'
-	import Plane from './Plane.svelte'
-	import Solid from './Solid.svelte'
-	import Sketch from './Sketch.svelte'
+	import Point3D from "./Point3D.svelte"
+	import Plane from "./Plane.svelte"
+	import Solid from "./Solid.svelte"
+	import Sketch from "./Sketch.svelte"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -49,7 +49,7 @@
 	}
 
 	$: dashedLineMaterial = new LineMaterial({
-		color: '#000000',
+		color: "#000000",
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
 		transparent: true,
@@ -61,7 +61,7 @@
 	})
 
 	$: dashedHoveredMaterial = new LineMaterial({
-		color: '#ffaa00',
+		color: "#ffaa00",
 		linewidth: 1.0 * $dpr,
 		depthTest: false,
 		transparent: true,
@@ -73,7 +73,7 @@
 	})
 
 	$: solidLineMaterial = new LineMaterial({
-		color: '#000000',
+		color: "#000000",
 		linewidth: 1.5 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -82,7 +82,7 @@
 	})
 
 	$: solidHoveredMaterial = new LineMaterial({
-		color: '#88aa00',
+		color: "#88aa00",
 		linewidth: 5.5 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -91,7 +91,7 @@
 	})
 
 	$: solidSelectedMaterial = new LineMaterial({
-		color: '#ffaa00',
+		color: "#ffaa00",
 		linewidth: 5.5 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -100,7 +100,7 @@
 	})
 
 	$: collisionLineMaterial = new LineMaterial({
-		color: '#FFFFFF',
+		color: "#FFFFFF",
 		linewidth: 12.0 * $dpr,
 		depthTest: false,
 		depthWrite: false,

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition'
-	import { quintOut } from 'svelte/easing'
-	import { renameStep } from './projectUtils'
+	import { slide } from "svelte/transition"
+	import { quintOut } from "svelte/easing"
+	import { renameStep } from "./projectUtils"
 	import { workbenchIsStale, featureIndex } from "./stores"
-	import MagnifyingGlass from 'phosphor-svelte/lib/MagnifyingGlass'
+	import MagnifyingGlass from "phosphor-svelte/lib/MagnifyingGlass"
 	import type { Plane, SetCameraFocus } from "../../types"
 
 	// prettier-ignore
@@ -90,4 +90,3 @@
 		</form>
 	</div>
 {/if}
-

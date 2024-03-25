@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
-	import PassiveSketch from './PassiveSketch.svelte'
-	import { currentlySelected, previewGeometry, sketchTool } from './stores'
+	import PassiveSketch from "./PassiveSketch.svelte"
+	import { currentlySelected, previewGeometry, sketchTool } from "./stores"
 	import type { PlaneRealized, SketchTuple } from "../../types"
 
 	// prettier-ignore

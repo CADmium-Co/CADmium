@@ -1,6 +1,6 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 
-import { circleToPoints, arcToPoints } from './utils'
+import { circleToPoints, arcToPoints } from "./utils"
 
 class Face {
 	constructor(face, real_plane, parent, points) {
@@ -38,8 +38,8 @@ class Face {
 		// we need to rotate properly
 		const m = new THREE.Matrix4()
 		m.makeBasis(primary, secondary, tertiary)
-		const ea = new THREE.Euler(0, 0, 0, 'XYZ')
-		ea.setFromRotationMatrix(m, 'XYZ')
+		const ea = new THREE.Euler(0, 0, 0, "XYZ")
+		ea.setFromRotationMatrix(m, "XYZ")
 		this.mesh = new THREE.Mesh(geometry, material)
 		this.mesh.rotation.x = ea.x
 		this.mesh.rotation.y = ea.y
@@ -62,7 +62,7 @@ class Face {
 			}
 		} else {
 			for (let segment of exterior.Segments) {
-				if (segment.type === 'Line') {
+				if (segment.type === "Line") {
 					let start_point = points[`${parent}:${segment.start}`]
 					let end_point = points[`${parent}:${segment.end}`]
 
@@ -73,7 +73,7 @@ class Face {
 						shape_points.push(start_point_2d)
 					}
 					shape_points.push(end_point_2d)
-				} else if (segment.type === 'Arc') {
+				} else if (segment.type === "Arc") {
 					let center_point = points[`${parent}:${segment.center}`]
 					let start_point = points[`${parent}:${segment.start}`]
 					let end_point = points[`${parent}:${segment.end}`]
@@ -82,12 +82,7 @@ class Face {
 					let start_point_2d = new THREE.Vector2(start_point.x_2d, start_point.y_2d)
 					let end_point_2d = new THREE.Vector2(end_point.x_2d, end_point.y_2d)
 
-					let as_points = arcToPoints(
-						center_point_2d,
-						start_point_2d,
-						end_point_2d,
-						segment.clockwise
-					)
+					let as_points = arcToPoints(center_point_2d, start_point_2d, end_point_2d, segment.clockwise)
 
 					if (shape_points.length !== 0) {
 						as_points.shift()

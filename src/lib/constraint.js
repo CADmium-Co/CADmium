@@ -1,5 +1,5 @@
-import * as THREE from 'three'
-import { Text } from 'troika-three-text'
+import * as THREE from "three"
+import { Text } from "troika-three-text"
 
 class Constraint {
 	constructor(name, original_constraint, real_plane, parent, points, lines, circles) {
@@ -9,7 +9,7 @@ class Constraint {
 		this.original_constraint = original_constraint
 		this.name = name
 
-		if (original_constraint.type === 'CircleDiameter') {
+		if (original_constraint.type === "CircleDiameter") {
 			// we need an arrow that points to the center of the circle
 			// with a text label that says the diameter
 			// colored so that bigger error = more red
@@ -33,14 +33,8 @@ class Constraint {
 				sin * (circle.original_circle.radius + original_constraint.r_offset - 0.05)
 			)
 
-			text_point.addScaledVector(
-				this.primary,
-				cos * (circle.original_circle.radius + original_constraint.r_offset)
-			)
-			text_point.addScaledVector(
-				this.secondary,
-				sin * (circle.original_circle.radius + original_constraint.r_offset)
-			)
+			text_point.addScaledVector(this.primary, cos * (circle.original_circle.radius + original_constraint.r_offset))
+			text_point.addScaledVector(this.secondary, sin * (circle.original_circle.radius + original_constraint.r_offset))
 
 			start_point.addScaledVector(this.primary, cos * circle.original_circle.radius)
 			start_point.addScaledVector(this.secondary, sin * circle.original_circle.radius)
@@ -60,7 +54,7 @@ class Constraint {
 
 			this.group.add(this.label)
 			this.group.add(arrow)
-		} else if (original_constraint.type === 'SegmentLength') {
+		} else if (original_constraint.type === "SegmentLength") {
 			// console.log('og', original_constraint)
 			const extendedKey = `${name}:${original_constraint.segment_id}`
 			const line = lines[extendedKey]
@@ -77,28 +71,16 @@ class Constraint {
 
 			const edge_buffer = 0.01
 
-			const offset_midpoint = midpoint
-				.clone()
-				.addScaledVector(normal, original_constraint.normal_offset)
+			const offset_midpoint = midpoint.clone().addScaledVector(normal, original_constraint.normal_offset)
 
-			const edge_0_end = start
-				.clone()
-				.addScaledVector(normal, original_constraint.normal_offset + edge_buffer)
+			const edge_0_end = start.clone().addScaledVector(normal, original_constraint.normal_offset + edge_buffer)
 			const geometry_edge_0 = new THREE.BufferGeometry().setFromPoints([start, edge_0_end])
-			const edge_0 = new THREE.Line(
-				geometry_edge_0,
-				new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
-			)
+			const edge_0 = new THREE.Line(geometry_edge_0, new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 }))
 			this.group.add(edge_0)
 
-			const edge_1_end = end
-				.clone()
-				.addScaledVector(normal, original_constraint.normal_offset + edge_buffer)
+			const edge_1_end = end.clone().addScaledVector(normal, original_constraint.normal_offset + edge_buffer)
 			const geometry_edge_1 = new THREE.BufferGeometry().setFromPoints([end, edge_1_end])
-			const edge_1 = new THREE.Line(
-				geometry_edge_1,
-				new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 })
-			)
+			const edge_1 = new THREE.Line(geometry_edge_1, new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 1 }))
 			this.group.add(edge_1)
 
 			const text_point = offset_midpoint.clone()
@@ -136,7 +118,7 @@ class Constraint {
 				0.025
 			)
 			this.group.add(arrow_1)
-		} else if (original_constraint.type === 'SegmentAngle') {
+		} else if (original_constraint.type === "SegmentAngle") {
 			// console.log('SA', original_constraint)
 			const extendedKey = `${name}:${original_constraint.segment_id}`
 			const line = lines[extendedKey]
@@ -148,7 +130,7 @@ class Constraint {
 			const difference = end.clone().sub(start)
 			const midpoint = start.clone().addScaledVector(difference, 0.5)
 
-			let image = '/actions/horizontal.svg'
+			let image = "/actions/horizontal.svg"
 
 			let tex = new THREE.TextureLoader().load(image)
 			tex.center = new THREE.Vector2(0.5, 0.5)
@@ -156,7 +138,7 @@ class Constraint {
 
 			const geom = new THREE.BufferGeometry()
 			const vertices = new Float32Array([midpoint.x, midpoint.y, midpoint.z])
-			geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+			geom.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3))
 			const material = new THREE.PointsMaterial({
 				size: 40.0,
 				map: tex,
@@ -189,13 +171,13 @@ class Constraint {
 		// we need to rotate the text properly
 		const m = new THREE.Matrix4()
 		m.makeBasis(this.primary, this.secondary, this.tertiary)
-		this.ea = new THREE.Euler(0, 0, 0, 'XYZ')
-		this.ea.setFromRotationMatrix(m, 'XYZ')
+		this.ea = new THREE.Euler(0, 0, 0, "XYZ")
+		this.ea.setFromRotationMatrix(m, "XYZ")
 
 		this.label = new Text()
 		this.label.fontSize = 0.05
-		this.label.anchorX = 'center'
-		this.label.anchorY = 'middle'
+		this.label.anchorX = "center"
+		this.label.anchorY = "middle"
 		// this.label.depthOffset = -1
 		this.label.rotation.x = this.ea.x
 		this.label.rotation.y = this.ea.y

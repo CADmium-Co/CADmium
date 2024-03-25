@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { T } from '@threlte/core'
-	import { Path, Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry } from 'three'
-	import { circleToPoints, arcToPoints } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, selectingFor } from './stores'
+	import { T } from "@threlte/core"
+	import { Path, Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry } from "three"
+	import { circleToPoints, arcToPoints } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, selectingFor } from "./stores"
 	import type { EntityType, IDictionary, SketchPoint } from "../../types"
 	// import Sketch from './Sketch.svelte'
 
@@ -44,7 +44,7 @@
 		} else if (wire.Segments) {
 			let points = []
 			for (let segment of wire.Segments) {
-				if (segment.type === 'Line') {
+				if (segment.type === "Line") {
 					let start = pointsById[segment.start]
 					let end = pointsById[segment.end]
 
@@ -52,7 +52,7 @@
 						points.push(new Vector2(start.twoD.x, start.twoD.y))
 					}
 					points.push(new Vector2(end.twoD.x, end.twoD.y))
-				} else if (segment.type === 'Arc') {
+				} else if (segment.type === "Arc") {
 					let center = pointsById[segment.center]
 					let start = pointsById[segment.start]
 					let end = pointsById[segment.end]
@@ -91,7 +91,7 @@
 	// const edgeMaterial = new LineBasicMaterial({ color: 0xff0000 })
 
 	const standardMaterial = new MeshStandardMaterial({
-		color: '#525252',
+		color: "#525252",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -104,7 +104,7 @@
 	})
 
 	const hoverMaterial = new MeshStandardMaterial({
-		color: '#525252',
+		color: "#525252",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -117,7 +117,7 @@
 	})
 
 	const selectedMaterial = new MeshStandardMaterial({
-		color: '#525252',
+		color: "#525252",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -143,18 +143,14 @@
 		on:pointerleave={() => {
 			if ($selectingFor.includes(type)) {
 				hovered = false
-				$currentlyMousedOver = $currentlyMousedOver.filter(
-					(item) => !(item.id === id && item.type === type)
-				)
+				$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 			}
 		}}
 		on:click={() => {
 			if ($selectingFor.includes(type)) {
 				if ($currentlySelected.some((e) => e.id === id && e.type === type)) {
 					// this face was already selected, so unselect it
-					$currentlySelected = $currentlySelected.filter(
-						(item) => !(item.id === id && item.type === type)
-					)
+					$currentlySelected = $currentlySelected.filter((item) => !(item.id === id && item.type === type))
 				} else {
 					// @ts-ignore todo make all numeric ids number type.
 					$currentlySelected = [...$currentlySelected, { type, id }]

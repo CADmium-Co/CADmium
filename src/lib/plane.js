@@ -1,10 +1,10 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 
-import { Line2 } from 'three/addons/lines/Line2.js'
-import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
-import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+import { Line2 } from "three/addons/lines/Line2.js"
+import { LineMaterial } from "three/addons/lines/LineMaterial.js"
+import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 
-import { Text } from 'troika-three-text'
+import { Text } from "troika-three-text"
 
 class Plane {
 	constructor(name, { plane, width, height }, element) {
@@ -17,8 +17,8 @@ class Plane {
 		this.height = height
 		this.name = name
 
-		this.fillColor = '#525292'
-		this.strokeColor = '#42a7eb'
+		this.fillColor = "#525292"
+		this.strokeColor = "#42a7eb"
 		this.lineWidth = 2.0 * window.devicePixelRatio * window.devicePixelRatio
 		this.material = new THREE.MeshStandardMaterial({
 			color: this.fillColor,
@@ -40,14 +40,11 @@ class Plane {
 			depthTest: true,
 			transparent: true,
 			dashed: false,
-			resolution: new THREE.Vector2(
-				element.width * window.devicePixelRatio,
-				element.height * window.devicePixelRatio
-			)
+			resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
 		})
 
-		this.mouseOverFillColor = '#525292'
-		this.mouseOverStrokeColor = '#ffa500'
+		this.mouseOverFillColor = "#525292"
+		this.mouseOverStrokeColor = "#ffa500"
 		this.mouseOverLineWidth = 2.0
 		this.mouseOverMaterial = new THREE.MeshStandardMaterial({
 			color: this.mouseOverFillColor,
@@ -63,14 +60,11 @@ class Plane {
 			depthTest: true,
 			transparent: true,
 			dashed: false,
-			resolution: new THREE.Vector2(
-				element.width * window.devicePixelRatio,
-				element.height * window.devicePixelRatio
-			)
+			resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
 		})
 
-		this.selectedFillColor = '#525292'
-		this.selectedStrokeColor = '#ff0000'
+		this.selectedFillColor = "#525292"
+		this.selectedStrokeColor = "#ff0000"
 		this.selectedLineWidth = 2.0
 		this.selectedMaterial = new THREE.MeshStandardMaterial({
 			color: this.selectedFillColor,
@@ -86,13 +80,10 @@ class Plane {
 			depthTest: true,
 			transparent: true,
 			dashed: false,
-			resolution: new THREE.Vector2(
-				element.width * window.devicePixelRatio,
-				element.height * window.devicePixelRatio
-			)
+			resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
 		})
 
-		this.selectionStatus = 'unselected' // could also be 'mouseOver' or 'selected'
+		this.selectionStatus = "unselected" // could also be 'mouseOver' or 'selected'
 
 		origin = new THREE.Vector3(origin.x, origin.y, origin.z)
 		primary = new THREE.Vector3(primary.x, primary.y, primary.z)
@@ -102,22 +93,10 @@ class Plane {
 		let half_width = width / 2
 		let half_height = height / 2
 
-		const upper_right = origin
-			.clone()
-			.addScaledVector(primary, half_width)
-			.addScaledVector(secondary, half_height)
-		const upper_left = origin
-			.clone()
-			.addScaledVector(primary, -half_width)
-			.addScaledVector(secondary, half_height)
-		const lower_right = origin
-			.clone()
-			.addScaledVector(primary, half_width)
-			.addScaledVector(secondary, -half_height)
-		const lower_left = origin
-			.clone()
-			.addScaledVector(primary, -half_width)
-			.addScaledVector(secondary, -half_height)
+		const upper_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, half_height)
+		const upper_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, half_height)
+		const lower_right = origin.clone().addScaledVector(primary, half_width).addScaledVector(secondary, -half_height)
+		const lower_left = origin.clone().addScaledVector(primary, -half_width).addScaledVector(secondary, -half_height)
 		const label_position = upper_left.clone().addScaledVector(tertiary, 0.001)
 
 		const geometry = new THREE.BufferGeometry()
@@ -163,8 +142,8 @@ class Plane {
 			tertiary.z
 		])
 
-		geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3))
-		geometry.setAttribute('normal', new THREE.BufferAttribute(normals, 3))
+		geometry.setAttribute("position", new THREE.BufferAttribute(vertices, 3))
+		geometry.setAttribute("normal", new THREE.BufferAttribute(normals, 3))
 
 		const mesh = new THREE.Mesh(geometry, this.material)
 
@@ -194,7 +173,7 @@ class Plane {
 		const label = new Text()
 
 		// Set properties to configure:
-		label.text = ' ' + name
+		label.text = " " + name
 		label.fontSize = 0.05
 		label.position.x = label_position.x
 		label.position.y = label_position.y
@@ -208,8 +187,8 @@ class Plane {
 		// we need to rotate the text properly
 		const m = new THREE.Matrix4()
 		m.makeBasis(primary, secondary, tertiary)
-		const ea = new THREE.Euler(0, 0, 0, 'XYZ')
-		ea.setFromRotationMatrix(m, 'XYZ')
+		const ea = new THREE.Euler(0, 0, 0, "XYZ")
+		ea.setFromRotationMatrix(m, "XYZ")
 		this.ea = ea
 		label.rotation.x = ea.x
 		label.rotation.y = ea.y
@@ -237,17 +216,17 @@ class Plane {
 	}
 
 	setSelectionStatus(status) {
-		if (status === 'unselected') {
+		if (status === "unselected") {
 			this.mesh.material.color.set(this.fillColor)
 			this.line.material = this.lineMaterial
-		} else if (status === 'mouseOver') {
+		} else if (status === "mouseOver") {
 			this.mesh.material.color.set(this.mouseOverFillColor)
 			this.line.material = this.mouseOverLineMaterial
-		} else if (status === 'selected') {
+		} else if (status === "selected") {
 			this.mesh.material.color.set(this.selectedFillColor)
 			this.line.material = this.selectedLineMaterial
 		} else {
-			throw new Error('Invalid selection status: ', status)
+			throw new Error("Invalid selection status: ", status)
 		}
 		this.selectionStatus = status
 	}

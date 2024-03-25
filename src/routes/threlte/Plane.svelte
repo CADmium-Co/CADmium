@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { Matrix4, Euler, MeshStandardMaterial, DoubleSide, Vector2, Vector3, type Vector3Like } from "three"
-	import { T, extend, useThrelte } from '@threlte/core'
-	import { Text, Suspense } from '@threlte/extras'
+	import { T, extend, useThrelte } from "@threlte/core"
+	import { Text, Suspense } from "@threlte/extras"
 
-	import { Line2 } from 'three/addons/lines/Line2.js'
+	import { Line2 } from "three/addons/lines/Line2.js"
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 
-	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMin, selectionMax } from './stores'
+	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMin, selectionMax } from "./stores"
 	import type { EntityType } from "../../types"
 
 	// prettier-ignore
@@ -37,12 +37,12 @@
 	// Use those to make the rotation matrix and euler angles
 	const rotationMatrix = new Matrix4()
 	rotationMatrix.makeBasis(primaryV3, secondaryV3, tertiaryV3)
-	const eulerAngles = new Euler(0, 0, 0, 'XYZ')
-	eulerAngles.setFromRotationMatrix(rotationMatrix, 'XYZ')
+	const eulerAngles = new Euler(0, 0, 0, "XYZ")
+	eulerAngles.setFromRotationMatrix(rotationMatrix, "XYZ")
 
 	// Lastly, make the Plane Material
 	const standardMaterial = new MeshStandardMaterial({
-		color: '#525292',
+		color: "#525292",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -55,7 +55,7 @@
 	})
 
 	const hoveredMaterial = new MeshStandardMaterial({
-		color: '#525292',
+		color: "#525292",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -87,7 +87,7 @@
 	]
 
 	$: standardLineMaterial = new LineMaterial({
-		color: '#42a7eb',
+		color: "#42a7eb",
 		linewidth: 2.0 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -96,7 +96,7 @@
 	})
 
 	$: hoveredLineMaterial = new LineMaterial({
-		color: '#fcba03',
+		color: "#fcba03",
 		linewidth: 3.0 * $dpr,
 		depthTest: true,
 		transparent: true,
@@ -129,7 +129,7 @@
 	position.x={origin_point.x}
 	position.y={origin_point.y}
 	position.z={origin_point.z}
-	visible={!name.startsWith('derived_plane_for:')}
+	visible={!name.startsWith("derived_plane_for:")}
 >
 	<T.Mesh
 		material={hovered ? hoveredMaterial : standardMaterial}

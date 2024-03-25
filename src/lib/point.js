@@ -1,4 +1,4 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 
 class Point {
 	constructor(name, { x, y, z }, point_2d, parent = null) {
@@ -10,15 +10,15 @@ class Point {
 		this.y_2d = point_2d.y
 		this.parent = parent
 
-		let image = '/actions/point_min.svg'
+		let image = "/actions/point_min.svg"
 		if (parent) {
-			image = '/actions/simple_point_min.svg'
+			image = "/actions/simple_point_min.svg"
 		}
 
 		let tex = new THREE.TextureLoader().load(image)
 		const geom = new THREE.BufferGeometry()
 		const vertices = new Float32Array([x, y, z])
-		geom.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3))
+		geom.setAttribute("position", new THREE.Float32BufferAttribute(vertices, 3))
 		const material = new THREE.PointsMaterial({
 			size: parent ? 6.0 : 12.0,
 			map: tex,

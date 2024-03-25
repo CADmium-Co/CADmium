@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { workbench, realization } from './stores'
-	import PointFeature from './PointFeature.svelte'
-	import PlaneFeature from './PlaneFeature.svelte'
-	import SketchFeature from './SketchFeature.svelte'
-	import ExtrusionFeature from './ExtrusionFeature.svelte'
-	import SolidItem from './SolidItem.svelte'
+	import { workbench, realization } from "./stores"
+	import PointFeature from "./PointFeature.svelte"
+	import PlaneFeature from "./PlaneFeature.svelte"
+	import SketchFeature from "./SketchFeature.svelte"
+	import ExtrusionFeature from "./ExtrusionFeature.svelte"
+	import SolidItem from "./SolidItem.svelte"
 	import { isPoint, isPlane, isExtrusion, isSketch } from "./projectUtils"
 	import type { SetCameraFocus } from "../../types"
 
@@ -62,12 +62,7 @@
 				{#if isPoint(feature)}
 					<PointFeature name={feature.name} index={featureIdx} />
 				{:else if isPlane(feature)}
-					<PlaneFeature
-						name={feature.name}
-						index={featureIdx}
-						plane={feature.data.plane}
-						{setCameraFocus}
-					/>
+					<PlaneFeature name={feature.name} index={featureIdx} plane={feature.data.plane} {setCameraFocus} />
 				{:else if isSketch(feature)}
 					<SketchFeature
 						name={feature.name}

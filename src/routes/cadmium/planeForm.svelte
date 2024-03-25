@@ -1,7 +1,7 @@
 <script>
 	export let item
-	import { new_realization_needed, step_being_edited } from './stores'
-	console.log('item:', item)
+	import { new_realization_needed, step_being_edited } from "./stores"
+	console.log("item:", item)
 </script>
 
 <div class="px-3 py-2 bg-gray-300 flex flex-col space-y-2">

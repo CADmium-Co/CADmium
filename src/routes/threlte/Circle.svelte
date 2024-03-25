@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
-	import { T } from '@threlte/core'
-	import { flatten, circleToPoints, promoteTo3 } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import { T } from "@threlte/core"
+	import { flatten, circleToPoints, promoteTo3 } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
 	import type { CircleTuple, EntityType } from "../../types"
 
 	// prettier-ignore
@@ -52,18 +52,16 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 				// log("$currentlyMousedOver", $currentlyMousedOver)
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = false
-				$currentlyMousedOver = $currentlyMousedOver.filter(
-					(item) => !(item.id === id && item.type === type)
-				)
+				$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 			}
 		}}
 	/>

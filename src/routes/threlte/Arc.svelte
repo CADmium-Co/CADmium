@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
-	import { Vector2 } from 'three'
-	import { T } from '@threlte/core'
-	import { flatten, arcToPoints, promoteTo3 } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import { Vector2 } from "three"
+	import { T } from "@threlte/core"
+	import { flatten, arcToPoints, promoteTo3 } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
 	import type { EntityType, SketchPoint } from "../../types"
 	import { isEntity } from "../../typeGuards"
 
@@ -13,7 +13,7 @@
 
 	const type: EntityType = "arc"
 
-	export let id: string, center:SketchPoint, start:SketchPoint, end:SketchPoint
+	export let id: string, center: SketchPoint, start: SketchPoint, end: SketchPoint
 
 	export let dashedLineMaterial: LineMaterial,
 		dashedHoveredMaterial: LineMaterial,
@@ -22,12 +22,9 @@
 		solidSelectedMaterial: LineMaterial,
 		collisionLineMaterial: LineMaterial
 
-
 	let hovered = false
 
-	$: selected = $currentlySelected.some((e) => isEntity(e) && e.id === id && e.type === type)
-		? true
-		: false
+	$: selected = $currentlySelected.some((e) => isEntity(e) && e.id === id && e.type === type) ? true : false
 
 	const center2 = new Vector2(center.twoD.x, center.twoD.y)
 	const start2 = new Vector2(start.twoD.x, start.twoD.y)
@@ -61,17 +58,15 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = false
-				$currentlyMousedOver = $currentlyMousedOver.filter(
-					(item) => !(item.id === id && item.type === type)
-				)
+				$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 			}
 		}}
 	/>

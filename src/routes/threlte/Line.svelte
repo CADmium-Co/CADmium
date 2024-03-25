@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
-	import { Vector2 } from 'three'
-	import { T } from '@threlte/core'
-	import { flatten, promoteTo3 } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
+	import { Vector2 } from "three"
+	import { T } from "@threlte/core"
+	import { flatten, promoteTo3 } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
 	import type { EntityType, PointById } from "../../types"
 	import { isEntity } from "../../typeGuards"
 
@@ -24,9 +24,7 @@
 	const type: EntityType = "line"
 
 	let hovered = false
-	$: selected = $currentlySelected.some((e) => checkIsEntity(e) && e.id === id && e.type === type)
-		? true
-		: false
+	$: selected = $currentlySelected.some((e) => checkIsEntity(e) && e.id === id && e.type === type) ? true : false
 
 	function checkIsEntity(e: unknown) {
 		// log("[checkIsEntity]", isEntity(e), e)
@@ -67,17 +65,15 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id: id }]
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === 'select') {
+			if ($sketchTool === "select") {
 				hovered = false
-				$currentlyMousedOver = $currentlyMousedOver.filter(
-					(item) => !(item.id === id && item.type === type)
-				)
+				$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 			}
 		}}
 	/>

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
-	import { addCircleBetweenPoints, addPointToSketch } from './projectUtils'
+	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from "./stores"
+	import { addCircleBetweenPoints, addPointToSketch } from "./projectUtils"
 	import { Vector3, type Vector2Like, type Vector3Like } from "three"
 	import type { PointLikeById, Point2D, PointsLikeById, ProjectToPlane } from "../../types"
 
@@ -34,8 +34,7 @@
 			// there WAS an center point, so we should create a circle!
 
 			// if the center point doesn't exist, then we should create a point
-			if (centerPoint.id === null)
-				centerPoint.id = addPointToSketch(sketchIndex, centerPoint.twoD!, false)
+			if (centerPoint.id === null) centerPoint.id = addPointToSketch(sketchIndex, centerPoint.twoD!, false)
 
 			if (point.id && centerPoint.id) {
 				// if the point exists, then we should create a circle between the two existing points
@@ -44,8 +43,7 @@
 				// if the point doesn't exist, then we should create a point and a circle
 				point.id = addPointToSketch(sketchIndex, point.twoD!, true)
 			}
-			if (point.id && centerPoint.id)
-				addCircleBetweenPoints(sketchIndex, centerPoint.id, point.id)
+			if (point.id && centerPoint.id) addCircleBetweenPoints(sketchIndex, centerPoint.id, point.id)
 			centerPoint = null
 		}
 	}
@@ -70,7 +68,7 @@
 		let snappedTo = null
 		for (const geom of $currentlyMousedOver) {
 			// log("[currentlyMousedOver geom]", geom)
-			if (geom.type === 'point3D') {
+			if (geom.type === "point3D") {
 				const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
 				// log("[projectToPlane twoD]", twoD)
 				const point = {
@@ -80,7 +78,7 @@
 				}
 				snappedTo = point
 			}
-			if (geom.type === 'point') {
+			if (geom.type === "point") {
 				// log("[currentlyMousedOver geom is type point]", geom)
 				const point = pointsById[geom.id]
 				// oops! point.twoD etc does not exist here, we have:
@@ -95,8 +93,7 @@
 				// see if we can retrieve it? unlikely
 				// log("[querySnapPoint found point:]", querySnapPoint(point?.id!))
 				// have not seen a successful query yet! sort it out with an if:
-				if (point.twoD && point.threeD && geom.id)
-					snappedTo = { twoD: point.twoD, threeD: point.threeD, id: geom.id }
+				if (point.twoD && point.threeD && geom.id) snappedTo = { twoD: point.twoD, threeD: point.threeD, id: geom.id }
 				break // If there is a 2D point, prefer to use it rather than the 3D point
 			}
 		}
@@ -114,27 +111,22 @@
 		}
 
 		if (centerPoint) {
-			function calcDeltas(
-				a: Vector2Like | Point2D | { x: number; y: number },
-				b: Vector2Like | undefined
-			) {
+			function calcDeltas(a: Vector2Like | Point2D | { x: number; y: number }, b: Vector2Like | undefined) {
 				const dx = a.x - b?.x!
 				const dy = a.y - b?.y!
 				return Math.hypot(dx, dy)
 			}
-			const radius = snappedTo
-				? calcDeltas(snappedTo.twoD, centerPoint.twoD)
-				: calcDeltas(projected, centerPoint.twoD)
+			const radius = snappedTo ? calcDeltas(snappedTo.twoD, centerPoint.twoD) : calcDeltas(projected, centerPoint.twoD)
 
 			previewGeometry.set([
 				{
-					type: 'circle',
+					type: "circle",
 					center: centerPoint,
 					radius,
 					uuid: `circle-${centerPoint.twoD?.x}-${centerPoint.twoD?.y}-${radius}`
 				},
 				{
-					type: 'point',
+					type: "point",
 					x: centerPoint.twoD?.x,
 					y: centerPoint.twoD?.y,
 					uuid: `point-${centerPoint.twoD?.x}-${centerPoint.twoD?.y}`
@@ -147,10 +139,10 @@
 
 	export function onKeyDown(event: KeyboardEvent) {
 		if (!active) return
-		if (event.key === 'Escape') {
+		if (event.key === "Escape") {
 			previewGeometry.set([])
 			centerPoint = null
-			$sketchTool = 'select'
+			$sketchTool = "select"
 		}
 	}
 </script>

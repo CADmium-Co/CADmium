@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
 	import {
 		Shape,
@@ -12,12 +12,12 @@
 		Euler,
 		Matrix4,
 		type Vector3Like
-	} from 'three'
-	import { T } from '@threlte/core'
-	import { flatten } from './projectUtils'
-	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMax, selectionMin } from './stores'
+	} from "three"
+	import { T } from "@threlte/core"
+	import { flatten } from "./projectUtils"
+	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMax, selectionMin } from "./stores"
 	import type { EntityType, TruckEdge, TruckFace, TruckFaceBoundary } from "../../types"
-	import nurbs from 'nurbs'
+	import nurbs from "nurbs"
 
 	// prettier-ignore
 	const log = (function () { const context = "[SelectableSurface.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -35,7 +35,7 @@
 		truck_vertices
 
 	const standardMaterial = new MeshStandardMaterial({
-		color: '#525252',
+		color: "#525252",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -48,7 +48,7 @@
 	})
 
 	const hoveredMaterial = new MeshStandardMaterial({
-		color: '#ff0000',
+		color: "#ff0000",
 		side: DoubleSide,
 		metalness: 0.0,
 		transparent: true,
@@ -69,7 +69,7 @@
 
 	const shape = new Shape()
 
-	if ('Plane' in surface) {
+	if ("Plane" in surface) {
 		// cool, this surface is planar. let's extract its boundaries
 		// boundaries is an array like [0, 1] where the indices point to the truck_edges array
 
@@ -164,7 +164,7 @@
 			const edge = truck_edges[index]
 			const curve = edge.curve
 
-			if ('NURBSCurve' in curve) {
+			if ("NURBSCurve" in curve) {
 				const { NURBSCurve } = curve
 				const weights = NURBSCurve.control_points.map((point) => point.w)
 				const controlPoints = NURBSCurve.control_points.map((point) => [
@@ -197,7 +197,7 @@
 
 				const flattened = flatten(b)
 				for (let p of flattened) points.push(p)
-			} else if ('Line' in curve) {
+			} else if ("Line" in curve) {
 				const line = curve.Line
 				const startPoint = orientation === true ? line[0] : line[1]
 				const endPoint = orientation === true ? line[1] : line[0]

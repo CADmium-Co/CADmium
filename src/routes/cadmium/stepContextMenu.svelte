@@ -43,30 +43,30 @@
 	}
 
 	function addItem() {
-		console.log('export item')
+		console.log("export item")
 	}
 
 	function remove() {
-		console.log('remove item')
+		console.log("remove item")
 	}
 
 	// hide, hide all others, isolate, make transparent, rename, export, delete
 	// edit appearance, assign material
 	let menuItems = [
 		{
-			name: 'addItem',
+			name: "addItem",
 			onClick: addItem,
-			displayText: 'Add Item',
-			class: 'fa-solid fa-plus'
+			displayText: "Add Item",
+			class: "fa-solid fa-plus"
 		},
 		{
-			name: 'hr'
+			name: "hr"
 		},
 		{
-			name: 'trash',
+			name: "trash",
 			onClick: remove,
-			displayText: 'Delete',
-			class: 'fa-solid fa-trash-can'
+			displayText: "Delete",
+			class: "fa-solid fa-trash-can"
 		}
 	]
 </script>
@@ -79,7 +79,7 @@
 		>
 			<ul class="m-1.5">
 				{#each menuItems as item}
-					{#if item.name == 'hr'}
+					{#if item.name == "hr"}
 						<hr class="mx-0 my-[5px]" />
 					{:else}
 						<li class="block list-none w-[1fr]">

@@ -1,6 +1,6 @@
 <script>
-	import fileDownload from 'js-file-download'
-	import { realization, realization_rust } from './stores'
+	import fileDownload from "js-file-download"
+	import { realization, realization_rust } from "./stores"
 
 	let showMenu = false
 	// pos is cursor position when right click occur
@@ -50,26 +50,26 @@
 
 	function exportSolidOBJ() {
 		let obj_string = $realization_rust.solid_to_obj(solid_name, 0.001)
-		fileDownload(obj_string, solid_name + '.obj')
+		fileDownload(obj_string, solid_name + ".obj")
 	}
 	const exportSolidSTEP = () => {
 		let step_string = $realization_rust.solid_to_step(solid_name)
 		console.log(step_string)
-		fileDownload(step_string, solid_name + '.step')
+		fileDownload(step_string, solid_name + ".step")
 	}
 
 	let menuItems = [
 		{
-			name: 'export',
+			name: "export",
 			onClick: exportSolidOBJ,
-			displayText: 'Download as OBJ',
-			class: 'fa-solid fa-download'
+			displayText: "Download as OBJ",
+			class: "fa-solid fa-download"
 		},
 		{
-			name: 'export',
+			name: "export",
 			onClick: exportSolidSTEP,
-			displayText: 'Download as STEP',
-			class: 'fa-solid fa-download'
+			displayText: "Download as STEP",
+			class: "fa-solid fa-download"
 		}
 		// {
 		// 	name: 'hr'
@@ -85,7 +85,7 @@
 		>
 			<ul class="m-1.5">
 				{#each menuItems as item}
-					{#if item.name == 'hr'}
+					{#if item.name == "hr"}
 						<hr class="mx-0 my-[5px]" />
 					{:else}
 						<li class="block list-none w-[1fr]">

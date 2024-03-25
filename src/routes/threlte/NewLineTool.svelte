@@ -1,16 +1,13 @@
 <script lang="ts">
-	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from './stores'
-	import { addLineToSketch, addPointToSketch } from './projectUtils'
-	import { Vector3 } from 'three'
+	import { snapPoints, sketchTool, previewGeometry, currentlyMousedOver } from "./stores"
+	import { addLineToSketch, addPointToSketch } from "./projectUtils"
+	import { Vector3 } from "three"
 	import type { IDictionary, Point, PointLikeById, PreviewGeometry, ProjectToPlane, SketchPoint } from "../../types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[NewLineTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let pointsById: IDictionary<SketchPoint>,
-		sketchIndex: string,
-		active: boolean,
-		projectToPlane: ProjectToPlane
+	export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
 
 	// $: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
 
@@ -32,13 +29,11 @@
 			// there WAS an anchor point, so we should create a line
 
 			// if the center point doesn't exist, then we should create a point
-			if (previousPoint?.id === null)
-				previousPoint.id = addPointToSketch(sketchIndex, previousPoint?.twoD!, false)
+			if (previousPoint?.id === null) previousPoint.id = addPointToSketch(sketchIndex, previousPoint?.twoD!, false)
 
 			if (point?.id) {
 				// if the point exists, then we should create a line
-				if (previousPoint?.id && point.id)
-					addLineToSketch(sketchIndex, +previousPoint.id, +point.id)
+				if (previousPoint?.id && point.id) addLineToSketch(sketchIndex, +previousPoint.id, +point.id)
 				previousPoint = null
 				return
 			} else {
@@ -64,7 +59,7 @@
 
 		for (const geom of $currentlyMousedOver) {
 			// log("[geom of $currentlyMousedOver]", geom)
-			if (geom.type === 'point3D') {
+			if (geom.type === "point3D") {
 				if (geom.x && geom.y && geom.z) {
 					const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
 					const point: PointLikeById = {
@@ -76,7 +71,7 @@
 					snappedTo = point
 				}
 			}
-			if (geom.type === 'point') {
+			if (geom.type === "point") {
 				const point = pointsById[geom.id]
 				// log("[pointsById]", pointsById)
 				snappedTo = {
@@ -120,10 +115,10 @@
 
 	export function onKeyDown(event: KeyboardEvent) {
 		if (!active) return
-		if (event.key === 'Escape') {
+		if (event.key === "Escape") {
 			previewGeometry.set([])
 			previousPoint = null
-			$sketchTool = 'select'
+			$sketchTool = "select"
 		}
 	}
 </script>

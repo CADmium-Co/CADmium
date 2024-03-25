@@ -1,18 +1,18 @@
 <script lang="ts">
-	import fileDownload from 'js-file-download'
-	import { wasmProject, messageHistory } from './stores'
+	import fileDownload from "js-file-download"
+	import { wasmProject, messageHistory } from "./stores"
 	import type { Project } from "cadmium"
 
-	import Download from 'phosphor-svelte/lib/Download'
-	import Upload from 'phosphor-svelte/lib/Upload'
-	import Bug from 'phosphor-svelte/lib/Bug'
+	import Download from "phosphor-svelte/lib/Download"
+	import Upload from "phosphor-svelte/lib/Upload"
+	import Bug from "phosphor-svelte/lib/Bug"
 	import type { WithTarget } from "../../types"
 	import { isProject } from "../../typeGuards"
 
 	// prettier-ignore
 	const log = (function () { const context = "[AppBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let userName = 'mattferraro.dev'
+	export let userName = "mattferraro.dev"
 	export let project: Project
 
 	export let newFileContent: string | null = null

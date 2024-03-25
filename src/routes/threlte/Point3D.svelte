@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
-	import { useTexture } from '@threlte/extras'
-	import { BufferGeometry, Float32BufferAttribute, PointsMaterial, Vector2 } from 'three'
-	import { currentlySelected, currentlyMousedOver, sketchTool } from './stores'
-	import { flatten, promoteTo3 } from './projectUtils'
-	import { T } from '@threlte/core'
+	import { useTexture } from "@threlte/extras"
+	import { BufferGeometry, Float32BufferAttribute, PointsMaterial, Vector2 } from "three"
+	import { currentlySelected, currentlyMousedOver, sketchTool } from "./stores"
+	import { flatten, promoteTo3 } from "./projectUtils"
+	import { T } from "@threlte/core"
 	import type { EntityType } from "../../types"
 
-	export let x:number, y:number, z:number, hidden: boolean, id: string
+	export let x: number, y: number, z: number, hidden: boolean, id: string
 	export let isPreview = false
 
 	export let collisionLineMaterial: LineMaterial
@@ -35,9 +35,9 @@
 
 	const geom = new BufferGeometry()
 	const vertices = new Float32Array([x, y, z])
-	geom.setAttribute('position', new Float32BufferAttribute(vertices, 3))
+	geom.setAttribute("position", new Float32BufferAttribute(vertices, 3))
 
-	const validTools = ['select', 'line', 'circle', 'rectangle']
+	const validTools = ["select", "line", "circle", "rectangle"]
 </script>
 
 {#if !hidden}
@@ -48,19 +48,14 @@
 					if (isPreview) return
 					if (validTools.includes($sketchTool)) {
 						hovered = true
-						$currentlyMousedOver = [
-							...$currentlyMousedOver,
-							{ type, id, x, y, z }
-						]
+						$currentlyMousedOver = [...$currentlyMousedOver, { type, id, x, y, z }]
 					}
 				}}
 				on:pointerout={() => {
 					if (isPreview) return
 					if (validTools.includes($sketchTool)) {
 						hovered = false
-						$currentlyMousedOver = $currentlyMousedOver.filter(
-							(item) => !(item.id === id && item.type === type)
-						)
+						$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 					}
 				}}
 			>

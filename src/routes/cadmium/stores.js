@@ -1,4 +1,4 @@
-import { writable } from 'svelte/store'
+import { writable } from "svelte/store"
 
 export const project_rust = writable({})
 export const project = writable({})

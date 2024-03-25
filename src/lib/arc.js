@@ -1,10 +1,10 @@
-import * as THREE from 'three'
+import * as THREE from "three"
 
-import { Line2 } from 'three/addons/lines/Line2.js'
-import { LineMaterial } from 'three/addons/lines/LineMaterial.js'
-import { LineGeometry } from 'three/addons/lines/LineGeometry.js'
+import { Line2 } from "three/addons/lines/Line2.js"
+import { LineMaterial } from "three/addons/lines/LineMaterial.js"
+import { LineGeometry } from "three/addons/lines/LineGeometry.js"
 
-import { ARC_TOLERANCE, SKETCH_LINE_WIDTH } from './utils'
+import { ARC_TOLERANCE, SKETCH_LINE_WIDTH } from "./utils"
 
 class Arc {
 	constructor(name, { center, start, end, clockwise }, real_plane, parent, points, element) {
@@ -59,16 +59,12 @@ class Arc {
 		line_geometry.setPositions(line_vertices)
 
 		this.defaultMaterial = new LineMaterial({
-			color: '#000000',
-			linewidth: (this.lineWidth =
-				SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
+			color: "#000000",
+			linewidth: (this.lineWidth = SKETCH_LINE_WIDTH * window.devicePixelRatio * window.devicePixelRatio),
 			depthTest: true,
 			transparent: true,
 			dashed: false,
-			resolution: new THREE.Vector2(
-				element.width * window.devicePixelRatio,
-				element.height * window.devicePixelRatio
-			)
+			resolution: new THREE.Vector2(element.width * window.devicePixelRatio, element.height * window.devicePixelRatio)
 		})
 
 		const fat_line = new Line2(line_geometry, this.defaultMaterial)
