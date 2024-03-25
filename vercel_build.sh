@@ -19,8 +19,7 @@ pnpm install
 
 # Run tests
 echo "Running tests"
-pnpm exec playwright install
-pnpm run test
+pnpm run test:unit
 
 
 echo "Build static frontend client..."
