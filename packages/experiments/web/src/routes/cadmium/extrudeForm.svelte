@@ -1,6 +1,6 @@
 <script>
 	export let item
-	import { step_being_edited, project_rust, active_workbench_index, new_realization_needed } from "./stores"
+	import { step_being_edited, project_rust, active_workbench_index, new_realization_needed } from "shared/stores"
 	console.log(item)
 	const update_extrusion_length = (e) => {
 		console.log("updating length to: ", e.target.value)

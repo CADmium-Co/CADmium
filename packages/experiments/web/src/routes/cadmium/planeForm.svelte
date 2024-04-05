@@ -1,6 +1,6 @@
 <script>
 	export let item
-	import { new_realization_needed, step_being_edited } from "./stores"
+	import { new_realization_needed, step_being_edited } from "shared/stores"
 	console.log("item:", item)
 </script>
 

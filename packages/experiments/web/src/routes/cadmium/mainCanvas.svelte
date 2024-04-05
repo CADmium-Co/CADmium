@@ -1,7 +1,7 @@
 <script>
 	import { onMount } from "svelte"
 	import { browser } from "$app/environment"
-	import { realization, looking_for, found, outlined_solids, sketch_being_edited } from "./stores"
+	import { realization, looking_for, found, outlined_solids, sketch_being_edited } from "shared/stores"
 
 	import * as THREE from "three"
 	import { TrackballControls } from "three/addons/controls/TrackballControls.js"

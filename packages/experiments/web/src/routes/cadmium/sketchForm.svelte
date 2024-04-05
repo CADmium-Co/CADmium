@@ -7,7 +7,7 @@
 		looking_for,
 		found,
 		project_rust
-	} from "./stores"
+	} from "shared/stores"
 	sketch_being_edited.set(item.name)
 
 	let mode = "Select"

@@ -1,3 +1,4 @@
 packages:
   - "packages/*"
   - "packages/cadmium/pkg"
+  - "applications/*"

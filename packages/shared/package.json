@@ -1,0 +1,11 @@
+{
+  "name": "shared",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "cadmium": "workspace:*",
+		"svelte": "^4.2.12",
+		"three": "^0.162.0"
+  }
+}

@@ -1,6 +1,6 @@
 <script>
 	import fileDownload from "js-file-download"
-	import { realization, realization_rust } from "./stores"
+	import { realization, realization_rust } from "shared/stores"
 
 	let showMenu = false
 	// pos is cursor position when right click occur

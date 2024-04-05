@@ -39,7 +39,7 @@ If you're just trying to kick the tires, [click here](https://cadmium-nine.verce
 
 To build locally using pnpm workspace:
 
-```
+```shell
 git clone https://github.com/MattFerraro/CADmium.git
 cd CADmium/packages/web
 pnpm run build:wasm
@@ -48,6 +48,26 @@ pnpm run dev
 ```
 
 You will need rust and wasm-pack working locally. See `vercel_build.sh` for an example of installing these dependencies.
+
+## Running Tests
+
+```shell
+pnpm test
+```
+
+Playwright is used for e2e testing. You may be prompted with a command to install it.
+
+For manjaro/archlinux folks it may report missing dependencies. On manjaro the missing dependencies are solved [thanks to this comment](https://github.com/microsoft/playwright/issues/2621#issuecomment-931530175):
+
+```shell
+yay -S aur/enchant1.6 aur/icu66 aur/libwebp052
+```
+
+Watch vitest unit tests only:
+
+```shell
+pnpm test:unit -w 
+```
 
 ## Contributing
 
