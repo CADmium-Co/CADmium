@@ -41,7 +41,7 @@ To build locally using pnpm workspace:
 
 ```
 git clone https://github.com/MattFerraro/CADmium.git
-cd CADmium
+cd CADmium/packages/web
 pnpm run build:wasm
 pnpm install
 pnpm run dev

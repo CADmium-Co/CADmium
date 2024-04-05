@@ -165,9 +165,9 @@
 			const curve = edge.curve
 
 			// https://github.com/MattFerraro/CADmium/pull/2#discussion_r1536905388
-			// There are two common representations for NURBS control points, one where x, y, z, w can be used as is, 
-			// and one where you need to normalize by w first. The NURBS engine that is included in truck uses one kind and the 
-			// NURBS javascript library that we're using here uses the other kind, so it is necessary to normalize by w here. 
+			// There are two common representations for NURBS control points, one where x, y, z, w can be used as is,
+			// and one where you need to normalize by w first. The NURBS engine that is included in truck uses one kind and the
+			// NURBS javascript library that we're using here uses the other kind, so it is necessary to normalize by w here.
 			if ("NURBSCurve" in curve) {
 				const { NURBSCurve } = curve
 				const weights = NURBSCurve.control_points.map((point) => point.w)
