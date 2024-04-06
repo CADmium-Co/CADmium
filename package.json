@@ -12,6 +12,7 @@
     "build:wasm": "wasm-pack build --target web packages/cadmium"
   },
   "devDependencies": {
+    "@playwright/test": "^1.42.1",
     "turbo": "^1.13.2"
   },
   "packageManager": "pnpm@8.15.5",
