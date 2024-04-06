@@ -56,10 +56,10 @@ jobs:
         run: pnpm exec playwright install
 
       - name: Build
-        run: pnpm build
+        run: turbo build
 
       - name: Test
-        run: pnpm test
+        run: turbo test
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
