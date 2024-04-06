@@ -1,12 +1,12 @@
 name: CI
- 
+
 on:
   push:
     # branches: ["main"]
     branches: ["*"]
   pull_request:
     types: [opened, synchronize]
- 
+
 jobs:
   build:
     name: Build and Test
@@ -16,36 +16,39 @@ jobs:
     # env:
     #  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
     #  TURBO_TEAM: ${{ vars.TURBO_TEAM }}
- 
+
     steps:
       - name: Check out code
         uses: actions/checkout@v4
         with:
           fetch-depth: 2
- 
+
       - uses: pnpm/action-setup@v3
         with:
           version: 8
- 
+
       - name: Setup Node.js environment
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'pnpm'
+          cache: "pnpm"
 
       - uses: jetli/wasm-pack-action@v0.4.0
         with:
           # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
-          version: 'latest'
- 
+          version: "latest"
+
       - name: Build cadmium
         run: pnpm build:wasm
 
       - name: Install dependencies
         run: pnpm install
- 
+
+      - name: Install playwright dependencies
+        run: pnpm exec playwright install
+
       - name: Build
         run: pnpm build
- 
+
       - name: Test
         run: pnpm test
