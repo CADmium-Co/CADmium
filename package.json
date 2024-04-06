@@ -4,6 +4,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "serve": "turbo run serve",
+    "test": "turbo run test",
     "clean": "turbo run clean",
     "lint": "turbo run lint",
     "format": "prettier --write .",
