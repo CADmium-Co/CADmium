@@ -1,7 +1,7 @@
 {
   "private": true,
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --cache-dir=.turbo",
     "dev": "turbo run dev",
     "serve": "turbo run serve",
     "test": "turbo run test",
