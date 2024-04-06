@@ -60,3 +60,9 @@ jobs:
 
       - name: Test
         run: pnpm test
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: applications/web/dist
+          branch: gh-pages
