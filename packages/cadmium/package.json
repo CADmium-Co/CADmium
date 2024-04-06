@@ -1,0 +1,7 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "wasm-pack build --target web ."
+  }
+}
