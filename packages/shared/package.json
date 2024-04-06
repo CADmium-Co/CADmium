@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "scripts": {
+    "clean": "rm -rf node_modules"
+  },
   "dependencies": {
     "cadmium": "workspace:*",
 		"svelte": "^4.2.12",

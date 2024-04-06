@@ -3,12 +3,10 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"build:wasm:dev": "wasm-pack build --target web ../../packages/cadmium --dev --no-typescript",
-		"build:wasm": "wasm-pack build --target web ../../packages/cadmium",
-		"prepare": "pnpm build:wasm",
 		"dev": "vite dev",
 		"build": "vite build",
 		"serve": "pnpm build && serve -p 5173 dist",
+		"clean": "rm -rf .turbo .sveltekit dist node_modules",
 		"preview": "vite preview",
 		"test": "pnpm test:integration && pnpm test:unit",
 		"lint": "prettier --plugin-search-dir . --check . && eslint .",

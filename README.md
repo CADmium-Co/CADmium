@@ -37,14 +37,14 @@ This software is offered under the [Elastic License 2.0](https://www.elastic.co/
 
 If you're just trying to kick the tires, [click here](https://cadmium-nine.vercel.app/threlte) to view the live web demo.
 
-To build locally using pnpm workspace:
+To build locally using pnpm workspace & turbo:
 
 ```shell
 git clone https://github.com/MattFerraro/CADmium.git
-cd CADmium/packages/web
-pnpm run build:wasm
+cd CADmium
+pnpm build:wasm
 pnpm install
-pnpm run dev
+turbo dev
 ```
 
 You will need rust and wasm-pack working locally. See `vercel_build.sh` for an example of installing these dependencies.
@@ -52,7 +52,7 @@ You will need rust and wasm-pack working locally. See `vercel_build.sh` for an e
 ## Running Tests
 
 ```shell
-pnpm test
+turbo test
 ```
 
 Playwright is used for e2e testing. You may be prompted with a command to install it.
@@ -66,6 +66,7 @@ yay -S aur/enchant1.6 aur/icu66 aur/libwebp052
 Watch vitest unit tests only:
 
 ```shell
+cd applications/web
 pnpm test:unit -w 
 ```
 

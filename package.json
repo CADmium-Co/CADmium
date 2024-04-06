@@ -4,8 +4,11 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "serve": "turbo run serve",
+    "clean": "turbo run clean",
     "lint": "turbo run lint",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
+    "build:wasm": "wasm-pack build --target web packages/cadmium"
   },
   "devDependencies": {
     "turbo": "^1.13.2"
