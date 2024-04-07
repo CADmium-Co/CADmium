@@ -14,7 +14,12 @@ const config = {
 			pages: "dist",
 			assets: "dist",
 			strict: false
-		})
+		}),
+		paths: {
+			base: dev ? "" : "/CADmium"
+		},
+		// hydrate the <div id="svelte"> element in src/app.html
+		target: "#svelte"
 	},
 	vitePlugin: {
 		inspector: true
