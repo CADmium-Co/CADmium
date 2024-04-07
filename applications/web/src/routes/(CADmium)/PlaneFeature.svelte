@@ -5,6 +5,7 @@
 	import { workbenchIsStale, featureIndex } from "shared/stores"
 	import MagnifyingGlass from "phosphor-svelte/lib/MagnifyingGlass"
 	import type { Plane, SetCameraFocus } from "shared/types"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[PlaneFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -12,7 +13,7 @@
 	export let name: string, index: number, plane: Plane, setCameraFocus: SetCameraFocus
 	// log("[props]", "name:", name, "index:", index, "plane:", plane, "setCameraFocus:", "(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void")
 
-	const source = "/actions/plane_min.svg"
+	const source = `${base}/actions/plane_min.svg`
 
 	const closeAndRefresh = () => {
 		log("closing, refreshing")

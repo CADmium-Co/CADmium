@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "vite dev",
 		"build": "vite build",
-		"serve": "pnpm build && serve -p 5173 dist",
+		"serve": "pnpm build && serve -p 5174 dist",
 		"clean": "rm -rf .turbo .svelte-kit dist node_modules",
 		"preview": "vite preview",
 		"test": "pnpm test:integration && pnpm test:unit",

@@ -5,6 +5,7 @@
 	import { selectingFor, workbenchIsStale, featureIndex, currentlySelected, hiddenSketches } from "shared/stores"
 	import X from "phosphor-svelte/lib/X"
 	import type { ExtrusionData } from "shared/types"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -69,7 +70,7 @@
 	// $: log($currentlySelected)
 	// $: faceIds = $currentlySelected.filter((e) => e.type === 'face').map((e) => e.id)
 
-	const source = "/actions/extrude_min.svg"
+	const source = `${base}/actions/extrude_min.svg`
 
 	$: if ($featureIndex === index) {
 		$selectingFor = ["face"]

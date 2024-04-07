@@ -3,14 +3,14 @@
 	import { quintOut } from "svelte/easing"
 	import { renameStep } from "shared/projectUtils"
 	import { workbenchIsStale, featureIndex } from "shared/stores"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[PointFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let name: string, index: number
 
-	const source = "/actions/point_min_icon.svg"
-
+	const source = `${base}/actions/point_min_icon.svg`
 	const closeAndRefresh = () => {
 		log("closing, refreshing")
 		workbenchIsStale.set(true)

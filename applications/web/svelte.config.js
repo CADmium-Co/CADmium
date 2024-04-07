@@ -1,6 +1,10 @@
 import { vitePreprocess } from "@sveltejs/vite-plugin-svelte"
 import adapter from "@sveltejs/adapter-static"
 
+const prodBasePath = "/CADmium"
+let base = process.env.NODE_ENV === "production" ? prodBasePath : ""
+// base = prodBasePath
+
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
 	// Consult https://kit.svelte.dev/docs/integrations#preprocessors
@@ -15,9 +19,7 @@ const config = {
 			assets: "dist",
 			strict: false
 		}),
-		paths: {
-			base: process.env.NODE_ENV === "development" ? "" : "/CADmium"
-		}
+		paths: { base }
 	},
 	vitePlugin: {
 		inspector: true

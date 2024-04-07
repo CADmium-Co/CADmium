@@ -10,6 +10,7 @@
 		hiddenSketches
 	} from "shared/stores"
 	import { newExtrusion, newSketchOnPlane } from "shared/projectUtils"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -33,20 +34,20 @@
 	const actions = [
 		{
 			alt: "new sketch",
-			src: "/actions/sketch_min.svg",
+			src: `${base}/actions/sketch_min.svg`,
 			text: "New Sketch",
 			handler: createNewSketch
 		},
-		{ alt: "extrude", src: "/actions/extrude_min.svg", handler: createNewExtrusion }
+		{ alt: "extrude", src: `${base}/actions/extrude_min.svg`, handler: createNewExtrusion }
 		// { alt: 'plane', src: '/actions/plane_min.svg' }
 	]
 
 	const sketchActions = [
-		{ alt: "solve", src: "/actions/solve_min.svg", text: "Solve", handler: solveSketch },
-		{ alt: "step", src: "/actions/step_min.svg", text: "Step", handler: stepSketch },
-		{ alt: "line", src: "/actions/line.svg", handler: () => ($sketchTool = "line") },
-		{ alt: "circle", src: "/actions/circle.svg", handler: () => ($sketchTool = "circle") },
-		{ alt: "rectangle", src: "/actions/rectangle.svg", handler: () => ($sketchTool = "rectangle") }
+		{ alt: "solve", src: `${base}/actions/solve_min.svg`, text: "Solve", handler: solveSketch },
+		{ alt: "step", src: `${base}/actions/step_min.svg`, text: "Step", handler: stepSketch },
+		{ alt: "line", src: `${base}/actions/line.svg`, handler: () => ($sketchTool = "line") },
+		{ alt: "circle", src: `${base}/actions/circle.svg`, handler: () => ($sketchTool = "circle") },
+		{ alt: "rectangle", src: `${base}/actions/rectangle.svg`, handler: () => ($sketchTool = "rectangle") }
 	]
 </script>
 

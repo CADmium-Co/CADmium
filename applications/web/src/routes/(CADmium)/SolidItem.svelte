@@ -3,13 +3,14 @@
 	import FileArrowDown from "phosphor-svelte/lib/FileArrowDown"
 	import { getObjectString } from "shared/projectUtils"
 	import type { WithTarget } from "shared/types"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[SolidItem.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let name: string
 
-	const source = "/actions/part.svg"
+	const source = `${base}/actions/part.svg`
 	let contextMenuVisible = false
 
 	// pos is cursor position when right click occur

@@ -16,13 +16,13 @@
 		new_realization_needed,
 		sketch_being_edited
 	} from "./stores.js"
-	// import init from '../../rust/cadmium/pkg/cadmium_bg.wasm?init';
 	import { default as init, Project } from "cadmium"
 	import StepContextMenu from "./stepContextMenu.svelte"
 	import SolidContextMenu from "./solidContextMenu.svelte"
 	import ExtrudeForm from "./extrudeForm.svelte"
 	import SketchForm from "./sketchForm.svelte"
 	import PlaneForm from "./planeForm.svelte"
+	import { base } from "$app/paths"
 
 	let num_steps_applied = 1000
 	// let realization = {}
@@ -258,7 +258,7 @@
 	<header class="col-span-2 bg-gray-100">
 		<div class="flex items-center gap-4">
 			<div class="shrink-0 select-none">
-				<img class="object-cover h-10 w-10 ml-4" alt="logo" src="/cadmium_logo_min.svg" />
+				<img class="object-cover h-10 w-10 ml-4" alt="logo" src="{base}/cadmium_logo_min.svg" />
 			</div>
 			<div class="select-none">CADmium</div>
 			<div class="text-xl font-medium">{$project.name || ""}</div>
@@ -344,7 +344,7 @@
 								unhighlightSolid(solid_id)
 							}}
 						>
-							<img class="h-8 w-8 px-1" src="/actions/part.svg" alt="solid" />
+							<img class="h-8 w-8 px-1" src="{base}/actions/part.svg" alt="solid" />
 							{solid_id}
 						</div>
 					{/each}

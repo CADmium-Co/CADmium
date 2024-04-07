@@ -17,6 +17,7 @@
 	import Eye from "phosphor-svelte/lib/Eye"
 	import X from "phosphor-svelte/lib/X"
 	import type { Entity } from "shared/types"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -25,7 +26,7 @@
 
 	// $: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
 
-	const source = "/actions/sketch_min.svg"
+	const source = `${base}/actions/sketch_min.svg`
 
 	let surface: Entity | null = null
 	let selectingForSketchPlane = false
