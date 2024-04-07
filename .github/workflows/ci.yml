@@ -14,13 +14,13 @@ on:
 permissions:
   contents: read
   pages: write
-  id-token: write 
+  id-token: write
 
 # Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
 # However, do NOT cancel in-progress runs as we want to allow these production deployments to complete.
 concurrency:
   group: "pages"
-  cancel-in-progress: false       
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -44,7 +44,7 @@ jobs:
           path: .turbo
           key: ${{ runner.os }}-turbo-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-turbo-          
+            ${{ runner.os }}-turbo-
 
       - uses: pnpm/action-setup@v3
         with:
@@ -76,7 +76,7 @@ jobs:
       - name: Test
         run: pnpm turbo run test
 
-      - uses: actions/upload-artifact@master
+      - uses: actions/upload-artifact@v4
         with:
           name: cadmium
           path: applications/web/dist
@@ -89,17 +89,16 @@ jobs:
     steps:
       # - name: Checkout
       #   uses: actions/checkout@v4
-      # - name: Setup Pages
-      #   uses: actions/configure-pages@v5
-      # - name: Upload artifact
-      #   uses: actions/upload-pages-artifact@v3
-      #   with:
-      #     # Upload entire repository
-      #     path: '.'
-      - uses: actions/download-artifact@master
+      - uses: actions/download-artifact@v4
         with:
           name: cadmium
-          path: applications/web/dist      
+          path: applications/web/dist
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: applications/web/dist
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
