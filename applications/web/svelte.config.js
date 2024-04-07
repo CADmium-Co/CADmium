@@ -15,6 +15,9 @@ const config = {
 			assets: "dist",
 			strict: false
 		}),
+		paths: {
+			base: process.env.NODE_ENV === "development" ? "" : "/CADmium"
+		}
 	},
 	vitePlugin: {
 		inspector: true
