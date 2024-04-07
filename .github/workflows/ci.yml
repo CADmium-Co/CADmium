@@ -27,6 +27,9 @@ jobs:
     name: Build and Test
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}    
     # To use Remote Caching, uncomment the next lines and follow the steps below.
     # env:
     #  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -81,18 +84,18 @@ jobs:
           name: cadmium
           path: applications/web/dist
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
+  # deploy:
+    # environment:
+    #   name: github-pages
+    #   url: ${{ steps.deployment.outputs.page_url }}
+    # runs-on: ubuntu-latest
+    # steps:
       # - name: Checkout
       #   uses: actions/checkout@v4
-      - uses: actions/download-artifact@v4
-        with:
-          name: cadmium
-          path: applications/web/dist
+      # - uses: actions/download-artifact@v4
+      #   with:
+      #     name: cadmium
+      #     path: applications/web/dist
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
