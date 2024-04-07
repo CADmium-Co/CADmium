@@ -7,7 +7,7 @@
     "test": "turbo run test",
     "clean": "turbo run clean",
     "lint": "turbo run lint",
-    "format": "prettier --write .",
+    "format": "turbo run format",
     "build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
     "build:wasm": "wasm-pack build --target web packages/cadmium"
   },

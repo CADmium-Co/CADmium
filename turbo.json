@@ -9,6 +9,10 @@
       "dependsOn": ["^build"]
     },
     "lint": {},
+    "format": {
+      "cache": false,
+      "persistent": false
+    },
     "serve": {},
     "clean": {
       "cache": false,
