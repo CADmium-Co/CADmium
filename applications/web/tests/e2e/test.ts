@@ -7,11 +7,11 @@ test("index page has expected title", async ({ page }) => {
 })
 
 test("has history pane", async ({ page }) => {
-	await page.goto("/threlte")
+	await page.goto("/")
 	await expect(page.getByText("History")).toBeVisible()
 })
 
 test("has origin in history panel", async ({ page }) => {
-	await page.goto("/threlte")
+	await page.goto("/")
 	await expect(page.getByText("origin")).toBeVisible()
 })

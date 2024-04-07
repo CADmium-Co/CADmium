@@ -1,4 +1,3 @@
-// import type Point3D from "./routes/threlte/Point3D.svelte"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 interface IDictionary<TValue> {

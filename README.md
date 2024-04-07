@@ -35,7 +35,7 @@ This software is offered under the [Elastic License 2.0](https://www.elastic.co/
 
 ## Running The Code
 
-If you're just trying to kick the tires, [click here](https://cadmium-nine.vercel.app/threlte) to view the live web demo.
+If you're just trying to kick the tires, [click here](https://MattFerraro.github.io/CADmium/) to view the live web demo.
 
 To build locally using pnpm workspace & turbo:
 
