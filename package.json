@@ -5,6 +5,7 @@
     "dev": "turbo run dev",
     "serve": "turbo run serve",
     "test": "turbo run test",
+    "test:rust": "cd packages/cadmium && cargo test",
     "clean": "turbo run clean",
     "lint": "turbo run lint",
     "format": "turbo run format",
