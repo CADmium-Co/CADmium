@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     # branches: ["main"]
-    branches: ["fix_rust_tests", "main"]
+    branches: ["non-existent-branch"]
   pull_request:
     types: [opened, synchronize]
 
@@ -75,19 +75,19 @@ jobs:
           path: applications/web/dist
 
   # https://kit.svelte.dev/docs/adapter-static#github-pages
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
+  # deploy:
+  #   needs: build
+  #   runs-on: ubuntu-latest
 
-    permissions:
-      pages: write
-      id-token: write
+  #   permissions:
+  #     pages: write
+  #     id-token: write
 
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  #   environment:
+  #     name: github-pages
+  #     url: ${{ steps.deployment.outputs.page_url }}
 
-    steps:
-      - name: Deploy
-        id: deployment
-        uses: actions/deploy-pages@v4
+  #   steps:
+  #     - name: Deploy
+  #       id: deployment
+  #       uses: actions/deploy-pages@v4
