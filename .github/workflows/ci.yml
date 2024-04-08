@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build, Test & Deploy
+    name: Build and Test
     timeout-minutes: 15
     runs-on: ubuntu-latest
     # env:
@@ -75,19 +75,19 @@ jobs:
           path: applications/web/dist
 
   # https://kit.svelte.dev/docs/adapter-static#github-pages
-  # deploy:
-  #   needs: build
-  #   runs-on: ubuntu-latest
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
 
-  #   permissions:
-  #     pages: write
-  #     id-token: write
+    permissions:
+      pages: write
+      id-token: write
 
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
 
-  #   steps:
-  #     - name: Deploy
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+    steps:
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
