@@ -3,7 +3,7 @@ name: CI
 on:
   push:
     # branches: ["main"]
-    branches: ["some-non-existent-branch"]
+    branches: ["fix_rust_tests", "main"]
   pull_request:
     types: [opened, synchronize]
 
