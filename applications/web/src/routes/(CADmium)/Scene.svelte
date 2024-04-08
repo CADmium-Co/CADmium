@@ -11,6 +11,7 @@
 	import Plane from "./Plane.svelte"
 	import Solid from "./Solid.svelte"
 	import Sketch from "./Sketch.svelte"
+	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -142,7 +143,7 @@
 
 <!-- <T.AmbientLight intensity={0.6} /> -->
 
-<Environment path="/envmap/hdr/" files="kloofendal_28d_misty_puresky_1k.hdr" isBackground={false} format="hdr" />
+<Environment path="{base}/envmap/hdr/" files="kloofendal_28d_misty_puresky_1k.hdr" isBackground={false} format="hdr" />
 
 {#each points as [pointName, point] (`${$workbench.name}-${pointName}`)}
 	<Point3D id={pointName} x={point.x} y={point.y} z={point.z} hidden={point.hidden} {collisionLineMaterial} />
