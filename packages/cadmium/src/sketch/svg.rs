@@ -3,6 +3,7 @@ use std::f64::consts::PI;
 
 use svg::node::element::path::Data;
 // use svg::node::element::Circle;
+use std::fs;
 use svg::node::element::Path;
 use svg::Document;
 
@@ -255,6 +256,7 @@ mod tests {
     #[test]
     fn empty_to_svg() {
         let mut sketch = Sketch::new();
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/empty.svg");
     }
 
@@ -273,6 +275,7 @@ mod tests {
         sketch.add_segment(center, left);
         sketch.add_segment(center, bottom);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/no_rings.svg");
     }
 
@@ -283,6 +286,7 @@ mod tests {
         let id0 = sketch.add_point(1.0, 0.0);
         sketch.add_circle(id0, 1.0);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/circle.svg");
     }
 
@@ -300,6 +304,7 @@ mod tests {
         sketch.add_segment(id2, id3);
         sketch.add_segment(id3, id0);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/square.svg");
     }
 
@@ -329,6 +334,7 @@ mod tests {
         sketch.add_segment(g, h);
         sketch.add_arc(l, h, a, false);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/rounded_square.svg");
     }
 
@@ -356,6 +362,7 @@ mod tests {
         sketch.add_segment(g, h);
         sketch.add_segment(h, e);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/square_with_hole.svg");
     }
 
@@ -376,6 +383,7 @@ mod tests {
 
         sketch.add_circle(center, 0.4);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/square_with_circular_hole.svg");
     }
 
@@ -388,6 +396,7 @@ mod tests {
         sketch.add_circle(center, 0.5);
         sketch.add_circle(center, 0.25);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/circle_with_circular_hole.svg");
     }
 
@@ -408,6 +417,7 @@ mod tests {
 
         sketch.add_circle(center, 1.0);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/circle_with_square_hole.svg");
     }
 
@@ -433,6 +443,7 @@ mod tests {
         sketch.add_segment(g, h);
         sketch.add_segment(h, e);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/two_intersecting_squares_unsplit.svg");
 
         let sketch = sketch.split_intersections(false);
@@ -451,6 +462,7 @@ mod tests {
         sketch.add_circle(center_b, 1.0);
 
         // Save the naive svg: just two circular paths
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/two_intersecting_circles_unsplit.svg");
 
         // Split the intersections, creating a new and different sketch
@@ -474,6 +486,7 @@ mod tests {
         println!("Error: {}", sketch.constraint_error(constraint_id));
         assert!(sketch.constraint_is_satisfied(constraint_id));
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/constraint_circle_diameter.svg");
     }
 
@@ -492,6 +505,7 @@ mod tests {
 
         let constraint_id = sketch.add_segments_equal_constraint(segment_ab, segment_cd);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/equality_constraint_unsolved.svg");
         assert!(sketch.solve(1000));
         sketch.save_svg("test_svgs/equality_constraint_solved.svg");
@@ -519,6 +533,7 @@ mod tests {
 
         assert!(sketch.all_constraints_are_satisfied());
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/constraint_triangle.svg");
     }
 
@@ -533,6 +548,7 @@ mod tests {
         sketch.add_arc(center, right, top, false);
         sketch.add_arc(center, top, right, false);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/two_arcs_in_a_circle_90.svg");
     }
 
@@ -547,6 +563,7 @@ mod tests {
         sketch.add_arc(center, bottom, top, false);
         sketch.add_arc(center, top, bottom, false);
 
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/two_arcs_in_a_circle_180.svg");
     }
 
@@ -581,6 +598,7 @@ mod tests {
         // }
 
         sketch.solve(1000);
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/manual_square_solved.svg");
     }
 
@@ -616,6 +634,7 @@ mod tests {
 
         let solved = sketch.solve(1000);
         println!("did solve? {}", solved);
+        fs::create_dir_all("test_svgs");
         sketch.save_svg("test_svgs/manual_rectangle_solved.svg");
     }
 }

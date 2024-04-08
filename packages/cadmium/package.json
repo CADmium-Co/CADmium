@@ -1,0 +1,6 @@
+{
+  "name": "cadmium-root",
+  "scripts": {
+    "test": "cargo test"
+  }
+}
