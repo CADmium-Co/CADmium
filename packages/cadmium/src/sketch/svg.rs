@@ -3,6 +3,7 @@ use std::f64::consts::PI;
 
 use svg::node::element::path::Data;
 // use svg::node::element::Circle;
+use std::fs;
 use svg::node::element::Path;
 use svg::Document;
 
