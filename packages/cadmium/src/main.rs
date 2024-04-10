@@ -37,6 +37,7 @@ fn main() {
     });
     let extrude_sha = el.append(Operation::NewExtrusion {
         name: "Extrude1".to_string(),
+        unique_id: "abc123".to_string(),
         sketch_name: "Sketch1".to_string(),
         click_x: 50.0,
         click_y: 50.0,
@@ -53,8 +54,12 @@ fn main() {
     });
     el.cherry_pick(extrude_sha);
 
-    el.pretty_print();
+    el.append(Operation::ModifyExtrusionDepth {
+        unique_id: "abc123".to_string(),
+        depth: 200.0,
+    });
 
+    el.pretty_print();
 }
 
 fn main_old() {

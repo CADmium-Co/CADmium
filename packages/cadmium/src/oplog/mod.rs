@@ -156,18 +156,23 @@ pub enum Operation {
         width: f64,
         height: f64,
     },
-    NewExtrusion {
-        name: String,
-        sketch_name: String,
-        click_x: f64,
-        click_y: f64,
-        depth: f64,
-    },
     NewCircle {
         sketch_name: String,
         x: f64,
         y: f64,
         radius: f64,
+    },
+    NewExtrusion {
+        name: String,
+        unique_id: String,
+        sketch_name: String,
+        click_x: f64,
+        click_y: f64,
+        depth: f64,
+    },
+    ModifyExtrusionDepth {
+        unique_id: String,
+        depth: f64,
     },
 }
 
@@ -195,20 +200,25 @@ impl Operation {
                 width,
                 height,
             } => hasher.update(format!("{sketch_name}-{x}-{y}-{width}-{height}").as_bytes()),
-            Operation::NewExtrusion {
-                name,
-                sketch_name,
-                click_x,
-                click_y,
-                depth,
-            } => hasher
-                .update(format!("{name}-{sketch_name}-{click_x}-{click_y}-{depth}").as_bytes()),
             Operation::NewCircle {
                 sketch_name,
                 x,
                 y,
                 radius,
             } => hasher.update(format!("{sketch_name}-{x}-{y}-{radius}").as_bytes()),
+            Operation::NewExtrusion {
+                name,
+                unique_id,
+                sketch_name,
+                click_x,
+                click_y,
+                depth,
+            } => hasher.update(
+                format!("{name}-{unique_id}-{sketch_name}-{click_x}-{click_y}-{depth}").as_bytes(),
+            ),
+            Operation::ModifyExtrusionDepth { unique_id, depth } => {
+                hasher.update(format!("{unique_id}-{depth}").as_bytes())
+            }
         }
 
         format!("{:x}", hasher.finalize())
@@ -235,16 +245,6 @@ impl Operation {
                 "NewRectangle: {} {} {} {} on '{}'",
                 x, y, width, height, sketch_name
             ),
-            Operation::NewExtrusion {
-                name,
-                sketch_name,
-                click_x,
-                click_y,
-                depth,
-            } => format!(
-                "NewExtrusion: '{}' on '{}' ({},{}) depth: {}",
-                name, sketch_name, click_x, click_y, depth
-            ),
             Operation::NewCircle {
                 sketch_name,
                 x,
@@ -254,6 +254,20 @@ impl Operation {
                 "NewCircle: ({},{}) radius: {} on '{}'",
                 x, y, radius, sketch_name
             ),
+            Operation::NewExtrusion {
+                name,
+                unique_id,
+                sketch_name,
+                click_x,
+                click_y,
+                depth,
+            } => format!(
+                "NewExtrusion: '{}' on '{}' ({},{}) depth: {}",
+                name, sketch_name, click_x, click_y, depth
+            ),
+            Operation::ModifyExtrusionDepth { unique_id, depth } => {
+                format!("ModifyExtrusionDepth: {} to {}", unique_id, depth)
+            }
         }
     }
 }
