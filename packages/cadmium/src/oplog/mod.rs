@@ -1,5 +1,5 @@
-use highhash::Murmur3Hasher;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use std::hash::{Hash, Hasher};
 use std::process::id;
 
@@ -47,9 +47,9 @@ impl OpLog {
 
 fn id_from_op_and_parent(operation: &Operation, parent: &Sha) -> Sha {
     let h = operation.hash();
-    let mut hasher = Murmur3Hasher::default();
-    hasher.write(format!("{h}-{parent}").as_bytes());
-    format!("{:x}", hasher.finish())
+    let mut hasher = Sha256::new();
+    hasher.update(format!("{h}-{parent}").as_bytes());
+    format!("{:x}", hasher.finalize())
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -125,7 +125,8 @@ impl Commit {
     }
 
     pub fn pretty_print(&self) -> String {
-        format!("{}: {}", self.id, self.operation.pretty_print())
+        // truncate to just the first 10 chars of self.id
+        format!("{}: {}", &self.id[..10], self.operation.pretty_print())
     }
 }
 
@@ -172,19 +173,20 @@ pub enum Operation {
 
 impl Operation {
     pub fn hash(&self) -> Sha {
-        let mut hasher = Murmur3Hasher::default();
-        hasher.write("cadmium".as_bytes()); // mm, salt
+        let mut hasher = Sha256::new();
+
+        hasher.update("cadmium".as_bytes()); // mm, salt
         match self {
-            Operation::Create { nonce } => hasher.write(format!("{nonce}").as_bytes()),
+            Operation::Create { nonce } => hasher.update(format!("{nonce}").as_bytes()),
             Operation::Describe {
                 description,
                 commit,
-            } => hasher.write(format!("{description}-{commit}").as_bytes()),
+            } => hasher.update(format!("{description}-{commit}").as_bytes()),
             Operation::NewPlane { name, plane } => {
-                hasher.write(format!("{name}-{plane:?}").as_bytes())
+                hasher.update(format!("{name}-{plane:?}").as_bytes())
             }
             Operation::NewSketch { name, plane_name } => {
-                hasher.write(format!("{name}-{plane_name:?}").as_bytes())
+                hasher.update(format!("{name}-{plane_name:?}").as_bytes())
             }
             Operation::NewRectangle {
                 sketch_name,
@@ -192,25 +194,24 @@ impl Operation {
                 y,
                 width,
                 height,
-            } => hasher.write(format!("{sketch_name}-{x}-{y}-{width}-{height}").as_bytes()),
+            } => hasher.update(format!("{sketch_name}-{x}-{y}-{width}-{height}").as_bytes()),
             Operation::NewExtrusion {
                 name,
                 sketch_name,
                 click_x,
                 click_y,
                 depth,
-            } => {
-                hasher.write(format!("{name}-{sketch_name}-{click_x}-{click_y}-{depth}").as_bytes())
-            }
+            } => hasher
+                .update(format!("{name}-{sketch_name}-{click_x}-{click_y}-{depth}").as_bytes()),
             Operation::NewCircle {
                 sketch_name,
                 x,
                 y,
                 radius,
-            } => hasher.write(format!("{sketch_name}-{x}-{y}-{radius}").as_bytes()),
+            } => hasher.update(format!("{sketch_name}-{x}-{y}-{radius}").as_bytes()),
         }
 
-        format!("{:x}", hasher.finish())
+        format!("{:x}", hasher.finalize())
     }
 
     pub fn pretty_print(&self) -> String {
