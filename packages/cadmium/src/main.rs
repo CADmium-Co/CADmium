@@ -26,10 +26,11 @@ fn main() {
     });
     let new_sketch_hash = el.append(Operation::NewSketch {
         name: "Sketch1".to_string(),
+        unique_id: "qwerty".to_string(),
         plane_name: "Front".to_string(),
     });
     el.append(Operation::NewRectangle {
-        sketch_name: "Sketch1".to_string(),
+        sketch_id: "qwerty".to_string(),
         x: 0.0,
         y: 0.0,
         width: 100.0,
@@ -38,7 +39,7 @@ fn main() {
     let extrude_sha = el.append(Operation::NewExtrusion {
         name: "Extrude1".to_string(),
         unique_id: "abc123".to_string(),
-        sketch_name: "Sketch1".to_string(),
+        sketch_id: "qwerty".to_string(),
         click_x: 50.0,
         click_y: 50.0,
         depth: 100.0,
@@ -47,7 +48,7 @@ fn main() {
     // Actually, let's try something different
     el.checkout(new_sketch_hash);
     el.append(Operation::NewCircle {
-        sketch_name: "Sketch1".to_string(),
+        sketch_id: "qwerty".to_string(),
         x: 50.0,
         y: 50.0,
         radius: 50.0,

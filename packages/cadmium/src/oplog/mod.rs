@@ -148,16 +148,17 @@ pub enum Operation {
     NewSketch {
         name: String,
         plane_name: String,
+        unique_id: String,
     },
     NewRectangle {
-        sketch_name: String,
+        sketch_id: String,
         x: f64,
         y: f64,
         width: f64,
         height: f64,
     },
     NewCircle {
-        sketch_name: String,
+        sketch_id: String,
         x: f64,
         y: f64,
         radius: f64,
@@ -165,7 +166,7 @@ pub enum Operation {
     NewExtrusion {
         name: String,
         unique_id: String,
-        sketch_name: String,
+        sketch_id: String,
         click_x: f64,
         click_y: f64,
         depth: f64,
@@ -190,31 +191,33 @@ impl Operation {
             Operation::NewPlane { name, plane } => {
                 hasher.update(format!("{name}-{plane:?}").as_bytes())
             }
-            Operation::NewSketch { name, plane_name } => {
-                hasher.update(format!("{name}-{plane_name:?}").as_bytes())
-            }
+            Operation::NewSketch {
+                name,
+                plane_name,
+                unique_id,
+            } => hasher.update(format!("{name}-{plane_name:?}-{unique_id}").as_bytes()),
             Operation::NewRectangle {
-                sketch_name,
+                sketch_id,
                 x,
                 y,
                 width,
                 height,
-            } => hasher.update(format!("{sketch_name}-{x}-{y}-{width}-{height}").as_bytes()),
+            } => hasher.update(format!("{sketch_id}-{x}-{y}-{width}-{height}").as_bytes()),
             Operation::NewCircle {
-                sketch_name,
+                sketch_id,
                 x,
                 y,
                 radius,
-            } => hasher.update(format!("{sketch_name}-{x}-{y}-{radius}").as_bytes()),
+            } => hasher.update(format!("{sketch_id}-{x}-{y}-{radius}").as_bytes()),
             Operation::NewExtrusion {
                 name,
                 unique_id,
-                sketch_name,
+                sketch_id,
                 click_x,
                 click_y,
                 depth,
             } => hasher.update(
-                format!("{name}-{unique_id}-{sketch_name}-{click_x}-{click_y}-{depth}").as_bytes(),
+                format!("{name}-{unique_id}-{sketch_id}-{click_x}-{click_y}-{depth}").as_bytes(),
             ),
             Operation::ModifyExtrusionDepth { unique_id, depth } => {
                 hasher.update(format!("{unique_id}-{depth}").as_bytes())
@@ -232,38 +235,42 @@ impl Operation {
                 commit,
             } => format!("Describe: {} '{}'", commit, description),
             Operation::NewPlane { name, plane } => format!("NewPlane: '{}'", name),
-            Operation::NewSketch { name, plane_name } => {
+            Operation::NewSketch {
+                name,
+                plane_name,
+                unique_id,
+            } => {
                 format!("NewSketch: '{}' on plane '{}'", name, plane_name)
             }
             Operation::NewRectangle {
-                sketch_name,
+                sketch_id,
                 x,
                 y,
                 width,
                 height,
             } => format!(
                 "NewRectangle: {} {} {} {} on '{}'",
-                x, y, width, height, sketch_name
+                x, y, width, height, sketch_id
             ),
             Operation::NewCircle {
-                sketch_name,
+                sketch_id,
                 x,
                 y,
                 radius,
             } => format!(
                 "NewCircle: ({},{}) radius: {} on '{}'",
-                x, y, radius, sketch_name
+                x, y, radius, sketch_id
             ),
             Operation::NewExtrusion {
                 name,
                 unique_id,
-                sketch_name,
+                sketch_id,
                 click_x,
                 click_y,
                 depth,
             } => format!(
                 "NewExtrusion: '{}' on '{}' ({},{}) depth: {}",
-                name, sketch_name, click_x, click_y, depth
+                name, sketch_id, click_x, click_y, depth
             ),
             Operation::ModifyExtrusionDepth { unique_id, depth } => {
                 format!("ModifyExtrusionDepth: {} to {}", unique_id, depth)
