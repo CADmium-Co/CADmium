@@ -1,17 +1,63 @@
 #![allow(dead_code, unused)]
 
 use std::ops::{Sub, SubAssign};
+use std::sync::Arc;
 
 use cadmium::extrusion::fuse;
+use cadmium::oplog::EvolutionLog;
+use cadmium::oplog::Operation;
+use cadmium::project::Plane;
+use cadmium::{oplog, Realization};
 use truck_meshalgo::filters::OptimizingFilter;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
 use truck_modeling::builder::{translated, tsweep, vertex};
-use truck_modeling::{Plane, Point3, Surface, Vector3};
+use truck_modeling::{Point3, Surface, Vector3};
 use truck_polymesh::{obj, InnerSpace, Invertible, ParametricSurface, Tolerance};
 use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
+// use oplog::Operation;
+
 fn main() {
+    let mut el = EvolutionLog::new();
+    el.append(Operation::NewPlane {
+        name: "Front".to_string(),
+        plane: Plane::front(),
+    });
+    let new_sketch_hash = el.append(Operation::NewSketch {
+        name: "Sketch1".to_string(),
+        plane_name: "Front".to_string(),
+    });
+    el.append(Operation::NewRectangle {
+        sketch_name: "Sketch1".to_string(),
+        x: 0.0,
+        y: 0.0,
+        width: 100.0,
+        height: 100.0,
+    });
+    let extrude_sha = el.append(Operation::NewExtrusion {
+        name: "Extrude1".to_string(),
+        sketch_name: "Sketch1".to_string(),
+        click_x: 50.0,
+        click_y: 50.0,
+        depth: 100.0,
+    });
+
+    // Actually, let's try something different
+    el.checkout(new_sketch_hash);
+    el.append(Operation::NewCircle {
+        sketch_name: "Sketch1".to_string(),
+        x: 50.0,
+        y: 50.0,
+        radius: 50.0,
+    });
+    el.cherry_pick(extrude_sha);
+
+    el.pretty_print();
+
+}
+
+fn main_old() {
     let point_a = vertex(Point3::new(0.0, 0.0, 0.0));
     let line_a = tsweep(&point_a, Vector3::new(1.0, 0.0, 0.0));
     let square_a = tsweep(&line_a, Vector3::new(0.0, 1.0, 0.0));

@@ -105,6 +105,7 @@ dependencies = [
  "console_error_panic_hook",
  "crc32fast",
  "geo",
+ "highhash",
  "indexmap 2.1.0",
  "itertools 0.11.0",
  "serde",
@@ -453,6 +454,12 @@ name = "hex"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7f24254aa9a54b5c858eaee2f5bccdb46aaf0e486a595ed5fd8f86ba55232a70"
+
+[[package]]
+name = "highhash"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "208b08088d46b46f504b584a4eed9c4d93f86e2ff820e028362b5651312ddf6a"
 
 [[package]]
 name = "iana-time-zone"
