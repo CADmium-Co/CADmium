@@ -79,23 +79,33 @@ impl EvolutionLog {
         }
     }
 
-    pub fn checkout(&mut self, sha: Sha) -> Result<(), String> {
+    pub fn checkout(&mut self, sha: Sha) -> Result<String, String> {
         // check that the sha exists in the oplog before doing this
         for commit in &self.oplog.commits {
             if commit.id == sha {
                 self.cursor = sha;
-                return Ok(());
+                return Ok(self.cursor.clone());
             }
         }
         Err(format!("SHA {} not found in oplog", sha))
     }
 
-    pub fn cherry_pick(&mut self, sha: Sha) -> Result<(), String> {
+    pub fn cherry_pick(&mut self, sha: Sha) -> Result<String, String> {
         // check that the sha exists in the oplog before doing this
         for commit in &self.oplog.commits {
             if commit.id == sha {
-                self.append(commit.operation.clone());
-                return Ok(());
+                let new_operation = commit.operation.clone();
+                let mut new_commit_id = self.append(commit.operation.clone());
+
+                // If the original commit created an entity, we'll need to create an alias commit
+                if new_operation.is_create() {
+                    new_commit_id = self.append(Operation::Alias {
+                        original: sha,
+                        new: new_commit_id.clone(),
+                    });
+                }
+
+                return Ok(new_commit_id);
             }
         }
         Err(format!("SHA {} not found in oplog", sha))
@@ -141,43 +151,80 @@ pub enum Operation {
         description: String,
         commit: Sha,
     },
-    NewPlane {
+    Alias {
+        original: Sha,
+        new: Sha,
+    },
+
+    CreatePlane {
+        nonce: String,
+    },
+    SetPlaneName {
+        plane_id: Sha,
         name: String,
+    },
+    SetPlane {
+        plane_id: Sha,
         plane: Plane,
     },
-    NewSketch {
-        name: String,
-        plane_name: String,
-        unique_id: String,
+
+    CreateSketch {
+        nonce: String,
     },
-    NewRectangle {
-        sketch_id: String,
+    SetSketchName {
+        sketch_id: Sha,
+        name: String,
+    },
+    SetSketchPlane {
+        sketch_id: Sha,
+        plane_id: Sha,
+    },
+
+    AddSketchRectangle {
+        sketch_id: Sha,
         x: f64,
         y: f64,
         width: f64,
         height: f64,
     },
-    NewCircle {
-        sketch_id: String,
+    AddSketchCircle {
+        sketch_id: Sha,
         x: f64,
         y: f64,
         radius: f64,
     },
-    NewExtrusion {
-        name: String,
-        unique_id: String,
-        sketch_id: String,
-        click_x: f64,
-        click_y: f64,
-        depth: f64,
+
+    CreateExtrusion {
+        nonce: String,
     },
-    ModifyExtrusionDepth {
-        unique_id: String,
+    SetExtrusionName {
+        extrusion_id: Sha,
+        name: String,
+    },
+    SetExtrusionSketch {
+        extrusion_id: Sha,
+        sketch_id: Sha,
+    },
+    SetExtrusionClicks {
+        extrusion_id: Sha,
+        clicks: Vec<(f64, f64)>,
+    },
+    SetExtrusionDepth {
+        extrusion_id: Sha,
         depth: f64,
     },
 }
 
 impl Operation {
+    pub fn is_create(&self) -> bool {
+        match self {
+            Operation::CreatePlane { .. } => true,
+            Operation::CreateSketch { .. } => true,
+            Operation::CreateExtrusion { .. } => true,
+            _ => false,
+        }
+    }
+
     pub fn hash(&self) -> Sha {
         let mut hasher = Sha256::new();
 
@@ -188,40 +235,58 @@ impl Operation {
                 description,
                 commit,
             } => hasher.update(format!("{description}-{commit}").as_bytes()),
-            Operation::NewPlane { name, plane } => {
-                hasher.update(format!("{name}-{plane:?}").as_bytes())
+            Operation::Alias { original, new } => {
+                hasher.update(format!("{original}-{new}").as_bytes())
             }
-            Operation::NewSketch {
-                name,
-                plane_name,
-                unique_id,
-            } => hasher.update(format!("{name}-{plane_name:?}-{unique_id}").as_bytes()),
-            Operation::NewRectangle {
+            Operation::CreatePlane { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::SetPlaneName { plane_id, name } => {
+                hasher.update(format!("{plane_id}-{name}").as_bytes())
+            }
+            Operation::SetPlane { plane_id, plane } => {
+                hasher.update(format!("{plane_id}-{plane:?}").as_bytes())
+            }
+            Operation::CreateSketch { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::SetSketchName { sketch_id, name } => {
+                hasher.update(format!("{sketch_id}-{name}").as_bytes())
+            }
+            Operation::SetSketchPlane {
+                sketch_id,
+                plane_id,
+            } => hasher.update(format!("{sketch_id}-{plane_id}").as_bytes()),
+            Operation::AddSketchRectangle {
                 sketch_id,
                 x,
                 y,
                 width,
                 height,
             } => hasher.update(format!("{sketch_id}-{x}-{y}-{width}-{height}").as_bytes()),
-            Operation::NewCircle {
+            Operation::AddSketchCircle {
                 sketch_id,
                 x,
                 y,
                 radius,
             } => hasher.update(format!("{sketch_id}-{x}-{y}-{radius}").as_bytes()),
-            Operation::NewExtrusion {
-                name,
-                unique_id,
-                sketch_id,
-                click_x,
-                click_y,
-                depth,
-            } => hasher.update(
-                format!("{name}-{unique_id}-{sketch_id}-{click_x}-{click_y}-{depth}").as_bytes(),
-            ),
-            Operation::ModifyExtrusionDepth { unique_id, depth } => {
-                hasher.update(format!("{unique_id}-{depth}").as_bytes())
+            Operation::CreateExtrusion { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::SetExtrusionName { extrusion_id, name } => {
+                hasher.update(format!("{extrusion_id}-{name}").as_bytes())
             }
+            Operation::SetExtrusionSketch {
+                extrusion_id,
+                sketch_id,
+            } => hasher.update(format!("{extrusion_id}-{sketch_id}").as_bytes()),
+            Operation::SetExtrusionClicks {
+                extrusion_id,
+                clicks,
+            } => {
+                hasher.update(format!("{extrusion_id}").as_bytes());
+                for (x, y) in clicks {
+                    hasher.update(format!("{x}-{y}").as_bytes())
+                }
+            }
+            Operation::SetExtrusionDepth {
+                extrusion_id,
+                depth,
+            } => hasher.update(format!("{extrusion_id}-{depth}").as_bytes()),
         }
 
         format!("{:x}", hasher.finalize())
@@ -233,47 +298,118 @@ impl Operation {
             Operation::Describe {
                 description,
                 commit,
-            } => format!("Describe: {} '{}'", commit, description),
-            Operation::NewPlane { name, plane } => format!("NewPlane: '{}'", name),
-            Operation::NewSketch {
-                name,
-                plane_name,
-                unique_id,
-            } => {
-                format!("NewSketch: '{}' on plane '{}'", name, plane_name)
+            } => format!(
+                "Describe: {} '{}'",
+                commit.to_owned()[..10].to_string(),
+                description
+            ),
+            Operation::Alias { original, new } => {
+                format!(
+                    "Alias: from {} to {}",
+                    original.to_owned()[..10].to_string(),
+                    new.to_owned()[..10].to_string()
+                )
             }
-            Operation::NewRectangle {
+            Operation::CreatePlane { nonce } => format!("CreatePlane: {}", nonce),
+            Operation::SetPlaneName { plane_id, name } => {
+                format!(
+                    "SetPlaneName: {} '{}'",
+                    plane_id.to_owned()[..10].to_string(),
+                    name
+                )
+            }
+            Operation::SetPlane { plane_id, plane } => {
+                format!(
+                    "SetPlane: {} {:?}",
+                    plane_id.to_owned()[..10].to_string(),
+                    plane
+                )
+            }
+            Operation::CreateSketch { nonce } => format!("CreateSketch: {}", nonce),
+            Operation::SetSketchName { sketch_id, name } => {
+                format!(
+                    "SetSketchName: {} '{}'",
+                    sketch_id.to_owned()[..10].to_string(),
+                    name
+                )
+            }
+            Operation::SetSketchPlane {
+                sketch_id,
+                plane_id,
+            } => {
+                format!(
+                    "SetSketchPlane: {} {}",
+                    sketch_id.to_owned()[..10].to_string(),
+                    plane_id.to_owned()[..10].to_string()
+                )
+            }
+            Operation::AddSketchRectangle {
                 sketch_id,
                 x,
                 y,
                 width,
                 height,
             } => format!(
-                "NewRectangle: {} {} {} {} on '{}'",
-                x, y, width, height, sketch_id
+                "AddSketchRectangle: {} ({}, {}) {}x{}",
+                sketch_id.to_owned()[..10].to_string(),
+                x,
+                y,
+                width,
+                height
             ),
-            Operation::NewCircle {
+            Operation::AddSketchCircle {
                 sketch_id,
                 x,
                 y,
                 radius,
             } => format!(
-                "NewCircle: ({},{}) radius: {} on '{}'",
-                x, y, radius, sketch_id
+                "AddSketchCircle: {} ({}, {}) r={}",
+                sketch_id.to_owned()[..10].to_string(),
+                x,
+                y,
+                radius
             ),
-            Operation::NewExtrusion {
-                name,
-                unique_id,
+            Operation::CreateExtrusion { nonce } => format!("CreateExtrusion: {}", nonce),
+            Operation::SetExtrusionName { extrusion_id, name } => {
+                format!(
+                    "SetExtrusionName: {} '{}'",
+                    extrusion_id.to_owned()[..10].to_string(),
+                    name
+                )
+            }
+            Operation::SetExtrusionSketch {
+                extrusion_id,
                 sketch_id,
-                click_x,
-                click_y,
+            } => {
+                format!(
+                    "SetExtrusionSketch: {} {}",
+                    extrusion_id.to_owned()[..10].to_string(),
+                    sketch_id.to_owned()[..10].to_string()
+                )
+            }
+            Operation::SetExtrusionClicks {
+                extrusion_id,
+                clicks,
+            } => {
+                let mut click_str = String::new();
+                for (x, y) in clicks {
+                    click_str.push_str(&format!("({}, {}) ", x, y));
+                }
+                format!(
+                    "SetExtrusionClicks: {} {}",
+                    extrusion_id.to_owned()[..10].to_string(),
+                    click_str
+                )
+            }
+            Operation::SetExtrusionDepth {
+                extrusion_id,
                 depth,
-            } => format!(
-                "NewExtrusion: '{}' on '{}' ({},{}) depth: {}",
-                name, sketch_id, click_x, click_y, depth
-            ),
-            Operation::ModifyExtrusionDepth { unique_id, depth } => {
-                format!("ModifyExtrusionDepth: {} to {}", unique_id, depth)
+            } => {
+                format!(
+                    "SetExtrusionDepth: {} {}",
+                    extrusion_id.to_owned()[..10].to_string(),
+                    depth
+                )
             }
         }
     }

@@ -7,7 +7,7 @@ use cadmium::extrusion::fuse;
 use cadmium::oplog::EvolutionLog;
 use cadmium::oplog::Operation;
 use cadmium::project::Plane;
-use cadmium::{oplog, Realization};
+use cadmium::{oplog, sketch, Realization};
 use truck_meshalgo::filters::OptimizingFilter;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
 use truck_modeling::builder::{translated, tsweep, vertex};
@@ -20,45 +20,103 @@ use truck_topology::{Shell, Solid};
 
 fn main() {
     let mut el = EvolutionLog::new();
-    el.append(Operation::NewPlane {
+
+    // Create the Top Plane
+    let top_plane_id = el.append(Operation::CreatePlane {
+        nonce: "a".to_string(),
+    });
+    // Note that top_plane_id is just a sha. the plane doesn't have any unique ID outside of its commit sha
+    el.append(Operation::SetPlaneName {
+        plane_id: top_plane_id.clone(),
+        name: "Top".to_string(),
+    });
+    el.append(Operation::SetPlane {
+        plane_id: top_plane_id.clone(),
+        plane: Plane::top(),
+    });
+
+    // Create the Front Plane
+    let front_plane_id = el.append(Operation::CreatePlane {
+        nonce: "b".to_string(),
+    });
+    el.append(Operation::SetPlaneName {
+        plane_id: front_plane_id.clone(),
         name: "Front".to_string(),
+    });
+    el.append(Operation::SetPlane {
+        plane_id: front_plane_id.clone(),
         plane: Plane::front(),
     });
-    let new_sketch_hash = el.append(Operation::NewSketch {
-        name: "Sketch1".to_string(),
-        unique_id: "qwerty".to_string(),
-        plane_name: "Front".to_string(),
+
+    // Create the main sketch
+    let sketch_id = el.append(Operation::CreateSketch {
+        nonce: "a".to_string(),
     });
-    el.append(Operation::NewRectangle {
-        sketch_id: "qwerty".to_string(),
+    let name_sketch_commit = el.append(Operation::SetSketchName {
+        sketch_id: sketch_id.clone(),
+        name: "Sketch1".to_string(),
+    });
+    let set_sketch_plane_commit = el.append(Operation::SetSketchPlane {
+        sketch_id: sketch_id.clone(),
+        plane_id: front_plane_id.clone(),
+    });
+
+    el.append(Operation::AddSketchRectangle {
+        sketch_id: sketch_id.clone(),
         x: 0.0,
         y: 0.0,
         width: 100.0,
         height: 100.0,
     });
-    let extrude_sha = el.append(Operation::NewExtrusion {
+
+    let extrusion_id = el.append(Operation::CreateExtrusion {
+        nonce: "c".to_string(),
+    });
+    let name_ext_commit = el.append(Operation::SetExtrusionName {
+        extrusion_id: extrusion_id.clone(),
         name: "Extrude1".to_string(),
-        unique_id: "abc123".to_string(),
-        sketch_id: "qwerty".to_string(),
-        click_x: 50.0,
-        click_y: 50.0,
-        depth: 100.0,
+    });
+    let set_ext_sketch_commit = el.append(Operation::SetExtrusionSketch {
+        extrusion_id: extrusion_id.clone(),
+        sketch_id: sketch_id.clone(),
+    });
+    let set_ext_clicks_commit = el.append(Operation::SetExtrusionClicks {
+        extrusion_id: extrusion_id.clone(),
+        clicks: vec![(50.0, 50.0)],
+    });
+    let finished_rectangle_commit = el.append(Operation::SetExtrusionDepth {
+        extrusion_id: extrusion_id.clone(),
+        depth: 10.0,
     });
 
-    // Actually, let's try something different
-    el.checkout(new_sketch_hash);
-    el.append(Operation::NewCircle {
-        sketch_id: "qwerty".to_string(),
+    // Oops, our sketch was on the wrong plane. Fix that!
+    let rotated_rectangle_commit = el.append(Operation::SetSketchPlane {
+        sketch_id: sketch_id.clone(),
+        plane_id: front_plane_id,
+    });
+
+    // Actually, let's try an alternate approach using a circle instead of a rectangle
+    el.checkout(sketch_id.clone());
+
+    // Re-use the commits that specified the sketch name and plane
+    el.cherry_pick(name_sketch_commit);
+    el.cherry_pick(set_sketch_plane_commit);
+
+    // Add a circle to the sketch
+    el.append(Operation::AddSketchCircle {
+        sketch_id: sketch_id.clone(),
         x: 50.0,
         y: 50.0,
         radius: 50.0,
     });
-    el.cherry_pick(extrude_sha);
 
-    el.append(Operation::ModifyExtrusionDepth {
-        unique_id: "abc123".to_string(),
-        depth: 200.0,
-    });
+    // Re-use all the extrusion commits
+    el.cherry_pick(extrusion_id);
+    el.cherry_pick(name_ext_commit);
+    el.cherry_pick(set_ext_sketch_commit);
+    el.cherry_pick(set_ext_clicks_commit);
+    let finished_circle_commit = el.cherry_pick(finished_rectangle_commit).unwrap();
+    let rotated_circle_commit = el.cherry_pick(rotated_rectangle_commit).unwrap();
 
     el.pretty_print();
 }
