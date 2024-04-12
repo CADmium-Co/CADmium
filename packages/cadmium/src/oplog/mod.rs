@@ -1,9 +1,12 @@
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
 
 use crate::project::Plane;
+
+pub type Sha = String;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpLog {
@@ -24,7 +27,7 @@ impl OpLog {
         let op_hash = operation.hash();
         let parent = parent.clone();
         let new_commit = Commit {
-            id: id_from_op_and_parent(&operation, &parent),
+            id: id_from_op_and_parent(&operation, &parent, self.commits.len()),
             operation,
             content_hash: op_hash,
             parent,
@@ -45,10 +48,10 @@ impl OpLog {
     }
 }
 
-fn id_from_op_and_parent(operation: &Operation, parent: &Sha) -> Sha {
+fn id_from_op_and_parent(operation: &Operation, parent: &Sha, nonce: usize) -> Sha {
     let h = operation.hash();
     let mut hasher = Sha256::new();
-    hasher.update(format!("{h}-{parent}").as_bytes());
+    hasher.update(format!("{h}-{parent}-{nonce}").as_bytes());
     format!("{:x}", hasher.finalize())
 }
 
@@ -79,6 +82,112 @@ impl EvolutionLog {
         }
     }
 
+    pub fn to_tree(&self) -> CommitNode {
+        // Build a tree of commits using CommitNode
+        let mut commit_node_table: HashMap<String, CommitNode> = HashMap::new();
+        for commit in &self.oplog.commits {
+            commit_node_table.insert(
+                commit.id.clone(),
+                CommitNode {
+                    commit: commit.id.clone(),
+                    children: vec![],
+                },
+            );
+        }
+        for commit in &self.oplog.commits {
+            let parent = commit.parent.clone();
+            if parent == "" {
+                // special treatment for the root node
+                continue;
+            }
+            let mut parent_commit_node = commit_node_table.get_mut(&parent).unwrap();
+            parent_commit_node.children.push(commit.id.clone());
+        }
+
+        let root_node = commit_node_table.get(&self.oplog.commits[0].id).unwrap();
+        root_node.clone()
+    }
+
+    pub fn git_log(&self) {
+        // Build a tree of commits using CommitNode
+        let mut commit_node_table: HashMap<String, CommitNode> = HashMap::new();
+        for commit in &self.oplog.commits {
+            commit_node_table.insert(
+                commit.id.clone(),
+                CommitNode {
+                    commit: commit.id.clone(),
+                    children: vec![],
+                },
+            );
+        }
+        for commit in &self.oplog.commits {
+            let parent = commit.parent.clone();
+            if parent == "" {
+                // special treatment for the root node
+                continue;
+            }
+            let mut parent_commit_node = commit_node_table.get_mut(&parent).unwrap();
+            parent_commit_node.children.push(commit.id.clone());
+            // println!(
+            //     "Parent now has: {} children",
+            //     parent_commit_node.children.len()
+            // )
+        }
+
+        let root_node = commit_node_table.get(&self.oplog.commits[0].id).unwrap();
+
+        let commit_table = self
+            .oplog
+            .commits
+            .iter()
+            .map(|commit| (commit.id.clone(), commit))
+            .collect::<HashMap<Sha, &Commit>>();
+
+        // const OTHER_CHILD: &str = "│   "; // prefix: pipe
+        // const OTHER_ENTRY: &str = "├── "; // connector: tee
+        // const FINAL_CHILD: &str = "    "; // prefix: no more siblings
+        // const FINAL_ENTRY: &str = "└── "; // connector: elbow
+
+        println!("Root:");
+        visit(&root_node.commit, "", &commit_table, &commit_node_table);
+
+        fn visit(
+            sha: &Sha,
+            prefix: &str,
+            commit_table: &HashMap<String, &Commit>,
+            commit_node_table: &HashMap<String, CommitNode>,
+        ) {
+            let commit = commit_table.get(sha).unwrap();
+            let commit_node = commit_node_table.get(sha).unwrap();
+            println!("{}* {}", prefix, commit);
+
+            if commit_node.children.len() == 0 {
+                return;
+            } else if commit_node.children.len() == 1 {
+                visit(
+                    &commit_node.children[0],
+                    &prefix,
+                    commit_table,
+                    commit_node_table,
+                );
+            } else if commit_node.children.len() == 2 {
+                println!("{}|\\", prefix);
+                visit(
+                    &commit_node.children[0],
+                    &format!("| {}", prefix),
+                    commit_table,
+                    commit_node_table,
+                );
+                visit(
+                    &commit_node.children[1],
+                    &prefix,
+                    commit_table,
+                    commit_node_table,
+                );
+            }
+        }
+    }
+
     pub fn checkout(&mut self, sha: Sha) -> Result<String, String> {
         // check that the sha exists in the oplog before doing this
         for commit in &self.oplog.commits {
@@ -95,7 +204,7 @@ impl EvolutionLog {
         for commit in &self.oplog.commits {
             if commit.id == sha {
                 let new_operation = commit.operation.clone();
-                let mut new_commit_id = self.append(commit.operation.clone());
+                let mut new_commit_id = self.append(new_operation.clone());
 
                 // If the original commit created an entity, we'll need to create an alias commit
                 if new_operation.is_create() {
@@ -127,7 +236,7 @@ impl Commit {
         };
         let parent_sha = "".to_owned();
         Self {
-            id: id_from_op_and_parent(&init_op, &parent_sha),
+            id: id_from_op_and_parent(&init_op, &parent_sha, 0),
             content_hash: init_op.hash(),
             operation: init_op,
             parent: parent_sha,
@@ -140,7 +249,23 @@ impl Commit {
     }
 }
 
-pub type Sha = String;
+impl std::fmt::Display for Commit {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}: {}", &self.id[..8], self.operation)
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct CommitNode {
+    pub commit: Sha,
+    pub children: Vec<Sha>,
+}
+
+impl std::fmt::Display for CommitNode {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.commit)
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Operation {
@@ -320,9 +445,9 @@ impl Operation {
             }
             Operation::SetPlane { plane_id, plane } => {
                 format!(
-                    "SetPlane: {} {:?}",
+                    "SetPlane: {}",
                     plane_id.to_owned()[..10].to_string(),
-                    plane
+                    // plane
                 )
             }
             Operation::CreateSketch { nonce } => format!("CreateSketch: {}", nonce),
@@ -412,5 +537,11 @@ impl Operation {
                 )
             }
         }
+    }
+}
+
+impl std::fmt::Display for Operation {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "{}", &self.pretty_print())
     }
 }

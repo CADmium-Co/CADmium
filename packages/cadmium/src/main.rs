@@ -25,6 +25,48 @@ fn main() {
     let top_plane_id = el.append(Operation::CreatePlane {
         nonce: "a".to_string(),
     });
+    el.append(Operation::SetPlaneName {
+        plane_id: top_plane_id.clone(),
+        name: "Top".to_string(),
+    });
+    let set_plane = el.append(Operation::SetPlane {
+        plane_id: top_plane_id.clone(),
+        plane: Plane::top(),
+    });
+    let set_name = el.append(Operation::SetPlaneName {
+        plane_id: top_plane_id.clone(),
+        name: "Top2".to_string(),
+    });
+    let new_extrusion = el.append(Operation::CreateExtrusion {
+        nonce: "b".to_string(),
+    });
+    let set_ext_name = el.append(Operation::SetExtrusionName {
+        extrusion_id: new_extrusion.clone(),
+        name: "Extrusion1".to_string(),
+    });
+    el.checkout(top_plane_id.clone());
+    el.append(Operation::SetPlaneName {
+        plane_id: top_plane_id.clone(),
+        name: "Bottom".to_string(),
+    });
+    el.cherry_pick(set_plane);
+    el.cherry_pick(set_name);
+    el.cherry_pick(new_extrusion);
+    el.cherry_pick(set_ext_name);
+    // let new_extrusion = el.append(Operation::CreateExtrusion {
+    //     nonce: "c".to_string(),
+    // });
+
+    el.git_log()
+}
+
+fn main_2() {
+    let mut el = EvolutionLog::new();
+
+    // Create the Top Plane
+    let top_plane_id = el.append(Operation::CreatePlane {
+        nonce: "a".to_string(),
+    });
     // Note that top_plane_id is just a sha. the plane doesn't have any unique ID outside of its commit sha
     el.append(Operation::SetPlaneName {
         plane_id: top_plane_id.clone(),
@@ -118,7 +160,9 @@ fn main() {
     let finished_circle_commit = el.cherry_pick(finished_rectangle_commit).unwrap();
     let rotated_circle_commit = el.cherry_pick(rotated_rectangle_commit).unwrap();
 
-    el.pretty_print();
+    // el.pretty_print();
+
+    el.git_log();
 }
 
 fn main_old() {
