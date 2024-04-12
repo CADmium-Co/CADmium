@@ -33,10 +33,6 @@ fn main() {
         plane_id: top_plane_id.clone(),
         plane: Plane::top(),
     });
-    let set_name = el.append(Operation::SetPlaneName {
-        plane_id: top_plane_id.clone(),
-        name: "Top2".to_string(),
-    });
     let new_extrusion = el.append(Operation::CreateExtrusion {
         nonce: "b".to_string(),
     });
@@ -44,18 +40,16 @@ fn main() {
         extrusion_id: new_extrusion.clone(),
         name: "Extrusion1".to_string(),
     });
+
+    // Rewind to an earlier commit
     el.checkout(top_plane_id.clone());
     el.append(Operation::SetPlaneName {
         plane_id: top_plane_id.clone(),
         name: "Bottom".to_string(),
     });
     el.cherry_pick(set_plane);
-    el.cherry_pick(set_name);
     el.cherry_pick(new_extrusion);
     el.cherry_pick(set_ext_name);
-    // let new_extrusion = el.append(Operation::CreateExtrusion {
-    //     nonce: "c".to_string(),
-    // });
 
     el.git_log()
 }

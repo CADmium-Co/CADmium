@@ -251,7 +251,7 @@ impl Commit {
 
 impl std::fmt::Display for Commit {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}: {}", &self.id[..8], self.operation)
+        write!(f, "{}: {}", &self.id[..6], self.operation)
     }
 }
 
@@ -418,6 +418,7 @@ impl Operation {
     }
 
     pub fn pretty_print(&self) -> String {
+        let num_chars = 6;
         match self {
             Operation::Create { nonce } => format!("Create: {}", nonce),
             Operation::Describe {
@@ -425,28 +426,28 @@ impl Operation {
                 commit,
             } => format!(
                 "Describe: {} '{}'",
-                commit.to_owned()[..10].to_string(),
+                commit.to_owned()[..num_chars].to_string(),
                 description
             ),
             Operation::Alias { original, new } => {
                 format!(
                     "Alias: from {} to {}",
-                    original.to_owned()[..10].to_string(),
-                    new.to_owned()[..10].to_string()
+                    original.to_owned()[..num_chars].to_string(),
+                    new.to_owned()[..num_chars].to_string()
                 )
             }
             Operation::CreatePlane { nonce } => format!("CreatePlane: {}", nonce),
             Operation::SetPlaneName { plane_id, name } => {
                 format!(
                     "SetPlaneName: {} '{}'",
-                    plane_id.to_owned()[..10].to_string(),
+                    plane_id.to_owned()[..num_chars].to_string(),
                     name
                 )
             }
             Operation::SetPlane { plane_id, plane } => {
                 format!(
                     "SetPlane: {}",
-                    plane_id.to_owned()[..10].to_string(),
+                    plane_id.to_owned()[..num_chars].to_string(),
                     // plane
                 )
             }
@@ -454,7 +455,7 @@ impl Operation {
             Operation::SetSketchName { sketch_id, name } => {
                 format!(
                     "SetSketchName: {} '{}'",
-                    sketch_id.to_owned()[..10].to_string(),
+                    sketch_id.to_owned()[..num_chars].to_string(),
                     name
                 )
             }
@@ -464,8 +465,8 @@ impl Operation {
             } => {
                 format!(
                     "SetSketchPlane: {} {}",
-                    sketch_id.to_owned()[..10].to_string(),
-                    plane_id.to_owned()[..10].to_string()
+                    sketch_id.to_owned()[..num_chars].to_string(),
+                    plane_id.to_owned()[..num_chars].to_string()
                 )
             }
             Operation::AddSketchRectangle {
@@ -476,7 +477,7 @@ impl Operation {
                 height,
             } => format!(
                 "AddSketchRectangle: {} ({}, {}) {}x{}",
-                sketch_id.to_owned()[..10].to_string(),
+                sketch_id.to_owned()[..num_chars].to_string(),
                 x,
                 y,
                 width,
@@ -489,7 +490,7 @@ impl Operation {
                 radius,
             } => format!(
                 "AddSketchCircle: {} ({}, {}) r={}",
-                sketch_id.to_owned()[..10].to_string(),
+                sketch_id.to_owned()[..num_chars].to_string(),
                 x,
                 y,
                 radius
@@ -498,7 +499,7 @@ impl Operation {
             Operation::SetExtrusionName { extrusion_id, name } => {
                 format!(
                     "SetExtrusionName: {} '{}'",
-                    extrusion_id.to_owned()[..10].to_string(),
+                    extrusion_id.to_owned()[..num_chars].to_string(),
                     name
                 )
             }
@@ -508,8 +509,8 @@ impl Operation {
             } => {
                 format!(
                     "SetExtrusionSketch: {} {}",
-                    extrusion_id.to_owned()[..10].to_string(),
-                    sketch_id.to_owned()[..10].to_string()
+                    extrusion_id.to_owned()[..num_chars].to_string(),
+                    sketch_id.to_owned()[..num_chars].to_string()
                 )
             }
             Operation::SetExtrusionClicks {
@@ -522,7 +523,7 @@ impl Operation {
                 }
                 format!(
                     "SetExtrusionClicks: {} {}",
-                    extrusion_id.to_owned()[..10].to_string(),
+                    extrusion_id.to_owned()[..num_chars].to_string(),
                     click_str
                 )
             }
@@ -532,7 +533,7 @@ impl Operation {
             } => {
                 format!(
                     "SetExtrusionDepth: {} {}",
-                    extrusion_id.to_owned()[..10].to_string(),
+                    extrusion_id.to_owned()[..num_chars].to_string(),
                     depth
                 )
             }
