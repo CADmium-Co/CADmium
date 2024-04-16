@@ -16,9 +16,88 @@ use truck_polymesh::{obj, InnerSpace, Invertible, ParametricSurface, Tolerance};
 use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
-// use oplog::Operation;
-
 fn main() {
+    topological_naming();
+}
+
+fn topological_naming() {
+    // Let's replicate the flow seen here: https://wiki.freecad.org/Topological_naming_problem
+    let mut el = EvolutionLog::new();
+
+    // Create the Top Plane
+    let top_plane_id = el.append(Operation::CreatePlane {
+        nonce: "the top plane".to_string(),
+    });
+    el.append(Operation::SetPlaneName {
+        plane_id: top_plane_id.clone(),
+        name: "Top".to_string(),
+    });
+    let set_plane = el.append(Operation::SetPlane {
+        plane_id: top_plane_id.clone(),
+        plane: Plane::top(),
+    });
+
+    let sketch_id = el.append(Operation::CreateSketch {
+        nonce: "top sketch".to_string(),
+    });
+    el.append(Operation::SetSketchName {
+        sketch_id: sketch_id.clone(),
+        name: "Sketch1".to_string(),
+    });
+    el.append(Operation::SetSketchPlane {
+        sketch_id: sketch_id.clone(),
+        plane_id: top_plane_id.clone(),
+    });
+
+    // Create the base "L" shape
+    // autojoin means "look for the nearest endpoints and join them if they're close enough"
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (0.0, 0.0),
+        end: (0.0, 100.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (0.0, 100.0),
+        end: (50.0, 100.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (50.0, 100.0),
+        end: (50.0, 50.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (50.0, 50.0),
+        end: (100.0, 50.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (100.0, 50.0),
+        end: (100.0, 0.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (100.0, 0.0),
+        end: (0.0, 0.0),
+    });
+
+    let extrusion_id = el.append(Operation::CreateExtrusion {
+        nonce: "top extrusion".to_string(),
+    });
+    el.append(Operation::SetExtrusionName {
+        extrusion_id: extrusion_id.clone(),
+        name: "Extrude1".to_string(),
+    });
+    el.append(Operation::SetExtrusionSketch {
+        extrusion_id: extrusion_id.clone(),
+        sketch_id: sketch_id.clone(),
+    });
+
+    el.git_log();
+}
+
+fn main_good() {
     let mut el = EvolutionLog::new();
 
     // Create the Top Plane

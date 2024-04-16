@@ -318,6 +318,11 @@ pub enum Operation {
         y: f64,
         radius: f64,
     },
+    AddSketchLine {
+        sketch_id: Sha,
+        start: (f64, f64),
+        end: (f64, f64),
+    },
 
     CreateExtrusion {
         nonce: String,
@@ -391,6 +396,11 @@ impl Operation {
                 y,
                 radius,
             } => hasher.update(format!("{sketch_id}-{x}-{y}-{radius}").as_bytes()),
+            Operation::AddSketchLine {
+                sketch_id,
+                start,
+                end,
+            } => hasher.update(format!("{sketch_id}-{start:?}-{end:?}").as_bytes()),
             Operation::CreateExtrusion { nonce } => hasher.update(format!("{nonce}").as_bytes()),
             Operation::SetExtrusionName { extrusion_id, name } => {
                 hasher.update(format!("{extrusion_id}-{name}").as_bytes())
@@ -494,6 +504,18 @@ impl Operation {
                 x,
                 y,
                 radius
+            ),
+            Operation::AddSketchLine {
+                sketch_id,
+                start,
+                end,
+            } => format!(
+                "AddSketchLine: {} ({}, {}) to ({}, {})",
+                sketch_id.to_owned()[..num_chars].to_string(),
+                start.0,
+                start.1,
+                end.0,
+                end.1
             ),
             Operation::CreateExtrusion { nonce } => format!("CreateExtrusion: {}", nonce),
             Operation::SetExtrusionName { extrusion_id, name } => {
