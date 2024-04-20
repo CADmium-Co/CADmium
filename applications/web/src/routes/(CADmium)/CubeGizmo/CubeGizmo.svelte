@@ -32,9 +32,9 @@
   export let verticalPlacement: Required<$$Props>['verticalPlacement'] = 'bottom'
   export let horizontalPlacement: Required<$$Props>['horizontalPlacement'] = 'right'
   export let size: Required<$$Props>['size'] = 128
-  export let xColor: Required<$$Props>['xColor'] = 0xff3653
-  export let yColor: Required<$$Props>['yColor'] = 0x8adb00
-  export let zColor: Required<$$Props>['zColor'] = 0x2c8fff
+  export let xColor: Required<$$Props>['xColor'] = 0xff0000
+  export let yColor: Required<$$Props>['yColor'] = 0x00ff00
+  export let zColor: Required<$$Props>['zColor'] = 0x0000ff
   export let toneMapped: Required<$$Props>['toneMapped'] = false
   export let paddingX: Required<$$Props>['paddingX'] = 0
   export let paddingY: Required<$$Props>['paddingY'] = 0
@@ -288,17 +288,12 @@
     canvas.height = size
 
     const context = canvas.getContext('2d')!
-    context.beginPath()
-    context.arc(size / 2, size / 2, size / 4, 0, 2 * Math.PI)
-    context.closePath()
-    context.fillStyle = color.convertSRGBToLinear().getStyle()
-    context.fill()
 
     if (text) {
-      const textSize = Math.abs(size * (24 / 64))
+      const textSize = Math.abs(size * (20 / 64))
       context.font = `${textSize}px Arial`
       context.textAlign = 'center'
-      context.fillStyle = '#000000'
+      context.fillStyle = color.convertSRGBToLinear().getStyle()
       const textY = size * (41 / 64)
       context.fillText(text, size / 2, textY)
     }
@@ -330,7 +325,6 @@
     >
       <T.SpriteMaterial
         map={getSpriteTexture(textureSize, xColor, 'X')}
-        opacity={p[0] >= 0 ? 1 : 0.5}
       />
     </T.Sprite>
 
@@ -341,26 +335,11 @@
       <T is={stemGeometry} />
       <T.MeshBasicMaterial
         transparent
-        opacity={p[0] >= 0 ? 1 : 0.5}
         color={xColor}
         polygonOffset={usePolygonOffset && frontMostAxisIndex === 0 && p[0] < 0.75}
         {polygonOffsetFactor}
       />
     </T.Mesh>
-
-    <!-- <T.Sprite
-      renderOrder={1}
-      bind:ref={negX}
-      position.x={-1}
-      scale={0.8}
-      userData.targetPosition={[-1, 0, 0]}
-      userData.targetEuler={[0, -Math.PI * 0.5, 0]}
-    >
-      <T.SpriteMaterial
-        map={getSpriteTexture(textureSize, xColor)}
-        opacity={p[0] >= 0 ? 0.5 : 1}
-      />
-    </T.Sprite> -->
 
     <!-- yAxis -->
     <T.Sprite
@@ -372,7 +351,6 @@
     >
       <T.SpriteMaterial
         map={getSpriteTexture(textureSize, yColor, 'Y')}
-        opacity={p[1] >= 0 ? 1 : 0.5}
       />
     </T.Sprite>
 
@@ -384,26 +362,11 @@
       <T is={stemGeometry} />
       <T.MeshBasicMaterial
         transparent
-        opacity={p[1] >= 0 ? 1 : 0.5}
         color={yColor}
         polygonOffset={usePolygonOffset && frontMostAxisIndex === 1 && p[1] < 0.75}
         {polygonOffsetFactor}
       />
     </T.Mesh>
-
-    <!-- <T.Sprite
-      renderOrder={1}
-      bind:ref={negY}
-      position.y={-1}
-      scale={0.8}
-      userData.targetPosition={[0, -1, 0]}
-      userData.targetEuler={[Math.PI * 0.5, 0, 0]}
-    >
-      <T.SpriteMaterial
-        map={getSpriteTexture(textureSize, yColor)}
-        opacity={p[1] >= 0 ? 0.5 : 1}
-      />
-    </T.Sprite> -->
 
     <!-- zAxis -->
     <T.Sprite
@@ -415,7 +378,6 @@
     >
       <T.SpriteMaterial
         map={getSpriteTexture(textureSize, zColor, 'Z')}
-        opacity={p[2] >= 0 ? 1 : 0.5}
       />
     </T.Sprite>
 
@@ -427,25 +389,10 @@
       <T is={stemGeometry} />
       <T.MeshBasicMaterial
         transparent
-        opacity={p[2] >= 0 ? 1 : 0.5}
         color={zColor}
         polygonOffset={usePolygonOffset && frontMostAxisIndex === 2 && p[2] < 0.75}
         {polygonOffsetFactor}
       />
     </T.Mesh>
-
-    <!-- <T.Sprite
-      renderOrder={1}
-      bind:ref={negZ}
-      position.z={-1}
-      scale={0.8}
-      userData.targetPosition={[0, 0, -1]}
-      userData.targetEuler={[0, Math.PI, 0]}
-    >
-      <T.SpriteMaterial
-        map={getSpriteTexture(textureSize, zColor)}
-        opacity={p[2] >= 0 ? 0.5 : 1}
-      />
-    </T.Sprite> -->
   </T>
 </HierarchicalObject>
