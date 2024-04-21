@@ -47,13 +47,14 @@
   // invalidate the frame when any of the following values change
   $: size, horizontalPlacement, verticalPlacement, toneMapped, paddingX, paddingY, invalidate()
 
-  const orthoCam = new OrthographicCamera(-1.25, 1.25, 1.25, -1.25, 0, 4)
+  const orthoCam = new OrthographicCamera(-1.6, 1.6, 1.6, -1.6, 0, 4)
   orthoCam.position.set(0, 0, 2)
 
   const root = new Scene()
 
   const viewport = new Vector4()
 
+  // Position and render the gizmo in the parent element.
   useTask(
     renderTask?.key ?? Symbol('cube-gizmo-render'),
     () => {
