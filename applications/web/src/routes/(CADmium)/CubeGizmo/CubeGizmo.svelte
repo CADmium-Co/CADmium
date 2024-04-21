@@ -181,6 +181,11 @@
     return false
   }
 
+  /**
+   * @returns boolean indicating if value is effectively 1.
+   */
+  const approachesOne = (num: number) => 0.9999 < num && num < 1.0001;
+
   const handleClick = (event: MouseEvent) => {
     if (animating) {
       return
@@ -332,8 +337,10 @@
       userData.targetPosition={[1, 0, 0]}
       userData.targetEuler={[0, Math.PI * 0.5, 0]}
     >
+      <!-- hide the text 'X' when xAxis is not visible(is orthogonal to view) -->
       <T.SpriteMaterial
         map={getSpriteTexture(textureSize, xColor, 'X')}
+        opacity={approachesOne(-1 * p[0]) || approachesOne(p[0]) ? 0 : 1}
       />
     </T.Sprite>
 
@@ -358,8 +365,10 @@
       userData.targetPosition={[0, 1, 0]}
       userData.targetEuler={[-Math.PI * 0.5, 0, 0]}
     >
+      <!-- hide the text 'Y' when yAxis is not visible(is orthogonal to view) -->
       <T.SpriteMaterial
         map={getSpriteTexture(textureSize, yColor, 'Y')}
+        opacity={approachesOne(-1 * p[1]) || approachesOne(p[1]) ? 0 : 1}
       />
     </T.Sprite>
 
@@ -385,8 +394,10 @@
       userData.targetPosition={[0, 0, 1]}
       userData.targetEuler={[0, 0, 0]}
     >
+      <!-- hide the text 'Z' when zAxis is not visible(is orthogonal to view) -->
       <T.SpriteMaterial
         map={getSpriteTexture(textureSize, zColor, 'Z')}
+        opacity={approachesOne(-1 * p[2]) || approachesOne(p[2]) ? 0 : 1}
       />
     </T.Sprite>
 
