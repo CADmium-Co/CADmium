@@ -32,9 +32,10 @@
   export let verticalPlacement: Required<$$Props>['verticalPlacement'] = 'bottom'
   export let horizontalPlacement: Required<$$Props>['horizontalPlacement'] = 'right'
   export let size: Required<$$Props>['size'] = 128
-  export let xColor: Required<$$Props>['xColor'] = 0xff0000
-  export let yColor: Required<$$Props>['yColor'] = 0x00ff00
-  export let zColor: Required<$$Props>['zColor'] = 0x0000ff
+  export let xColor: Required<$$Props>['xColor'] = 0xff0000 // red
+  export let yColor: Required<$$Props>['yColor'] = 0x179316 // green
+  export let zColor: Required<$$Props>['zColor'] = 0x0000ff // blue
+  let grayColor = 0xdde6ed
   export let toneMapped: Required<$$Props>['toneMapped'] = false
   export let paddingX: Required<$$Props>['paddingX'] = 0
   export let paddingY: Required<$$Props>['paddingY'] = 0
@@ -290,7 +291,7 @@
     const context = canvas.getContext('2d')!
 
     if (text) {
-      const textSize = Math.abs(size * (20 / 64))
+      const textSize = Math.abs(size * (22 / 64))
       context.font = `${textSize}px Arial`
       context.textAlign = 'center'
       context.fillStyle = color.convertSRGBToLinear().getStyle()
@@ -303,7 +304,7 @@
     return texture
   }
 
-  const stemGeometry = new CapsuleGeometry(0.025, 0.78)
+  const stemGeometry = new CapsuleGeometry(0.02, 1.5)
   stemGeometry.rotateZ(Math.PI / 2)
 
   // Used to decrease atifacts of intersecting axis stems.
@@ -315,11 +316,18 @@
   <T is={root}>
     {@const polygonOffsetFactor = -20}
 
+    <T.Mesh>
+      <T.BoxGeometry args={[1.5, 1.5, 1.5]} />
+      <T.MeshBasicMaterial 
+        color={grayColor}
+      />
+    </T.Mesh>
+
     <!-- xAxis -->
     <T.Sprite
       renderOrder={1}
       bind:ref={posX}
-      position.x={1}
+      position={[1, -0.75, -0.75]}
       userData.targetPosition={[1, 0, 0]}
       userData.targetEuler={[0, Math.PI * 0.5, 0]}
     >
@@ -329,7 +337,7 @@
     </T.Sprite>
 
     <T.Mesh
-      position.x={0.39}
+      position={[0,-0.75,-0.75]}
       renderOrder={frontMostAxisIndex === 0 ? -1 : 0}
     >
       <T is={stemGeometry} />
@@ -345,7 +353,7 @@
     <T.Sprite
       renderOrder={1}
       bind:ref={posY}
-      position.y={1}
+      position={[-0.75, 1, -0.75]}
       userData.targetPosition={[0, 1, 0]}
       userData.targetEuler={[-Math.PI * 0.5, 0, 0]}
     >
@@ -355,7 +363,7 @@
     </T.Sprite>
 
     <T.Mesh
-      position.y={0.39}
+      position={[-0.75,0,-0.75]}
       rotation.z={Math.PI / 2}
       renderOrder={frontMostAxisIndex === 1 ? -1 : 0}
     >
@@ -372,7 +380,7 @@
     <T.Sprite
       renderOrder={1}
       bind:ref={posZ}
-      position.z={1}
+      position={[-0.75, -0.75, 1]}
       userData.targetPosition={[0, 0, 1]}
       userData.targetEuler={[0, 0, 0]}
     >
@@ -382,7 +390,7 @@
     </T.Sprite>
 
     <T.Mesh
-      position.z={0.39}
+    position={[-0.75,-0.75,0]}
       rotation.y={-Math.PI / 2}
       renderOrder={frontMostAxisIndex === 2 ? -1 : 0}
     >
