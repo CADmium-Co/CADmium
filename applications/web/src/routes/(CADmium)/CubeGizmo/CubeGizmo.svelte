@@ -35,7 +35,9 @@
   export let xColor: Required<$$Props>['xColor'] = 0xff0000 // red
   export let yColor: Required<$$Props>['yColor'] = 0x179316 // green
   export let zColor: Required<$$Props>['zColor'] = 0x0000ff // blue
-  let grayColor = 0xdde6ed
+  let gray = 0xdde6ed
+  // let white = 0xffffff // TODO(sosho): Set backgroundColor to white after adding rotation edges.
+  let black = 0x000000
   export let toneMapped: Required<$$Props>['toneMapped'] = false
   export let paddingX: Required<$$Props>['paddingX'] = 0
   export let paddingY: Required<$$Props>['paddingY'] = 0
@@ -284,7 +286,7 @@
   const textures: Record<string, CanvasTexture> = {}
 
   const color = new Color()
-  const getSpriteTexture = (size: number, colorRepresentation: ColorRepresentation, text = '') => {
+  const getAxisLabelSpriteTexture = (size: number, colorRepresentation: ColorRepresentation, text = '') => {
     color.set(colorRepresentation)
     const key = `${color.getHexString()}-${text}`
     if (textures[key]) {
@@ -310,6 +312,55 @@
     return texture
   }
 
+  const getCubeSpriteTexture = (size: number, text = '') => {
+    const key = `cube-${text}`
+    if (textures[key]) {
+      textures[key].dispose()
+    }
+    const canvas = document.createElement('canvas')
+    canvas.width = size
+    canvas.height = size
+
+    const context = canvas.getContext('2d')!
+
+    const backgroundColor = new Color(gray);
+    context.fillStyle = backgroundColor.convertSRGBToLinear().getStyle()
+    context.fillRect(0,0, canvas.width, canvas.height)
+
+    if (text) {
+      const textSize = Math.abs(size * (16 / 64))
+      context.font = `${textSize}px Arial`
+      context.textAlign = 'center'
+      const textColor = new Color(black)
+      context.fillStyle = textColor.convertSRGBToLinear().getStyle()
+      const textXPos = size / 2
+      const textYPos = size * (41 / 64)
+      context.fillText(text, textXPos, textYPos)
+    }
+
+    const texture = new CanvasTexture(canvas)
+    texture.generateMipmaps = false // makes text sharper
+
+    // Rotate text.
+    texture.center = new Vector2(0.5, 0.5);
+    switch (text) {
+      case 'Right':
+        texture.rotation = Math.PI/2 // 90 deg
+        break
+      case 'Back':
+      case 'Bottom':
+        texture.rotation = Math.PI
+        break
+      case 'Left':
+      texture.rotation = 3 * Math.PI/2
+        break
+      // other faces don't need to be rotated.
+    }
+
+    textures[key] = texture
+    return texture
+  }
+
   const stemGeometry = new CapsuleGeometry(0.02, 1.5)
   stemGeometry.rotateZ(Math.PI / 2)
 
@@ -325,8 +376,47 @@
     <T.Mesh>
       <T.BoxGeometry args={[1.5, 1.5, 1.5]} />
       <T.MeshBasicMaterial 
-        color={grayColor}
+        map={getCubeSpriteTexture(textureSize, 'Right')}
+        attach={(parent, self) => {
+          if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
+          else parent.material = [self]
+        }}
       />
+      <T.MeshBasicMaterial 
+        map={getCubeSpriteTexture(textureSize, 'Left')}
+        attach={(parent, self) => {
+          if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
+          else parent.material = [self]
+        }}
+      />
+      <T.MeshBasicMaterial 
+      map={getCubeSpriteTexture(textureSize, 'Back')}
+      attach={(parent, self) => {
+        if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
+        else parent.material = [self]
+      }}
+      />
+      <T.MeshBasicMaterial 
+      map={getCubeSpriteTexture(textureSize, 'Front')}
+      attach={(parent, self) => {
+        if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
+        else parent.material = [self]
+      }}
+      />
+      <T.MeshBasicMaterial 
+      map={getCubeSpriteTexture(textureSize, 'Top')}
+      attach={(parent, self) => {
+        if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
+        else parent.material = [self]
+      }}
+      />
+      <T.MeshBasicMaterial 
+      map={getCubeSpriteTexture(textureSize, 'Bottom')}
+      attach={(parent, self) => {
+        if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
+        else parent.material = [self]
+      }}
+    />
     </T.Mesh>
 
     <!-- xAxis -->
@@ -339,7 +429,7 @@
     >
       <!-- hide the text 'X' when xAxis is not visible(is orthogonal to view) -->
       <T.SpriteMaterial
-        map={getSpriteTexture(textureSize, xColor, 'X')}
+        map={getAxisLabelSpriteTexture(textureSize, xColor, 'X')}
         opacity={approachesOne(-1 * p[0]) || approachesOne(p[0]) ? 0 : 1}
       />
     </T.Sprite>
@@ -367,7 +457,7 @@
     >
       <!-- hide the text 'Y' when yAxis is not visible(is orthogonal to view) -->
       <T.SpriteMaterial
-        map={getSpriteTexture(textureSize, yColor, 'Y')}
+        map={getAxisLabelSpriteTexture(textureSize, yColor, 'Y')}
         opacity={approachesOne(-1 * p[1]) || approachesOne(p[1]) ? 0 : 1}
       />
     </T.Sprite>
@@ -396,7 +486,7 @@
     >
       <!-- hide the text 'Z' when zAxis is not visible(is orthogonal to view) -->
       <T.SpriteMaterial
-        map={getSpriteTexture(textureSize, zColor, 'Z')}
+        map={getAxisLabelSpriteTexture(textureSize, zColor, 'Z')}
         opacity={approachesOne(-1 * p[2]) || approachesOne(p[2]) ? 0 : 1}
       />
     </T.Sprite>
