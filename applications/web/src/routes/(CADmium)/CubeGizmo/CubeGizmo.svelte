@@ -6,6 +6,7 @@
     CapsuleGeometry,
     Color,
     Euler,
+    Mesh,
     Object3D,
     OrthographicCamera,
     Quaternion,
@@ -18,6 +19,8 @@
     type ColorRepresentation,
     type Intersection
   } from 'three'
+
+  import type { SetCameraFocus } from "shared/types"
   import type { CubeGizmoEvents, CubeGizmoProps, CubeGizmoSlots } from './CubeGizmo'
 
   type $$Props = CubeGizmoProps
@@ -26,6 +29,7 @@
 
   export let renderTask: $$Props['renderTask'] = undefined
   export let animationTask: $$Props['animationTask'] = undefined
+  export let setCameraFocus: SetCameraFocus
 
   export let turnRate: Required<$$Props>['turnRate'] = 2 * Math.PI
   export let center: Required<$$Props>['center'] = [0, 0, 0]
@@ -99,8 +103,8 @@
   clickTarget.style.position = 'absolute'
   $: {
     if (horizontalPlacement === 'right') {
-      clickTarget.style.right = ''
-      clickTarget.style.left = `${boundingRect.right - size - paddingX}px`
+      clickTarget.style.right = `${paddingX}px`
+      clickTarget.style.left = ''
     } else {
       clickTarget.style.right = ''
       clickTarget.style.left = `${paddingX + boundingRect.left}px`
@@ -124,6 +128,7 @@
   let negX: Sprite
   let negY: Sprite
   let negZ: Sprite
+  let cube: Mesh
 
   const targetPosition = new Vector3()
   const targetQuaternion = new Quaternion()
@@ -201,18 +206,62 @@
     mouse.y = -((event.clientY - offsetY) / (rect.bottom - offsetY)) * 2 + 1
 
     raycaster.setFromCamera(mouse, orthoCam)
+    
+    const intersects = raycaster.intersectObject(cube)
+    if (intersects.length) {
+      const faceIndex = intersects[0].faceIndex
+      const origin =  {x: 0, y:0, z:0}
 
-    const intersects = raycaster.intersectObjects([posX, posY, posZ, negX, negY, negZ])
-
-    if (intersects.length > 0) {
-      const alreadyReached = handleIntersection(intersects[0])
-      if (alreadyReached) {
-        // get the second closest intersection
-        if (intersects.length > 1) {
-          handleIntersection(intersects[1])
-        }
+      // Each cube face consists of 2 faceIndexes
+      // TODO(sosho): add slerp
+      switch (faceIndex) {
+        // Right
+        case 0:
+        case 1:
+          setCameraFocus({x: 1, y:0, z:0}, origin, {x: 0, y:0, z:1})
+          break
+        // Left
+        case 2:
+        case 3:
+          setCameraFocus({x: -1, y:0, z:0}, origin, {x: 0, y:0, z:1})
+          break
+        // Back
+        case 4:
+        case 5:
+          setCameraFocus({x: 0, y:1, z:0}, origin, {x: 0, y:0, z:1})
+          break
+        // Front
+        case 6:
+        case 7:
+          setCameraFocus({x: 0, y:-1, z:0}, origin, {x: 0, y:0, z:1})
+          break
+        // Top
+        case 8:
+        case 9:
+          setCameraFocus({x: 0, y:0, z:1}, origin, {x: 0, y:1, z:0})
+          break
+        // Bottom
+        case 10:
+        case 11:
+          setCameraFocus({x: 0, y:0, z:-1}, origin, {x: 0, y:-1, z:0})
+          break
+        default:
+          break
       }
     }
+
+    // TODO(sosho): I think this can be removed or modified/replaced with the rotation controls
+    // const intersects = raycaster.intersectObjects([posX, posY, posZ, negX, negY, negZ])
+
+    // if (intersects.length > 0) {
+    //   const alreadyReached = handleIntersection(intersects[0])
+    //   if (alreadyReached) {
+    //     // get the second closest intersection
+    //     if (intersects.length > 1) {
+    //       handleIntersection(intersects[1])
+    //     }
+    //   }
+    // }
   }
 
   onMount(() => {
@@ -373,7 +422,7 @@
   <T is={root}>
     {@const polygonOffsetFactor = -20}
 
-    <T.Mesh>
+    <T.Mesh bind:ref={cube}>
       <T.BoxGeometry args={[1.5, 1.5, 1.5]} />
       <T.MeshBasicMaterial 
         map={getCubeSpriteTexture(textureSize, 'Right')}
@@ -416,7 +465,7 @@
         if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
         else parent.material = [self]
       }}
-    />
+      />
     </T.Mesh>
 
     <!-- xAxis -->
