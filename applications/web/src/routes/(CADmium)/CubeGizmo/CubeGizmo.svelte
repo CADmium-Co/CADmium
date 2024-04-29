@@ -278,6 +278,7 @@
           // Crossing the vectors follows left-hand rule for calculating the perpendicular up vector.
           const normalizedCameraPos = camera.current.position.clone().normalize()
           const newUp = normalizedCameraPos.cross(upDownRotationAxis)
+          camera.current.up.set(newUp.x, newUp.y, newUp.z)
           break
         case leftTriangle:
           quaternion.setFromAxisAngle(cameraUp, Math.PI/12)
