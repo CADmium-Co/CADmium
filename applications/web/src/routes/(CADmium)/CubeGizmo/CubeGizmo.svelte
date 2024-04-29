@@ -13,6 +13,7 @@
     Raycaster,
     Scene,
     Sprite,
+    Triangle,
     Vector2,
     Vector3,
     Vector4,
@@ -45,6 +46,7 @@
   export let toneMapped: Required<$$Props>['toneMapped'] = false
   export let paddingX: Required<$$Props>['paddingX'] = 0
   export let paddingY: Required<$$Props>['paddingY'] = 0
+  const origin = new Vector3(0,0,0)
 
   $: centerVec = new Vector3(...center)
 
@@ -53,10 +55,11 @@
   // invalidate the frame when any of the following values change
   $: size, horizontalPlacement, verticalPlacement, toneMapped, paddingX, paddingY, invalidate()
 
-  const orthoCam = new OrthographicCamera(-1.6, 1.6, 1.6, -1.6, 0, 4)
+  const orthoCam = new OrthographicCamera(-2, 2, 2, -2, 0, 4)
   orthoCam.position.set(0, 0, 2)
 
-  const root = new Scene()
+  const rotationRoot = new Scene()
+  const triangleControls = new Scene()
 
   const viewport = new Vector4()
 
@@ -80,7 +83,8 @@
           : renderer.domElement.offsetHeight - size - paddingY
 
       renderer.setViewport(x, y, size, size)
-      renderer.render(root, orthoCam)
+      renderer.render(rotationRoot, orthoCam)
+      renderer.render(triangleControls, orthoCam)
       renderer.setViewport(viewport.x, viewport.y, viewport.z, viewport.w)
       renderer.autoClear = autoClear
       renderer.toneMapping = toneMapping
@@ -129,6 +133,10 @@
   let negY: Sprite
   let negZ: Sprite
   let cube: Mesh
+  let downTriangle: Sprite
+  let leftTriangle: Sprite
+  let upTriangle: Sprite
+  let rightTriangle: Sprite
 
   const targetPosition = new Vector3()
   const targetQuaternion = new Quaternion()
@@ -191,7 +199,7 @@
   /**
    * @returns boolean indicating if value is effectively 1.
    */
-  const approachesOne = (num: number) => 0.9999 < num && num < 1.0001;
+  const approachesOne = (num: number) => 0.9999 < num && num < 1.0001
 
   const handleClick = (event: MouseEvent) => {
     if (animating) {
@@ -207,10 +215,9 @@
 
     raycaster.setFromCamera(mouse, orthoCam)
     
-    const intersects = raycaster.intersectObject(cube)
-    if (intersects.length) {
-      const faceIndex = intersects[0].faceIndex
-      const origin =  {x: 0, y:0, z:0}
+    const cubeIntersects = raycaster.intersectObject(cube)
+    if (cubeIntersects.length) {
+      const faceIndex = cubeIntersects[0].faceIndex
 
       // Each cube face consists of 2 faceIndexes
       // TODO(sosho): add slerp
@@ -250,6 +257,39 @@
       }
     }
 
+    const triangleIntersects = raycaster.intersectObjects([downTriangle, leftTriangle, upTriangle, rightTriangle])
+    if (triangleIntersects.length) {
+      const cameraUp = camera.current.up.clone()
+      const quaternion = new Quaternion();
+
+      const triangleSprite = triangleIntersects[0].object
+      switch(triangleSprite) {
+        case downTriangle:
+        case upTriangle:
+          const angle = triangleSprite == downTriangle ? -Math.PI/12 : Math.PI/12 // 15 deg
+      
+          // Rotate camera to new position.
+          const planeTriangle = new Triangle(origin, cameraUp, camera.current.position)
+          const upDownRotationAxis = planeTriangle.getNormal(origin)
+          quaternion.setFromAxisAngle(upDownRotationAxis, angle)
+          camera.current.position.applyQuaternion(quaternion)
+
+          // Set camera up vector (prevents orientation inversion).
+          // Crossing the vectors follows left-hand rule for calculating the perpendicular up vector.
+          const normalizedCameraPos = camera.current.position.clone().normalize()
+          const newUp = normalizedCameraPos.cross(upDownRotationAxis)
+          break
+        case leftTriangle:
+          quaternion.setFromAxisAngle(cameraUp, Math.PI/12)
+          camera.current.position.applyQuaternion(quaternion)
+          break
+        case rightTriangle:
+          quaternion.setFromAxisAngle(cameraUp, -Math.PI/12)
+          camera.current.position.applyQuaternion(quaternion)
+          break
+      }
+    }
+
     // TODO(sosho): I think this can be removed or modified/replaced with the rotation controls
     // const intersects = raycaster.intersectObjects([posX, posY, posZ, negX, negY, negZ])
 
@@ -284,13 +324,12 @@
       point.set(0, 0, 1).applyQuaternion(camera.current.quaternion)
       if (point.x !== p[0] || point.y !== p[1] || point.z !== p[2]) {
         p = [point.x, point.y, point.z]
-        root.quaternion.copy(camera.current.quaternion).invert()
+        rotationRoot.quaternion.copy(camera.current.quaternion).invert()
         invalidate()
       }
 
       if (animating) {
         const step = delta * turnRate
-
         // animate position by doing a slerp and then scaling the position on the unit sphere
         currentQuaternion.rotateTowards(finalQuaternion, step)
         camera.current.position
@@ -410,6 +449,34 @@
     return texture
   }
 
+  const getTriangleSpriteTexture = (label = '') => {
+    const key = `triangle-${label}`
+    if (textures[key]) {
+      textures[key].dispose()
+    }
+
+    const canvas = document.createElement('canvas')
+    canvas.width = 100
+    canvas.height = 73
+
+    const context = canvas.getContext('2d')!
+    const v1 = new Vector2(0, 0)
+    const v2 = new Vector2(50, 72.1)
+    const v3 = new Vector2(100, 0)
+    context.beginPath()
+    context.moveTo(v1.x, v1.y)
+    context.lineTo(v2.x, v2.y)
+    context.lineTo(v3.x, v3.y)
+
+    const backgroundColor = new Color(gray);
+    context.fillStyle = backgroundColor.convertSRGBToLinear().getStyle()
+    context.fill()
+
+    const texture = new CanvasTexture(canvas)
+    textures[key] = texture
+    return texture
+  }
+
   const stemGeometry = new CapsuleGeometry(0.02, 1.5)
   stemGeometry.rotateZ(Math.PI / 2)
 
@@ -419,7 +486,7 @@
 </script>
 
 <HierarchicalObject>
-  <T is={root}>
+  <T is={rotationRoot}>
     {@const polygonOffsetFactor = -20}
 
     <T.Mesh bind:ref={cube}>
@@ -554,4 +621,45 @@
       />
     </T.Mesh>
   </T>
+  <T is={triangleControls}>
+    <T.Sprite
+      bind:ref={downTriangle}
+      position={[0,-1.85,1]}
+      scale={0.4}
+    >
+      <T.SpriteMaterial
+        map={getTriangleSpriteTexture('down')}
+      />
+    </T.Sprite>
+    <T.Sprite
+      bind:ref={leftTriangle}
+      position={[-1.85,0,1]}
+      scale={0.4}
+    >
+      <T.SpriteMaterial
+        map={getTriangleSpriteTexture('left')}
+        rotation={3*Math.PI/2}
+      />
+    </T.Sprite>
+    <T.Sprite
+      bind:ref={upTriangle}
+      position={[0,1.85,1]}
+      scale={0.4}
+    >
+      <T.SpriteMaterial
+        map={getTriangleSpriteTexture('up')}
+        rotation={Math.PI}
+      />
+    </T.Sprite>
+    <T.Sprite
+      bind:ref={rightTriangle}
+      position={[1.85,0,1]}
+      scale={0.4}
+    >
+      <T.SpriteMaterial
+        map={getTriangleSpriteTexture('right')}
+        rotation={Math.PI/2}
+      />
+    </T.Sprite>
+  </T> 
 </HierarchicalObject>
