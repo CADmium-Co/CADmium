@@ -195,4 +195,4 @@
 	/>
 {/each}
 
-<CubeGizmo verticalPlacement={top} size={140} paddingX={20} paddingY={20} {setCameraFocus} />
+<CubeGizmo verticalPlacement={'top'} size={140} paddingX={20} paddingY={20} {setCameraFocus} />

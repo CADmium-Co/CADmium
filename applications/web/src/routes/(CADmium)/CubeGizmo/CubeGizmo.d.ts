@@ -1,6 +1,7 @@
 import type { Key, ThrelteUseTaskOptions } from '@threlte/core'
 import { SvelteComponent } from 'svelte'
 import type { ColorRepresentation } from 'three'
+import type { SetCameraFocus } from "shared/types"
 
 type TaskOptions = Pick<ThrelteUseTaskOptions, 'after' | 'before' | 'stage'> & { key?: Key }
 
@@ -18,10 +19,7 @@ export type CubeGizmoProps = {
   toneMapped?: boolean
   paddingX?: number
   paddingY?: number
+  setCameraFocus: SetCameraFocus
 }
 
-export type CubeGizmoEvents = Record<string, never>
-
-export type CubeGizmoSlots = Record<string, never>
-
-export default class CubeGizmo extends SvelteComponent<CubeGizmoProps, CubeGizmoEvents, CubeGizmoSlots> {}
+export default class CubeGizmo extends SvelteComponent<CubeGizmoProps> {}

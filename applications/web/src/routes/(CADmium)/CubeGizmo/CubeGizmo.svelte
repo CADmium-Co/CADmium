@@ -5,9 +5,7 @@
     CanvasTexture,
     CapsuleGeometry,
     Color,
-    Euler,
     Mesh,
-    Object3D,
     OrthographicCamera,
     Quaternion,
     Raycaster,
@@ -18,37 +16,31 @@
     Vector3,
     Vector4,
     type ColorRepresentation,
-    type Intersection
   } from 'three'
 
   import type { SetCameraFocus } from "shared/types"
-  import type { CubeGizmoEvents, CubeGizmoProps, CubeGizmoSlots } from './CubeGizmo'
+  import type { CubeGizmoProps } from './CubeGizmo'
 
   type $$Props = CubeGizmoProps
-  type $$Events = CubeGizmoEvents
-  type $$Slots = CubeGizmoSlots
 
   export let renderTask: $$Props['renderTask'] = undefined
   export let animationTask: $$Props['animationTask'] = undefined
   export let setCameraFocus: SetCameraFocus
 
-  export let turnRate: Required<$$Props>['turnRate'] = 2 * Math.PI
-  export let center: Required<$$Props>['center'] = [0, 0, 0]
   export let verticalPlacement: Required<$$Props>['verticalPlacement'] = 'bottom'
   export let horizontalPlacement: Required<$$Props>['horizontalPlacement'] = 'right'
   export let size: Required<$$Props>['size'] = 128
   export let xColor: Required<$$Props>['xColor'] = 0xff0000 // red
   export let yColor: Required<$$Props>['yColor'] = 0x179316 // green
   export let zColor: Required<$$Props>['zColor'] = 0x0000ff // blue
-  let gray = 0xdde6ed
-  // let white = 0xffffff // TODO(sosho): Set backgroundColor to white after adding rotation edges.
-  let black = 0x000000
   export let toneMapped: Required<$$Props>['toneMapped'] = false
   export let paddingX: Required<$$Props>['paddingX'] = 0
   export let paddingY: Required<$$Props>['paddingY'] = 0
-  const origin = new Vector3(0,0,0)
 
-  $: centerVec = new Vector3(...center)
+  const origin = new Vector3(0,0,0)
+  const textureSize = 64
+  const gray = 0xdde6ed
+  const black = 0x000000
 
   const { autoRenderTask, renderer, camera, invalidate } = useThrelte()
 
@@ -126,75 +118,17 @@
     clickTarget.style.width = `${size}px`
   }
 
-  let posX: Sprite
-  let posY: Sprite
-  let posZ: Sprite
-  let negX: Sprite
-  let negY: Sprite
-  let negZ: Sprite
+  let xAxisLabel: Sprite
+  let yAxisLabel: Sprite
+  let zAxisLabel: Sprite
   let cube: Mesh
   let downTriangle: Sprite
   let leftTriangle: Sprite
   let upTriangle: Sprite
   let rightTriangle: Sprite
 
-  const targetPosition = new Vector3()
-  const targetQuaternion = new Quaternion()
-  const currentQuaternion = new Quaternion()
-  const finalQuaternion = new Quaternion()
-  let radius = 0
-
-  let animating = false
   const mouse = new Vector2()
   const raycaster = new Raycaster()
-
-  /**
-   * Floating point operations make it hard to compare quaternions, controls
-   * (such as the OrbitControls) may also restrict the rotation of the camera on
-   * certain axes. To allow for loose equality checks, we use a sensible
-   * threshold to compare quaternions.
-   *
-   * @param a - Quaternion a
-   * @param b - Quaternion b
-   * @param threshold - Threshold to use for comparison
-   */
-  const quaternionsAreEqual = (a: Quaternion, b: Quaternion, threshold: number) => {
-    const delta =
-      Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z) + Math.abs(a.w - b.w)
-    return delta < threshold
-  }
-
-  /**
-   * @returns boolean that indicates if the target and the current rotation are equal.
-   */
-  const handleIntersection = (intersection: Intersection<Object3D>): boolean => {
-    const object = intersection.object
-    const targetPos = object.userData.targetPosition as [number, number, number]
-    const targetEuler = object.userData.targetEuler as [number, number, number]
-
-    radius = camera.current.position.distanceTo(centerVec)
-    targetPosition
-      .set(...targetPos)
-      .multiplyScalar(radius)
-      .add(centerVec)
-    targetQuaternion.setFromEuler(new Euler(...targetEuler))
-
-    const dummy = new Object3D()
-    dummy.position.copy(centerVec)
-
-    dummy.lookAt(camera.current.position)
-    currentQuaternion.copy(dummy.quaternion)
-
-    dummy.lookAt(targetPosition)
-    finalQuaternion.copy(dummy.quaternion)
-
-    if (quaternionsAreEqual(finalQuaternion, currentQuaternion, 0.0001)) {
-      return true
-    }
-
-    animating = true
-    return false
-  }
 
   /**
    * @returns boolean indicating if value is effectively 1.
@@ -202,10 +136,6 @@
   const approachesOne = (num: number) => 0.9999 < num && num < 1.0001
 
   const handleClick = (event: MouseEvent) => {
-    if (animating) {
-      return
-    }
-
     // Raycasting is done manually.
     const rect = clickTarget.getBoundingClientRect()
     const offsetX = rect.left + (clickTarget.offsetWidth - size)
@@ -220,7 +150,7 @@
       const faceIndex = cubeIntersects[0].faceIndex
 
       // Each cube face consists of 2 faceIndexes
-      // TODO(sosho): add slerp
+      // TODO: add slerp
       switch (faceIndex) {
         // Right
         case 0:
@@ -251,8 +181,6 @@
         case 10:
         case 11:
           setCameraFocus({x: 0, y:0, z:-1}, origin, {x: 0, y:-1, z:0})
-          break
-        default:
           break
       }
     }
@@ -290,19 +218,6 @@
           break
       }
     }
-
-    // TODO(sosho): I think this can be removed or modified/replaced with the rotation controls
-    // const intersects = raycaster.intersectObjects([posX, posY, posZ, negX, negY, negZ])
-
-    // if (intersects.length > 0) {
-    //   const alreadyReached = handleIntersection(intersects[0])
-    //   if (alreadyReached) {
-    //     // get the second closest intersection
-    //     if (intersects.length > 1) {
-    //       handleIntersection(intersects[1])
-    //     }
-    //   }
-    // }
   }
 
   onMount(() => {
@@ -315,37 +230,16 @@
     clickTarget.removeEventListener('click', handleClick)
   })
 
-  // Used to test which axis (pos or neg) are closer to the camera.
+  // Rotate the gizmo as the camera moves.
   const point = new Vector3()
   let p = [0, 0, 0]
-
   useTask(
     animationTask?.key ?? Symbol('cube-gizmo-animation'),
-    (delta) => {
+    () => {
       point.set(0, 0, 1).applyQuaternion(camera.current.quaternion)
       if (point.x !== p[0] || point.y !== p[1] || point.z !== p[2]) {
         p = [point.x, point.y, point.z]
         rotationRoot.quaternion.copy(camera.current.quaternion).invert()
-        invalidate()
-      }
-
-      if (animating) {
-        const step = delta * turnRate
-        // animate position by doing a slerp and then scaling the position on the unit sphere
-        currentQuaternion.rotateTowards(finalQuaternion, step)
-        camera.current.position
-          .set(0, 0, 1)
-          .applyQuaternion(currentQuaternion)
-          .multiplyScalar(radius)
-          .add(centerVec)
-
-        // animate orientation
-        camera.current.quaternion.rotateTowards(targetQuaternion, step)
-
-        if (currentQuaternion.angleTo(finalQuaternion) === 0) {
-          animating = false
-        }
-
         invalidate()
       }
     },
@@ -354,19 +248,6 @@
       autoInvalidate: false
     }
   )
-
-  const findClosestPow2LargerThan = (x: number) => {
-    if (x <= 0) {
-      return 1
-    }
-    let pow2 = 1
-    while (pow2 < x) {
-      pow2 <<= 1
-    }
-    return pow2
-  }
-
-  $: textureSize = findClosestPow2LargerThan(size * 0.3 * renderer.getPixelRatio())
 
   /**
    * Keep track of the textures to be able to dispose them when they are no
@@ -478,18 +359,12 @@
     return texture
   }
 
-  const stemGeometry = new CapsuleGeometry(0.02, 1.5)
-  stemGeometry.rotateZ(Math.PI / 2)
-
-  // Used to decrease atifacts of intersecting axis stems.
-  $: frontMostAxisIndex = p.indexOf(Math.max(...p))
-  $: usePolygonOffset = p.some((v) => v < 0)
+  const axisLine = new CapsuleGeometry(0.02, 1.5)
+  axisLine.rotateZ(Math.PI / 2)
 </script>
 
 <HierarchicalObject>
   <T is={rotationRoot}>
-    {@const polygonOffsetFactor = -20}
-
     <T.Mesh bind:ref={cube}>
       <T.BoxGeometry args={[1.5, 1.5, 1.5]} />
       <T.MeshBasicMaterial 
@@ -536,92 +411,69 @@
       />
     </T.Mesh>
 
-    <!-- xAxis -->
     <T.Sprite
-      renderOrder={1}
-      bind:ref={posX}
+      bind:ref={xAxisLabel}
       position={[1, -0.75, -0.75]}
-      userData.targetPosition={[1, 0, 0]}
-      userData.targetEuler={[0, Math.PI * 0.5, 0]}
     >
-      <!-- hide the text 'X' when xAxis is not visible(is orthogonal to view) -->
+      <!-- hide the text 'X' when xAxisLabel is orthogonal to viewport -->
       <T.SpriteMaterial
         map={getAxisLabelSpriteTexture(textureSize, xColor, 'X')}
         opacity={approachesOne(-1 * p[0]) || approachesOne(p[0]) ? 0 : 1}
       />
     </T.Sprite>
-
     <T.Mesh
       position={[0,-0.75,-0.75]}
-      renderOrder={frontMostAxisIndex === 0 ? -1 : 0}
     >
-      <T is={stemGeometry} />
+      <T is={axisLine} />
       <T.MeshBasicMaterial
         transparent
         color={xColor}
-        polygonOffset={usePolygonOffset && frontMostAxisIndex === 0 && p[0] < 0.75}
-        {polygonOffsetFactor}
       />
     </T.Mesh>
 
-    <!-- yAxis -->
     <T.Sprite
-      renderOrder={1}
-      bind:ref={posY}
+      bind:ref={yAxisLabel}
       position={[-0.75, 1, -0.75]}
-      userData.targetPosition={[0, 1, 0]}
-      userData.targetEuler={[-Math.PI * 0.5, 0, 0]}
     >
-      <!-- hide the text 'Y' when yAxis is not visible(is orthogonal to view) -->
+      <!-- hide the text 'Y' when yAxisLabel is orthogonal to viewport -->
       <T.SpriteMaterial
         map={getAxisLabelSpriteTexture(textureSize, yColor, 'Y')}
         opacity={approachesOne(-1 * p[1]) || approachesOne(p[1]) ? 0 : 1}
       />
     </T.Sprite>
-
     <T.Mesh
       position={[-0.75,0,-0.75]}
       rotation.z={Math.PI / 2}
-      renderOrder={frontMostAxisIndex === 1 ? -1 : 0}
     >
-      <T is={stemGeometry} />
+      <T is={axisLine} />
       <T.MeshBasicMaterial
         transparent
         color={yColor}
-        polygonOffset={usePolygonOffset && frontMostAxisIndex === 1 && p[1] < 0.75}
-        {polygonOffsetFactor}
       />
     </T.Mesh>
 
-    <!-- zAxis -->
     <T.Sprite
-      renderOrder={1}
-      bind:ref={posZ}
+      bind:ref={zAxisLabel}
       position={[-0.75, -0.75, 1]}
-      userData.targetPosition={[0, 0, 1]}
-      userData.targetEuler={[0, 0, 0]}
     >
-      <!-- hide the text 'Z' when zAxis is not visible(is orthogonal to view) -->
+      <!-- hide the text 'Z' when zAxisLabel is orthogonal to viewport -->
       <T.SpriteMaterial
         map={getAxisLabelSpriteTexture(textureSize, zColor, 'Z')}
         opacity={approachesOne(-1 * p[2]) || approachesOne(p[2]) ? 0 : 1}
       />
     </T.Sprite>
-
     <T.Mesh
-    position={[-0.75,-0.75,0]}
+      position={[-0.75,-0.75,0]}
       rotation.y={-Math.PI / 2}
-      renderOrder={frontMostAxisIndex === 2 ? -1 : 0}
     >
-      <T is={stemGeometry} />
+      <T is={axisLine} />
       <T.MeshBasicMaterial
         transparent
         color={zColor}
-        polygonOffset={usePolygonOffset && frontMostAxisIndex === 2 && p[2] < 0.75}
-        {polygonOffsetFactor}
       />
     </T.Mesh>
   </T>
+
   <T is={triangleControls}>
     <T.Sprite
       bind:ref={downTriangle}
