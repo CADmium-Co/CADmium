@@ -17,7 +17,7 @@ Then this project may be for you!
 
 ## Overall Plan
 
-I am currently racing toward an MVP, which I expect to release as version 0.1 in April, 2024. After that I hope to get a small group of users together to help guide me toward a version 1.0 release which will be more fully featured and which may serve as a solid foundation for hobbyists: all of it free, source available, and local-only.
+I am currently racing toward an MVP, which I expect to release as version 0.1 in July, 2024. After that I hope to get a small group of users together to help guide me toward a version 1.0 release which will be more fully featured and which may serve as a solid foundation for hobbyists: all of it free, source available, and local-only.
 
 Beyond that, I will try to monetize by offering a hosted version of the software as a paid product. To achieve this I will introduce a notion of users, accounts, sharing, and a public commons. All of the actual CAD functionality, including the ability to read and modify .cadmium files, will always be available for free here on Github in a local-only form.
 

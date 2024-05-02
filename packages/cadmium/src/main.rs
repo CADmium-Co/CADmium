@@ -98,10 +98,10 @@ fn topological_naming() {
         extrusion_id: extrusion_id.clone(),
         sketch_id: sketch_id.clone(),
     });
-    el.append(Operation::SetExtrusionHandles {
-        extrusion_id: extrusion_id.clone(),
-        handles: vec![handle_id.clone()],
-    });
+    // el.append(Operation::SetExtrusionHandles {
+    //     extrusion_id: extrusion_id.clone(),
+    //     handles: vec![handle_id.clone()],
+    // });
 
     el.git_log();
 }
