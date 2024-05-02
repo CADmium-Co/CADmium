@@ -37,6 +37,7 @@ fn topological_naming() {
         plane: Plane::top(),
     });
 
+    // Create the sketch
     let sketch_id = el.append(Operation::CreateSketch {
         nonce: "top sketch".to_string(),
     });
@@ -50,7 +51,6 @@ fn topological_naming() {
     });
 
     // Create the base "L" shape
-    // autojoin means "look for the nearest endpoints and join them if they're close enough"
     el.append(Operation::AddSketchLine {
         sketch_id: sketch_id.clone(),
         start: (0.0, 0.0),
@@ -81,7 +81,12 @@ fn topological_naming() {
         start: (100.0, 0.0),
         end: (0.0, 0.0),
     });
+    let handle_id = el.append(Operation::AddSketchHandle {
+        sketch_id: sketch_id.clone(),
+        position: (20.0, 20.0),
+    });
 
+    // Create a new extrusion and set it to the sketch
     let extrusion_id = el.append(Operation::CreateExtrusion {
         nonce: "top extrusion".to_string(),
     });
@@ -92,6 +97,10 @@ fn topological_naming() {
     el.append(Operation::SetExtrusionSketch {
         extrusion_id: extrusion_id.clone(),
         sketch_id: sketch_id.clone(),
+    });
+    el.append(Operation::SetExtrusionHandles {
+        extrusion_id: extrusion_id.clone(),
+        handles: vec![handle_id.clone()],
     });
 
     el.git_log();
