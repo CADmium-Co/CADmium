@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { T, useThrelte } from "@threlte/core"
-	import { TrackballControls, Gizmo, Environment } from "@threlte/extras"
+	import { TrackballControls, Environment } from "@threlte/extras"
 	import { Vector2, Vector3, type Vector3Like } from "three"
 	import { interactivity } from "@threlte/extras"
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
@@ -11,6 +11,7 @@
 	import Plane from "./Plane.svelte"
 	import Solid from "./Solid.svelte"
 	import Sketch from "./Sketch.svelte"
+	import CubeGizmo from "./CubeGizmo/CubeGizmo.svelte"
 	import { base } from "$app/paths"
 
 	// prettier-ignore
@@ -194,4 +195,4 @@
 	/>
 {/each}
 
-<Gizmo verticalPlacement={top} size={110} paddingX={10} paddingY={10} />
+<CubeGizmo verticalPlacement={"top"} size={140} paddingX={20} paddingY={20} {setCameraFocus} />
