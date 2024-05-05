@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
 
-use crate::project::Plane;
+use crate::project::{Plane, Project};
 
 pub type Sha = String;
 
@@ -58,7 +58,7 @@ fn id_from_op_and_parent(operation: &Operation, parent: &Sha, nonce: usize) -> S
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EvolutionLog {
     pub cursor: Sha,
-    pub oplog: OpLog, // TODO: work out the lifetimes here so that we can have multiple evolutionLogs at once?
+    pub oplog: OpLog,
 }
 
 impl EvolutionLog {
@@ -219,6 +219,20 @@ impl EvolutionLog {
         }
         Err(format!("SHA {} not found in oplog", sha))
     }
+
+    pub fn to_project(&self) -> Project {
+        let mut project = Project::new("Untitled");
+
+        for commit in &self.oplog.commits {
+            match &commit.operation {
+                // Operation::CreatePlane { nonce } => {
+                //     project.create_plane(nonce.clone());
+                // }
+                _ => {}
+            }
+        }
+        project
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -281,8 +295,26 @@ pub enum Operation {
         new: Sha,
     },
 
+    CreateProject {
+        nonce: String,
+    },
+    SetProjectName {
+        project_id: Sha,
+        name: String,
+    },
+
+    CreateWorkspace {
+        nonce: String,
+        project_id: Sha,
+    },
+    SetWorkspaceName {
+        workspace_id: Sha,
+        name: String,
+    },
+
     CreatePlane {
         nonce: String,
+        workspace_id: Sha,
     },
     SetPlaneName {
         plane_id: Sha,
@@ -295,6 +327,7 @@ pub enum Operation {
 
     CreateSketch {
         nonce: String,
+        workspace_id: Sha,
     },
     SetSketchName {
         sketch_id: Sha,
@@ -329,6 +362,7 @@ pub enum Operation {
     },
 
     CreateExtrusion {
+        workspace_id: Sha,
         nonce: String,
     },
     SetExtrusionName {
@@ -372,14 +406,31 @@ impl Operation {
             Operation::Alias { original, new } => {
                 hasher.update(format!("{original}-{new}").as_bytes())
             }
-            Operation::CreatePlane { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::CreateProject { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::SetProjectName { project_id, name } => {
+                hasher.update(format!("{project_id}-{name}").as_bytes())
+            }
+            Operation::CreateWorkspace { nonce, project_id } => {
+                hasher.update(format!("{nonce}-{project_id}").as_bytes())
+            }
+            Operation::SetWorkspaceName { workspace_id, name } => {
+                hasher.update(format!("{workspace_id}-{name}").as_bytes())
+            }
+
+            Operation::CreatePlane {
+                nonce,
+                workspace_id,
+            } => hasher.update(format!("{nonce}-{workspace_id}").as_bytes()),
             Operation::SetPlaneName { plane_id, name } => {
                 hasher.update(format!("{plane_id}-{name}").as_bytes())
             }
             Operation::SetPlane { plane_id, plane } => {
                 hasher.update(format!("{plane_id}-{plane:?}").as_bytes())
             }
-            Operation::CreateSketch { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::CreateSketch {
+                nonce,
+                workspace_id,
+            } => hasher.update(format!("{nonce}-{workspace_id}").as_bytes()),
             Operation::SetSketchName { sketch_id, name } => {
                 hasher.update(format!("{sketch_id}-{name}").as_bytes())
             }
@@ -409,7 +460,10 @@ impl Operation {
                 sketch_id,
                 position,
             } => hasher.update(format!("{sketch_id}-{position:?}").as_bytes()),
-            Operation::CreateExtrusion { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::CreateExtrusion {
+                nonce,
+                workspace_id,
+            } => hasher.update(format!("{nonce}-{workspace_id}").as_bytes()),
             Operation::SetExtrusionName { extrusion_id, name } => {
                 hasher.update(format!("{extrusion_id}-{name}").as_bytes())
             }
@@ -454,7 +508,36 @@ impl Operation {
                     new.to_owned()[..num_chars].to_string()
                 )
             }
-            Operation::CreatePlane { nonce } => format!("CreatePlane: {}", nonce),
+            Operation::CreateProject { nonce } => format!("CreateProject: {}", nonce),
+            Operation::SetProjectName { project_id, name } => {
+                format!(
+                    "SetProjectName: {} '{}'",
+                    project_id.to_owned()[..num_chars].to_string(),
+                    name
+                )
+            }
+            Operation::CreateWorkspace { nonce, project_id } => {
+                format!(
+                    "CreateWorkspace: {} {}",
+                    project_id.to_owned()[..num_chars].to_string(),
+                    nonce
+                )
+            }
+            Operation::SetWorkspaceName { workspace_id, name } => {
+                format!(
+                    "SetWorkspaceName: {} '{}'",
+                    workspace_id.to_owned()[..num_chars].to_string(),
+                    name
+                )
+            }
+            Operation::CreatePlane {
+                nonce,
+                workspace_id,
+            } => format!(
+                "CreatePlane: {} {}",
+                workspace_id.to_owned()[..num_chars].to_string(),
+                nonce
+            ),
             Operation::SetPlaneName { plane_id, name } => {
                 format!(
                     "SetPlaneName: {} '{}'",
@@ -469,7 +552,14 @@ impl Operation {
                     // plane
                 )
             }
-            Operation::CreateSketch { nonce } => format!("CreateSketch: {}", nonce),
+            Operation::CreateSketch {
+                nonce,
+                workspace_id,
+            } => format!(
+                "CreateSketch: {} {}",
+                workspace_id.to_owned()[..num_chars].to_string(),
+                nonce
+            ),
             Operation::SetSketchName { sketch_id, name } => {
                 format!(
                     "SetSketchName: {} '{}'",
@@ -534,7 +624,14 @@ impl Operation {
                 position.0,
                 position.1
             ),
-            Operation::CreateExtrusion { nonce } => format!("CreateExtrusion: {}", nonce),
+            Operation::CreateExtrusion {
+                nonce,
+                workspace_id,
+            } => format!(
+                "CreateExtrusion: {} {}",
+                workspace_id.to_owned()[..num_chars].to_string(),
+                nonce
+            ),
             Operation::SetExtrusionName { extrusion_id, name } => {
                 format!(
                     "SetExtrusionName: {} '{}'",
