@@ -339,9 +339,9 @@ pub enum Operation {
         extrusion_id: Sha,
         sketch_id: Sha,
     },
-    SetExtrusionClicks {
+    SetExtrusionHandles {
         extrusion_id: Sha,
-        clicks: Vec<(f64, f64)>,
+        handles: Vec<Sha>,
     },
     SetExtrusionDepth {
         extrusion_id: Sha,
@@ -417,13 +417,13 @@ impl Operation {
                 extrusion_id,
                 sketch_id,
             } => hasher.update(format!("{extrusion_id}-{sketch_id}").as_bytes()),
-            Operation::SetExtrusionClicks {
+            Operation::SetExtrusionHandles {
                 extrusion_id,
-                clicks,
+                handles,
             } => {
                 hasher.update(format!("{extrusion_id}").as_bytes());
-                for (x, y) in clicks {
-                    hasher.update(format!("{x}-{y}").as_bytes())
+                for sha in handles {
+                    hasher.update(format!("{sha}").as_bytes())
                 }
             }
             Operation::SetExtrusionDepth {
@@ -552,13 +552,13 @@ impl Operation {
                     sketch_id.to_owned()[..num_chars].to_string()
                 )
             }
-            Operation::SetExtrusionClicks {
+            Operation::SetExtrusionHandles {
                 extrusion_id,
-                clicks,
+                handles,
             } => {
                 let mut click_str = String::new();
-                for (x, y) in clicks {
-                    click_str.push_str(&format!("({}, {}) ", x, y));
+                for sha in handles {
+                    click_str.push_str(&format!("{} ", sha.to_owned()[..num_chars].to_string()));
                 }
                 format!(
                     "SetExtrusionClicks: {} {}",

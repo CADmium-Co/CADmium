@@ -17,7 +17,88 @@ use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
 fn main() {
-    topological_naming();
+    // topological_naming();
+    stacked_cubes();
+}
+
+fn stacked_cubes() {
+    let mut el = EvolutionLog::new();
+
+    // Create the Top Plane
+    let top_plane_id = el.append(Operation::CreatePlane {
+        nonce: "the top plane".to_string(),
+    });
+    el.append(Operation::SetPlaneName {
+        plane_id: top_plane_id.clone(),
+        name: "Top".to_string(),
+    });
+    let set_plane = el.append(Operation::SetPlane {
+        plane_id: top_plane_id.clone(),
+        plane: Plane::top(),
+    });
+
+    // Create the sketch
+    let sketch_id = el.append(Operation::CreateSketch {
+        nonce: "top sketch".to_string(),
+    });
+    el.append(Operation::SetSketchName {
+        sketch_id: sketch_id.clone(),
+        name: "Sketch1".to_string(),
+    });
+    el.append(Operation::SetSketchPlane {
+        sketch_id: sketch_id.clone(),
+        plane_id: top_plane_id.clone(),
+    });
+
+    // make a square
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (0.0, 0.0),
+        end: (0.0, 100.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (0.0, 100.0),
+        end: (100.0, 100.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (100.0, 100.0),
+        end: (100.0, 0.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: sketch_id.clone(),
+        start: (100.0, 0.0),
+        end: (0.0, 0.0),
+    });
+    // Add a handle to pull the extrusion from
+    let handle_id = el.append(Operation::AddSketchHandle {
+        sketch_id: sketch_id.clone(),
+        position: (20.0, 20.0),
+    });
+
+    // extrude the square
+    let extrusion_id = el.append(Operation::CreateExtrusion {
+        nonce: "first extrusion".to_string(),
+    });
+    el.append(Operation::SetExtrusionName {
+        extrusion_id: extrusion_id.clone(),
+        name: "Extrude1".to_string(),
+    });
+    el.append(Operation::SetExtrusionSketch {
+        extrusion_id: extrusion_id.clone(),
+        sketch_id: sketch_id.clone(),
+    });
+    el.append(Operation::SetExtrusionHandles {
+        extrusion_id: extrusion_id.clone(),
+        handles: vec![handle_id.clone()],
+    });
+    el.append(Operation::SetExtrusionDepth {
+        extrusion_id: extrusion_id.clone(),
+        depth: 100.0,
+    });
+
+    el.git_log();
 }
 
 fn topological_naming() {
@@ -204,10 +285,10 @@ fn main_2() {
         extrusion_id: extrusion_id.clone(),
         sketch_id: sketch_id.clone(),
     });
-    let set_ext_clicks_commit = el.append(Operation::SetExtrusionClicks {
-        extrusion_id: extrusion_id.clone(),
-        clicks: vec![(50.0, 50.0)],
-    });
+    // let set_ext_clicks_commit = el.append(Operation::SetExtrusionClicks {
+    //     extrusion_id: extrusion_id.clone(),
+    //     clicks: vec![(50.0, 50.0)],
+    // });
     let finished_rectangle_commit = el.append(Operation::SetExtrusionDepth {
         extrusion_id: extrusion_id.clone(),
         depth: 10.0,
@@ -238,7 +319,7 @@ fn main_2() {
     el.cherry_pick(extrusion_id);
     el.cherry_pick(name_ext_commit);
     el.cherry_pick(set_ext_sketch_commit);
-    el.cherry_pick(set_ext_clicks_commit);
+    // el.cherry_pick(set_ext_clicks_commit);
     let finished_circle_commit = el.cherry_pick(finished_rectangle_commit).unwrap();
     let rotated_circle_commit = el.cherry_pick(rotated_rectangle_commit).unwrap();
 
