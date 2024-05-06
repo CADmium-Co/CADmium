@@ -17,34 +17,24 @@ use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
 fn main() {
-    // topological_naming();
     stacked_cubes();
 }
 
 fn stacked_cubes() {
     let mut el = EvolutionLog::new();
 
-    let project_id = el.append(Operation::CreateProject {
-        nonce: "Project 1".to_string(),
+    let workbench_id = el.append(Operation::CreateWorkbench {
+        nonce: "Workbench 1".to_string(),
     });
-    el.append(Operation::SetProjectName {
-        project_id: project_id.clone(),
-        name: "Main Project".to_string(),
-    });
-
-    let workspace_id = el.append(Operation::CreateWorkspace {
-        project_id: project_id.clone(),
-        nonce: "Workspace 1".to_string(),
-    });
-    el.append(Operation::SetWorkspaceName {
-        workspace_id: workspace_id.clone(),
-        name: "Main Workspace".to_string(),
+    el.append(Operation::SetWorkbenchName {
+        workbench_id: workbench_id.clone(),
+        name: "Main Workbench".to_string(),
     });
 
     // Create the Top Plane
     let top_plane_id = el.append(Operation::CreatePlane {
         nonce: "the top plane".to_string(),
-        workspace_id: workspace_id.clone(),
+        workbench_id: workbench_id.clone(),
     });
     el.append(Operation::SetPlaneName {
         plane_id: top_plane_id.clone(),
@@ -58,7 +48,7 @@ fn stacked_cubes() {
     // Create the sketch
     let sketch_id = el.append(Operation::CreateSketch {
         nonce: "top sketch".to_string(),
-        workspace_id: workspace_id.clone(),
+        workbench_id: workbench_id.clone(),
     });
     el.append(Operation::SetSketchName {
         sketch_id: sketch_id.clone(),
@@ -98,7 +88,7 @@ fn stacked_cubes() {
 
     // extrude the square
     let extrusion_id = el.append(Operation::CreateExtrusion {
-        workspace_id: workspace_id.clone(),
+        workbench_id: workbench_id.clone(),
         nonce: "first extrusion".to_string(),
     });
     el.append(Operation::SetExtrusionName {
@@ -118,5 +108,7 @@ fn stacked_cubes() {
         depth: 100.0,
     });
 
-    el.git_log();
+    // el.git_log();
+
+    el.to_project();
 }

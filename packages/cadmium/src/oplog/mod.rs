@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
 
-use crate::project::{Plane, Project};
+use crate::project::{Plane, Project, Workbench};
 
 pub type Sha = String;
 
@@ -221,16 +221,95 @@ impl EvolutionLog {
     }
 
     pub fn to_project(&self) -> Project {
-        let mut project = Project::new("Untitled");
+        // first we need to walk backwards from the cursor's current commit
+        // all the way back to the root commit. Then we need to reverse the order
 
+        // to achieve that we need to build a Hashmap of all commits by their SHA
+        // In the future maybe commit.parent should be Box<Commit> instead of Sha
+        // which would prevent the need for this hashmap
+        let mut commits_by_sha = HashMap::new();
         for commit in &self.oplog.commits {
+            commits_by_sha.insert(commit.id.clone(), commit.clone());
+        }
+        println!("Commits by SHA: {}", commits_by_sha.len());
+        let mut current_sha = self.cursor.clone();
+        let mut commit_chain = vec![];
+        loop {
+            let commit = commits_by_sha.get(&current_sha).unwrap();
+            commit_chain.push(commit.clone());
+            if commit.parent == "" {
+                break;
+            }
+            current_sha = commit.parent.clone();
+        }
+        commit_chain.reverse();
+        println!("Commit chain: {}", commit_chain.len());
+
+        let mut project = Project::new("Untitled");
+        println!("Project: {:?}", project);
+
+        // this hashmap lets us look up the index of a workbench by its SHA
+        let mut workbenches = HashMap::new();
+
+        // this hashmap lets us look up the unique_id of steps by their SHA
+        let mut planes = HashMap::new();
+
+        // you get the idea
+        let mut sketches = HashMap::new();
+
+        for commit in commit_chain.iter() {
+            println!("Commit: {}", commit.pretty_print());
             match &commit.operation {
-                // Operation::CreatePlane { nonce } => {
-                //     project.create_plane(nonce.clone());
-                // }
+                Operation::CreateWorkbench { nonce } => {
+                    let w = Workbench::new(nonce);
+                    project.workbenches.push(w);
+                    workbenches.insert(commit.id.clone(), project.workbenches.len() - 1);
+                }
+                Operation::SetWorkbenchName { workbench_id, name } => {
+                    let workbench_index = workbenches.get(workbench_id).unwrap();
+                    project.workbenches[*workbench_index].name = name.clone();
+                }
+                Operation::CreatePlane {
+                    nonce,
+                    workbench_id,
+                } => {
+                    let workbench_index = workbenches.get(workbench_id).unwrap();
+                    let mut wb = project.workbenches.get_mut(*workbench_index).unwrap();
+                    let plane_id = wb.add_plane("Untitled-Plane", Plane::front());
+                    planes.insert(commit.id.clone(), (*workbench_index, plane_id));
+                }
+                Operation::SetPlaneName { plane_id, name } => {
+                    // the plane_id passed in is a SHA, we need to look up the actual plane_id
+                    let (workbench_idx, step_id) = planes.get(plane_id).unwrap();
+                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
+                    let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
+                    wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
+                }
+                Operation::SetPlane { plane_id, plane } => {
+                    let (workbench_idx, step_id) = planes.get(plane_id).unwrap();
+                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
+                    let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
+                    let step = wb.history.get_mut(step_idx as usize).unwrap();
+                    let new_plane = plane; // this is just to change the name to avoid a collision
+                    if let crate::project::StepData::Plane { plane, .. } = &mut step.data {
+                        let temp_plane = std::mem::replace(plane, new_plane.clone());
+                    } else {
+                        unreachable!()
+                    };
+                }
+                Operation::CreateSketch {
+                    nonce,
+                    workbench_id,
+                } => {
+                    let workbench_index = workbenches.get(workbench_id).unwrap();
+                    let mut wb = project.workbenches.get_mut(*workbench_index).unwrap();
+                    let sketch_id = wb.add_blank_sketch("Untitled-Sketch");
+                    sketches.insert(commit.id.clone(), (*workbench_index, sketch_id));
+                }
                 _ => {}
             }
         }
+        println!("Project: {:?}", project);
         project
     }
 }
@@ -303,18 +382,17 @@ pub enum Operation {
         name: String,
     },
 
-    CreateWorkspace {
+    CreateWorkbench {
         nonce: String,
-        project_id: Sha,
     },
-    SetWorkspaceName {
-        workspace_id: Sha,
+    SetWorkbenchName {
+        workbench_id: Sha,
         name: String,
     },
 
     CreatePlane {
         nonce: String,
-        workspace_id: Sha,
+        workbench_id: Sha,
     },
     SetPlaneName {
         plane_id: Sha,
@@ -327,7 +405,7 @@ pub enum Operation {
 
     CreateSketch {
         nonce: String,
-        workspace_id: Sha,
+        workbench_id: Sha,
     },
     SetSketchName {
         sketch_id: Sha,
@@ -362,7 +440,7 @@ pub enum Operation {
     },
 
     CreateExtrusion {
-        workspace_id: Sha,
+        workbench_id: Sha,
         nonce: String,
     },
     SetExtrusionName {
@@ -410,17 +488,15 @@ impl Operation {
             Operation::SetProjectName { project_id, name } => {
                 hasher.update(format!("{project_id}-{name}").as_bytes())
             }
-            Operation::CreateWorkspace { nonce, project_id } => {
-                hasher.update(format!("{nonce}-{project_id}").as_bytes())
-            }
-            Operation::SetWorkspaceName { workspace_id, name } => {
-                hasher.update(format!("{workspace_id}-{name}").as_bytes())
+            Operation::CreateWorkbench { nonce } => hasher.update(format!("{nonce}").as_bytes()),
+            Operation::SetWorkbenchName { workbench_id, name } => {
+                hasher.update(format!("{workbench_id}-{name}").as_bytes())
             }
 
             Operation::CreatePlane {
                 nonce,
-                workspace_id,
-            } => hasher.update(format!("{nonce}-{workspace_id}").as_bytes()),
+                workbench_id,
+            } => hasher.update(format!("{nonce}-{workbench_id}").as_bytes()),
             Operation::SetPlaneName { plane_id, name } => {
                 hasher.update(format!("{plane_id}-{name}").as_bytes())
             }
@@ -429,8 +505,8 @@ impl Operation {
             }
             Operation::CreateSketch {
                 nonce,
-                workspace_id,
-            } => hasher.update(format!("{nonce}-{workspace_id}").as_bytes()),
+                workbench_id,
+            } => hasher.update(format!("{nonce}-{workbench_id}").as_bytes()),
             Operation::SetSketchName { sketch_id, name } => {
                 hasher.update(format!("{sketch_id}-{name}").as_bytes())
             }
@@ -462,8 +538,8 @@ impl Operation {
             } => hasher.update(format!("{sketch_id}-{position:?}").as_bytes()),
             Operation::CreateExtrusion {
                 nonce,
-                workspace_id,
-            } => hasher.update(format!("{nonce}-{workspace_id}").as_bytes()),
+                workbench_id,
+            } => hasher.update(format!("{nonce}-{workbench_id}").as_bytes()),
             Operation::SetExtrusionName { extrusion_id, name } => {
                 hasher.update(format!("{extrusion_id}-{name}").as_bytes())
             }
@@ -516,26 +592,22 @@ impl Operation {
                     name
                 )
             }
-            Operation::CreateWorkspace { nonce, project_id } => {
-                format!(
-                    "CreateWorkspace: {} {}",
-                    project_id.to_owned()[..num_chars].to_string(),
-                    nonce
-                )
+            Operation::CreateWorkbench { nonce } => {
+                format!("CreateWorkspace: {}", nonce)
             }
-            Operation::SetWorkspaceName { workspace_id, name } => {
+            Operation::SetWorkbenchName { workbench_id, name } => {
                 format!(
                     "SetWorkspaceName: {} '{}'",
-                    workspace_id.to_owned()[..num_chars].to_string(),
+                    workbench_id.to_owned()[..num_chars].to_string(),
                     name
                 )
             }
             Operation::CreatePlane {
                 nonce,
-                workspace_id,
+                workbench_id,
             } => format!(
                 "CreatePlane: {} {}",
-                workspace_id.to_owned()[..num_chars].to_string(),
+                workbench_id.to_owned()[..num_chars].to_string(),
                 nonce
             ),
             Operation::SetPlaneName { plane_id, name } => {
@@ -554,10 +626,10 @@ impl Operation {
             }
             Operation::CreateSketch {
                 nonce,
-                workspace_id,
+                workbench_id,
             } => format!(
                 "CreateSketch: {} {}",
-                workspace_id.to_owned()[..num_chars].to_string(),
+                workbench_id.to_owned()[..num_chars].to_string(),
                 nonce
             ),
             Operation::SetSketchName { sketch_id, name } => {
@@ -626,10 +698,10 @@ impl Operation {
             ),
             Operation::CreateExtrusion {
                 nonce,
-                workspace_id,
+                workbench_id,
             } => format!(
                 "CreateExtrusion: {} {}",
-                workspace_id.to_owned()[..num_chars].to_string(),
+                workbench_id.to_owned()[..num_chars].to_string(),
                 nonce
             ),
             Operation::SetExtrusionName { extrusion_id, name } => {

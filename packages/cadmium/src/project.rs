@@ -127,10 +127,6 @@ impl Project {
                 step_id,
                 new_name,
             } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let current_step_name = workbench.history[*step_id as usize].name.clone();
-                let current_step = workbench.history.get(*step_id as usize).unwrap();
-
                 self.workbenches[*workbench_id as usize]
                     .history
                     .get_mut(*step_id as usize)
@@ -415,9 +411,9 @@ pub struct Assembly {
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
-    name: String,
-    history: Vec<Step>,
-    step_counters: HashMap<String, u64>,
+    pub name: String,
+    pub history: Vec<Step>,
+    pub step_counters: HashMap<String, u64>,
 }
 
 impl Workbench {
@@ -432,6 +428,15 @@ impl Workbench {
                 ("Extrusion".to_owned(), 0),
             ]),
         }
+    }
+
+    pub fn step_id_from_unique_id(&self, unique_id: &str) -> Option<u64> {
+        for (i, step) in self.history.iter().enumerate() {
+            if step.unique_id == unique_id {
+                return Some(i as u64);
+            }
+        }
+        None
     }
 
     pub fn get_first_plane_id(&self) -> Option<String> {
@@ -677,6 +682,16 @@ impl Workbench {
         self.plane_name_to_id(name).unwrap()
     }
 
+    pub fn add_blank_sketch(&mut self, name: &str) -> String {
+        let counter = self.step_counters.get_mut("Sketch").unwrap();
+        let new_step = Step::new_sketch_unbound(name, *counter);
+        let new_step_id = new_step.unique_id.clone();
+        self.history.push(new_step);
+        *counter += 1;
+
+        new_step_id
+    }
+
     pub fn plane_name_to_id(&self, plane_name: &str) -> Option<String> {
         for step in self.history.iter() {
             if step.name == plane_name {
@@ -809,6 +824,9 @@ impl Workbench {
                     plane_description,
                     sketch,
                 } => match plane_description {
+                    PlaneDescription::None => {
+                        println!("Sketch {} has no plane", step.name);
+                    }
                     PlaneDescription::PlaneId(plane_id) => {
                         if plane_id == "" {
                             println!("Sketch {} has no plane", step.name);
@@ -1075,10 +1093,10 @@ impl Realization {
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
-    name: String,
-    unique_id: String,
-    suppressed: bool,
-    data: StepData,
+    pub name: String,
+    pub unique_id: String,
+    pub suppressed: bool,
+    pub data: StepData,
 }
 
 impl Step {
@@ -1102,6 +1120,20 @@ impl Step {
                 plane,
                 height: 100.0,
                 width: 100.0,
+            },
+        }
+    }
+
+    pub fn new_sketch_unbound(name: &str, sketch_id: u64) -> Self {
+        Step {
+            name: name.to_owned(),
+            unique_id: format!("Sketch-{}", sketch_id),
+            suppressed: false,
+            data: StepData::Sketch {
+                plane_description: PlaneDescription::None,
+                width: 1.25,
+                height: 0.75,
+                sketch: Sketch::new(),
             },
         }
     }
@@ -1178,6 +1210,7 @@ pub enum StepData {
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum PlaneDescription {
+    None,
     PlaneId(String),
     SolidFace { solid_id: String, normal: Vector3 },
 }
