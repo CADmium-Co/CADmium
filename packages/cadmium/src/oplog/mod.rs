@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
 
-use crate::project::{Plane, Project, Workbench};
+use crate::project::{Plane, PlaneDescription, Project, StepData, Workbench};
 
 pub type Sha = String;
 
@@ -291,8 +291,8 @@ impl EvolutionLog {
                     let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
                     let step = wb.history.get_mut(step_idx as usize).unwrap();
                     let new_plane = plane; // this is just to change the name to avoid a collision
-                    if let crate::project::StepData::Plane { plane, .. } = &mut step.data {
-                        let temp_plane = std::mem::replace(plane, new_plane.clone());
+                    if let StepData::Plane { plane, .. } = &mut step.data {
+                        *plane = new_plane.clone();
                     } else {
                         unreachable!()
                     };
@@ -305,6 +305,46 @@ impl EvolutionLog {
                     let mut wb = project.workbenches.get_mut(*workbench_index).unwrap();
                     let sketch_id = wb.add_blank_sketch("Untitled-Sketch");
                     sketches.insert(commit.id.clone(), (*workbench_index, sketch_id));
+                }
+                Operation::SetSketchName { sketch_id, name } => {
+                    let (workbench_idx, step_id) = sketches.get(sketch_id).unwrap();
+                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
+                    let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
+                    wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
+                }
+                Operation::SetSketchPlane {
+                    sketch_id,
+                    plane_id,
+                } => {
+                    let (workbench_idx_sketch, sketch_id) = sketches.get(sketch_id).unwrap();
+                    let (workbench_idx_plane, plane_id) = planes.get(plane_id).unwrap();
+                    assert_eq!(workbench_idx_sketch, workbench_idx_plane);
+                    let mut wb = project.workbenches.get_mut(*workbench_idx_plane).unwrap();
+                    let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+                    let step = wb.history.get_mut(step_idx as usize).unwrap();
+                    if let StepData::Sketch {
+                        plane_description, ..
+                    } = &mut step.data
+                    {
+                        *plane_description = PlaneDescription::PlaneId(plane_id.clone());
+                    } else {
+                        unreachable!()
+                    };
+                }
+                Operation::AddSketchLine {
+                    sketch_id,
+                    start,
+                    end,
+                } => {
+                    let (workbench_idx, sketch_id) = sketches.get(sketch_id).unwrap();
+                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
+                    let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+                    let step = wb.history.get_mut(step_idx as usize).unwrap();
+                    if let StepData::Sketch { sketch, .. } = &mut step.data {
+                        sketch.add_line_segment(start.0, start.1, end.0, end.1);
+                    } else {
+                        unreachable!()
+                    };
                 }
                 _ => {}
             }

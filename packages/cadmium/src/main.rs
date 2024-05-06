@@ -52,7 +52,7 @@ fn stacked_cubes() {
     });
     el.append(Operation::SetSketchName {
         sketch_id: sketch_id.clone(),
-        name: "Sketch1".to_string(),
+        name: "Original Sketch".to_string(),
     });
     el.append(Operation::SetSketchPlane {
         sketch_id: sketch_id.clone(),
