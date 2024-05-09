@@ -86,6 +86,12 @@ fn stacked_cubes() {
         position: (20.0, 20.0),
     });
 
+    // This should trigger a commit that adds the Face
+    el.append(Operation::FinalizeSketch {
+        sketch_id: sketch_id.clone(),
+        workbench_id: workbench_id.clone(),
+    });
+
     // extrude the square
     let extrusion_id = el.append(Operation::CreateExtrusion {
         workbench_id: workbench_id.clone(),

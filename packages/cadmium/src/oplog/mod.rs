@@ -3,8 +3,10 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
+use truck_polymesh::faces;
 
 use crate::project::{Plane, PlaneDescription, Project, StepData, Workbench};
+use crate::sketch::Face;
 
 pub type Sha = String;
 
@@ -73,6 +75,39 @@ impl EvolutionLog {
 
     pub fn append(&mut self, operation: Operation) -> Sha {
         self.cursor = self.oplog.append(&self.cursor, operation).id;
+
+        match operation {
+            // Operation::FinalizeSketch {
+            //     sketch_id,
+            //     workbench_id,
+            // } => {
+            // additional_operations = self.find_faces();
+            // let (workbench_idx, sketch_id) = sketches.get(sketch_id).unwrap();
+            // let workbench_sha = workbenches_inverse.get(workbench_idx).unwrap();
+            // let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
+
+            // let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+            // let step = wb.history.get_mut(step_idx as usize).unwrap();
+            // if let StepData::Sketch { sketch, .. } = &mut step.data {
+            //     let (faces, _unused_segments) = sketch.find_faces();
+            //     for face in faces {
+            //         println!("Face: {:?}", face);
+            //         let face_op = Operation::CreateFace {
+            //             workbench_id: workbench_sha.clone(),
+            //             sketch_id: sketch_id.clone(),
+            //             face: face.clone(),
+            //         };
+            //         println!("Face Op: {:?}", face_op);
+            //     }
+            // } else {
+            //     unreachable!()
+            // };
+            // }
+            _ => {
+                // most operations don't require any additional work
+            }
+        }
+
         self.cursor.clone()
     }
 
@@ -250,6 +285,7 @@ impl EvolutionLog {
 
         // this hashmap lets us look up the index of a workbench by its SHA
         let mut workbenches = HashMap::new();
+        let mut workbenches_inverse = HashMap::new();
 
         // this hashmap lets us look up the unique_id of steps by their SHA
         let mut planes = HashMap::new();
@@ -257,13 +293,17 @@ impl EvolutionLog {
         // you get the idea
         let mut sketches = HashMap::new();
 
+        // let mut faces = HashMap::new();
+
         for commit in commit_chain.iter() {
             println!("Commit: {}", commit.pretty_print());
             match &commit.operation {
                 Operation::CreateWorkbench { nonce } => {
                     let w = Workbench::new(nonce);
                     project.workbenches.push(w);
-                    workbenches.insert(commit.id.clone(), project.workbenches.len() - 1);
+                    let index = project.workbenches.len() - 1;
+                    workbenches.insert(commit.id.clone(), index);
+                    workbenches_inverse.insert(index, commit.id.clone());
                 }
                 Operation::SetWorkbenchName { workbench_id, name } => {
                     let workbench_index = workbenches.get(workbench_id).unwrap();
@@ -345,6 +385,32 @@ impl EvolutionLog {
                     } else {
                         unreachable!()
                     };
+                }
+                Operation::FinalizeSketch {
+                    sketch_id,
+                    workbench_id,
+                } => {
+                    println!("Noop!");
+                    // let (workbench_idx, sketch_id) = sketches.get(sketch_id).unwrap();
+                    // let workbench_sha = workbenches_inverse.get(workbench_idx).unwrap();
+                    // let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
+
+                    // let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+                    // let step = wb.history.get_mut(step_idx as usize).unwrap();
+                    // if let StepData::Sketch { sketch, .. } = &mut step.data {
+                    //     let (faces, _unused_segments) = sketch.find_faces();
+                    //     for face in faces {
+                    //         println!("Face: {:?}", face);
+                    //         let face_op = Operation::CreateFace {
+                    //             workbench_id: workbench_sha.clone(),
+                    //             sketch_id: sketch_id.clone(),
+                    //             face: face.clone(),
+                    //         };
+                    //         println!("Face Op: {:?}", face_op);
+                    //     }
+                    // } else {
+                    //     unreachable!()
+                    // };
                 }
                 _ => {}
             }
@@ -478,6 +544,16 @@ pub enum Operation {
         sketch_id: Sha,
         position: (f64, f64),
     },
+    FinalizeSketch {
+        workbench_id: Sha,
+        sketch_id: Sha,
+    },
+
+    CreateFace {
+        workbench_id: Sha,
+        sketch_id: Sha,
+        face: Face,
+    },
 
     CreateExtrusion {
         workbench_id: Sha,
@@ -576,6 +652,16 @@ impl Operation {
                 sketch_id,
                 position,
             } => hasher.update(format!("{sketch_id}-{position:?}").as_bytes()),
+            Operation::FinalizeSketch {
+                sketch_id,
+                workbench_id,
+            } => hasher.update(format!("{sketch_id}-{workbench_id}").as_bytes()),
+            Operation::CreateFace {
+                workbench_id,
+                sketch_id,
+                face,
+            } => hasher.update(format!("{workbench_id}-{sketch_id}-{face:?}").as_bytes()),
+
             Operation::CreateExtrusion {
                 nonce,
                 workbench_id,
@@ -736,6 +822,28 @@ impl Operation {
                 position.0,
                 position.1
             ),
+            Operation::FinalizeSketch {
+                sketch_id,
+                workbench_id,
+            } => {
+                format!(
+                    "FinalizeSketch: {} {}",
+                    workbench_id.to_owned()[..num_chars].to_string(),
+                    sketch_id.to_owned()[..num_chars].to_string()
+                )
+            }
+            Operation::CreateFace {
+                workbench_id,
+                sketch_id,
+                face,
+            } => {
+                format!(
+                    "CreateFace: {} {} {:?}",
+                    workbench_id.to_owned()[..num_chars].to_string(),
+                    sketch_id.to_owned()[..num_chars].to_string(),
+                    face
+                )
+            }
             Operation::CreateExtrusion {
                 nonce,
                 workbench_id,
