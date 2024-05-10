@@ -80,17 +80,19 @@ fn stacked_cubes() {
         start: (100.0, 0.0),
         end: (0.0, 0.0),
     });
-    // Add a handle to pull the extrusion from
-    let handle_id = el.append(Operation::AddSketchHandle {
-        sketch_id: sketch_id.clone(),
-        position: (20.0, 20.0),
-    });
+    // // Add a handle to pull the extrusion from
+    // let handle_id = el.append(Operation::AddSketchHandle {
+    //     sketch_id: sketch_id.clone(),
+    //     position: (20.0, 20.0),
+    // });
 
-    // This should trigger a commit that adds the Face
-    el.append(Operation::FinalizeSketch {
-        sketch_id: sketch_id.clone(),
-        workbench_id: workbench_id.clone(),
-    });
+    // el.append(Operation::FinalizeSketch {
+    //     sketch_id: sketch_id.clone(),
+    //     workbench_id: workbench_id.clone(),
+    // });``
+
+    //
+    el.find_faces(&workbench_id, &sketch_id);
 
     // extrude the square
     let extrusion_id = el.append(Operation::CreateExtrusion {
@@ -101,20 +103,21 @@ fn stacked_cubes() {
         extrusion_id: extrusion_id.clone(),
         name: "Extrude1".to_string(),
     });
-    el.append(Operation::SetExtrusionSketch {
-        extrusion_id: extrusion_id.clone(),
-        sketch_id: sketch_id.clone(),
-    });
-    el.append(Operation::SetExtrusionHandles {
-        extrusion_id: extrusion_id.clone(),
-        handles: vec![handle_id.clone()],
-    });
     el.append(Operation::SetExtrusionDepth {
         extrusion_id: extrusion_id.clone(),
         depth: 100.0,
     });
+    // el.append(Operation::SetExtrusionSketch {
+    //     extrusion_id: extrusion_id.clone(),
+    //     sketch_id: sketch_id.clone(),
+    // });
+    // el.append(Operation::SetExtrusionHandles {
+    //     extrusion_id: extrusion_id.clone(),
+    //     handles: vec![handle_id.clone()],
+    // });
 
     // el.git_log();
+    println!("project: {:?}", el.project);
 
-    el.to_project();
+    // el.to_project();
 }

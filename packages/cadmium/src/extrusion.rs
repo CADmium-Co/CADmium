@@ -36,8 +36,8 @@ use crate::sketch::Vector2;
 
 // use truck_meshalgo::prelude::*;
 use truck_modeling::{
-    builder, Edge, Face as TruckFace, Point3 as TruckPoint3, Vector3 as TruckVector3,
-    Vertex, Wire, Curve, Surface, Plane, builder::translated
+    builder, builder::translated, Curve, Edge, Face as TruckFace, Plane, Point3 as TruckPoint3,
+    Surface, Vector3 as TruckVector3, Vertex, Wire,
 };
 
 use truck_topology::Solid as TruckSolid;
@@ -49,6 +49,7 @@ const MESH_TOLERANCE: f64 = 0.1;
 pub struct Extrusion {
     pub sketch_id: String,
     pub face_ids: Vec<u64>,
+    pub face_shas: Vec<String>,
     pub length: f64,
     pub offset: f64,
     pub direction: Direction,
@@ -75,6 +76,7 @@ impl Extrusion {
         Extrusion {
             sketch_id,
             face_ids,
+            face_shas: vec![],
             length,
             offset,
             direction,

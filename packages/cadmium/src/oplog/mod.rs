@@ -3,6 +3,7 @@ use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
+use std::vec;
 use truck_polymesh::faces;
 
 use crate::project::{Plane, PlaneDescription, Project, StepData, Workbench};
@@ -13,15 +14,21 @@ pub type Sha = String;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct OpLog {
     commits: Vec<Commit>,
+    commits_by_sha: HashMap<Sha, usize>,
 }
 
 impl OpLog {
     pub fn new() -> Self {
-        Self { commits: vec![] }
+        Self {
+            commits: vec![],
+            commits_by_sha: HashMap::new(),
+        }
     }
 
     pub fn init(&mut self) {
         let creation_commit = Commit::init();
+        self.commits_by_sha
+            .insert(creation_commit.id.clone(), self.commits.len());
         self.commits.push(creation_commit);
     }
 
@@ -34,7 +41,11 @@ impl OpLog {
             content_hash: op_hash,
             parent,
         };
+
+        self.commits_by_sha
+            .insert(new_commit.id.clone(), self.commits.len());
         self.commits.push(new_commit.clone());
+
         new_commit
     }
 
@@ -57,10 +68,15 @@ fn id_from_op_and_parent(operation: &Operation, parent: &Sha, nonce: usize) -> S
     format!("{:x}", hasher.finalize())
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct EvolutionLog {
     pub cursor: Sha,
     pub oplog: OpLog,
+    pub project: Project,
+    pub workbenches: HashMap<Sha, usize>,
+    pub planes: HashMap<Sha, (usize, String)>,
+    pub sketches: HashMap<Sha, (usize, String)>,
+    pub extrusions: HashMap<Sha, (usize, usize)>,
 }
 
 impl EvolutionLog {
@@ -70,42 +86,184 @@ impl EvolutionLog {
         Self {
             cursor: ol.last().unwrap().id.clone(),
             oplog: ol,
+            project: Project::new("Untitled"),
+            workbenches: HashMap::new(),
+            planes: HashMap::new(),
+            sketches: HashMap::new(),
+            extrusions: HashMap::new(),
         }
     }
 
     pub fn append(&mut self, operation: Operation) -> Sha {
-        self.cursor = self.oplog.append(&self.cursor, operation).id;
+        self.cursor = self.oplog.append(&self.cursor, operation.clone()).id;
 
         match operation {
-            // Operation::FinalizeSketch {
-            //     sketch_id,
-            //     workbench_id,
-            // } => {
-            // additional_operations = self.find_faces();
-            // let (workbench_idx, sketch_id) = sketches.get(sketch_id).unwrap();
-            // let workbench_sha = workbenches_inverse.get(workbench_idx).unwrap();
-            // let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
-
-            // let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
-            // let step = wb.history.get_mut(step_idx as usize).unwrap();
-            // if let StepData::Sketch { sketch, .. } = &mut step.data {
-            //     let (faces, _unused_segments) = sketch.find_faces();
-            //     for face in faces {
-            //         println!("Face: {:?}", face);
-            //         let face_op = Operation::CreateFace {
-            //             workbench_id: workbench_sha.clone(),
-            //             sketch_id: sketch_id.clone(),
-            //             face: face.clone(),
-            //         };
-            //         println!("Face Op: {:?}", face_op);
-            //     }
-            // } else {
-            //     unreachable!()
-            // };
-            // }
-            _ => {
-                // most operations don't require any additional work
+            Operation::CreateWorkbench { nonce } => {
+                let w = Workbench::new(&nonce);
+                self.project.workbenches.push(w);
+                let index = self.project.workbenches.len() - 1;
+                self.workbenches.insert(self.cursor.clone(), index);
+                // self.workbenches_inverse.insert(index, self.cursor.clone());
             }
+            Operation::SetWorkbenchName { workbench_id, name } => {
+                let workbench_index = self.workbenches.get(&workbench_id).unwrap();
+                self.project.workbenches[*workbench_index].name = name.clone();
+            }
+            Operation::CreatePlane {
+                nonce,
+                workbench_id,
+            } => {
+                let workbench_index = self.workbenches.get(&workbench_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_index).unwrap();
+                let plane_id = wb.add_plane("Untitled-Plane", Plane::front());
+                self.planes
+                    .insert(self.cursor.clone(), (*workbench_index, plane_id));
+            }
+            Operation::SetPlaneName { plane_id, name } => {
+                // the plane_id passed in is a SHA, we need to look up the actual plane_id
+                let (workbench_idx, step_id) = self.planes.get(&plane_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
+                wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
+            }
+            Operation::SetPlane { plane_id, plane } => {
+                let (workbench_idx, step_id) = self.planes.get(&plane_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
+                let step = wb.history.get_mut(step_idx as usize).unwrap();
+                let new_plane = plane; // this is just to change the name to avoid a collision
+                if let StepData::Plane { plane, .. } = &mut step.data {
+                    *plane = new_plane.clone();
+                } else {
+                    unreachable!()
+                };
+            }
+            Operation::CreateSketch {
+                nonce,
+                workbench_id,
+            } => {
+                let workbench_index = self.workbenches.get(&workbench_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_index).unwrap();
+                let sketch_id = wb.add_blank_sketch("Untitled-Sketch");
+                self.sketches
+                    .insert(self.cursor.clone(), (*workbench_index, sketch_id));
+            }
+            Operation::SetSketchName { sketch_id, name } => {
+                let (workbench_idx, step_id) = self.sketches.get(&sketch_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
+                wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
+            }
+            Operation::SetSketchPlane {
+                sketch_id,
+                plane_id,
+            } => {
+                let (workbench_idx_sketch, sketch_id) = self.sketches.get(&sketch_id).unwrap();
+                let (workbench_idx_plane, plane_id) = self.planes.get(&plane_id).unwrap();
+                assert_eq!(workbench_idx_sketch, workbench_idx_plane);
+                let mut wb = self
+                    .project
+                    .workbenches
+                    .get_mut(*workbench_idx_plane)
+                    .unwrap();
+                let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+                let step = wb.history.get_mut(step_idx as usize).unwrap();
+                if let StepData::Sketch {
+                    plane_description, ..
+                } = &mut step.data
+                {
+                    *plane_description = PlaneDescription::PlaneId(plane_id.clone());
+                } else {
+                    unreachable!()
+                };
+            }
+            Operation::AddSketchLine {
+                sketch_id,
+                start,
+                end,
+            } => {
+                let (workbench_idx, sketch_id) = self.sketches.get(&sketch_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+                let step = wb.history.get_mut(step_idx as usize).unwrap();
+                if let StepData::Sketch { sketch, .. } = &mut step.data {
+                    sketch.add_line_segment(start.0, start.1, end.0, end.1);
+                } else {
+                    unreachable!()
+                };
+            }
+            Operation::CreateExtrusion {
+                workbench_id,
+                nonce,
+            } => {
+                let workbench_idx = self.workbenches.get(&workbench_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+
+                let extrusion = crate::extrusion::Extrusion {
+                    sketch_id: "".to_owned(),
+                    face_ids: vec![],
+                    face_shas: vec![],
+                    length: 25.0,
+                    offset: 0.0,
+                    direction: crate::extrusion::Direction::Normal,
+                    mode: crate::extrusion::ExtrusionMode::New,
+                };
+                wb.add_extrusion("Untitled Extrusion", extrusion);
+                let step_id = wb.history.len() - 1;
+                self.extrusions
+                    .insert(self.cursor.clone(), (*workbench_idx, step_id as usize));
+            }
+            Operation::SetExtrusionName { extrusion_id, name } => {
+                let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                wb.history.get_mut(*extrusion_idx).unwrap().name = name.clone();
+            }
+            Operation::SetExtrusionDepth {
+                extrusion_id,
+                depth,
+            } => {
+                let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
+                {
+                    extrusion.length = depth;
+                } else {
+                    unreachable!()
+                };
+            }
+
+            _ => {}
+        }
+
+        self.cursor.clone()
+    }
+
+    pub fn find_faces(&mut self, workbench_id: &Sha, sketch_id: &Sha) -> Sha {
+        let (workbench_idx, sketch_id) = self.sketches.get(sketch_id).unwrap();
+        // let workbench_sha = self.workbenches_inverse.get(workbench_idx).unwrap();
+        let wb = self.project.workbenches.get(*workbench_idx).unwrap();
+
+        let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+        let step = wb.history.get(step_idx as usize).unwrap();
+
+        let mut new_face_ops = Vec::new();
+        if let StepData::Sketch { sketch, .. } = &step.data {
+            let (faces, _unused_segments) = sketch.find_faces();
+            for face in faces {
+                let face_op = Operation::CreateFace {
+                    workbench_id: workbench_id.clone(),
+                    sketch_id: sketch_id.clone(),
+                    face: face.clone(),
+                };
+                println!("Face Op: {:?}", face_op);
+                new_face_ops.push(face_op);
+            }
+        } else {
+            unreachable!()
+        };
+
+        for face_op in new_face_ops {
+            self.append(face_op);
         }
 
         self.cursor.clone()
@@ -253,170 +411,6 @@ impl EvolutionLog {
             }
         }
         Err(format!("SHA {} not found in oplog", sha))
-    }
-
-    pub fn to_project(&self) -> Project {
-        // first we need to walk backwards from the cursor's current commit
-        // all the way back to the root commit. Then we need to reverse the order
-
-        // to achieve that we need to build a Hashmap of all commits by their SHA
-        // In the future maybe commit.parent should be Box<Commit> instead of Sha
-        // which would prevent the need for this hashmap
-        let mut commits_by_sha = HashMap::new();
-        for commit in &self.oplog.commits {
-            commits_by_sha.insert(commit.id.clone(), commit.clone());
-        }
-        println!("Commits by SHA: {}", commits_by_sha.len());
-        let mut current_sha = self.cursor.clone();
-        let mut commit_chain = vec![];
-        loop {
-            let commit = commits_by_sha.get(&current_sha).unwrap();
-            commit_chain.push(commit.clone());
-            if commit.parent == "" {
-                break;
-            }
-            current_sha = commit.parent.clone();
-        }
-        commit_chain.reverse();
-        println!("Commit chain: {}", commit_chain.len());
-
-        let mut project = Project::new("Untitled");
-        println!("Project: {:?}", project);
-
-        // this hashmap lets us look up the index of a workbench by its SHA
-        let mut workbenches = HashMap::new();
-        let mut workbenches_inverse = HashMap::new();
-
-        // this hashmap lets us look up the unique_id of steps by their SHA
-        let mut planes = HashMap::new();
-
-        // you get the idea
-        let mut sketches = HashMap::new();
-
-        // let mut faces = HashMap::new();
-
-        for commit in commit_chain.iter() {
-            println!("Commit: {}", commit.pretty_print());
-            match &commit.operation {
-                Operation::CreateWorkbench { nonce } => {
-                    let w = Workbench::new(nonce);
-                    project.workbenches.push(w);
-                    let index = project.workbenches.len() - 1;
-                    workbenches.insert(commit.id.clone(), index);
-                    workbenches_inverse.insert(index, commit.id.clone());
-                }
-                Operation::SetWorkbenchName { workbench_id, name } => {
-                    let workbench_index = workbenches.get(workbench_id).unwrap();
-                    project.workbenches[*workbench_index].name = name.clone();
-                }
-                Operation::CreatePlane {
-                    nonce,
-                    workbench_id,
-                } => {
-                    let workbench_index = workbenches.get(workbench_id).unwrap();
-                    let mut wb = project.workbenches.get_mut(*workbench_index).unwrap();
-                    let plane_id = wb.add_plane("Untitled-Plane", Plane::front());
-                    planes.insert(commit.id.clone(), (*workbench_index, plane_id));
-                }
-                Operation::SetPlaneName { plane_id, name } => {
-                    // the plane_id passed in is a SHA, we need to look up the actual plane_id
-                    let (workbench_idx, step_id) = planes.get(plane_id).unwrap();
-                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
-                    let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
-                    wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
-                }
-                Operation::SetPlane { plane_id, plane } => {
-                    let (workbench_idx, step_id) = planes.get(plane_id).unwrap();
-                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
-                    let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
-                    let step = wb.history.get_mut(step_idx as usize).unwrap();
-                    let new_plane = plane; // this is just to change the name to avoid a collision
-                    if let StepData::Plane { plane, .. } = &mut step.data {
-                        *plane = new_plane.clone();
-                    } else {
-                        unreachable!()
-                    };
-                }
-                Operation::CreateSketch {
-                    nonce,
-                    workbench_id,
-                } => {
-                    let workbench_index = workbenches.get(workbench_id).unwrap();
-                    let mut wb = project.workbenches.get_mut(*workbench_index).unwrap();
-                    let sketch_id = wb.add_blank_sketch("Untitled-Sketch");
-                    sketches.insert(commit.id.clone(), (*workbench_index, sketch_id));
-                }
-                Operation::SetSketchName { sketch_id, name } => {
-                    let (workbench_idx, step_id) = sketches.get(sketch_id).unwrap();
-                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
-                    let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
-                    wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
-                }
-                Operation::SetSketchPlane {
-                    sketch_id,
-                    plane_id,
-                } => {
-                    let (workbench_idx_sketch, sketch_id) = sketches.get(sketch_id).unwrap();
-                    let (workbench_idx_plane, plane_id) = planes.get(plane_id).unwrap();
-                    assert_eq!(workbench_idx_sketch, workbench_idx_plane);
-                    let mut wb = project.workbenches.get_mut(*workbench_idx_plane).unwrap();
-                    let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
-                    let step = wb.history.get_mut(step_idx as usize).unwrap();
-                    if let StepData::Sketch {
-                        plane_description, ..
-                    } = &mut step.data
-                    {
-                        *plane_description = PlaneDescription::PlaneId(plane_id.clone());
-                    } else {
-                        unreachable!()
-                    };
-                }
-                Operation::AddSketchLine {
-                    sketch_id,
-                    start,
-                    end,
-                } => {
-                    let (workbench_idx, sketch_id) = sketches.get(sketch_id).unwrap();
-                    let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
-                    let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
-                    let step = wb.history.get_mut(step_idx as usize).unwrap();
-                    if let StepData::Sketch { sketch, .. } = &mut step.data {
-                        sketch.add_line_segment(start.0, start.1, end.0, end.1);
-                    } else {
-                        unreachable!()
-                    };
-                }
-                Operation::FinalizeSketch {
-                    sketch_id,
-                    workbench_id,
-                } => {
-                    println!("Noop!");
-                    // let (workbench_idx, sketch_id) = sketches.get(sketch_id).unwrap();
-                    // let workbench_sha = workbenches_inverse.get(workbench_idx).unwrap();
-                    // let mut wb = project.workbenches.get_mut(*workbench_idx).unwrap();
-
-                    // let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
-                    // let step = wb.history.get_mut(step_idx as usize).unwrap();
-                    // if let StepData::Sketch { sketch, .. } = &mut step.data {
-                    //     let (faces, _unused_segments) = sketch.find_faces();
-                    //     for face in faces {
-                    //         println!("Face: {:?}", face);
-                    //         let face_op = Operation::CreateFace {
-                    //             workbench_id: workbench_sha.clone(),
-                    //             sketch_id: sketch_id.clone(),
-                    //             face: face.clone(),
-                    //         };
-                    //         println!("Face Op: {:?}", face_op);
-                    //     }
-                    // } else {
-                    //     unreachable!()
-                    // };
-                }
-                _ => {}
-            }
-        }
-        println!("Project: {:?}", project);
-        project
     }
 }
 
