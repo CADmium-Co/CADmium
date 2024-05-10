@@ -92,7 +92,7 @@ fn stacked_cubes() {
     // });``
 
     //
-    el.find_faces(&workbench_id, &sketch_id);
+    let face_id = el.find_faces(&workbench_id, &sketch_id);
 
     // extrude the square
     let extrusion_id = el.append(Operation::CreateExtrusion {
@@ -107,10 +107,15 @@ fn stacked_cubes() {
         extrusion_id: extrusion_id.clone(),
         depth: 100.0,
     });
-    // el.append(Operation::SetExtrusionSketch {
-    //     extrusion_id: extrusion_id.clone(),
-    //     sketch_id: sketch_id.clone(),
-    // });
+    el.append(Operation::SetExtrusionSketch {
+        extrusion_id: extrusion_id.clone(),
+        sketch_id: sketch_id.clone(),
+    });
+    el.append(Operation::SetExtrusionFaces {
+        extrusion_id: extrusion_id.clone(),
+        faces: vec![face_id.clone()],
+    });
+
     // el.append(Operation::SetExtrusionHandles {
     //     extrusion_id: extrusion_id.clone(),
     //     handles: vec![handle_id.clone()],

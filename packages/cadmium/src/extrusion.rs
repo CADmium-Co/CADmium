@@ -49,7 +49,7 @@ const MESH_TOLERANCE: f64 = 0.1;
 pub struct Extrusion {
     pub sketch_id: String,
     pub face_ids: Vec<u64>,
-    pub face_shas: Vec<String>,
+    pub faces: Vec<Face>,
     pub length: f64,
     pub offset: f64,
     pub direction: Direction,
@@ -76,7 +76,7 @@ impl Extrusion {
         Extrusion {
             sketch_id,
             face_ids,
-            face_shas: vec![],
+            faces: vec![],
             length,
             offset,
             direction,

@@ -77,6 +77,7 @@ pub struct EvolutionLog {
     pub planes: HashMap<Sha, (usize, String)>,
     pub sketches: HashMap<Sha, (usize, String)>,
     pub extrusions: HashMap<Sha, (usize, usize)>,
+    pub faces: HashMap<Sha, Face>,
 }
 
 impl EvolutionLog {
@@ -91,6 +92,7 @@ impl EvolutionLog {
             planes: HashMap::new(),
             sketches: HashMap::new(),
             extrusions: HashMap::new(),
+            faces: HashMap::new(),
         }
     }
 
@@ -202,7 +204,7 @@ impl EvolutionLog {
                 let extrusion = crate::extrusion::Extrusion {
                     sketch_id: "".to_owned(),
                     face_ids: vec![],
-                    face_shas: vec![],
+                    faces: vec![],
                     length: 25.0,
                     offset: 0.0,
                     direction: crate::extrusion::Direction::Normal,
@@ -231,7 +233,38 @@ impl EvolutionLog {
                     unreachable!()
                 };
             }
-
+            Operation::SetExtrusionFaces {
+                extrusion_id,
+                faces,
+            } => {
+                let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
+                {
+                    let actual_faces = faces
+                        .iter()
+                        .map(|sha| self.faces.get(sha).unwrap().clone())
+                        .collect();
+                    extrusion.faces = actual_faces;
+                } else {
+                    unreachable!()
+                };
+            }
+            Operation::SetExtrusionSketch {
+                extrusion_id,
+                sketch_id,
+            } => {
+                let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
+                let (workbench_idx_sketch, sketch_id) = self.sketches.get(&sketch_id).unwrap();
+                assert_eq!(workbench_idx, workbench_idx_sketch);
+                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
+                {
+                    extrusion.sketch_id = sketch_id.clone();
+                } else {
+                    unreachable!()
+                };
+            }
             _ => {}
         }
 
@@ -263,7 +296,12 @@ impl EvolutionLog {
         };
 
         for face_op in new_face_ops {
-            self.append(face_op);
+            self.append(face_op.clone());
+            if let Operation::CreateFace { face, .. } = face_op {
+                self.faces.insert(self.cursor.clone(), face.clone());
+            } else {
+                unreachable!()
+            }
         }
 
         self.cursor.clone()
@@ -569,6 +607,10 @@ pub enum Operation {
         extrusion_id: Sha,
         depth: f64,
     },
+    SetExtrusionFaces {
+        extrusion_id: Sha,
+        faces: Vec<Sha>,
+    },
 }
 
 impl Operation {
@@ -680,6 +722,15 @@ impl Operation {
                 extrusion_id,
                 depth,
             } => hasher.update(format!("{extrusion_id}-{depth}").as_bytes()),
+            Operation::SetExtrusionFaces {
+                extrusion_id,
+                faces,
+            } => {
+                hasher.update(format!("{extrusion_id}").as_bytes());
+                for sha in faces {
+                    hasher.update(format!("{sha}").as_bytes())
+                }
+            }
         }
 
         format!("{:x}", hasher.finalize())
@@ -885,6 +936,20 @@ impl Operation {
                     "SetExtrusionDepth: {} {}",
                     extrusion_id.to_owned()[..num_chars].to_string(),
                     depth
+                )
+            }
+            Operation::SetExtrusionFaces {
+                extrusion_id,
+                faces,
+            } => {
+                let mut face_str = String::new();
+                for sha in faces {
+                    face_str.push_str(&format!("{} ", sha.to_owned()[..num_chars].to_string()));
+                }
+                format!(
+                    "SetExtrusionFaces: {} {}",
+                    extrusion_id.to_owned()[..num_chars].to_string(),
+                    face_str
                 )
             }
         }
