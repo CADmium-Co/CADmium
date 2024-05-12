@@ -108,8 +108,12 @@ fn stacked_cubes() {
 
     el.realize_extrusion(&extrusion_id);
 
-    el.git_log();
-    // println!("project: {:?}", el.project);
+    // print each solid
+    for (solid_id, solid) in el.solids.iter() {
+        println!("Solid: {:?}", solid);
+        solid.save_as_obj("first_solid.obj", 0.01);
+    }
 
+    // el.git_log();
     // el.to_project();
 }
