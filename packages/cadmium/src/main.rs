@@ -44,6 +44,7 @@ fn stacked_cubes() {
         plane_id: top_plane_id.clone(),
         plane: Plane::top(),
     });
+    let top_plane_real = el.realize_plane(&top_plane_id);
 
     // Create the sketch
     let sketch_id = el.append(Operation::CreateSketch {
@@ -56,7 +57,7 @@ fn stacked_cubes() {
     });
     el.append(Operation::SetSketchPlane {
         sketch_id: sketch_id.clone(),
-        plane_id: top_plane_id.clone(),
+        plane_id: top_plane_real.clone(),
     });
 
     // make a square
@@ -80,19 +81,7 @@ fn stacked_cubes() {
         start: (100.0, 0.0),
         end: (0.0, 0.0),
     });
-    // // Add a handle to pull the extrusion from
-    // let handle_id = el.append(Operation::AddSketchHandle {
-    //     sketch_id: sketch_id.clone(),
-    //     position: (20.0, 20.0),
-    // });
-
-    // el.append(Operation::FinalizeSketch {
-    //     sketch_id: sketch_id.clone(),
-    //     workbench_id: workbench_id.clone(),
-    // });``
-
-    //
-    let face_id = el.find_faces(&workbench_id, &sketch_id);
+    let realized_sketch = el.realize_sketch(&sketch_id);
 
     // extrude the square
     let extrusion_id = el.append(Operation::CreateExtrusion {
@@ -107,22 +96,20 @@ fn stacked_cubes() {
         extrusion_id: extrusion_id.clone(),
         depth: 100.0,
     });
+
     el.append(Operation::SetExtrusionSketch {
         extrusion_id: extrusion_id.clone(),
-        sketch_id: sketch_id.clone(),
+        sketch_id: realized_sketch.clone(),
     });
     el.append(Operation::SetExtrusionFaces {
         extrusion_id: extrusion_id.clone(),
-        faces: vec![face_id.clone()],
+        faces: vec![0],
     });
 
-    // el.append(Operation::SetExtrusionHandles {
-    //     extrusion_id: extrusion_id.clone(),
-    //     handles: vec![handle_id.clone()],
-    // });
+    el.realize_extrusion(&extrusion_id);
 
-    // el.git_log();
-    println!("project: {:?}", el.project);
+    el.git_log();
+    // println!("project: {:?}", el.project);
 
     // el.to_project();
 }

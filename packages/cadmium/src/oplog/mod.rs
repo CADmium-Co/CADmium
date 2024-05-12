@@ -6,7 +6,10 @@ use std::process::id;
 use std::vec;
 use truck_polymesh::faces;
 
-use crate::project::{Plane, PlaneDescription, Project, StepData, Workbench};
+use crate::extrusion::Solid;
+use crate::project::{
+    Plane, PlaneDescription, Project, RealPlane, RealSketch, StepData, Workbench,
+};
 use crate::sketch::Face;
 
 pub type Sha = String;
@@ -75,9 +78,12 @@ pub struct EvolutionLog {
     pub project: Project,
     pub workbenches: HashMap<Sha, usize>,
     pub planes: HashMap<Sha, (usize, String)>,
+    pub real_planes: HashMap<Sha, (usize, RealPlane)>,
     pub sketches: HashMap<Sha, (usize, String)>,
+    pub real_sketches: HashMap<Sha, RealSketch>,
     pub extrusions: HashMap<Sha, (usize, usize)>,
     pub faces: HashMap<Sha, Face>,
+    pub solids: HashMap<Sha, Solid>,
 }
 
 impl EvolutionLog {
@@ -90,9 +96,12 @@ impl EvolutionLog {
             project: Project::new("Untitled"),
             workbenches: HashMap::new(),
             planes: HashMap::new(),
+            real_planes: HashMap::new(),
             sketches: HashMap::new(),
+            real_sketches: HashMap::new(),
             extrusions: HashMap::new(),
             faces: HashMap::new(),
+            solids: HashMap::new(),
         }
     }
 
@@ -160,8 +169,10 @@ impl EvolutionLog {
                 sketch_id,
                 plane_id,
             } => {
+                let real_plane_sha = plane_id;
                 let (workbench_idx_sketch, sketch_id) = self.sketches.get(&sketch_id).unwrap();
-                let (workbench_idx_plane, plane_id) = self.planes.get(&plane_id).unwrap();
+                let (workbench_idx_plane, plane_id) =
+                    self.real_planes.get(&real_plane_sha).unwrap();
                 assert_eq!(workbench_idx_sketch, workbench_idx_plane);
                 let mut wb = self
                     .project
@@ -174,7 +185,7 @@ impl EvolutionLog {
                     plane_description, ..
                 } = &mut step.data
                 {
-                    *plane_description = PlaneDescription::PlaneId(plane_id.clone());
+                    *plane_description = PlaneDescription::PlaneId(real_plane_sha.clone());
                 } else {
                     unreachable!()
                 };
@@ -241,11 +252,12 @@ impl EvolutionLog {
                 let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
                 {
-                    let actual_faces = faces
-                        .iter()
-                        .map(|sha| self.faces.get(sha).unwrap().clone())
-                        .collect();
-                    extrusion.faces = actual_faces;
+                    extrusion.face_ids = faces.iter().map(|i| *i as u64).collect();
+                    // let actual_faces = faces
+                    //     .iter()
+                    //     .map(|sha| self.faces.get(sha).unwrap().clone())
+                    //     .collect();
+                    // extrusion.faces = actual_faces;
                 } else {
                     unreachable!()
                 };
@@ -255,8 +267,10 @@ impl EvolutionLog {
                 sketch_id,
             } => {
                 let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
-                let (workbench_idx_sketch, sketch_id) = self.sketches.get(&sketch_id).unwrap();
-                assert_eq!(workbench_idx, workbench_idx_sketch);
+                let real_sketch = self
+                    .real_sketches
+                    .get(&sketch_id)
+                    .expect("No such real sketch");
                 let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
                 {
@@ -272,6 +286,7 @@ impl EvolutionLog {
     }
 
     pub fn find_faces(&mut self, workbench_id: &Sha, sketch_id: &Sha) -> Sha {
+        // TODO: delete this whole function. It is unnecessary
         let (workbench_idx, sketch_id) = self.sketches.get(sketch_id).unwrap();
         // let workbench_sha = self.workbenches_inverse.get(workbench_idx).unwrap();
         let wb = self.project.workbenches.get(*workbench_idx).unwrap();
@@ -305,6 +320,117 @@ impl EvolutionLog {
         }
 
         self.cursor.clone()
+    }
+
+    pub fn realize_plane(&mut self, plane_id: &Sha) -> Sha {
+        let mut new_operations = vec![];
+        let plane_sha = plane_id;
+        let wbidx;
+
+        {
+            let (workbench_idx, plane_uid) = self.planes.get(plane_sha).unwrap();
+            wbidx = workbench_idx.clone();
+            let wb = self.project.workbenches.get(*workbench_idx).unwrap();
+            let step_idx = wb.step_id_from_unique_id(plane_uid).unwrap();
+            let step = wb.history.get(step_idx as usize).unwrap();
+
+            if let StepData::Plane { plane, .. } = &step.data {
+                new_operations.push(Operation::CreateRealPlane {
+                    plane_id: plane_sha.clone(),
+                    real_plane: RealPlane {
+                        plane: plane.clone(),
+                        width: 90.0,
+                        height: 60.0,
+                        name: plane_sha.clone(),
+                    },
+                });
+            } else {
+                unreachable!()
+            };
+        }
+
+        for new_operation in new_operations {
+            // frustratingly, we use a for loop because that's the easiest way to appease the borrow
+            // checker, but we know there's only one operation in the vec
+            self.append(new_operation.clone());
+            if let Operation::CreateRealPlane { real_plane, .. } = new_operation {
+                self.real_planes
+                    .insert(self.cursor.clone(), (wbidx, real_plane));
+            } else {
+                unreachable!()
+            }
+        }
+
+        self.cursor.clone()
+    }
+
+    pub fn realize_sketch(&mut self, sketch_id: &Sha) -> Sha {
+        let sketch_sha = sketch_id;
+        let (workbench_idx, sketch_id) = self.sketches.get(sketch_sha).unwrap();
+        let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+        let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+        let step = wb.history.get_mut(step_idx as usize).unwrap();
+
+        let new_op;
+
+        if let StepData::Sketch {
+            sketch,
+            plane_description,
+            ..
+        } = &mut step.data
+        {
+            if let PlaneDescription::PlaneId(plane_sha) = plane_description {
+                let (workbench_idx_plane, real_plane) = self.real_planes.get(plane_sha).unwrap();
+                assert_eq!(workbench_idx, workbench_idx_plane);
+                // let rp = real_plane.clone();
+                let real_sketch =
+                    RealSketch::new("test-plane-name", plane_sha, &real_plane, sketch);
+
+                new_op = Operation::CreateRealSketch {
+                    sketch_id: sketch_sha.clone(),
+                    real_sketch,
+                };
+            } else {
+                unreachable!()
+            }
+        } else {
+            unreachable!()
+        };
+
+        self.append(new_op.clone());
+
+        if let Operation::CreateRealSketch { real_sketch, .. } = new_op {
+            self.real_sketches
+                .insert(self.cursor.clone(), real_sketch.clone());
+        } else {
+            unreachable!()
+        }
+
+        self.cursor.clone()
+    }
+
+    pub fn realize_extrusion(&mut self, extrusion_id: &Sha) {
+        let (workbench_idx, extrusion_idx) = self.extrusions.get(extrusion_id).unwrap();
+        let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+        let step = wb.history.get_mut(*extrusion_idx).unwrap();
+
+        if let StepData::Extrusion { extrusion, .. } = &step.data {
+            let real_sketch = self.real_sketches.get(&extrusion.sketch_id).unwrap();
+            let (_, real_plane) = self.real_planes.get(&real_sketch.plane_id).unwrap();
+            let solids =
+                Solid::from_extrusion(step.name.clone(), real_plane, real_sketch, extrusion);
+
+            for (name, solid) in solids {
+                let new_op = Operation::CreateSolid {
+                    nonce: name,
+                    solid: solid.clone(),
+                };
+                self.append(new_op);
+                self.solids.insert(self.cursor.clone(), solid);
+            }
+        } else {
+            unreachable!()
+        };
     }
 
     pub fn pretty_print(&self) {
@@ -540,6 +666,10 @@ pub enum Operation {
         plane_id: Sha,
         plane: Plane,
     },
+    CreateRealPlane {
+        plane_id: Sha,
+        real_plane: RealPlane,
+    },
 
     CreateSketch {
         nonce: String,
@@ -552,6 +682,10 @@ pub enum Operation {
     SetSketchPlane {
         sketch_id: Sha,
         plane_id: Sha,
+    },
+    CreateRealSketch {
+        sketch_id: Sha,
+        real_sketch: RealSketch,
     },
 
     AddSketchRectangle {
@@ -609,7 +743,12 @@ pub enum Operation {
     },
     SetExtrusionFaces {
         extrusion_id: Sha,
-        faces: Vec<Sha>,
+        faces: Vec<usize>,
+    },
+
+    CreateSolid {
+        nonce: String,
+        solid: Solid,
     },
 }
 
@@ -655,6 +794,10 @@ impl Operation {
             Operation::SetPlane { plane_id, plane } => {
                 hasher.update(format!("{plane_id}-{plane:?}").as_bytes())
             }
+            Operation::CreateRealPlane {
+                plane_id,
+                real_plane,
+            } => hasher.update(format!("{plane_id}-{real_plane:?}").as_bytes()),
             Operation::CreateSketch {
                 nonce,
                 workbench_id,
@@ -692,6 +835,11 @@ impl Operation {
                 sketch_id,
                 workbench_id,
             } => hasher.update(format!("{sketch_id}-{workbench_id}").as_bytes()),
+            Operation::CreateRealSketch {
+                sketch_id,
+                real_sketch,
+            } => hasher.update(format!("{sketch_id}-{real_sketch:?}").as_bytes()),
+
             Operation::CreateFace {
                 workbench_id,
                 sketch_id,
@@ -730,6 +878,9 @@ impl Operation {
                 for sha in faces {
                     hasher.update(format!("{sha}").as_bytes())
                 }
+            }
+            Operation::CreateSolid { nonce, solid } => {
+                hasher.update(format!("{nonce}-{solid:?}").as_bytes())
             }
         }
 
@@ -793,6 +944,16 @@ impl Operation {
                     "SetPlane: {}",
                     plane_id.to_owned()[..num_chars].to_string(),
                     // plane
+                )
+            }
+            Operation::CreateRealPlane {
+                plane_id,
+                real_plane,
+            } => {
+                format!(
+                    "CreateRealPlane: {} {:?}",
+                    plane_id.to_owned()[..num_chars].to_string(),
+                    real_plane
                 )
             }
             Operation::CreateSketch {
@@ -877,6 +1038,17 @@ impl Operation {
                     sketch_id.to_owned()[..num_chars].to_string()
                 )
             }
+            Operation::CreateRealSketch {
+                sketch_id,
+                real_sketch,
+            } => {
+                format!(
+                    "CreateRealSketch: {} {:?}",
+                    sketch_id.to_owned()[..num_chars].to_string(),
+                    real_sketch
+                )
+            }
+
             Operation::CreateFace {
                 workbench_id,
                 sketch_id,
@@ -944,13 +1116,16 @@ impl Operation {
             } => {
                 let mut face_str = String::new();
                 for sha in faces {
-                    face_str.push_str(&format!("{} ", sha.to_owned()[..num_chars].to_string()));
+                    face_str.push_str(&format!("{} ", sha));
                 }
                 format!(
                     "SetExtrusionFaces: {} {}",
                     extrusion_id.to_owned()[..num_chars].to_string(),
                     face_str
                 )
+            }
+            Operation::CreateSolid { nonce, solid } => {
+                format!("CreateSolid: {nonce} {solid:?}")
             }
         }
     }
