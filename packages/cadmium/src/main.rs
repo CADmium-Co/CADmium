@@ -17,10 +17,10 @@ use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
 fn main() {
-    stacked_cubes();
+    simple_cube();
 }
 
-fn stacked_cubes() {
+fn simple_cube() {
     let mut el = EvolutionLog::new();
 
     let workbench_id = el.append(Operation::CreateWorkbench {
