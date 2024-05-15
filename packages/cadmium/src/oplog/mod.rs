@@ -300,15 +300,9 @@ impl EvolutionLog {
                 };
             }
             Operation::FuseSolids { solid1, solid2 } => {
-                let solid1 = self.solids.get(&solid1).unwrap();
-                let solid2 = self.solids.get(&solid2).unwrap();
-                let fused: Option<
-                    truck_topology::Solid<
-                        truck_meshalgo::prelude::cgmath::Point3<f64>,
-                        truck_modeling::Curve,
-                        truck_modeling::Surface,
-                    >,
-                > = fuse(&solid1.truck_solid, &solid2.truck_solid);
+                let solid_a = self.solids.get(&solid1).unwrap();
+                let solid_b = self.solids.get(&solid2).unwrap();
+                let fused = fuse(&solid_a.truck_solid, &solid_b.truck_solid);
                 match fused {
                     Some(fused) => {
                         let new_solid = Solid::from_truck_solid("alpha".to_owned(), fused);
@@ -318,6 +312,15 @@ impl EvolutionLog {
                         };
                         self.append(new_op);
                         self.solids.insert(self.cursor.clone(), new_solid);
+
+                        // delete the old solids
+                        self.solids.remove(&solid1);
+                        let delete_op_1 = Operation::DeleteSolid { solid_id: solid1 };
+                        self.append(delete_op_1);
+
+                        self.solids.remove(&solid2);
+                        let delete_op_2 = Operation::DeleteSolid { solid_id: solid2 };
+                        self.append(delete_op_2);
                     }
                     _ => {}
                 }
@@ -831,6 +834,10 @@ pub enum Operation {
         solid: Solid,
     },
 
+    DeleteSolid {
+        solid_id: Sha,
+    },
+
     FuseSolids {
         solid1: Sha,
         solid2: Sha,
@@ -975,6 +982,7 @@ impl Operation {
             Operation::FuseSolids { solid1, solid2 } => {
                 hasher.update(format!("{solid1}-{solid2}").as_bytes())
             }
+            Operation::DeleteSolid { solid_id } => hasher.update(format!("{solid_id}").as_bytes()),
         }
 
         format!("{:x}", hasher.finalize())
@@ -1255,6 +1263,12 @@ impl Operation {
                     "FuseSolids: {} {}",
                     solid1.to_owned()[..num_chars].to_string(),
                     solid2.to_owned()[..num_chars].to_string()
+                )
+            }
+            Operation::DeleteSolid { solid_id } => {
+                format!(
+                    "DeleteSolid: {}",
+                    solid_id.to_owned()[..num_chars].to_string()
                 )
             }
         }
