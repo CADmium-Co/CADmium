@@ -5,12 +5,21 @@ use std::hash::{Hash, Hasher};
 use std::process::id;
 use std::vec;
 use truck_polymesh::faces;
+use truck_topology::{
+    FaceDisplayFormat, ShellDisplayFormat, SolidDisplayFormat, VertexDisplayFormat,
+    WireDisplayFormat,
+};
 
 use crate::extrusion::Solid;
 use crate::project::{
     Plane, PlaneDescription, Project, RealPlane, RealSketch, StepData, Workbench,
 };
 use crate::sketch::Face;
+use FaceDisplayFormat as FDF;
+use ShellDisplayFormat as ShDF;
+use SolidDisplayFormat as SDF;
+use VertexDisplayFormat as VDF;
+use WireDisplayFormat as WDF;
 
 pub type Sha = String;
 
@@ -411,6 +420,16 @@ impl EvolutionLog {
 
     pub fn realize_extrusion(&mut self, extrusion_id: &Sha) {
         let (workbench_idx, extrusion_idx) = self.extrusions.get(extrusion_id).unwrap();
+        // iterate through all of self.workbenches to find the one whose index matches workbench_idx
+        let workbench_sha = self.workbenches.iter().find_map(|(key, &val)| {
+            if val == *workbench_idx {
+                Some(key)
+            } else {
+                None
+            }
+        });
+        let workbench_sha = workbench_sha.unwrap().clone();
+
         let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
         let step = wb.history.get_mut(*extrusion_idx).unwrap();
 
@@ -425,8 +444,19 @@ impl EvolutionLog {
                     nonce: name,
                     solid: solid.clone(),
                 };
+
                 self.append(new_op);
-                self.solids.insert(self.cursor.clone(), solid);
+                self.solids.insert(self.cursor.clone(), solid.clone());
+                for boundary in solid.truck_solid.boundaries() {
+                    boundary.face_iter().for_each(|face| {
+                        let o = Operation::CreateTruckFace {
+                            workbench_id: workbench_sha.clone(),
+                            solid_id: self.cursor.clone(),
+                            face: face.clone(),
+                        };
+                        self.append(o);
+                    });
+                }
             }
         } else {
             unreachable!()
@@ -720,6 +750,15 @@ pub enum Operation {
         sketch_id: Sha,
         face: Face,
     },
+    CreateTruckFace {
+        workbench_id: Sha,
+        solid_id: Sha,
+        face: truck_topology::Face<
+            truck_meshalgo::prelude::cgmath::Point3<f64>,
+            truck_modeling::Curve,
+            truck_modeling::Surface,
+        >,
+    },
 
     CreateExtrusion {
         workbench_id: Sha,
@@ -845,6 +884,11 @@ impl Operation {
                 sketch_id,
                 face,
             } => hasher.update(format!("{workbench_id}-{sketch_id}-{face:?}").as_bytes()),
+            Operation::CreateTruckFace {
+                workbench_id,
+                solid_id,
+                face,
+            } => hasher.update(format!("{workbench_id}-{solid_id}-{face:?}").as_bytes()),
 
             Operation::CreateExtrusion {
                 nonce,
@@ -1061,6 +1105,22 @@ impl Operation {
                     face
                 )
             }
+            Operation::CreateTruckFace {
+                workbench_id,
+                solid_id,
+                face,
+            } => {
+                format!(
+                    "CreateTruckFace: {} {} {:?}",
+                    workbench_id.to_owned()[..num_chars].to_string(),
+                    solid_id.to_owned()[..num_chars].to_string(),
+                    face.display(FDF::BoundariesAndID {
+                        wire_format: WDF::VerticesList {
+                            vertex_format: VDF::AsPoint,
+                        },
+                    })
+                )
+            }
             Operation::CreateExtrusion {
                 nonce,
                 workbench_id,
@@ -1125,7 +1185,18 @@ impl Operation {
                 )
             }
             Operation::CreateSolid { nonce, solid } => {
-                format!("CreateSolid: {nonce} {solid:?}")
+                format!(
+                    "CreateSolid: {nonce} {:?}",
+                    solid.truck_solid.display(SDF::ShellsList {
+                        shell_format: ShDF::FacesList {
+                            face_format: FDF::LoopsList {
+                                wire_format: WDF::VerticesList {
+                                    vertex_format: VDF::AsPoint
+                                }
+                            }
+                        }
+                    })
+                )
             }
         }
     }
