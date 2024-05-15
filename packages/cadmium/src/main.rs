@@ -8,11 +8,14 @@ use cadmium::oplog::EvolutionLog;
 use cadmium::oplog::Operation;
 use cadmium::project::Plane;
 use cadmium::{oplog, sketch, Realization};
+use truck_meshalgo::analyzers::CalcVolume;
 use truck_meshalgo::filters::OptimizingFilter;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
 use truck_modeling::builder::{translated, tsweep, vertex};
 use truck_modeling::{Point3, Surface, Vector3};
-use truck_polymesh::{obj, InnerSpace, Invertible, ParametricSurface, Tolerance};
+use truck_polymesh::{
+    obj, InnerSpace, Invertible, ParametricSurface, ParametricSurface3D, Tolerance,
+};
 use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
@@ -107,14 +110,107 @@ fn stacked_cubes() {
 
     el.realize_extrusion(&extrusion_id);
 
-    // print each solid
-    // for (solid_id, solid) in el.solids.iter() {
-    // println!("Solid: {:?}", solid.truck_solid);
-    // solid.save_as_obj("first_solid.obj", 0.01);
-    // }
+    // Create a plane on the face whose normal points up
+    let mut upward_face = None;
+    for (face_sha, face) in el.faces.iter() {
+        let surface = face.oriented_surface();
+        let normal = surface.normal(0.0, 0.0);
+        if normal.near(&Vector3::new(0.0, 0.0, 1.0)) {
+            upward_face = Some(face.clone());
+        }
+    }
+    let second_plane_id = el.append(Operation::CreatePlane {
+        nonce: "the second plane".to_string(),
+        workbench_id: workbench_id.clone(),
+    });
+    el.append(Operation::SetPlaneName {
+        plane_id: second_plane_id.clone(),
+        name: "Second Plane".to_string(),
+    });
+    match upward_face {
+        Some(face) => {
+            let set_plane = el.append(Operation::SetPlane {
+                plane_id: second_plane_id.clone(),
+                plane: Plane::from_truck_face(face),
+            });
+        }
+        None => {
+            println!("No upward face found!");
+            unreachable!();
+        }
+    }
+    let second_plane_real = el.realize_plane(&second_plane_id);
 
-    el.git_log();
-    // el.to_project();
+    // Create a second sketch on top of the second plane
+    let second_sketch_id = el.append(Operation::CreateSketch {
+        nonce: "second sketch".to_string(),
+        workbench_id: workbench_id.clone(),
+    });
+    el.append(Operation::SetSketchName {
+        sketch_id: second_sketch_id.clone(),
+        name: "Second Sketch".to_string(),
+    });
+    el.append(Operation::SetSketchPlane {
+        sketch_id: second_sketch_id.clone(),
+        plane_id: second_plane_real.clone(),
+    });
+
+    // make a square
+    el.append(Operation::AddSketchLine {
+        sketch_id: second_sketch_id.clone(),
+        start: (20.0, 20.0),
+        end: (20.0, 80.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: second_sketch_id.clone(),
+        start: (20.0, 80.0),
+        end: (80.0, 80.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: second_sketch_id.clone(),
+        start: (80.0, 80.0),
+        end: (80.0, 20.0),
+    });
+    el.append(Operation::AddSketchLine {
+        sketch_id: second_sketch_id.clone(),
+        start: (80.0, 20.0),
+        end: (20.0, 20.0),
+    });
+
+    let second_realized_sketch = el.realize_sketch(&second_sketch_id);
+
+    // extrude the second square
+    let second_extrusion_id = el.append(Operation::CreateExtrusion {
+        workbench_id: workbench_id.clone(),
+        nonce: "second extrusion".to_string(),
+    });
+    el.append(Operation::SetExtrusionName {
+        extrusion_id: second_extrusion_id.clone(),
+        name: "Extrude2".to_string(),
+    });
+    el.append(Operation::SetExtrusionDepth {
+        extrusion_id: second_extrusion_id.clone(),
+        depth: 60.0,
+    });
+    el.append(Operation::SetExtrusionSketch {
+        extrusion_id: second_extrusion_id.clone(),
+        sketch_id: second_realized_sketch.clone(),
+    });
+    el.append(Operation::SetExtrusionFaces {
+        extrusion_id: second_extrusion_id.clone(),
+        faces: vec![0],
+    });
+    el.realize_extrusion(&second_extrusion_id);
+
+    // print each solid
+    for (solid_id, solid) in el.solids.iter() {
+        let mut mesh = solid.truck_solid.triangulation(0.1).to_polygon();
+        mesh.put_together_same_attrs(0.1);
+        let v = mesh.volume();
+        println!("\nvolume: {}", v);
+    }
+
+    // el.git_log();
 }
 
 fn simple_cube() {

@@ -1290,6 +1290,18 @@ impl Plane {
         }
     }
 
+    pub fn from_truck_face(tf: truck_modeling::Face) -> Self {
+        let os = tf.oriented_surface();
+        match os {
+            truck_modeling::geometry::Surface::Plane(p) => {
+                return Plane::from_truck(p);
+            }
+            _ => {
+                panic!("I only know how to put sketches on planes");
+            }
+        }
+    }
+
     pub fn project(&self, point: &Point3) -> Point2 {
         let minus_origin = point.minus(&self.origin);
         let x = minus_origin.dot(&self.primary);

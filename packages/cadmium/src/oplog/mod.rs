@@ -91,7 +91,14 @@ pub struct EvolutionLog {
     pub sketches: HashMap<Sha, (usize, String)>,
     pub real_sketches: HashMap<Sha, RealSketch>,
     pub extrusions: HashMap<Sha, (usize, usize)>,
-    pub faces: HashMap<Sha, Face>,
+    pub faces: HashMap<
+        Sha,
+        truck_topology::Face<
+            truck_meshalgo::prelude::cgmath::Point3<f64>,
+            truck_modeling::Curve,
+            truck_modeling::Surface,
+        >,
+    >,
     pub solids: HashMap<Sha, Solid>,
 }
 
@@ -294,42 +301,42 @@ impl EvolutionLog {
         self.cursor.clone()
     }
 
-    pub fn find_faces(&mut self, workbench_id: &Sha, sketch_id: &Sha) -> Sha {
-        // TODO: delete this whole function. It is unnecessary
-        let (workbench_idx, sketch_id) = self.sketches.get(sketch_id).unwrap();
-        // let workbench_sha = self.workbenches_inverse.get(workbench_idx).unwrap();
-        let wb = self.project.workbenches.get(*workbench_idx).unwrap();
+    // fn find_faces_do_not_use(&mut self, workbench_id: &Sha, sketch_id: &Sha) -> Sha {
+    //     // TODO: delete this whole function. It is unnecessary
+    //     let (workbench_idx, sketch_id) = self.sketches.get(sketch_id).unwrap();
+    //     // let workbench_sha = self.workbenches_inverse.get(workbench_idx).unwrap();
+    //     let wb = self.project.workbenches.get(*workbench_idx).unwrap();
 
-        let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
-        let step = wb.history.get(step_idx as usize).unwrap();
+    //     let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
+    //     let step = wb.history.get(step_idx as usize).unwrap();
 
-        let mut new_face_ops = Vec::new();
-        if let StepData::Sketch { sketch, .. } = &step.data {
-            let (faces, _unused_segments) = sketch.find_faces();
-            for face in faces {
-                let face_op = Operation::CreateFace {
-                    workbench_id: workbench_id.clone(),
-                    sketch_id: sketch_id.clone(),
-                    face: face.clone(),
-                };
-                println!("Face Op: {:?}", face_op);
-                new_face_ops.push(face_op);
-            }
-        } else {
-            unreachable!()
-        };
+    //     let mut new_face_ops = Vec::new();
+    //     if let StepData::Sketch { sketch, .. } = &step.data {
+    //         let (faces, _unused_segments) = sketch.find_faces();
+    //         for face in faces {
+    //             let face_op = Operation::CreateFace {
+    //                 workbench_id: workbench_id.clone(),
+    //                 sketch_id: sketch_id.clone(),
+    //                 face: face.clone(),
+    //             };
+    //             println!("Face Op: {:?}", face_op);
+    //             new_face_ops.push(face_op);
+    //         }
+    //     } else {
+    //         unreachable!()
+    //     };
 
-        for face_op in new_face_ops {
-            self.append(face_op.clone());
-            if let Operation::CreateFace { face, .. } = face_op {
-                self.faces.insert(self.cursor.clone(), face.clone());
-            } else {
-                unreachable!()
-            }
-        }
+    //     for face_op in new_face_ops {
+    //         self.append(face_op.clone());
+    //         if let Operation::CreateFace { face, .. } = face_op {
+    //             self.faces.insert(self.cursor.clone(), face.clone());
+    //         } else {
+    //             unreachable!()
+    //         }
+    //     }
 
-        self.cursor.clone()
-    }
+    //     self.cursor.clone()
+    // }
 
     pub fn realize_plane(&mut self, plane_id: &Sha) -> Sha {
         let mut new_operations = vec![];
@@ -448,14 +455,21 @@ impl EvolutionLog {
                 self.append(new_op);
                 self.solids.insert(self.cursor.clone(), solid.clone());
                 for boundary in solid.truck_solid.boundaries() {
-                    boundary.face_iter().for_each(|face| {
-                        let o = Operation::CreateTruckFace {
-                            workbench_id: workbench_sha.clone(),
-                            solid_id: self.cursor.clone(),
-                            face: face.clone(),
-                        };
-                        self.append(o);
-                    });
+                    boundary.face_iter().for_each(
+                        |face: &truck_topology::Face<
+                            truck_meshalgo::prelude::cgmath::Point3<f64>,
+                            truck_modeling::Curve,
+                            truck_modeling::Surface,
+                        >| {
+                            let o = Operation::CreateTruckFace {
+                                workbench_id: workbench_sha.clone(),
+                                solid_id: self.cursor.clone(),
+                                face: face.clone(),
+                            };
+                            self.append(o);
+                            self.faces.insert(self.cursor.clone(), face.clone());
+                        },
+                    );
                 }
             }
         } else {
