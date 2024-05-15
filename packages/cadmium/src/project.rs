@@ -1864,7 +1864,7 @@ mod tests {
         let final_solid = &solids["Ext1:0"];
         println!("Final solid: {:?}", final_solid.truck_solid);
         let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let file = std::fs::File::create("bruno.obj").unwrap();
         obj::write(&mesh, file).unwrap();
 
@@ -1934,7 +1934,7 @@ mod tests {
 
         let final_solid = &solids["Ext1:0"];
         let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let file = std::fs::File::create("secondary_extrusion.obj").unwrap();
         obj::write(&mesh, file).unwrap();
 

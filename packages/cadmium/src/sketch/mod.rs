@@ -5,7 +5,7 @@ use geo::{point, Contains};
 use geo::{within, Intersects};
 use serde::{Deserialize, Serialize};
 use serde_with::{serde_as, DisplayFromStr};
-use truck_polymesh::stl::PolygonMeshSTLFaceIterator;
+use truck_polymesh::stl::PolygonMeshStlFaceIterator;
 use tsify::Tsify;
 
 use core::panic;

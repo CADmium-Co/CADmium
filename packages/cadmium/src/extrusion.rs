@@ -130,7 +130,7 @@ impl Solid {
             truck_solid,
         };
         let mut mesh = solid.truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
 
         // the mesh is prepared for obj export, but we need to convert it
         // to a format compatible for rendering
@@ -544,7 +544,7 @@ impl Solid {
 
     pub fn to_obj_string(&self, tolerance: f64) -> String {
         let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let mut buf = Vec::new();
         obj::write(&mesh, &mut buf).unwrap();
         let string = String::from_utf8(buf).unwrap();
@@ -553,7 +553,7 @@ impl Solid {
 
     pub fn save_as_obj(&self, filename: &str, tolerance: f64) {
         let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let file = std::fs::File::create(filename).unwrap();
         obj::write(&mesh, file).unwrap();
     }
@@ -563,7 +563,7 @@ impl Solid {
         let step_string = out::CompleteStepDisplay::new(
             out::StepModel::from(&compressed),
             out::StepHeaderDescriptor {
-                origination_system: "cadmium-shape-to-step".to_owned(),
+                organization_system: "cadmium-shape-to-step".to_owned(),
                 ..Default::default()
             },
         )
