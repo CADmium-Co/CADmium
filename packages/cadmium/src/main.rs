@@ -207,10 +207,17 @@ fn stacked_cubes() {
         let mut mesh = solid.truck_solid.triangulation(0.1).to_polygon();
         mesh.put_together_same_attrs(0.1);
         let v = mesh.volume();
-        println!("\nvolume: {}", v);
+        println!("ID: {solid_id} volume: {v}");
     }
+    let solid_ids: Vec<String> = el.solids.keys().cloned().collect();
+    let s0 = solid_ids[0].clone();
+    let s1 = solid_ids[1].clone();
 
-    // el.git_log();
+    el.append(Operation::FuseSolids {
+        solid1: s0,
+        solid2: s1,
+    });
+    el.git_log();
 }
 
 fn simple_cube() {

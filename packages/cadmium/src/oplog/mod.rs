@@ -1,9 +1,13 @@
+use crate::extrusion::fuse;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::process::id;
 use std::vec;
+use truck_meshalgo::analyzers::CalcVolume;
+use truck_meshalgo::filters::OptimizingFilter;
+use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
 use truck_polymesh::faces;
 use truck_topology::{
     FaceDisplayFormat, ShellDisplayFormat, SolidDisplayFormat, VertexDisplayFormat,
@@ -294,6 +298,29 @@ impl EvolutionLog {
                 } else {
                     unreachable!()
                 };
+            }
+            Operation::FuseSolids { solid1, solid2 } => {
+                let solid1 = self.solids.get(&solid1).unwrap();
+                let solid2 = self.solids.get(&solid2).unwrap();
+                let fused: Option<
+                    truck_topology::Solid<
+                        truck_meshalgo::prelude::cgmath::Point3<f64>,
+                        truck_modeling::Curve,
+                        truck_modeling::Surface,
+                    >,
+                > = fuse(&solid1.truck_solid, &solid2.truck_solid);
+                match fused {
+                    Some(fused) => {
+                        let new_solid = Solid::from_truck_solid("alpha".to_owned(), fused);
+                        let new_op = Operation::CreateSolid {
+                            nonce: "Fused Solid".to_string(),
+                            solid: new_solid.clone(),
+                        };
+                        self.append(new_op);
+                        self.solids.insert(self.cursor.clone(), new_solid);
+                    }
+                    _ => {}
+                }
             }
             _ => {}
         }
@@ -803,6 +830,11 @@ pub enum Operation {
         nonce: String,
         solid: Solid,
     },
+
+    FuseSolids {
+        solid1: Sha,
+        solid2: Sha,
+    },
 }
 
 impl Operation {
@@ -939,6 +971,9 @@ impl Operation {
             }
             Operation::CreateSolid { nonce, solid } => {
                 hasher.update(format!("{nonce}-{solid:?}").as_bytes())
+            }
+            Operation::FuseSolids { solid1, solid2 } => {
+                hasher.update(format!("{solid1}-{solid2}").as_bytes())
             }
         }
 
@@ -1199,17 +1234,27 @@ impl Operation {
                 )
             }
             Operation::CreateSolid { nonce, solid } => {
+                let mut mesh = solid.truck_solid.triangulation(0.1).to_polygon();
+                // mesh.put_together_same_attrs(0.1);
                 format!(
-                    "CreateSolid: {nonce} {:?}",
-                    solid.truck_solid.display(SDF::ShellsList {
-                        shell_format: ShDF::FacesList {
-                            face_format: FDF::LoopsList {
-                                wire_format: WDF::VerticesList {
-                                    vertex_format: VDF::AsPoint
-                                }
-                            }
-                        }
-                    })
+                    "CreateSolid: {nonce} Volume: {:?}",
+                    mesh.volume(),
+                    // solid.truck_solid.display(SDF::ShellsList {
+                    //     shell_format: ShDF::FacesList {
+                    //         face_format: FDF::LoopsList {
+                    //             wire_format: WDF::VerticesList {
+                    //                 vertex_format: VDF::AsPoint
+                    //             }
+                    //         }
+                    //     }
+                    // })
+                )
+            }
+            Operation::FuseSolids { solid1, solid2 } => {
+                format!(
+                    "FuseSolids: {} {}",
+                    solid1.to_owned()[..num_chars].to_string(),
+                    solid2.to_owned()[..num_chars].to_string()
                 )
             }
         }
