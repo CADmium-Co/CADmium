@@ -202,22 +202,37 @@ fn stacked_cubes() {
     });
     el.realize_extrusion(&second_extrusion_id);
 
-    // print each solid
-    for (solid_id, solid) in el.solids.iter() {
-        let mut mesh = solid.truck_solid.triangulation(0.1).to_polygon();
-        mesh.put_together_same_attrs(0.1);
-        let v = mesh.volume();
-        println!("ID: {solid_id} volume: {v}");
+    let mut small_solid_id = el.solids.keys().nth(0).unwrap().clone();
+    let small_solid_volume = el.solids[&small_solid_id]
+        .truck_solid
+        .triangulation(0.1)
+        .to_polygon()
+        .volume();
+
+    let mut big_solid_id = el.solids.keys().nth(1).unwrap().clone();
+    let big_solid_volume = el.solids[&big_solid_id]
+        .truck_solid
+        .triangulation(0.1)
+        .to_polygon()
+        .volume();
+
+    if big_solid_volume < small_solid_volume {
+        (small_solid_id, big_solid_id) = (big_solid_id, small_solid_id);
     }
-    let solid_ids: Vec<String> = el.solids.keys().cloned().collect();
-    let s0 = solid_ids[0].clone();
-    let s1 = solid_ids[1].clone();
 
     el.append(Operation::FuseSolids {
-        solid1: s0,
-        solid2: s1,
+        solid1: big_solid_id,
+        solid2: small_solid_id,
     });
     el.git_log();
+
+    for (solid_id, solid) in el.solids.iter() {
+        solid.save_as_obj("fused.obj", 0.1);
+        // let mut mesh = solid.truck_solid.triangulation(0.1).to_polygon();
+        // mesh.put_together_same_attrs(0.1);
+        // let v = mesh.volume();
+        // println!("ID: {solid_id} volume: {v}");
+    }
 }
 
 fn simple_cube() {
@@ -314,6 +329,6 @@ fn simple_cube() {
         solid.save_as_obj("first_solid.obj", 0.01);
     }
 
-    // el.git_log();
+    el.git_log();
     // el.to_project();
 }
