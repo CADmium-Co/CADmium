@@ -951,7 +951,7 @@ impl Operation {
                 workbench_id,
                 solid_id,
                 face,
-            } => hasher.update(format!("{workbench_id}-{solid_id}-{face:?}").as_bytes()),
+            } => hasher.update(format!("{}", self.pretty_print()).as_bytes()),
 
             Operation::CreateExtrusion {
                 nonce,
@@ -987,7 +987,8 @@ impl Operation {
                 }
             }
             Operation::CreateSolid { nonce, solid } => {
-                hasher.update(format!("{nonce}-{solid:?}").as_bytes())
+                let str = self.pretty_print();
+                hasher.update(format!("{nonce}-{str:?}").as_bytes())
             }
             Operation::FuseSolids { solid1, solid2 } => {
                 hasher.update(format!("{solid1}-{solid2}").as_bytes())
@@ -1183,15 +1184,15 @@ impl Operation {
                 solid_id,
                 face,
             } => {
+                let mut lengths = vec![];
+                for boundary in face.boundaries().iter() {
+                    lengths.push(boundary.len());
+                }
                 format!(
-                    "CreateTruckFace: {} {} {:?}",
+                    "CreateTruckFace: {} {} lengths: {:?}",
                     workbench_id.to_owned()[..num_chars].to_string(),
                     solid_id.to_owned()[..num_chars].to_string(),
-                    face.display(FDF::BoundariesAndID {
-                        wire_format: WDF::VerticesList {
-                            vertex_format: VDF::AsPoint,
-                        },
-                    })
+                    lengths
                 )
             }
             Operation::CreateExtrusion {
