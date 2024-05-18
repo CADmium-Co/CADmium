@@ -20,7 +20,21 @@ use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
 fn main() {
-    stacked_cubes();
+    truck_test();
+    // stacked_cubes();
+}
+
+fn truck_test() {
+    let point_a = vertex(Point3::new(0.0, 0.0, 0.0));
+    let line_a = tsweep(&point_a, Vector3::new(1.0, 0.0, 0.0));
+    let square_a = tsweep(&line_a, Vector3::new(0.0, 1.0, 0.0));
+    let cube_a = tsweep(&square_a, Vector3::new(0.0, 0.0, 1.0));
+
+    let result = serde_json::to_string(&cube_a);
+    match result {
+        Ok(json) => println!("{}", json),
+        Err(e) => println!("Error: {}", e),
+    }
 }
 
 fn stacked_cubes() {
