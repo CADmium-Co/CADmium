@@ -1,4 +1,5 @@
 use crate::extrusion::fuse;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
@@ -302,6 +303,7 @@ impl EvolutionLog {
             Operation::FuseSolids { solid1, solid2 } => {
                 let solid_a = self.solids.get(&solid1).unwrap();
                 let solid_b = self.solids.get(&solid2).unwrap();
+
                 let fused = fuse(&solid_a.truck_solid, &solid_b.truck_solid);
                 match fused {
                     Some(fused) => {
@@ -930,7 +932,15 @@ impl Operation {
             Operation::CreateRealSketch {
                 sketch_id,
                 real_sketch,
-            } => hasher.update(format!("{sketch_id}-{real_sketch:?}").as_bytes()),
+            } => {
+                let points_str: String = real_sketch
+                    .points
+                    .iter()
+                    .sorted_by_key(|p| p.0)
+                    .map(|p| format!("{:?}", p))
+                    .collect();
+                hasher.update(format!("{sketch_id}-{points_str:?}").as_bytes())
+            }
 
             Operation::CreateFace {
                 workbench_id,
@@ -1143,10 +1153,16 @@ impl Operation {
                 sketch_id,
                 real_sketch,
             } => {
+                let points_str: String = real_sketch
+                    .points
+                    .iter()
+                    .sorted_by_key(|p| p.0)
+                    .map(|p| format!("{:?}", p))
+                    .collect();
                 format!(
                     "CreateRealSketch: {} {:?}",
                     sketch_id.to_owned()[..num_chars].to_string(),
-                    real_sketch
+                    points_str
                 )
             }
 
