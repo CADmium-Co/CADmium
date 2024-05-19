@@ -20,8 +20,8 @@ use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
 fn main() {
-    truck_test();
-    // stacked_cubes();
+    // truck_test();
+    stacked_cubes();
 }
 
 fn truck_test() {

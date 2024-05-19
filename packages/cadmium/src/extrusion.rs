@@ -754,18 +754,19 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // Then, add every face from solid1 to the combined solid.
     combined.append(&mut boundary1_copy);
 
-    // Lastly, merge the two fusable faces together. This is complicated because
-    // one might be bigger than the other, or they might be the same size, or
-    // they might overlap somewhat. We'll need to figure out how to merge them.
-    // println!("How do I merge these two? {:?}", fusable_faces);
-    // println!("First:");
-    // for edge in boundary0[fusable_faces.0].edge_iter() {
-    //     println!(
-    //         "Edge: {:?} to {:?}",
-    //         edge.front().get_point(),
-    //         edge.back().get_point()
-    //     );
-    // }
+    // TODO: implement this correctly:
+    // The two faces as coplanar and some of their features might overlap
+    // but in general:
+    // There is some nonzero portion of the plane covered by BOTH faces. (If not, we can error out)
+    // There is some maybe zero portion of the plane covered by Face 0 and some disjoint,
+    // maybe zero portion covered by Face 1.
+    // Our primary task is to isolate those disjoint portions, orient each one correctly,
+    // and add them as faces to the combined solid.
+    // Any portion which is covered by BOTH facese can be ignored completely.
+
+    // For now we just have this shitty version that only works in the particular case where
+    // one face is completely enveloped by the other, and the bigger one was passed in first.
+    // TODO: Delete this garbage and implement the correct version.
     let mut outer_face = boundary0[fusable_faces.0].clone();
     let inner_face = boundary1[fusable_faces.1].clone();
     outer_face.add_boundary(inner_face.boundaries().first().unwrap().clone());
