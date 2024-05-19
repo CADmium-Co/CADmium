@@ -33,6 +33,7 @@
 	export let xColor: Required<$$Props>["xColor"] = 0xff0000 // red
 	export let yColor: Required<$$Props>["yColor"] = 0x179316 // green
 	export let zColor: Required<$$Props>["zColor"] = 0x0000ff // blue
+	export let mouseoverColor = 0xb1daf2 // light blue
 	export let toneMapped: Required<$$Props>["toneMapped"] = false
 	export let paddingX: Required<$$Props>["paddingX"] = 0
 	export let paddingY: Required<$$Props>["paddingY"] = 0
@@ -120,6 +121,7 @@
 	let leftTriangle: Sprite
 	let upTriangle: Sprite
 	let rightTriangle: Sprite
+	let spriteHoverColorSet = false
 
 	const mouse = new Vector2()
 	const raycaster = new Raycaster()
@@ -129,7 +131,7 @@
 	 */
 	const approachesOne = (num: number) => 0.9999 < num && num < 1.0001
 
-	const handleClick = (event: MouseEvent) => {
+	const setMouseRaycaster = (event: MouseEvent) => {
 		// Raycasting is done manually.
 		const rect = clickTarget.getBoundingClientRect()
 		const offsetX = rect.left + (clickTarget.offsetWidth - size)
@@ -138,6 +140,56 @@
 		mouse.y = -((event.clientY - offsetY) / (rect.bottom - offsetY)) * 2 + 1
 
 		raycaster.setFromCamera(mouse, orthoCam)
+	}
+
+	const handleMousemove = (event: MouseEvent) => {
+		setMouseRaycaster(event)
+
+		const triangleIntersects = raycaster.intersectObjects([downTriangle, leftTriangle, upTriangle, rightTriangle])
+		if (triangleIntersects.length) {
+			const triangleSprite = triangleIntersects[0].object
+			switch (triangleSprite) {
+				case downTriangle:
+					downTriangle.material.color.setHex(mouseoverColor)
+					spriteHoverColorSet = true
+					break
+				case upTriangle:
+					upTriangle.material.color.setHex(mouseoverColor)
+					spriteHoverColorSet = true
+					break
+				case leftTriangle:
+					leftTriangle.material.color.setHex(mouseoverColor)
+					spriteHoverColorSet = true
+					break
+				case rightTriangle:
+					rightTriangle.material.color.setHex(mouseoverColor)
+					spriteHoverColorSet = true
+					break
+			}
+			invalidate()
+		} else {
+			spriteHoverColorSet && restoreNonHoverColors()
+		}
+	}
+
+	// Although we are already calling restoreNonHoverColors on a mousemove event outside of a sprite intersect, if a user
+	// moves the mouse too quickly, they will move outside the clickTarget before mousemove registers, so we need to
+	// capture that the sprite is no longer being hovered over from the mouseleave event as well.
+	const handleMouseleave = (event: MouseEvent) => {
+		spriteHoverColorSet && restoreNonHoverColors()
+	}
+
+	const restoreNonHoverColors = () => {
+		downTriangle.material.color.setHex(gray)
+		upTriangle.material.color.setHex(gray)
+		leftTriangle.material.color.setHex(gray)
+		rightTriangle.material.color.setHex(gray)
+		spriteHoverColorSet = false
+		invalidate()
+	}
+
+	const handleClick = (event: MouseEvent) => {
+		setMouseRaycaster(event)
 
 		const cubeIntersects = raycaster.intersectObject(cube)
 		if (cubeIntersects.length) {
@@ -217,11 +269,15 @@
 	onMount(() => {
 		renderer.domElement.parentElement?.appendChild(clickTarget)
 		clickTarget.addEventListener("click", handleClick)
+		clickTarget.addEventListener("mousemove", handleMousemove)
+		clickTarget.addEventListener("mouseleave", handleMouseleave)
 	})
 
 	onDestroy(() => {
 		renderer.domElement.parentElement?.removeChild(clickTarget)
 		clickTarget.removeEventListener("click", handleClick)
+		clickTarget.removeEventListener("mousemove", handleMousemove)
+		clickTarget.removeEventListener("mouseleave", handleMouseleave)
 	})
 
 	// Rotate the gizmo as the camera moves.
