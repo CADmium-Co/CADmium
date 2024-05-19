@@ -6,6 +6,7 @@
 		CapsuleGeometry,
 		Color,
 		Mesh,
+		MeshBasicMaterial,
 		OrthographicCamera,
 		Quaternion,
 		Raycaster,
@@ -33,7 +34,8 @@
 	export let xColor: Required<$$Props>["xColor"] = 0xff0000 // red
 	export let yColor: Required<$$Props>["yColor"] = 0x179316 // green
 	export let zColor: Required<$$Props>["zColor"] = 0x0000ff // blue
-	export let mouseoverColor = 0xb1daf2 // light blue
+	const mouseoverColor = 0xb1daf2 // light blue
+	const white = 0xffffff
 	export let toneMapped: Required<$$Props>["toneMapped"] = false
 	export let paddingX: Required<$$Props>["paddingX"] = 0
 	export let paddingY: Required<$$Props>["paddingY"] = 0
@@ -117,6 +119,12 @@
 	let yAxisLabel: Sprite
 	let zAxisLabel: Sprite
 	let cube: Mesh
+	let cubeRight: MeshBasicMaterial
+	let cubeLeft: MeshBasicMaterial
+	let cubeBack: MeshBasicMaterial
+	let cubeFront: MeshBasicMaterial
+	let cubeTop: MeshBasicMaterial
+	let cubeBottom: MeshBasicMaterial
 	let downTriangle: Sprite
 	let leftTriangle: Sprite
 	let upTriangle: Sprite
@@ -145,30 +153,70 @@
 	const handleMousemove = (event: MouseEvent) => {
 		setMouseRaycaster(event)
 
+		const cubeIntersects = raycaster.intersectObject(cube)
 		const triangleIntersects = raycaster.intersectObjects([downTriangle, leftTriangle, upTriangle, rightTriangle])
-		if (triangleIntersects.length) {
+		if (cubeIntersects.length) {
+			// Cube face colors need to be restored when mouse moves from hovering over one face to another face.
+			restoreNonHoverColors()
+
+			const faceIndex = cubeIntersects[0].faceIndex
+			// Each cube face consists of 2 faceIndexes
+			switch (faceIndex) {
+				// Right
+				case 0:
+				case 1:
+					cubeRight.color.setHex(mouseoverColor)
+					break
+				// Left
+				case 2:
+				case 3:
+					cubeLeft.color.setHex(mouseoverColor)
+					break
+				// Back
+				case 4:
+				case 5:
+					cubeBack.color.setHex(mouseoverColor)
+					break
+				// Front
+				case 6:
+				case 7:
+					cubeFront.color.setHex(mouseoverColor)
+					break
+				// Top
+				case 8:
+				case 9:
+					cubeTop.color.setHex(mouseoverColor)
+					break
+				// Bottom
+				case 10:
+				case 11:
+					cubeBottom.color.setHex(mouseoverColor)
+					break
+			}
+			spriteHoverColorSet = true
+			invalidate()
+		} else if (triangleIntersects.length) {
+			restoreNonHoverColors()
 			const triangleSprite = triangleIntersects[0].object
 			switch (triangleSprite) {
 				case downTriangle:
 					downTriangle.material.color.setHex(mouseoverColor)
-					spriteHoverColorSet = true
 					break
 				case upTriangle:
 					upTriangle.material.color.setHex(mouseoverColor)
-					spriteHoverColorSet = true
 					break
 				case leftTriangle:
 					leftTriangle.material.color.setHex(mouseoverColor)
-					spriteHoverColorSet = true
 					break
 				case rightTriangle:
 					rightTriangle.material.color.setHex(mouseoverColor)
-					spriteHoverColorSet = true
 					break
 			}
+			spriteHoverColorSet = true
 			invalidate()
-		} else {
-			spriteHoverColorSet && restoreNonHoverColors()
+		} else if (spriteHoverColorSet) {
+			restoreNonHoverColors()
+			invalidate()
 		}
 	}
 
@@ -176,16 +224,24 @@
 	// moves the mouse too quickly, they will move outside the clickTarget before mousemove registers, so we need to
 	// capture that the sprite is no longer being hovered over from the mouseleave event as well.
 	const handleMouseleave = (event: MouseEvent) => {
-		spriteHoverColorSet && restoreNonHoverColors()
+		if (spriteHoverColorSet) {
+			restoreNonHoverColors()
+			invalidate()
+		}
 	}
 
 	const restoreNonHoverColors = () => {
+		cubeRight.color.setHex(gray)
+		cubeLeft.color.setHex(gray)
+		cubeBack.color.setHex(gray)
+		cubeFront.color.setHex(gray)
+		cubeTop.color.setHex(gray)
+		cubeBottom.color.setHex(gray)
 		downTriangle.material.color.setHex(gray)
 		upTriangle.material.color.setHex(gray)
 		leftTriangle.material.color.setHex(gray)
 		rightTriangle.material.color.setHex(gray)
 		spriteHoverColorSet = false
-		invalidate()
 	}
 
 	const handleClick = (event: MouseEvent) => {
@@ -343,7 +399,8 @@
 
 		const context = canvas.getContext("2d")!
 
-		const backgroundColor = new Color(gray)
+		// Cube gray color is applied via the mesh material rather than backgroundColor, we don't want the two to stack.
+		const backgroundColor = new Color(white)
 		context.fillStyle = backgroundColor.convertSRGBToLinear().getStyle()
 		context.fillRect(0, 0, canvas.width, canvas.height)
 
@@ -400,7 +457,7 @@
 		context.lineTo(v2.x, v2.y)
 		context.lineTo(v3.x, v3.y)
 
-		const backgroundColor = new Color(gray)
+		const backgroundColor = new Color(white)
 		context.fillStyle = backgroundColor.convertSRGBToLinear().getStyle()
 		context.fill()
 
@@ -418,6 +475,8 @@
 		<T.Mesh bind:ref={cube}>
 			<T.BoxGeometry args={[1.5, 1.5, 1.5]} />
 			<T.MeshBasicMaterial
+				bind:ref={cubeRight}
+				color={gray}
 				map={getCubeSpriteTexture(textureSize, "Right")}
 				attach={(parent, self) => {
 					if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
@@ -425,6 +484,8 @@
 				}}
 			/>
 			<T.MeshBasicMaterial
+				bind:ref={cubeLeft}
+				color={gray}
 				map={getCubeSpriteTexture(textureSize, "Left")}
 				attach={(parent, self) => {
 					if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
@@ -432,6 +493,8 @@
 				}}
 			/>
 			<T.MeshBasicMaterial
+				bind:ref={cubeBack}
+				color={gray}
 				map={getCubeSpriteTexture(textureSize, "Back")}
 				attach={(parent, self) => {
 					if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
@@ -439,6 +502,8 @@
 				}}
 			/>
 			<T.MeshBasicMaterial
+				bind:ref={cubeFront}
+				color={gray}
 				map={getCubeSpriteTexture(textureSize, "Front")}
 				attach={(parent, self) => {
 					if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
@@ -446,6 +511,8 @@
 				}}
 			/>
 			<T.MeshBasicMaterial
+				bind:ref={cubeTop}
+				color={gray}
 				map={getCubeSpriteTexture(textureSize, "Top")}
 				attach={(parent, self) => {
 					if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
@@ -453,6 +520,8 @@
 				}}
 			/>
 			<T.MeshBasicMaterial
+				bind:ref={cubeBottom}
+				color={gray}
 				map={getCubeSpriteTexture(textureSize, "Bottom")}
 				attach={(parent, self) => {
 					if (Array.isArray(parent.material)) parent.material = [...parent.material, self]
@@ -500,16 +569,16 @@
 
 	<T is={triangleControls}>
 		<T.Sprite bind:ref={downTriangle} position={[0, -1.85, 1]} scale={0.4}>
-			<T.SpriteMaterial map={getTriangleSpriteTexture("down")} />
+			<T.SpriteMaterial color={gray} map={getTriangleSpriteTexture("down")} />
 		</T.Sprite>
 		<T.Sprite bind:ref={leftTriangle} position={[-1.85, 0, 1]} scale={0.4}>
-			<T.SpriteMaterial map={getTriangleSpriteTexture("left")} rotation={(3 * Math.PI) / 2} />
+			<T.SpriteMaterial color={gray} map={getTriangleSpriteTexture("left")} rotation={(3 * Math.PI) / 2} />
 		</T.Sprite>
 		<T.Sprite bind:ref={upTriangle} position={[0, 1.85, 1]} scale={0.4}>
-			<T.SpriteMaterial map={getTriangleSpriteTexture("up")} rotation={Math.PI} />
+			<T.SpriteMaterial color={gray} map={getTriangleSpriteTexture("up")} rotation={Math.PI} />
 		</T.Sprite>
 		<T.Sprite bind:ref={rightTriangle} position={[1.85, 0, 1]} scale={0.4}>
-			<T.SpriteMaterial map={getTriangleSpriteTexture("right")} rotation={Math.PI / 2} />
+			<T.SpriteMaterial color={gray} map={getTriangleSpriteTexture("right")} rotation={Math.PI / 2} />
 		</T.Sprite>
 	</T>
 </HierarchicalObject>
