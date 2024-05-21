@@ -10,6 +10,7 @@ If you're looking for:
 - That can export solids as .step, .obj, or .cadmium (a json-based CAD format that this project is inventing)
 - That can export sketches as .svg or .dxf
 - That works without an internet connection
+- That allows live collaboration via edge servers
 
 Then this project may be for you!
 
@@ -143,6 +144,7 @@ If you feel like you would be willing and able to help, please join [my discord]
 - [ ] TrackballControls
   - [ ] Zoom camera to cursor, not center
   - [ ] Fix pan speed being mismatched on x and y
+  - [ ] allow users to change the settings. ie scroll wheel to zoom, double click middle wheel for zoom extents, shit middle press move for rotate...
 - [ ] Export
   - [x] Proper scaling on .obj and .step exports
   - [ ] .dxf export for sketches
@@ -215,7 +217,13 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Demonstrate associating .cadmium files with this app so they open on double-click from file explorer
 - [ ] Holes
   - [ ] A dedicated history feature for punching holes at standard sizes [M4 tight clearance, 1/4-20 loose clearance, M5 Tap Drill]
-
+- [ ] Title Blocks for drawings
+  - [ ] Automatically populate fields with object and custom properties
+  - [ ] automatically generate logical view based on part/assembly dimensions and geometry.
+  - [ ] automatically create call out and exploded views based on areas of concentrated parts (for example where groups of fasteners are located)
+  - [ ] automatically dimension views  based on dimensions and constraints defined in sketches
+  - [ ] standardised bill of material formats
+        
 ## Features to Make Money
 
 - [ ] SAAS - Hobbyist ($x/month)
@@ -249,5 +257,7 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] b-rep formats: .step, .x_t, .jt, .iges
   - [ ] mesh formats: .obj, .stl, .3mf, .gltf
   - [ ] project formats: .parasolid, .acis
+  - [ ] cad formats: .dwg, .dxf, Solidworks files, .rf5, .rf6
 - [ ] Add CAM functionality, or make a different, dedicated app
 - [ ] Add FEA functionality, or make a different, dedicated app
+  - [ ] to start, 2 way interation of wireframe models with Dlubal RFEM
