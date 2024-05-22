@@ -50,7 +50,7 @@
 	// invalidate the frame when any of the following values change
 	$: size, horizontalPlacement, verticalPlacement, toneMapped, paddingX, paddingY, invalidate()
 
-	const orthoCam = new OrthographicCamera(-2, 2, 2, -2, 0, 4)
+	const orthoCam = new OrthographicCamera(-2.1, 2.1, 2.1, -2.1, 0, 4)
 	orthoCam.position.set(0, 0, 2)
 
 	const rotationRoot = new Scene()
@@ -129,7 +129,13 @@
 	let leftTriangle: Sprite
 	let upTriangle: Sprite
 	let rightTriangle: Sprite
+	let curvedArrowLeft: Sprite
+	let curvedArrowRight: Sprite
 	let spriteHoverColorSet = false
+	let navigationClicked = false
+
+	const curvedArrowCanvasWidth = 200
+	const curvedArrowCanvasHeight = 200
 
 	const mouse = new Vector2()
 	const raycaster = new Raycaster()
@@ -320,6 +326,59 @@
 					break
 			}
 		}
+
+		const curvedArrowIntersects = raycaster.intersectObjects([curvedArrowLeft, curvedArrowRight])
+		if (curvedArrowIntersects.length) {		
+			navigationClicked = true	
+			const intersect = curvedArrowIntersects[0]
+			if (intersect.uv == null) {
+				return
+			}
+
+		  const quaternion = new Quaternion()
+			const intoPageRotationAxis = camera.current.position.clone().normalize()
+			const curvedArrowSprite = curvedArrowIntersects[0].object
+			switch (curvedArrowSprite) {
+				case curvedArrowLeft:
+					// If pixel on sprite is transparent (alpha == 0), the user clicked the area around the arrow and not on the
+					// arrow itself. We don't want to capture the area around the arrow because it overlaps with other navigation
+					// controls.
+					if (pixelAlphaFromUVForCurvedArrow(intersect.uv.x, intersect.uv.y, 'left') == 0) {
+						return
+					}
+					quaternion.setFromAxisAngle(intoPageRotationAxis, -Math.PI / 12)
+					camera.current.up.applyQuaternion(quaternion)
+					break
+				case curvedArrowRight:
+					if (pixelAlphaFromUVForCurvedArrow(intersect.uv.x, intersect.uv.y, 'right') == 0) {
+						return
+					}
+					quaternion.setFromAxisAngle(intoPageRotationAxis, Math.PI / 12)
+					camera.current.up.applyQuaternion(quaternion)
+					break
+			}
+		}
+	}
+
+	// Returns the alpha of the pixel at a given uv coordinate for the curvedArrow.
+	const pixelAlphaFromUVForCurvedArrow = (uvX: number, uvY: number, label: string): number => {
+		var curvedArrowImageData
+		if (label == 'right') {
+			curvedArrowImageData = curvedArrowRightImageData
+		} else {
+			curvedArrowImageData = curvedArrowLeftImageData
+		}
+	
+		const x = Math.round(uvX * curvedArrowCanvasWidth)
+		const y = curvedArrowCanvasHeight - Math.round(uvY * curvedArrowCanvasWidth)
+
+		// https://stackoverflow.com/questions/45963306/html5-canvas-how-to-get-adjacent-pixels-position-from-the-linearized-imagedata/45969661#45969661
+		// Read from stored curvedArrow imageData
+		// Each pixel is 4 values (r,g, b, alpha)
+		const pixelIndex = (x + y * curvedArrowCanvasWidth) * 4;
+		const pixelAlpha = curvedArrowImageData.data[pixelIndex + 3]
+
+		return pixelAlpha
 	}
 
 	onMount(() => {
@@ -343,7 +402,13 @@
 		animationTask?.key ?? Symbol("cube-gizmo-animation"),
 		() => {
 			point.set(0, 0, 1).applyQuaternion(camera.current.quaternion)
-			if (point.x !== p[0] || point.y !== p[1] || point.z !== p[2]) {
+			// Under rare orientations, a navigation button could be clicked, and the model could rotate without this point 
+			// moving, and hence the gizmo would not move, so we also check against a navigationClicked flag.
+			// The aforemention rare scenario happens on page load when curvedArrowLeft is clicked immediately. 
+			if (point.x !== p[0] || point.y !== p[1] || point.z !== p[2] || navigationClicked) {
+				if (navigationClicked) {
+					navigationClicked = false;
+				}
 				p = [point.x, point.y, point.z]
 				rotationRoot.quaternion.copy(camera.current.quaternion).invert()
 				invalidate()
@@ -399,9 +464,9 @@
 
 		const context = canvas.getContext("2d")!
 
-		// Cube gray color is applied via the mesh material rather than backgroundColor, we don't want the two to stack.
-		const backgroundColor = new Color(white)
-		context.fillStyle = backgroundColor.convertSRGBToLinear().getStyle()
+		// Cube gray color is applied via the mesh material rather than fillColor, we don't want the two to stack.
+		const fillColor = new Color(white)
+		context.fillStyle = fillColor.convertSRGBToLinear().getStyle()
 		context.fillRect(0, 0, canvas.width, canvas.height)
 
 		if (text) {
@@ -457,9 +522,85 @@
 		context.lineTo(v2.x, v2.y)
 		context.lineTo(v3.x, v3.y)
 
-		const backgroundColor = new Color(white)
-		context.fillStyle = backgroundColor.convertSRGBToLinear().getStyle()
+		const fillColor = new Color(white)
+		context.fillStyle = fillColor.convertSRGBToLinear().getStyle()
 		context.fill()
+
+		const texture = new CanvasTexture(canvas)
+		textures[key] = texture
+		return texture
+	}
+
+	var curvedArrowLeftImageData: ImageData;
+	var curvedArrowRightImageData: ImageData;
+
+	const getCurvedArrowSpriteTexture = (label = "") => {
+		const key = `curved-arrow-${label}`
+		if (textures[key]) {
+			textures[key].dispose()
+		}
+
+		const canvas = document.createElement("canvas")
+		canvas.width = curvedArrowCanvasWidth
+		canvas.height = curvedArrowCanvasHeight
+		
+		const context = canvas.getContext("2d")!
+		// mirror the arrow
+		if (label == 'right') {
+			context.translate(canvas.width, 0);
+			context.scale(-1,1)
+		}
+
+		// Sprite will be positioned later such that the canvas origin is at the center of the gizmo.
+		const originX = canvas.width 
+		const originY = canvas.height
+		const arcRadius = 180
+		const fillColor = new Color(white)
+		const fillStyle = fillColor.convertSRGBToLinear().getStyle()
+
+		// Draw the arc.
+		context.beginPath()
+		context.strokeStyle = fillStyle
+		context.lineWidth = 14
+		const startAngle = Math.PI + (Math.PI / 180 * 40) // 180 + 40 deg
+		const endAngle = Math.PI/180 * (270-19) // 270 - 19 deg
+		context.arc(originX, originY, arcRadius, startAngle, endAngle)
+		context.stroke()
+
+		// Calculate the point location of the tip of the arrow for drawing a triangle. The tip should be on the centerline
+		// of the arc.
+		// hypotenuse = radius
+		// sin angle = opposite / radius -> opposite = radius * sin angle
+		// cos angle = adjacent / radius -> adjacent = radius * sin angle	
+		// angle from the origin to the triangle tip in radians
+		const angleForTriangleTip = 55 * Math.PI / 180
+		const opposite = arcRadius * Math.sin(angleForTriangleTip)
+		const adjacent = arcRadius * Math.cos(angleForTriangleTip)
+		const tipX = originX - opposite
+		const tipY = originY - adjacent
+
+		// Draw the triangle (arrow tip).
+		const v1 = new Vector2(tipX, tipY)
+		// v2 and v3 are rotated because we draw the triangle based on 45 deg, but arc starts at 40 instead of 45 deg
+		const triangleLegLength = 30
+		const triangleRotationAngle = -5 // deg
+		const v2preRotation = new Vector2(tipX, tipY - triangleLegLength)
+		const v2 = v2preRotation.rotateAround(v1, Math.PI / 180 * triangleRotationAngle)
+		const v3preRotation = new Vector2(tipX + triangleLegLength, tipY)
+		const v3 = v3preRotation.rotateAround(v1, Math.PI / 180 * triangleRotationAngle)
+		context.beginPath()
+		context.moveTo(v1.x, v1.y)
+		context.lineTo(v2.x, v2.y)
+		context.lineTo(v3.x, v3.y)
+		context.fillStyle = fillStyle
+		context.fill()
+
+		// Store the imageData for use with handleClick.
+		if (label == 'right') {
+			curvedArrowRightImageData = context.getImageData(0,0,canvas.width,canvas.height)
+		} else {
+			curvedArrowLeftImageData = context.getImageData(0,0,canvas.width,canvas.height)
+		}
 
 		const texture = new CanvasTexture(canvas)
 		textures[key] = texture
@@ -579,6 +720,12 @@
 		</T.Sprite>
 		<T.Sprite bind:ref={rightTriangle} position={[1.85, 0, 1]} scale={0.4}>
 			<T.SpriteMaterial color={gray} map={getTriangleSpriteTexture("right")} rotation={Math.PI / 2} />
+		</T.Sprite>
+		<T.Sprite bind:ref={curvedArrowLeft} position={[-1, 1, 1]} scale={2} >
+			<T.SpriteMaterial color={gray} map={getCurvedArrowSpriteTexture("left")} />
+		</T.Sprite>
+		<T.Sprite bind:ref={curvedArrowRight} position={[1, 1, 1]} scale={2} >
+			<T.SpriteMaterial color={gray} map={getCurvedArrowSpriteTexture("right")} />
 		</T.Sprite>
 	</T>
 </HierarchicalObject>
