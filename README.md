@@ -199,6 +199,7 @@ If you feel like you would be willing and able to help, please join [my discord]
   - [ ] Disable/Enable edges
   - [ ] Disable/Enable shading
   - [ ] Section view
+  - [ ] Rotate about scene floor
 - [ ] User Preferences
   - [ ] Dark mode
   - [ ] Configure key and mouse bindings
