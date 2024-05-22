@@ -40,7 +40,7 @@
 	featureIndex.subscribe((val) => $wasmProject["get_workbench"] && workbenchIsStale.set(true))
 </script>
 
-<div class="w-[100vw] h-[100vh] block">
+<div class="w-[100vw] h-[100vh] block" style="overflow: hidden;">
 	<AppBar {userName} project={$project} bind:newFileContent />
 	<ToolBar />
 	<div class="flex">
