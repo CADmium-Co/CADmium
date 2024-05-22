@@ -7,6 +7,7 @@
 		Color,
 		Mesh,
 		MeshBasicMaterial,
+		Object3D,
 		OrthographicCamera,
 		Quaternion,
 		Raycaster,
@@ -16,7 +17,9 @@
 		Vector2,
 		Vector3,
 		Vector4,
-		type ColorRepresentation
+		type ColorRepresentation,
+		type Intersection,
+		type Object3DEventMap
 	} from "three"
 
 	import type { SetCameraFocus } from "shared/types"
@@ -131,8 +134,9 @@
 	let rightTriangle: Sprite
 	let curvedArrowLeft: Sprite
 	let curvedArrowRight: Sprite
+	// Whether one of the navigation control sprites (triangles, curvedArrrow) is displaying the on hover color.
 	let spriteHoverColorSet = false
-	let navigationClicked = false
+	let navControlClicked = false
 
 	const curvedArrowCanvasWidth = 200
 	const curvedArrowCanvasHeight = 200
@@ -161,6 +165,7 @@
 
 		const cubeIntersects = raycaster.intersectObject(cube)
 		const triangleIntersects = raycaster.intersectObjects([downTriangle, leftTriangle, upTriangle, rightTriangle])
+		const curvedArrowIntersects = raycaster.intersectObjects([curvedArrowLeft, curvedArrowRight])
 		if (cubeIntersects.length) {
 			// Cube face colors need to be restored when mouse moves from hovering over one face to another face.
 			restoreNonHoverColors()
@@ -220,6 +225,16 @@
 			}
 			spriteHoverColorSet = true
 			invalidate()
+		} else if (curvedArrowIntersects.length && isCurvedArrowLeftDwgIntersected(curvedArrowIntersects[0])) {
+			restoreNonHoverColors()
+			curvedArrowLeft.material.color.setHex(mouseoverColor)
+			spriteHoverColorSet = true
+			invalidate()
+		} else if (curvedArrowIntersects.length && isCurvedArrowRightDwgIntersected(curvedArrowIntersects[0])) {
+			restoreNonHoverColors()
+			curvedArrowRight.material.color.setHex(mouseoverColor)
+			spriteHoverColorSet = true
+			invalidate()
 		} else if (spriteHoverColorSet) {
 			restoreNonHoverColors()
 			invalidate()
@@ -229,7 +244,7 @@
 	// Although we are already calling restoreNonHoverColors on a mousemove event outside of a sprite intersect, if a user
 	// moves the mouse too quickly, they will move outside the clickTarget before mousemove registers, so we need to
 	// capture that the sprite is no longer being hovered over from the mouseleave event as well.
-	const handleMouseleave = (event: MouseEvent) => {
+	const handleMouseleave = (_: MouseEvent) => {
 		if (spriteHoverColorSet) {
 			restoreNonHoverColors()
 			invalidate()
@@ -247,6 +262,8 @@
 		upTriangle.material.color.setHex(gray)
 		leftTriangle.material.color.setHex(gray)
 		rightTriangle.material.color.setHex(gray)
+		curvedArrowLeft.material.color.setHex(gray)
+		curvedArrowRight.material.color.setHex(gray)
 		spriteHoverColorSet = false
 	}
 
@@ -328,54 +345,65 @@
 		}
 
 		const curvedArrowIntersects = raycaster.intersectObjects([curvedArrowLeft, curvedArrowRight])
-		if (curvedArrowIntersects.length) {		
-			navigationClicked = true	
-			const intersect = curvedArrowIntersects[0]
-			if (intersect.uv == null) {
-				return
-			}
-
-		  const quaternion = new Quaternion()
+		// Intersects with one of the curvedArrow sprites.
+		if (curvedArrowIntersects.length) {
+			navControlClicked = true
+			const quaternion = new Quaternion()
 			const intoPageRotationAxis = camera.current.position.clone().normalize()
-			const curvedArrowSprite = curvedArrowIntersects[0].object
-			switch (curvedArrowSprite) {
-				case curvedArrowLeft:
-					// If pixel on sprite is transparent (alpha == 0), the user clicked the area around the arrow and not on the
-					// arrow itself. We don't want to capture the area around the arrow because it overlaps with other navigation
-					// controls.
-					if (pixelAlphaFromUVForCurvedArrow(intersect.uv.x, intersect.uv.y, 'left') == 0) {
-						return
-					}
-					quaternion.setFromAxisAngle(intoPageRotationAxis, -Math.PI / 12)
-					camera.current.up.applyQuaternion(quaternion)
-					break
-				case curvedArrowRight:
-					if (pixelAlphaFromUVForCurvedArrow(intersect.uv.x, intersect.uv.y, 'right') == 0) {
-						return
-					}
-					quaternion.setFromAxisAngle(intoPageRotationAxis, Math.PI / 12)
-					camera.current.up.applyQuaternion(quaternion)
-					break
+
+			if (isCurvedArrowLeftDwgIntersected(curvedArrowIntersects[0])) {
+				quaternion.setFromAxisAngle(intoPageRotationAxis, -Math.PI / 12)
+				camera.current.up.applyQuaternion(quaternion)
+			} else if (isCurvedArrowRightDwgIntersected(curvedArrowIntersects[0])) {
+				quaternion.setFromAxisAngle(intoPageRotationAxis, Math.PI / 12)
+				camera.current.up.applyQuaternion(quaternion)
 			}
 		}
+	}
+
+	// Whether the mouse has intersected (hovered or clicked on) the canvas drawing of the curvedArrowLeft, not just the
+	// sprite.
+	const isCurvedArrowLeftDwgIntersected = (intersect: Intersection<Object3D<Object3DEventMap>>): boolean => {
+		// If pixel on sprite is transparent (alpha == 0), the user clicked the area around the arrow and not on the
+		// arrow itself. We don't want to capture the area around the arrow because it overlaps with other navigation
+		// controls.
+		if (
+			intersect.uv == null ||
+			intersect.object != curvedArrowLeft ||
+			pixelAlphaFromUVForCurvedArrow(intersect.uv.x, intersect.uv.y, "left") == 0
+		) {
+			return false
+		}
+		return true
+	}
+
+	const isCurvedArrowRightDwgIntersected = (intersect: Intersection<Object3D<Object3DEventMap>>): boolean => {
+		if (
+			intersect.uv == null ||
+			intersect.object != curvedArrowRight ||
+			pixelAlphaFromUVForCurvedArrow(intersect.uv.x, intersect.uv.y, "right") == 0
+		) {
+			return false
+		}
+		return true
 	}
 
 	// Returns the alpha of the pixel at a given uv coordinate for the curvedArrow.
 	const pixelAlphaFromUVForCurvedArrow = (uvX: number, uvY: number, label: string): number => {
 		var curvedArrowImageData
-		if (label == 'right') {
+		if (label == "right") {
 			curvedArrowImageData = curvedArrowRightImageData
 		} else {
 			curvedArrowImageData = curvedArrowLeftImageData
 		}
-	
+
 		const x = Math.round(uvX * curvedArrowCanvasWidth)
 		const y = curvedArrowCanvasHeight - Math.round(uvY * curvedArrowCanvasWidth)
 
 		// https://stackoverflow.com/questions/45963306/html5-canvas-how-to-get-adjacent-pixels-position-from-the-linearized-imagedata/45969661#45969661
 		// Read from stored curvedArrow imageData
 		// Each pixel is 4 values (r,g, b, alpha)
-		const pixelIndex = (x + y * curvedArrowCanvasWidth) * 4;
+		const pixelIndex = (x + y * curvedArrowCanvasWidth) * 4
 		const pixelAlpha = curvedArrowImageData.data[pixelIndex + 3]
 
 		return pixelAlpha
@@ -402,12 +430,12 @@
 		animationTask?.key ?? Symbol("cube-gizmo-animation"),
 		() => {
 			point.set(0, 0, 1).applyQuaternion(camera.current.quaternion)
-			// Under rare orientations, a navigation button could be clicked, and the model could rotate without this point 
-			// moving, and hence the gizmo would not move, so we also check against a navigationClicked flag.
-			// The aforemention rare scenario happens on page load when curvedArrowLeft is clicked immediately. 
-			if (point.x !== p[0] || point.y !== p[1] || point.z !== p[2] || navigationClicked) {
-				if (navigationClicked) {
-					navigationClicked = false;
+			// Under rare orientations, a navigation button could be clicked, and the model could rotate without this point
+			// moving, and hence the gizmo would not move, so we also check against a navControlClicked flag.
+			// The aforemention rare scenario happens on page load when curvedArrowLeft is clicked immediately.
+			if (point.x !== p[0] || point.y !== p[1] || point.z !== p[2] || navControlClicked) {
+				if (navControlClicked) {
+					navControlClicked = false
 				}
 				p = [point.x, point.y, point.z]
 				rotationRoot.quaternion.copy(camera.current.quaternion).invert()
@@ -531,8 +559,8 @@
 		return texture
 	}
 
-	var curvedArrowLeftImageData: ImageData;
-	var curvedArrowRightImageData: ImageData;
+	var curvedArrowLeftImageData: ImageData
+	var curvedArrowRightImageData: ImageData
 
 	const getCurvedArrowSpriteTexture = (label = "") => {
 		const key = `curved-arrow-${label}`
@@ -543,16 +571,16 @@
 		const canvas = document.createElement("canvas")
 		canvas.width = curvedArrowCanvasWidth
 		canvas.height = curvedArrowCanvasHeight
-		
+
 		const context = canvas.getContext("2d")!
 		// mirror the arrow
-		if (label == 'right') {
-			context.translate(canvas.width, 0);
-			context.scale(-1,1)
+		if (label == "right") {
+			context.translate(canvas.width, 0)
+			context.scale(-1, 1)
 		}
 
 		// Sprite will be positioned later such that the canvas origin is at the center of the gizmo.
-		const originX = canvas.width 
+		const originX = canvas.width
 		const originY = canvas.height
 		const arcRadius = 180
 		const fillColor = new Color(white)
@@ -562,8 +590,8 @@
 		context.beginPath()
 		context.strokeStyle = fillStyle
 		context.lineWidth = 14
-		const startAngle = Math.PI + (Math.PI / 180 * 40) // 180 + 40 deg
-		const endAngle = Math.PI/180 * (270-19) // 270 - 19 deg
+		const startAngle = Math.PI + (Math.PI / 180) * 40 // 180 + 40 deg
+		const endAngle = (Math.PI / 180) * (270 - 19) // 270 - 19 deg
 		context.arc(originX, originY, arcRadius, startAngle, endAngle)
 		context.stroke()
 
@@ -571,9 +599,9 @@
 		// of the arc.
 		// hypotenuse = radius
 		// sin angle = opposite / radius -> opposite = radius * sin angle
-		// cos angle = adjacent / radius -> adjacent = radius * sin angle	
+		// cos angle = adjacent / radius -> adjacent = radius * sin angle
 		// angle from the origin to the triangle tip in radians
-		const angleForTriangleTip = 55 * Math.PI / 180
+		const angleForTriangleTip = (55 * Math.PI) / 180
 		const opposite = arcRadius * Math.sin(angleForTriangleTip)
 		const adjacent = arcRadius * Math.cos(angleForTriangleTip)
 		const tipX = originX - opposite
@@ -585,9 +613,9 @@
 		const triangleLegLength = 30
 		const triangleRotationAngle = -5 // deg
 		const v2preRotation = new Vector2(tipX, tipY - triangleLegLength)
-		const v2 = v2preRotation.rotateAround(v1, Math.PI / 180 * triangleRotationAngle)
+		const v2 = v2preRotation.rotateAround(v1, (Math.PI / 180) * triangleRotationAngle)
 		const v3preRotation = new Vector2(tipX + triangleLegLength, tipY)
-		const v3 = v3preRotation.rotateAround(v1, Math.PI / 180 * triangleRotationAngle)
+		const v3 = v3preRotation.rotateAround(v1, (Math.PI / 180) * triangleRotationAngle)
 		context.beginPath()
 		context.moveTo(v1.x, v1.y)
 		context.lineTo(v2.x, v2.y)
@@ -596,10 +624,10 @@
 		context.fill()
 
 		// Store the imageData for use with handleClick.
-		if (label == 'right') {
-			curvedArrowRightImageData = context.getImageData(0,0,canvas.width,canvas.height)
+		if (label == "right") {
+			curvedArrowRightImageData = context.getImageData(0, 0, canvas.width, canvas.height)
 		} else {
-			curvedArrowLeftImageData = context.getImageData(0,0,canvas.width,canvas.height)
+			curvedArrowLeftImageData = context.getImageData(0, 0, canvas.width, canvas.height)
 		}
 
 		const texture = new CanvasTexture(canvas)
@@ -721,10 +749,10 @@
 		<T.Sprite bind:ref={rightTriangle} position={[1.85, 0, 1]} scale={0.4}>
 			<T.SpriteMaterial color={gray} map={getTriangleSpriteTexture("right")} rotation={Math.PI / 2} />
 		</T.Sprite>
-		<T.Sprite bind:ref={curvedArrowLeft} position={[-1, 1, 1]} scale={2} >
+		<T.Sprite bind:ref={curvedArrowLeft} position={[-1, 1, 1]} scale={2}>
 			<T.SpriteMaterial color={gray} map={getCurvedArrowSpriteTexture("left")} />
 		</T.Sprite>
-		<T.Sprite bind:ref={curvedArrowRight} position={[1, 1, 1]} scale={2} >
+		<T.Sprite bind:ref={curvedArrowRight} position={[1, 1, 1]} scale={2}>
 			<T.SpriteMaterial color={gray} map={getCurvedArrowSpriteTexture("right")} />
 		</T.Sprite>
 	</T>
