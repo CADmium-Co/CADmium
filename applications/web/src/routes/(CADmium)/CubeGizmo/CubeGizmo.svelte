@@ -135,7 +135,7 @@
 	let curvedArrowLeft: Sprite
 	let curvedArrowRight: Sprite
 	// Whether one of the navigation control sprites (triangles, curvedArrrow) is displaying the on hover color.
-	let spriteHoverColorSet = false
+	let isHoverColorSet = false
 	let navControlClicked = false
 
 	const curvedArrowCanvasWidth = 200
@@ -166,10 +166,26 @@
 		const cubeIntersects = raycaster.intersectObject(cube)
 		const triangleIntersects = raycaster.intersectObjects([downTriangle, leftTriangle, upTriangle, rightTriangle])
 		const curvedArrowIntersects = raycaster.intersectObjects([curvedArrowLeft, curvedArrowRight])
-		if (cubeIntersects.length) {
-			// Cube face colors need to be restored when mouse moves from hovering over one face to another face.
-			restoreNonHoverColors()
 
+		// No intersection with a navigation control.
+		if (
+			cubeIntersects.length == 0 &&
+			triangleIntersects.length == 0 &&
+			(curvedArrowIntersects.length == 0 ||
+				(!isCurvedArrowLeftDwgIntersected(curvedArrowIntersects[0]) &&
+					!isCurvedArrowRightDwgIntersected(curvedArrowIntersects[0])))
+		) {
+			if (isHoverColorSet) {
+				restoreNonHoverColors()
+				invalidate()
+			}
+			return
+		}
+
+		// Intersects with one of the navigation controls.
+		restoreNonHoverColors()
+		// Set hover color on whichever sprite the ray is interseting.
+		if (cubeIntersects.length) {
 			const faceIndex = cubeIntersects[0].faceIndex
 			// Each cube face consists of 2 faceIndexes
 			switch (faceIndex) {
@@ -204,10 +220,7 @@
 					cubeBottom.color.setHex(mouseoverColor)
 					break
 			}
-			spriteHoverColorSet = true
-			invalidate()
 		} else if (triangleIntersects.length) {
-			restoreNonHoverColors()
 			const triangleSprite = triangleIntersects[0].object
 			switch (triangleSprite) {
 				case downTriangle:
@@ -223,34 +236,26 @@
 					rightTriangle.material.color.setHex(mouseoverColor)
 					break
 			}
-			spriteHoverColorSet = true
-			invalidate()
 		} else if (curvedArrowIntersects.length && isCurvedArrowLeftDwgIntersected(curvedArrowIntersects[0])) {
-			restoreNonHoverColors()
 			curvedArrowLeft.material.color.setHex(mouseoverColor)
-			spriteHoverColorSet = true
-			invalidate()
 		} else if (curvedArrowIntersects.length && isCurvedArrowRightDwgIntersected(curvedArrowIntersects[0])) {
-			restoreNonHoverColors()
 			curvedArrowRight.material.color.setHex(mouseoverColor)
-			spriteHoverColorSet = true
-			invalidate()
-		} else if (spriteHoverColorSet) {
-			restoreNonHoverColors()
-			invalidate()
 		}
+		isHoverColorSet = true
+		invalidate()
 	}
 
 	// Although we are already calling restoreNonHoverColors on a mousemove event outside of a sprite intersect, if a user
 	// moves the mouse too quickly, they will move outside the clickTarget before mousemove registers, so we need to
 	// capture that the sprite is no longer being hovered over from the mouseleave event as well.
 	const handleMouseleave = (_: MouseEvent) => {
-		if (spriteHoverColorSet) {
+		if (isHoverColorSet) {
 			restoreNonHoverColors()
 			invalidate()
 		}
 	}
 
+	// Clear out the light blue hover color from all navigation controls.
 	const restoreNonHoverColors = () => {
 		cubeRight.color.setHex(gray)
 		cubeLeft.color.setHex(gray)
@@ -264,7 +269,7 @@
 		rightTriangle.material.color.setHex(gray)
 		curvedArrowLeft.material.color.setHex(gray)
 		curvedArrowRight.material.color.setHex(gray)
-		spriteHoverColorSet = false
+		isHoverColorSet = false
 	}
 
 	const handleClick = (event: MouseEvent) => {
