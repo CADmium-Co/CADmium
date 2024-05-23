@@ -53,7 +53,6 @@
 	// invalidate the frame when any of the following values change
 	$: size, horizontalPlacement, verticalPlacement, toneMapped, paddingX, paddingY, invalidate()
 
-
 	const orthoCam = new OrthographicCamera(-2.1, 2.1, 2.1, -2.1, 0, 4)
 	orthoCam.position.set(0, 0, 2)
 
