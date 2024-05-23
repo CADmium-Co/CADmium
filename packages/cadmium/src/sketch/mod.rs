@@ -734,9 +734,10 @@ impl Sketch {
             let point_a = self.points.get(&point_a_id).unwrap();
             let point_b = self.points.get(&point_b_id).unwrap();
 
-            let dt = 0.01;
+            let dx = point_b.x - point_a.x;
+            let dy = point_b.y - point_a.y;
 
-            let angle = (point_b.y - point_a.y).atan2(point_b.x - point_a.x);
+            let angle = dy.atan2(dx);
 
             let mut err = rest - angle;
             // println!("Err: {}", err);
@@ -747,25 +748,21 @@ impl Sketch {
                 err = err + PI * 2.0;
             }
 
-            let point_a_stepped = point_a.step(dt);
-            let point_b_stepped = point_b.step(dt);
-            let angle_stepped = (point_b_stepped.1 - point_a_stepped.1)
-                .atan2(point_b_stepped.0 - point_a_stepped.0);
-            let mut angle_change = angle_stepped - angle;
-            // println!("Dangle: {}", angle_change);
-
-            if angle_change > PI {
-                angle_change = angle_change - PI * 2.0;
-            }
-            if angle_change < -PI {
-                angle_change = angle_change + PI * 2.0;
-            }
-
-            let d_angle = angle_change / dt;
+            // Atan2(y,x) = atan(y/x) + C  with C \in {-pi, 0, pi} depending on the quadrant
+            // If y = y(t) and x = x(t) are the coordinates of the point at time t, then
+            // the derivative of atan2(y,x) with respect to time is
+            //
+            // 1 / ((y/x)^2 + 1) * (x * y' - y * x') / x^2,
+            // \---------------/   \---------------------/
+            //        |                        |
+            // d(atan(u(t))) / du        d(u(t)) / dt
+            //
+            // via the chain rule. Rewriting the denominator of the first term as (x^2 + y^2) / x^2
+            // and simplifying yields: (x * y' - y * x') / (x^2 + y^2).
+            let d_angle = (dx * (point_b.dy - point_a.dy) - dy * (point_b.dx - point_a.dx))
+                / (dx * dx + dy * dy);
             let torque = kp * err - kd * d_angle;
 
-            let dx = point_b.x - point_a.x;
-            let dy = point_b.y - point_a.y;
             let dist = dx.hypot(dy);
 
             let f_mag = torque / dist;
