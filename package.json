@@ -10,13 +10,12 @@
     "lint": "turbo run lint",
     "format": "turbo run format",
     "build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
-    "build:wasm": "wasm-pack build --target web packages/cadmium"
+    "build:wasm": "wasm-pack build --target web packages/cadmium && ./packages/cadmium/patchpackage.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
     "turbo": "^1.13.2"
   },
-  "packageManager": "pnpm@8.15.5",
   "engines": {
     "node": ">=20.12.0",
     "pnpm": ">=8.15.5"

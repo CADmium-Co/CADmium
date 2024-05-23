@@ -44,10 +44,31 @@ git clone https://github.com/MattFerraro/CADmium.git
 cd CADmium
 pnpm build:wasm
 pnpm install
-turbo dev
+pnpm dev
 ```
 
-You will need rust and wasm-pack working locally. See `vercel_build.sh` for an example of installing these dependencies.
+## Tooling setup
+
+### pnpm
+
+We use pnpm to manage the monorepo. Please follow the instructions here to install: https://pnpm.io/installation#using-a-standalone-script
+
+If you're new to node you can use pnpm to manage nodejs:
+
+```shell
+# https://pnpm.io/cli/env#use
+pnpm env use --global 20
+```
+
+### rust
+
+First install rust using rustup: https://rustup.rs
+
+Then install wasm-pack
+
+```shell
+cargo install wasm-pack
+```
 
 ## Running Tests
 
