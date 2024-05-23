@@ -992,7 +992,9 @@ export function isSetSketchPlane(obj: unknown): obj is SetSketchPlane {
 		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
 		typeof typedObj["workbench_id"] === "number" &&
 		typeof typedObj["sketch_id"] === "string" &&
-		typeof typedObj["plane_id"] === "string"
+		typeof typedObj["plane_id"] === "string" &&
+		typeof typedObj["is_solid"] === "boolean"
+		// typeof typedObj["normal"] === "Vector3D"
 	)
 }
 

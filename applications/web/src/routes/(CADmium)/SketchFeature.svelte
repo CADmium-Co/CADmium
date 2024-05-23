@@ -11,7 +11,10 @@
 		selectingFor,
 		sketchBeingEdited,
 		sketchTool,
-		currentlyMousedOver
+		currentlyMousedOver,
+
+		realization
+
 	} from "shared/stores"
 	import EyeSlash from "phosphor-svelte/lib/EyeSlash"
 	import Eye from "phosphor-svelte/lib/Eye"
@@ -95,7 +98,9 @@
 			setSketchPlane(id, thingSelected.id)
 		} else if (thingSelected.type === "meshFace") {
 			log("HOW DO I HANDLE THIS?")
-			log(thingSelected)
+			log(thingSelected, $currentlySelected)
+			// TODO: How to get the correct solid?
+			setSketchPlane(id, thingSelected.id, $realization.solids[0].normals[parseInt(thingSelected.id)])
 			// setSketchPlane(id, $currentlySelected[0].id)
 		}
 

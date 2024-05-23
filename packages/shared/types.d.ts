@@ -232,16 +232,24 @@ interface UpdateExtrusion {
   extrusion_id: string
 }
 
+// interface SketchPlane {
+//   plane_id: string
+// }
+
 interface SetSketchPlane {
   workbench_id: number
   sketch_id: string
   plane_id: string
+  normal: Vector3 | undefined
+  is_solid: boolean
 }
 
 interface NewSketchOnPlane {
   workbench_id: number
   plane_id: string
   sketch_name: string
+  normal: Vector3 | undefined
+  is_solid: boolean
 }
 
 interface NewExtrusion {

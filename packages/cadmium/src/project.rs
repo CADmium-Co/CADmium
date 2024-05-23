@@ -279,16 +279,26 @@ impl Project {
                 workbench_id,
                 sketch_name,
                 plane_id,
+                normal,
+                is_solid,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
 
-                let new_sketch_id = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
+                let new_sketch_id = if *is_solid {
+                    // TODO: Handle missing `normal`
+                    workbench.add_sketch_to_solid_face(&sketch_name, &plane_id, normal.clone().unwrap())
+                } else {
+                    workbench.add_sketch_to_plane(&sketch_name, &plane_id)
+                };
+
                 Ok(format!("\"sketch_id\": \"{}\"", new_sketch_id))
             }
             Message::SetSketchPlane {
                 workbench_id,
                 sketch_id,
                 plane_id: pid,
+                normal: solid_normal,
+                is_solid,
             } => {
                 let workbench = &mut self.workbenches[*workbench_id as usize];
 
@@ -301,14 +311,17 @@ impl Project {
                                 height,
                                 sketch,
                             } => {
-                                match plane_description {
-                                    PlaneDescription::PlaneId(plane_id) => {
-                                        *plane_id = pid.to_owned();
-                                        return Ok(format!("\"plane_id\": \"{}\"", pid));
-                                    }
-                                    _ => {
-                                        panic!("Not implemented yet");
-                                    }
+                                // TODO: Handle missing `solid_normal`
+                                if *is_solid {
+                                    *plane_description = PlaneDescription::SolidFace {
+                                        solid_id: pid.to_owned(),
+                                        normal: solid_normal.clone().unwrap(),
+                                    };
+                                    // TODO: How do we display a Vector3?
+                                    return Ok(format!("\"solid_id\": \"{}\", \"normal\": \"{:?}\"", pid, solid_normal));
+                                } else {
+                                    *plane_description = PlaneDescription::PlaneId(pid.to_owned());
+                                    return Ok(format!("\"plane_id\": \"{}\"", pid));
                                 }
                                 // *pn2 = pid.to_owned();
                             }
@@ -1582,11 +1595,15 @@ pub enum Message {
         workbench_id: u64,
         sketch_name: String,
         plane_id: String,
+        normal: Option<Vector3>,
+        is_solid: bool,
     },
     SetSketchPlane {
         workbench_id: u64,
         sketch_id: String,
         plane_id: String,
+        normal: Option<Vector3>,
+        is_solid: bool,
     },
     DeleteSketch {
         workbench_id: u64,

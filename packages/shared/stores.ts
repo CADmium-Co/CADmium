@@ -82,7 +82,7 @@ export const messageHistory = writable<MessageHistory[]>([])
 		const types = ["circle", "arc", "face", "line", "plane", "point", "point3D", "meshFace"] as EntityType[]
 		types.forEach((type) => {
 			const [isType, entity] = latestIsEntity(store, type)
-			if (isType) log(`[currentlySelected] entity is ${type === "arc" ? "an" : "a"} ${type}:`, entity)
+			if (isType) log(`[currentlySelected] entity is ${type.startsWith("a") ? "an" : "a"} ${type}:`, entity)
 		})
 	})
 // }
