@@ -91,17 +91,19 @@
 		if (!selectingForSketchPlane) return
 		if (!id) return
 		if (!$currentlySelected.length) return
-		// log("CS changed when selecting for Sketch Plane:", $currentlySelected)
+		log("CS changed when selecting for Sketch Plane:", $currentlySelected)
 
 		let thingSelected = $currentlySelected[0]
 		if (thingSelected.type === "plane") {
 			setSketchPlane(id, thingSelected.id)
 		} else if (thingSelected.type === "meshFace") {
 			log("HOW DO I HANDLE THIS?")
-			log(thingSelected, $currentlySelected)
-			// TODO: How to get the correct solid?
-			setSketchPlane(id, thingSelected.id, $realization.solids[0].normals[parseInt(thingSelected.id)])
-			// setSketchPlane(id, $currentlySelected[0].id)
+
+			// TODO: How to get the correct solid_id?
+			const solid_id = Object.keys($realization.solids)[0]
+			const solid = $realization.solids[solid_id]
+
+			setSketchPlane(id, solid_id, solid.normals[parseInt(thingSelected.id)])
 		}
 
 		disengageSearchForPlane()

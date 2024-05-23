@@ -12,7 +12,7 @@ import {
 	messageHistory
 } from "./stores"
 import { get } from "svelte/store"
-import { Vector2, Vector3, type Vector2Like } from "three"
+import { Vector2, Vector3, type Vector3Like, type Vector2Like } from "three"
 import type {
 	Entity,
 	ExtrusionHistoryStep,
@@ -123,7 +123,8 @@ export function updateExtrusion(extrusionId: string, sketchId: string, length: n
 	// workbenchIsStale.set(true)
 }
 
-export function setSketchPlane(sketchId: string, planeId: string, normal?: Vector3) {
+export function setSketchPlane(sketchId: string, planeId: string, normal?: Vector3Like) {
+	log("[setSketchPlane] sketchId, planeId, normal", sketchId, planeId, normal)
 	const message: Message = {
 		SetSketchPlane: {
 			workbench_id: get(workbenchIndex),
@@ -133,10 +134,6 @@ export function setSketchPlane(sketchId: string, planeId: string, normal?: Vecto
 			is_solid: normal !== undefined,
 		}
 	}
-
-	// if (solidNormal != null) {
-	// 	delete message.SetSketchPlane.plane_id
-	// }
 
 	checkWasmMessage(message)
 	sendWasmMessage(message)
