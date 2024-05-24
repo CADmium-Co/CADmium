@@ -229,7 +229,7 @@ pub struct RealPlane {
 }
 
 #[cfg(test)]
-mod tests {
+pub mod tests {
     use truck_polymesh::obj;
 
     use crate::extrusion::Direction;
@@ -255,14 +255,6 @@ mod tests {
         s.add_segment(ur, ul);
         s.add_segment(ul, ll);
 
-        p
-    }
-
-    #[test]
-    fn one_extrusion() {
-        let mut p = create_test_project();
-        let wb = p.workbenches.get_mut(0).unwrap();
-
         let extrusion = Extrusion::new(
             "Sketch-0".to_owned(),
             vec![0],
@@ -272,6 +264,13 @@ mod tests {
             ExtrusionMode::New,
         );
         wb.add_extrusion("Ext1", extrusion);
+
+        p
+    }
+
+    #[test]
+    fn one_extrusion() {
+        let p = create_test_project();
 
         let realization = p.get_realization(0, 1000);
         let solids = realization.solids;
@@ -355,16 +354,6 @@ mod tests {
         let mut p = create_test_project();
         let wb = p.workbenches.get_mut(0).unwrap();
 
-        let extrusion = Extrusion::new(
-            "Sketch-0".to_owned(),
-            vec![0],
-            25.0,
-            0.0,
-            Direction::Normal,
-            ExtrusionMode::New,
-        );
-        wb.add_extrusion("Ext1", extrusion);
-
         let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
         let s2 = wb.get_sketch_mut("Sketch-2").unwrap();
 
@@ -432,16 +421,6 @@ mod tests {
     fn secondary_extrusion_with_merge() {
         let mut p = create_test_project();
         let wb = p.workbenches.get_mut(0).unwrap();
-
-        let extrusion = Extrusion::new(
-            "Sketch-0".to_owned(),
-            vec![0],
-            25.0,
-            0.0,
-            Direction::Normal,
-            ExtrusionMode::New,
-        );
-        wb.add_extrusion("Ext1", extrusion);
 
         let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
         let s2 = wb.get_sketch_mut("Sketch-2").unwrap();
