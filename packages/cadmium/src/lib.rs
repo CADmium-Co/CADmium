@@ -1,10 +1,13 @@
-#![allow(dead_code, unused)]
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
 pub mod extrusion;
+pub mod message;
 pub mod project;
+pub mod realization;
 pub mod sketch;
+pub mod step;
+pub mod workbench;
 
 // #[wasm_bindgen]
 // pub fn add(a: usize, b: usize) -> usize {
@@ -97,7 +100,7 @@ impl Project {
 
 #[wasm_bindgen]
 pub struct Realization {
-    native: project::Realization,
+    native: realization::Realization,
 }
 
 #[wasm_bindgen]
