@@ -25,9 +25,9 @@ Beyond that, I will try to monetize by offering a hosted version of the software
 
 The boundary representation engine under the hood is [truck](https://github.com/ricosjp/truck), which is written in rust and is not dependent on any legacy b-rep engine.
 
-Leveraging truck, I wrote a small rust library called [cadmium](https://github.com/CADmium-Co/CADmium/tree/main/src/rust/cadmium) which provides structs for projects, workspaces, sketches, extrusions, and constraints. My goal is that this rust library provides all the same functionality as the UI for anyone who prefers code-first CAD. This library is able to save and load projects to disk as json. I have also built a set of javascript bindings so that the whole thing can be compiled to wasm and run in a browser.
+Leveraging truck, I wrote a small rust library called [cadmium](https://github.com/CADmium-Co/CADmium/tree/main/packages/cadmium) which provides structs for projects, workspaces, sketches, extrusions, and constraints. My goal is that this rust library provides all the same functionality as the UI for anyone who prefers code-first CAD. This library is able to save and load projects to disk as json. I have also built a set of javascript bindings so that the whole thing can be compiled to wasm and run in a browser.
 
-The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is [hosted](https://cadmium-nine.vercel.app/tailwind) with Vercel. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph decaratively.
+The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is [hosted here](https://cadmium-co.github.io/CADmium/) on github pages. I use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. I use [Threlte](https://github.com/threlte/threlte) to manage the scene graph decaratively.
 
 ## License
 
