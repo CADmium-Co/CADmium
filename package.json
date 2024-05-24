@@ -5,12 +5,9 @@
     "dev": "turbo run dev",
     "serve": "turbo run serve",
     "test": "turbo run test",
-    "test:rust": "cd packages/cadmium && cargo test",
     "clean": "turbo run clean",
     "lint": "turbo run lint",
-    "format": "turbo run format",
-    "build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
-    "build:wasm": "wasm-pack build --target web packages/cadmium && ./packages/cadmium/patchpackage.cjs"
+    "format": "turbo run format"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
@@ -18,6 +15,6 @@
   },
   "engines": {
     "node": ">=20.13.1",
-    "pnpm": ">=9.1.2"
+    "pnpm": ">=9.1.0"
   }
 }

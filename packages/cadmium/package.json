@@ -1,9 +1,9 @@
 {
   "name": "cadmium-root",
   "scripts": {
-    "dev": "onchange 'src/**/*.rs' -- pnpm run build:dev",
-    "build:dev": "cargo check && pnpm run build:wasm",
-    "build:wasm": "wasm-pack build --target web && ./patchpackage.cjs",
+    "dev": "pnpm run build:dev; onchange 'src/**/*.rs' -- pnpm run build:dev",
+    "build:dev": "cargo check && wasm-pack build --target web --dev && ./patchpackage.cjs",
+    "build": "wasm-pack build --target web && ./patchpackage.cjs",
     "test": "cargo test"
   },
   "devDependencies": {
