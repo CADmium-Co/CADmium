@@ -385,6 +385,7 @@ fn are_coplanar(p0: Plane, p1: Plane) -> bool {
 #[cfg(test)]
 mod tests {
     use crate::project::Project;
+    use crate::project::tests::create_test_project;
 
     #[allow(unused_imports)]
     use super::*;
@@ -433,25 +434,15 @@ mod tests {
         }
     }
 
-    // #[test]
-    // fn step_export() {
-    //     let mut p = Project::new("Test Project");
-    //     p.add_defaults();
-    //     p.add_
-    //     let workbench = &p.workbenches[0 as usize];
-    //     let realization = workbench.realize(1000);
-    //     // let solids = realization.solids;
-    //     let keys = Vec::from_iter(realization.solids.keys());
-    //     let key = keys[0 as usize];
-    //     let step_file = realization.solid_to_step(keys[0]);
+    #[test]
+    fn step_export() {
+        let p = create_test_project();
+        let workbench = &p.workbenches[0 as usize];
+        let realization = workbench.realize(1000);
+        let keys = Vec::from_iter(realization.solids.keys());
 
-    //     realization.save_solid_as_step_file(keys[0], "test.step");
-    //     // now delete that file
-    //     // std::fs::remove_file("test.step").unwrap();
-
-    //     realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001);
-    //     // now delete that file
-    //     // std::fs::remove_file("test.obj").unwrap();
-    // }
+        realization.save_solid_as_step_file(keys[0], "target/test.step");
+        realization.save_solid_as_obj_file(keys[0], "target/test.obj", 0.001);
+    }
 
 }
