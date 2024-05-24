@@ -42,7 +42,6 @@ To build locally using pnpm workspace & turbo:
 ```shell
 git clone https://github.com/Cadmium-Co/CADmium.git
 cd CADmium
-pnpm build:wasm
 pnpm install
 pnpm dev
 ```
