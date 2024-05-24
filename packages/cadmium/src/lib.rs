@@ -1,18 +1,15 @@
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
+pub mod archetypes;
 pub mod extrusion;
 pub mod message;
 pub mod project;
 pub mod realization;
+pub mod solid;
 pub mod sketch;
 pub mod step;
 pub mod workbench;
-
-// #[wasm_bindgen]
-// pub fn add(a: usize, b: usize) -> usize {
-//     a + b
-// }
 
 #[wasm_bindgen]
 pub struct Project {

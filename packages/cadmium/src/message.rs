@@ -1,7 +1,12 @@
+use itertools::Itertools as _;
+
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::extrusion::Direction;
+use crate::archetypes::PlaneDescription;
+use crate::extrusion::{Direction, Extrusion, ExtrusionMode};
+use crate::project::Project;
+use crate::step::StepData;
 
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -135,6 +140,302 @@ impl Message {
         match result {
             Ok(msg) => Ok(msg),
             Err(e) => Err(format!("Error: {}", e)),
+        }
+    }
+
+    pub fn handle(&self, project: &mut Project) -> Result<String, String> {
+        match self {
+            Message::RenameProject { new_name } => {
+                project.name = new_name.to_owned();
+                Ok(format!("\"name\": \"{}\"", new_name))
+            }
+            Message::RenameWorkbench {
+                workbench_id,
+                new_name,
+            } => {
+                project.workbenches[*workbench_id as usize].name = new_name.to_owned();
+                Ok(format!("\"name\": \"{}\"", new_name))
+            }
+            Message::RenameStep {
+                workbench_id,
+                step_id,
+                new_name,
+            } => {
+                // let workbench = &mut self.workbenches[*workbench_id as usize];
+                // let current_step_name = workbench.history[*step_id as usize].name.clone();
+                // let current_step = workbench.history.get(*step_id as usize).unwrap();
+
+                project.workbenches[*workbench_id as usize]
+                    .history
+                    .get_mut(*step_id as usize)
+                    .unwrap()
+                    .name = new_name.to_owned();
+
+                Ok(format!("\"name\": \"{}\"", new_name))
+            }
+            Message::DeleteLines {
+                workbench_id,
+                sketch_id,
+                line_ids,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                for line_id in line_ids {
+                    sketch.delete_line_segment(*line_id);
+                }
+                Ok("".to_owned())
+            }
+            Message::DeleteArcs {
+                workbench_id,
+                sketch_id,
+                arc_ids,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                for arc_id in arc_ids {
+                    sketch.delete_arc(*arc_id);
+                }
+                Ok("".to_owned())
+            }
+            Message::DeleteCircles {
+                workbench_id,
+                sketch_id,
+                circle_ids,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                for circle_id in circle_ids {
+                    sketch.delete_circle(*circle_id);
+                }
+                Ok("".to_owned())
+            }
+            Message::NewPointOnSketch2 {
+                workbench_id,
+                sketch_id,
+                x,
+                y,
+                hidden,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let point_id;
+                if *hidden {
+                    point_id = sketch.add_hidden_point(*x, *y);
+                } else {
+                    point_id = sketch.add_point(*x, *y);
+                }
+
+                Ok(format!("\"id\": \"{}\"", point_id))
+            }
+            Message::NewCircleBetweenPoints {
+                workbench_id,
+                sketch_id,
+                center_id,
+                edge_id,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let circle_id = sketch.add_circle_between_points(*center_id, *edge_id);
+                Ok(format!("\"id\": \"{}\"", circle_id))
+            }
+            Message::NewRectangleBetweenPoints {
+                workbench_id,
+                sketch_id,
+                start_id,
+                end_id,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let (point_ids, line_ids) = sketch.add_rectangle_between_points(*start_id, *end_id);
+                Ok(format!(
+                    "\"point_ids\": [{}], \"line_ids\": [{}]",
+                    point_ids.iter().join(","),
+                    line_ids.iter().join(",")
+                ))
+            }
+            Message::NewPointOnSketch {
+                workbench_id,
+                sketch_id,
+                point_id,
+                x,
+                y,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                sketch.add_point_with_id(*x, *y, *point_id).unwrap();
+                Ok("".to_owned())
+            }
+            Message::NewLineOnSketch {
+                workbench_id,
+                sketch_id,
+                start_point_id,
+                end_point_id,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let line_id = sketch.add_segment(*start_point_id, *end_point_id);
+                Ok(format!("\"id\": \"{}\"", line_id))
+            }
+            Message::DeleteLineSegment {
+                workbench_id,
+                sketch_name,
+                line_segment_id,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                sketch.delete_line_segment(*line_segment_id);
+                Ok("".to_owned())
+            }
+            Message::StepSketch {
+                workbench_id,
+                sketch_name,
+                steps,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                let mut max_change = 0.0;
+                for _ in 0..*steps {
+                    max_change = sketch.take_a_step();
+                }
+                Ok(format!("{}", max_change))
+            }
+            Message::SolveSketch {
+                workbench_id,
+                sketch_name,
+                max_steps,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                sketch.solve(*max_steps);
+                Ok("".to_owned())
+            }
+            Message::NewSketchOnPlane {
+                workbench_id,
+                sketch_name,
+                plane_id,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+
+                let new_sketch_id = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
+                Ok(format!("\"sketch_id\": \"{}\"", new_sketch_id))
+            }
+            Message::SetSketchPlane {
+                workbench_id,
+                sketch_id,
+                plane_id: pid,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+
+                for step in workbench.history.iter_mut() {
+                    if step.unique_id == *sketch_id {
+                        match &mut step.data {
+                            StepData::Sketch {
+                                plane_description,
+                                width: _width,
+                                height: _height,
+                                sketch: _sketch,
+                            } => {
+                                match plane_description {
+                                    PlaneDescription::PlaneId(plane_id) => {
+                                        *plane_id = pid.to_owned();
+                                        return Ok(format!("\"plane_id\": \"{}\"", pid));
+                                    }
+                                    _ => {
+                                        panic!("Not implemented yet");
+                                    }
+                                }
+                                // *pn2 = pid.to_owned();
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+
+                Ok("".to_owned())
+            }
+            Message::DeleteSketch {
+                workbench_id,
+                sketch_name,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let mut index = 0;
+                for step in workbench.history.iter() {
+                    match &step.data {
+                        StepData::Sketch { .. } => {
+                            if step.name == *sketch_name {
+                                break;
+                            }
+                        }
+                        _ => {}
+                    }
+                    index += 1;
+                }
+                workbench.history.remove(index);
+                Ok("".to_owned())
+            }
+            Message::NewExtrusion {
+                workbench_id,
+                extrusion_name,
+                sketch_id,
+                face_ids,
+                length,
+                offset,
+                direction,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let extrusion = Extrusion::new(
+                    sketch_id.to_owned(),
+                    face_ids.to_owned(),
+                    *length,
+                    *offset,
+                    direction.to_owned(),
+                    ExtrusionMode::New,
+                );
+                let extrusion_id = workbench.add_extrusion(extrusion_name, extrusion);
+                Ok(format!("\"id\": \"{}\"", extrusion_id))
+            }
+            Message::UpdateExtrusion {
+                workbench_id,
+                extrusion_name: _extrusion_name,
+                extrusion_id,
+                sketch_id,
+                face_ids,
+                length,
+                offset,
+                direction,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let extrusion = Extrusion::new(
+                    sketch_id.to_owned(),
+                    face_ids.to_owned(),
+                    *length,
+                    *offset,
+                    direction.to_owned(),
+                    ExtrusionMode::New,
+                );
+                let as_step_data = StepData::Extrusion { extrusion };
+                workbench.update_step_data(extrusion_id, as_step_data);
+                Ok(format!("\"id\": \"{}\"", extrusion_id))
+            }
+            Message::UpdateExtrusionLength {
+                workbench_id,
+                extrusion_name,
+                length,
+            } => {
+                let workbench = &mut project.workbenches[*workbench_id as usize];
+                for step in workbench.history.iter_mut() {
+                    match &mut step.data {
+                        StepData::Extrusion { extrusion } => {
+                            if step.name == *extrusion_name {
+                                extrusion.length = *length;
+                                return Ok(format!("\"length\": {}", length));
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+                Err(format!("Extrusion {} not found", extrusion_name))
+            }
         }
     }
 }

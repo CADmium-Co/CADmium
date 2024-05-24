@@ -1,20 +1,15 @@
-use itertools::Itertools as _;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
+use crate::archetypes::*;
 use crate::message::Message;
 use crate::realization::Realization;
 use crate::sketch::constraints::Constraint;
 use crate::step::StepData;
 use crate::workbench::Workbench;
 use crate::sketch::{Face, Point2, Sketch};
-use crate::extrusion::{Extrusion, ExtrusionMode};
 use std::collections::HashMap;
-use truck_polymesh::InnerSpace;
-
-// use truck_base::math::Vector3 as truck_vector3;
-use truck_modeling::Plane as TruckPlane;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -91,308 +86,12 @@ impl Project {
         match message {
             Err(e) => Err(format!("parsing_error: \"{}\"", e)),
             Ok(msg) => {
-                let result = self.handle_message(&msg);
+                let result = msg.handle(self);
 
                 match result {
                     Ok(res) => Ok(res),
                     Err(e) => Err(format!("message_handling_error: \"{}\"", e)),
                 }
-            }
-        }
-    }
-
-    pub fn handle_message(&mut self, message: &Message) -> Result<String, String> {
-        match message {
-            Message::RenameProject { new_name } => {
-                self.name = new_name.to_owned();
-                Ok(format!("\"name\": \"{}\"", new_name))
-            }
-            Message::RenameWorkbench {
-                workbench_id,
-                new_name,
-            } => {
-                self.workbenches[*workbench_id as usize].name = new_name.to_owned();
-                Ok(format!("\"name\": \"{}\"", new_name))
-            }
-            Message::RenameStep {
-                workbench_id,
-                step_id,
-                new_name,
-            } => {
-                // let workbench = &mut self.workbenches[*workbench_id as usize];
-                // let current_step_name = workbench.history[*step_id as usize].name.clone();
-                // let current_step = workbench.history.get(*step_id as usize).unwrap();
-
-                self.workbenches[*workbench_id as usize]
-                    .history
-                    .get_mut(*step_id as usize)
-                    .unwrap()
-                    .name = new_name.to_owned();
-
-                Ok(format!("\"name\": \"{}\"", new_name))
-            }
-            Message::DeleteLines {
-                workbench_id,
-                sketch_id,
-                line_ids,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                for line_id in line_ids {
-                    sketch.delete_line_segment(*line_id);
-                }
-                Ok("".to_owned())
-            }
-            Message::DeleteArcs {
-                workbench_id,
-                sketch_id,
-                arc_ids,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                for arc_id in arc_ids {
-                    sketch.delete_arc(*arc_id);
-                }
-                Ok("".to_owned())
-            }
-            Message::DeleteCircles {
-                workbench_id,
-                sketch_id,
-                circle_ids,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                for circle_id in circle_ids {
-                    sketch.delete_circle(*circle_id);
-                }
-                Ok("".to_owned())
-            }
-            Message::NewPointOnSketch2 {
-                workbench_id,
-                sketch_id,
-                x,
-                y,
-                hidden,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                let point_id;
-                if *hidden {
-                    point_id = sketch.add_hidden_point(*x, *y);
-                } else {
-                    point_id = sketch.add_point(*x, *y);
-                }
-
-                Ok(format!("\"id\": \"{}\"", point_id))
-            }
-            Message::NewCircleBetweenPoints {
-                workbench_id,
-                sketch_id,
-                center_id,
-                edge_id,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                let circle_id = sketch.add_circle_between_points(*center_id, *edge_id);
-                Ok(format!("\"id\": \"{}\"", circle_id))
-            }
-            Message::NewRectangleBetweenPoints {
-                workbench_id,
-                sketch_id,
-                start_id,
-                end_id,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                let (point_ids, line_ids) = sketch.add_rectangle_between_points(*start_id, *end_id);
-                Ok(format!(
-                    "\"point_ids\": [{}], \"line_ids\": [{}]",
-                    point_ids.iter().join(","),
-                    line_ids.iter().join(",")
-                ))
-            }
-            Message::NewPointOnSketch {
-                workbench_id,
-                sketch_id,
-                point_id,
-                x,
-                y,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                sketch.add_point_with_id(*x, *y, *point_id).unwrap();
-                Ok("".to_owned())
-            }
-            Message::NewLineOnSketch {
-                workbench_id,
-                sketch_id,
-                start_point_id,
-                end_point_id,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                let line_id = sketch.add_segment(*start_point_id, *end_point_id);
-                Ok(format!("\"id\": \"{}\"", line_id))
-            }
-            Message::DeleteLineSegment {
-                workbench_id,
-                sketch_name,
-                line_segment_id,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
-                sketch.delete_line_segment(*line_segment_id);
-                Ok("".to_owned())
-            }
-            Message::StepSketch {
-                workbench_id,
-                sketch_name,
-                steps,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
-                let mut max_change = 0.0;
-                for _ in 0..*steps {
-                    max_change = sketch.take_a_step();
-                }
-                Ok(format!("{}", max_change))
-            }
-            Message::SolveSketch {
-                workbench_id,
-                sketch_name,
-                max_steps,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
-                sketch.solve(*max_steps);
-                Ok("".to_owned())
-            }
-            Message::NewSketchOnPlane {
-                workbench_id,
-                sketch_name,
-                plane_id,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-
-                let new_sketch_id = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
-                Ok(format!("\"sketch_id\": \"{}\"", new_sketch_id))
-            }
-            Message::SetSketchPlane {
-                workbench_id,
-                sketch_id,
-                plane_id: pid,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-
-                for step in workbench.history.iter_mut() {
-                    if step.unique_id == *sketch_id {
-                        match &mut step.data {
-                            StepData::Sketch {
-                                plane_description,
-                                width: _width,
-                                height: _height,
-                                sketch: _sketch,
-                            } => {
-                                match plane_description {
-                                    PlaneDescription::PlaneId(plane_id) => {
-                                        *plane_id = pid.to_owned();
-                                        return Ok(format!("\"plane_id\": \"{}\"", pid));
-                                    }
-                                    _ => {
-                                        panic!("Not implemented yet");
-                                    }
-                                }
-                                // *pn2 = pid.to_owned();
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-
-                Ok("".to_owned())
-            }
-            Message::DeleteSketch {
-                workbench_id,
-                sketch_name,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let mut index = 0;
-                for step in workbench.history.iter() {
-                    match &step.data {
-                        StepData::Sketch { .. } => {
-                            if step.name == *sketch_name {
-                                break;
-                            }
-                        }
-                        _ => {}
-                    }
-                    index += 1;
-                }
-                workbench.history.remove(index);
-                Ok("".to_owned())
-            }
-            Message::NewExtrusion {
-                workbench_id,
-                extrusion_name,
-                sketch_id,
-                face_ids,
-                length,
-                offset,
-                direction,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let extrusion = Extrusion::new(
-                    sketch_id.to_owned(),
-                    face_ids.to_owned(),
-                    *length,
-                    *offset,
-                    direction.to_owned(),
-                    ExtrusionMode::New,
-                );
-                let extrusion_id = workbench.add_extrusion(extrusion_name, extrusion);
-                Ok(format!("\"id\": \"{}\"", extrusion_id))
-            }
-            Message::UpdateExtrusion {
-                workbench_id,
-                extrusion_name: _extrusion_name,
-                extrusion_id,
-                sketch_id,
-                face_ids,
-                length,
-                offset,
-                direction,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                let extrusion = Extrusion::new(
-                    sketch_id.to_owned(),
-                    face_ids.to_owned(),
-                    *length,
-                    *offset,
-                    direction.to_owned(),
-                    ExtrusionMode::New,
-                );
-                let as_step_data = StepData::Extrusion { extrusion };
-                workbench.update_step_data(extrusion_id, as_step_data);
-                Ok(format!("\"id\": \"{}\"", extrusion_id))
-            }
-            Message::UpdateExtrusionLength {
-                workbench_id,
-                extrusion_name,
-                length,
-            } => {
-                let workbench = &mut self.workbenches[*workbench_id as usize];
-                for step in workbench.history.iter_mut() {
-                    match &mut step.data {
-                        StepData::Extrusion { extrusion } => {
-                            if step.name == *extrusion_name {
-                                extrusion.length = *length;
-                                return Ok(format!("\"length\": {}", length));
-                            }
-                        }
-                        _ => {}
-                    }
-                }
-                Err(format!("Extrusion {} not found", extrusion_name))
             }
         }
     }
@@ -402,207 +101,6 @@ impl Project {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Assembly {
     name: String,
-}
-
-#[derive(Tsify, Debug, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum PlaneDescription {
-    PlaneId(String),
-    SolidFace { solid_id: String, normal: Vector3 },
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Plane {
-    pub origin: Point3,
-    pub primary: Vector3,
-    pub secondary: Vector3,
-    pub tertiary: Vector3, // aka Normal
-}
-
-impl Plane {
-    /*
-
-    z    y
-
-    ^   ^
-    |  /
-    | /
-    |/
-    |-------->  x
-
-    So "front" is xz plane with -y normal
-    and "top" is xy plane with z normal
-    and "right" is yz plane with x normal
-
-     */
-
-    pub fn new(origin: Point3, primary: Vector3, secondary: Vector3, tertiary: Vector3) -> Self {
-        Plane {
-            origin,
-            primary,
-            secondary,
-            tertiary,
-        }
-    }
-
-    pub fn front() -> Self {
-        Plane {
-            origin: Point3::new(0.0, 0.0, 0.0),
-            primary: Vector3::new(1.0, 0.0, 0.0),
-            secondary: Vector3::new(0.0, 0.0, 1.0),
-            tertiary: Vector3::new(0.0, -1.0, 0.0),
-        }
-    }
-
-    pub fn top() -> Self {
-        Plane {
-            origin: Point3::new(0.0, 0.0, 0.0),
-            primary: Vector3::new(1.0, 0.0, 0.0),
-            secondary: Vector3::new(0.0, 1.0, 0.0),
-            tertiary: Vector3::new(0.0, 0.0, 1.0),
-        }
-    }
-
-    pub fn right() -> Self {
-        Plane {
-            origin: Point3::new(0.0, 0.0, 0.0),
-            primary: Vector3::new(0.0, 1.0, 0.0),
-            secondary: Vector3::new(0.0, 0.0, 1.0),
-            tertiary: Vector3::new(1.0, 0.0, 0.0),
-        }
-    }
-
-    pub fn from_truck(tp: TruckPlane) -> Self {
-        let o = tp.origin();
-        let u = tp.u_axis().normalize();
-        let v = tp.v_axis().normalize();
-        let n = tp.normal().normalize();
-        Plane {
-            origin: Point3::new(o.x, o.y, o.z),
-            primary: Vector3::new(u.x, u.y, u.z),
-            secondary: Vector3::new(v.x, v.y, v.z),
-            tertiary: Vector3::new(n.x, n.y, n.z),
-        }
-    }
-
-    pub fn project(&self, point: &Point3) -> Point2 {
-        let minus_origin = point.minus(&self.origin);
-        let x = minus_origin.dot(&self.primary);
-        let y = minus_origin.dot(&self.secondary);
-        Point2::new(x, y)
-    }
-
-    pub fn unproject(&self, point: &Point2) -> Point3 {
-        let x = self.origin.plus(self.primary.times(point.x));
-        let y = self.origin.plus(self.secondary.times(point.y));
-        x.plus(y).to_point3()
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Vector3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-}
-
-impl Vector3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Vector3 { x, y, z }
-    }
-
-    pub fn to_point3(&self) -> Point3 {
-        Point3::new(self.x, self.y, self.z)
-    }
-
-    pub fn times(&self, s: f64) -> Self {
-        Self {
-            x: self.x * s,
-            y: self.y * s,
-            z: self.z * s,
-        }
-    }
-
-    pub fn plus(&self, v: Self) -> Self {
-        Self {
-            x: self.x + v.x,
-            y: self.y + v.y,
-            z: self.z + v.z,
-        }
-    }
-
-    pub fn dot(&self, other: &Vector3) -> f64 {
-        self.x * other.x + self.y * other.y + self.z * other.z
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Point3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-    pub hidden: bool,
-}
-
-impl Point3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Point3 {
-            x,
-            y,
-            z,
-            hidden: false,
-        }
-    }
-
-    pub fn plus(&self, v: Vector3) -> Vector3 {
-        Vector3 {
-            x: self.x + v.x,
-            y: self.y + v.y,
-            z: self.z + v.z,
-        }
-    }
-
-    pub fn minus(&self, other: &Point3) -> Vector3 {
-        Vector3 {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-
-    pub fn distance_to(&self, other: &Point3) -> f64 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
-        let dz = self.z - other.z;
-        (dx * dx + dy * dy + dz * dz).sqrt()
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Line3 {
-    pub start: u64,
-    pub end: u64,
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Arc3 {
-    center: u64,
-    start: u64,
-    end: u64,
-    clockwise: bool,
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Circle3 {
-    center: u64,
-    radius: f64,
-    top: u64,
 }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
@@ -735,13 +233,14 @@ mod tests {
     use truck_polymesh::obj;
 
     use crate::extrusion::Direction;
+    use crate::extrusion::Extrusion;
+    use crate::extrusion::ExtrusionMode;
     use truck_meshalgo::tessellation::*;
     use truck_meshalgo::filters::*;
 
     use super::*;
 
-    #[test]
-    fn one_extrusion() {
+    pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
         p.add_defaults();
         let wb = p.workbenches.get_mut(0).unwrap();
@@ -755,6 +254,14 @@ mod tests {
         s.add_segment(lr, ur);
         s.add_segment(ur, ul);
         s.add_segment(ul, ll);
+
+        p
+    }
+
+    #[test]
+    fn one_extrusion() {
+        let mut p = create_test_project();
+        let wb = p.workbenches.get_mut(0).unwrap();
 
         let extrusion = Extrusion::new(
             "Sketch-0".to_owned(),
@@ -799,8 +306,7 @@ mod tests {
 
     #[test]
     fn rename_plane() {
-        let mut p = Project::new("Test Project");
-        p.add_defaults();
+        let mut p = create_test_project();
 
         let message = &Message::RenameStep {
             workbench_id: 0,
@@ -808,7 +314,7 @@ mod tests {
             new_name: "Top-2".to_owned(),
         };
 
-        let result = p.handle_message(message);
+        let result = message.handle(&mut p);
         match result {
             Ok(res) => println!("{}", res),
             Err(e) => println!("{}", e),
@@ -844,21 +350,10 @@ mod tests {
         println!("{:?}", realization);
     }
 
-    // #[test]
+    #[test]
     fn bruno() {
-        let mut p = Project::new("Test Project");
-        p.add_defaults();
+        let mut p = create_test_project();
         let wb = p.workbenches.get_mut(0).unwrap();
-        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
-        let s = wb.get_sketch_mut("Sketch 1").unwrap();
-        let ll = s.add_point(2.0, 2.0);
-        let lr = s.add_point(42.0, 2.0);
-        let ul = s.add_point(2.0, 42.0);
-        let ur = s.add_point(42.0, 42.0);
-        s.add_segment(ll, lr);
-        s.add_segment(lr, ur);
-        s.add_segment(ur, ul);
-        s.add_segment(ul, ll);
 
         let extrusion = Extrusion::new(
             "Sketch-0".to_owned(),
@@ -926,28 +421,17 @@ mod tests {
         println!("Final solid: {:?}", final_solid.truck_solid);
         let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
         mesh.put_together_same_attrs();
-        let file = std::fs::File::create("bruno.obj").unwrap();
+        let file = std::fs::File::create("target/bruno.obj").unwrap();
         obj::write(&mesh, file).unwrap();
 
-        let file = std::fs::File::create("bruno.json").unwrap();
+        let file = std::fs::File::create("target/bruno.json").unwrap();
         serde_json::to_writer(file, &p).unwrap();
     }
 
     // #[test]
     fn secondary_extrusion_with_merge() {
-        let mut p = Project::new("Test Project");
-        p.add_defaults();
+        let mut p = create_test_project();
         let wb = p.workbenches.get_mut(0).unwrap();
-        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
-        let s = wb.get_sketch_mut("Sketch 1").unwrap();
-        let ll = s.add_point(2.0, 2.0);
-        let lr = s.add_point(42.0, 2.0);
-        let ul = s.add_point(2.0, 42.0);
-        let ur = s.add_point(42.0, 42.0);
-        s.add_segment(ll, lr);
-        s.add_segment(lr, ur);
-        s.add_segment(ur, ul);
-        s.add_segment(ul, ll);
 
         let extrusion = Extrusion::new(
             "Sketch-0".to_owned(),

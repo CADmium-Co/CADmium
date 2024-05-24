@@ -18,7 +18,8 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::f64::consts::{PI, TAU};
 use std::hash::{Hash, Hasher};
 
-use crate::project::{Circle3, Plane, Project, RealSketch};
+use crate::archetypes::{Circle3, Plane};
+use crate::project::{Project, RealSketch};
 
 pub(crate) mod constraints;
 mod intersections;
