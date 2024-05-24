@@ -1301,7 +1301,8 @@ fn within_range(x: f64, a: f64, b: f64, epsilon: f64) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::project::{Plane, Project, Workbench};
+    use crate::project::{Plane, Project};
+    use crate::workbench::Workbench;
 
     use super::*;
 

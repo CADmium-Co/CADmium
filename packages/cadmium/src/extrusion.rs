@@ -23,7 +23,6 @@ use truck_topology::Shell;
 // use truck_polymesh::cgmath::Point3 as TruckPoint3;
 
 use crate::project::Point3;
-use crate::project::Project;
 use crate::project::RealPlane;
 use crate::project::RealSketch;
 use crate::project::Vector3;
@@ -37,7 +36,7 @@ use crate::sketch::Vector2;
 // use truck_meshalgo::prelude::*;
 use truck_modeling::{
     builder, Edge, Face as TruckFace, Point3 as TruckPoint3, Vector3 as TruckVector3,
-    Vertex, Wire, Curve, Surface, Plane, builder::translated
+    Vertex, Wire, Surface, Plane, builder::translated
 };
 
 use truck_topology::Solid as TruckSolid;
@@ -210,7 +209,7 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
             let face_b_exterior = &face_b.exterior.canonical_form();
 
             // check if b's exterior is equal to any of a's holes
-            for (hole_index, hole) in face_a.holes.iter().enumerate() {
+            for (_hole_index, hole) in face_a.holes.iter().enumerate() {
                 let hole = hole.canonical_form();
 
                 if face_b_exterior.equals(&hole) {
@@ -225,9 +224,9 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
 
 pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
     // create  new sketch using these faces
-    let mut sketch = Sketch::from_faces(faces, real_sketch);
+    let sketch = Sketch::from_faces(faces, real_sketch);
 
-    let (mut all_sketch_faces, unused_segments) = sketch.find_faces();
+    let (mut all_sketch_faces, _unused_segments) = sketch.find_faces();
 
     // check whether each of these new faces should returned or not by picking a
     // random point on the new face and then checking every one of the original faces
@@ -249,7 +248,7 @@ pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
         // println!("Random point on face: {:?}", random_point_on_face);
 
         let mut located = false;
-        for (old_face_idx, old_face) in old_faces_as_polygons.iter().enumerate() {
+        for (_old_face_idx, old_face) in old_faces_as_polygons.iter().enumerate() {
             if old_face.contains(&random_point_on_face) {
                 // println!(
                 //     "Old face {} contains point {:?}",
@@ -441,7 +440,7 @@ impl Solid {
     pub fn to_wire(
         plane: &RealPlane,
         sketch: &RealSketch,
-        extrusion: &Extrusion,
+        _extrusion: &Extrusion,
         exterior: &Ring,
     ) -> Wire {
         match exterior {
@@ -527,7 +526,6 @@ impl Solid {
                             let transit_point = TruckPoint3::new(transit.x, transit.y, transit.z);
 
                             // center point is not a vertex, but a point
-                            let center_point = sketch.points.get(&arc.center).unwrap();
                             let edge = builder::circle_arc(start_vertex, end_vertex, transit_point);
                             edges.push(edge);
                         }
@@ -583,7 +581,7 @@ pub fn find_transit(
     center: &Point3,
     clockwise: bool,
 ) -> Point3 {
-    let radius = start.distance_to(center);
+    // let radius = start.distance_to(center);
 
     let start = real_plane.plane.project(start);
     let end = real_plane.plane.project(end);
@@ -595,127 +593,6 @@ pub fn find_transit(
 
     let transit_3d = real_plane.plane.unproject(&transit);
     transit_3d
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn create_project_solid() {
-        let mut p = Project::new("Test Extrusion");
-        p.add_defaults();
-
-        // now get solids? save as obj or stl or step?
-        let mut workbench = p.workbenches.get_mut(0).unwrap();
-        let realization = workbench.realize(100);
-        let solids = realization.solids;
-        // println!("solids: {:?}", solids);
-    }
-
-    #[test]
-    fn three_adjacent_solids() {
-        // this file contains three shapes which are adjacent to each other and
-        // thus should result in a single output solid
-
-        let contents =
-            std::fs::read_to_string("src/test_inputs/three_adjacent_faces.cadmium").unwrap();
-
-        // deserialize the contents into a Project
-        let mut p: Project = serde_json::from_str(&contents).unwrap();
-
-        // println!("p: {:?}", p);
-
-        // get a realization
-        let mut workbench = p.workbenches.get_mut(0).unwrap();
-        let realization = workbench.realize(100);
-        let solids = realization.solids;
-        println!("solids: {:?}", solids.len());
-
-        assert_eq!(solids.len(), 1); // doesn't work yet!
-    }
-
-    #[test]
-    fn nested_squares_solid() {
-        // this file contains one square nested inside another
-        // and thus should result in a single output solid
-        let contents = std::fs::read_to_string("src/test_inputs/nested_squares.cadmium").unwrap();
-
-        // deserialize the contents into a Project
-        let mut p: Project = serde_json::from_str(&contents).unwrap();
-
-        // get a realization
-        let mut workbench = p.workbenches.get_mut(0).unwrap();
-        let realization = workbench.realize(100);
-        let solids = realization.solids;
-        assert_eq!(solids.len(), 1);
-    }
-
-    #[test]
-    fn nested_circles_solid() {
-        // this file contains one circle nested inside another
-        // and thus should result in a single output solid
-
-        let contents = std::fs::read_to_string("src/test_inputs/nested_circles.cadmium").unwrap();
-
-        // deserialize the contents into a Project
-        let mut p: Project = serde_json::from_str(&contents).unwrap();
-
-        // get a realization
-        let mut workbench = p.workbenches.get_mut(0).unwrap();
-        let realization = workbench.realize(100);
-        let solids = realization.solids;
-        assert_eq!(solids.len(), 1);
-    }
-
-    #[test]
-    fn two_es() {
-        let contents = std::fs::read_to_string("src/test_inputs/two_Es.cadmium").unwrap();
-
-        // deserialize the contents into a Project
-        let mut p: Project = serde_json::from_str(&contents).unwrap();
-
-        // get a realization
-        let mut workbench = p.workbenches.get_mut(0).unwrap();
-        let realization = workbench.realize(100);
-        let solids = realization.solids;
-        assert_eq!(solids.len(), 1);
-    }
-
-    #[test]
-    fn lots_of_nesting() {
-        let contents = std::fs::read_to_string("src/test_inputs/lots_of_nesting.cadmium").unwrap();
-
-        // deserialize the contents into a Project
-        let mut p: Project = serde_json::from_str(&contents).unwrap();
-
-        // get a realization
-        let mut workbench = p.workbenches.get_mut(0).unwrap();
-        let realization = workbench.realize(100);
-        let solids = realization.solids;
-        assert_eq!(solids.len(), 4);
-    }
-
-    // #[test]
-    // fn step_export() {
-    //     let mut p = Project::new("Test Project");
-    //     p.add_defaults();
-    //     p.add_
-    //     let workbench = &p.workbenches[0 as usize];
-    //     let realization = workbench.realize(1000);
-    //     // let solids = realization.solids;
-    //     let keys = Vec::from_iter(realization.solids.keys());
-    //     let key = keys[0 as usize];
-    //     let step_file = realization.solid_to_step(keys[0]);
-
-    //     realization.save_solid_as_step_file(keys[0], "test.step");
-    //     // now delete that file
-    //     // std::fs::remove_file("test.step").unwrap();
-
-    //     realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001);
-    //     // now delete that file
-    //     // std::fs::remove_file("test.obj").unwrap();
-    // }
 }
 
 pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt::Debug>(
@@ -830,4 +707,78 @@ fn are_coplanar(p0: Plane, p1: Plane) -> bool {
     let difference = p0.origin() - p1.origin();
     let dot = normal0.dot(difference);
     dot.abs() < 0.0001
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::project::Project;
+
+    #[allow(unused_imports)]
+    use super::*;
+
+    #[test]
+    fn create_project_solid() {
+        let mut p = Project::new("Test Extrusion");
+        p.add_defaults();
+
+        // now get solids? save as obj or stl or step?
+        let workbench = p.workbenches.get_mut(0).unwrap();
+        let realization = workbench.realize(100);
+        let solids = realization.solids;
+        println!("solids: {:?}", solids);
+    }
+
+    #[test]
+    fn project_from_files() {
+        let file_list = [
+            // this file contains three shapes which are adjacent to each other and
+            // thus should result in a single output solid
+            ("src/test_inputs/three_adjacent_faces.cadmium", 1),
+            // this file contains one square nested inside another
+            // and thus should result in a single output solid
+            ("src/test_inputs/nested_squares.cadmium", 1),
+            // this file contains one circle nested inside another
+            // and thus should result in a single output solid
+            ("src/test_inputs/nested_circles.cadmium", 1),
+            ("src/test_inputs/two_Es.cadmium", 1),
+            ("src/test_inputs/lots_of_nesting.cadmium", 4),
+        ];
+
+        for (file, expected_solids) in file_list.iter() {
+            let contents = std::fs::read_to_string(file).unwrap();
+
+            // deserialize the contents into a Project
+            let mut p: Project = serde_json::from_str(&contents).unwrap();
+
+            // get a realization
+            let workbench = p.workbenches.get_mut(0).unwrap();
+            let realization = workbench.realize(100);
+            let solids = realization.solids;
+            println!("[{}] solids: {:?}", file, solids.len());
+
+            assert_eq!(solids.len(), *expected_solids); // doesn't work yet!
+        }
+    }
+
+    // #[test]
+    // fn step_export() {
+    //     let mut p = Project::new("Test Project");
+    //     p.add_defaults();
+    //     p.add_
+    //     let workbench = &p.workbenches[0 as usize];
+    //     let realization = workbench.realize(1000);
+    //     // let solids = realization.solids;
+    //     let keys = Vec::from_iter(realization.solids.keys());
+    //     let key = keys[0 as usize];
+    //     let step_file = realization.solid_to_step(keys[0]);
+
+    //     realization.save_solid_as_step_file(keys[0], "test.step");
+    //     // now delete that file
+    //     // std::fs::remove_file("test.step").unwrap();
+
+    //     realization.save_solid_as_obj_file(keys[0], "test.obj", 0.001);
+    //     // now delete that file
+    //     // std::fs::remove_file("test.obj").unwrap();
+    // }
+
 }
