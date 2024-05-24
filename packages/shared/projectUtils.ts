@@ -38,6 +38,7 @@ import {
 	isNewRectangleBetweenPoints,
 	isNewSketchOnPlane,
 	isRenameStep,
+	isRenameWorkbench,
 	isSetSketchPlane,
 	isUpdateExtrusion
 } from "./typeGuards"
@@ -354,6 +355,18 @@ export function renameStep(stepIdx: number, newName: string): void {
 	sendWasmMessage(message)
 }
 
+export function renameWorkbench(newName: string): void {
+	log("[renameWorkbench] newName", newName)
+	const message: Message = {
+		RenameWorkbench: {
+			workbench_id: get(workbenchIndex),
+			new_name: newName
+		}
+	}
+	checkWasmMessage(message)
+	sendWasmMessage(message)
+}
+
 // If the project ever becomes stale, refresh it. This should be pretty rare.
 projectIsStale.subscribe((value) => {
 	if (value) {
@@ -599,6 +612,13 @@ function checkWasmMessage(message: Message, abort = true, logError = true): bool
 
 		case "RenameStep":
 			if (!isRenameStep(command)) {
+				logOrAbort()
+				return false
+			}
+			return true
+
+		case "RenameWorkbench":
+			if (!isRenameWorkbench(command)) {
 				logOrAbort()
 				return false
 			}
