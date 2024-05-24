@@ -37,6 +37,7 @@ import {
 	isNewPointOnSketch2,
 	isNewRectangleBetweenPoints,
 	isNewSketchOnPlane,
+	isRenameProject,
 	isRenameStep,
 	isRenameWorkbench,
 	isSetSketchPlane,
@@ -367,6 +368,17 @@ export function renameWorkbench(newName: string): void {
 	sendWasmMessage(message)
 }
 
+export function renameProject(newName: string): void {
+	log("[renameProject] newName", newName)
+	const message: Message = {
+		RenameProject: {
+			new_name: newName
+		}
+	}
+	checkWasmMessage(message)
+	sendWasmMessage(message)
+}
+
 // If the project ever becomes stale, refresh it. This should be pretty rare.
 projectIsStale.subscribe((value) => {
 	if (value) {
@@ -619,6 +631,13 @@ function checkWasmMessage(message: Message, abort = true, logError = true): bool
 
 		case "RenameWorkbench":
 			if (!isRenameWorkbench(command)) {
+				logOrAbort()
+				return false
+			}
+			return true
+
+		case "RenameProject":
+			if (!isRenameProject(command)) {
 				logOrAbort()
 				return false
 			}

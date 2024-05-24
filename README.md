@@ -91,7 +91,7 @@ Watch vitest unit tests only:
 
 ```shell
 cd applications/web
-pnpm test:unit -w 
+pnpm test:unit -w
 ```
 
 ### rust
@@ -135,7 +135,6 @@ Github project for tracking progress is [here](https://github.com/orgs/CADmium-C
 - [ ] Extrusion
   - [ ] Configure an extrusion to create new solid or subtract from existing solid
 - [ ] Project
-  - [ ] Ability to rename the project
   - [ ] Ability to delete steps
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
 - [ ] Units

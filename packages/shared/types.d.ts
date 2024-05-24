@@ -312,6 +312,10 @@ interface RenameWorkbench {
   new_name: string
 }
 
+interface RenameProject {
+  new_name: string
+}
+
 export type Message_GeneratedFromRust =
   | { RenameWorkbench: { workbench_id: number; new_name: string } }
   | { RenameStep: { workbench_id: number; step_id: number; new_name: string } }
@@ -348,6 +352,7 @@ type Message =
   | { NewPointOnSketch2: NewPointOnSketch2 }
   | { RenameStep: RenameStep }
   | { RenameWorkbench: RenameWorkbench }
+  | { RenameProject: RenameProject }
 
 interface MessageHistory {
   message: Message

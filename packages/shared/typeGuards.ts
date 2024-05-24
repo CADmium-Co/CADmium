@@ -82,7 +82,8 @@ import type {
 	RenameStep,
 	Message,
 	MessageHistory,
-	RenameWorkbench
+	RenameWorkbench,
+	RenameProject
 } from "./types"
 import { Vector2 } from "three"
 import { Vector3 } from "three"
@@ -1118,6 +1119,14 @@ export function isRenameWorkbench(obj: unknown): obj is RenameWorkbench {
 	)
 }
 
+export function isRenameProject(obj: unknown): obj is RenameProject {
+	const typedObj = obj as RenameProject
+	return (
+		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
+		typeof typedObj["new_name"] === "string"
+	)
+}
+
 export function isMessage(obj: unknown): obj is Message {
 	const typedObj = obj as Message
 	return (
@@ -1146,7 +1155,9 @@ export function isMessage(obj: unknown): obj is Message {
 		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
 			(isRenameStep(typedObj["RenameStep"]) as boolean)) ||
 		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isRenameWorkbench(typedObj["RenameWorkbench"]) as boolean))
+			(isRenameWorkbench(typedObj["RenameWorkbench"]) as boolean)) ||
+		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
+			(isRenameProject(typedObj["RenameProject"]) as boolean))
 	)
 }
 
