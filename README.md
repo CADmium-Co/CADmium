@@ -91,6 +91,15 @@ cd applications/web
 pnpm test:unit -w 
 ```
 
+### rust
+
+Change the working directory to packages/cadmium and to run rust tests:
+
+```shell
+cd packages/cadmium
+cargo test
+```
+
 ## Contributing
 
 I am not currently able to handle contributions. After the 0.1 release in April I will be looking for help in a few areas:
