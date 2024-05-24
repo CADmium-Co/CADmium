@@ -67,6 +67,7 @@
 			{dashedHoveredMaterial}
 			{dashedLineMaterial}
 			{collisionLineMaterial}
+			{name}
 		/>
 	{/each}
 </T.Group>

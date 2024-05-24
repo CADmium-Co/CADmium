@@ -131,7 +131,7 @@ export function setSketchPlane(sketchId: string, planeId: string, normal?: Vecto
 			sketch_id: sketchId,
 			plane_id: planeId,
 			normal: normal,
-			is_solid: normal !== undefined,
+			is_solid: typeof normal !== "undefined",
 		}
 	}
 

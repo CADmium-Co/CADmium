@@ -13,7 +13,10 @@
 		sketchTool,
 		currentlyMousedOver,
 
-		realization
+		realization,
+
+		workbench
+
 
 	} from "shared/stores"
 	import EyeSlash from "phosphor-svelte/lib/EyeSlash"
@@ -25,9 +28,9 @@
 	// prettier-ignore
 	const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, index: number, id: string, plane_id: string
+	export let name: string, index: number, id: string, plane_id: string, solid_id: string
 
-	// $: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
+	$: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id, "solid_id:", solid_id)
 
 	const source = `${base}/actions/sketch_min.svg`
 
@@ -91,19 +94,27 @@
 		if (!selectingForSketchPlane) return
 		if (!id) return
 		if (!$currentlySelected.length) return
-		log("CS changed when selecting for Sketch Plane:", $currentlySelected)
+		log("CS changed when selecting for Sketch Plane:", $currentlySelected, "solid_id", solid_id)
 
 		let thingSelected = $currentlySelected[0]
 		if (thingSelected.type === "plane") {
 			setSketchPlane(id, thingSelected.id)
 		} else if (thingSelected.type === "meshFace") {
-			log("HOW DO I HANDLE THIS?")
+			if (thingSelected.featureName === undefined) {
+				log("No feature name on meshFace")
+				return
+			}
 
-			// TODO: How to get the correct solid_id?
-			const solid_id = Object.keys($realization.solids)[0]
-			const solid = $realization.solids[solid_id]
+			const solid_id = thingSelected.featureName
+			log("Setting sketch plane for solid:", solid_id, "face:", thingSelected.id)
 
-			setSketchPlane(id, solid_id, solid.normals[parseInt(thingSelected.id)])
+			try {
+				const solid = $realization.solids[solid_id]
+				setSketchPlane(id, solid_id, solid.normals[parseInt(thingSelected.id)])
+			} catch (error) {
+				log("Error getting solid:", error)
+				return
+			}
 		}
 
 		disengageSearchForPlane()

@@ -15,14 +15,14 @@
 	} from "three"
 	import { T } from "@threlte/core"
 	import { flatten } from "shared/projectUtils"
-	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMax, selectionMin } from "shared/stores"
+	import { currentlySelected, currentlyMousedOver, selectingFor, selectionMax, selectionMin, featureIndex } from "shared/stores"
 	import type { EntityType, TruckEdge, TruckFace, TruckFaceBoundary } from "shared/types"
 	import nurbs from "nurbs"
 
 	// prettier-ignore
 	const log = (function () { const context = "[SelectableSurface.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: string
+	export let truck_face: TruckFace, truck_edges: TruckEdge[], id: string, name: string
 	// log("[props]", "truck_face:", truck_face, "truck_edges:", truck_edges, "id:", id)
 
 	// svelte-ignore unused-export-let hmmm why does it not ignore?
@@ -294,7 +294,8 @@
 								$currentlySelected.shift()
 							}
 
-							$currentlySelected = [...$currentlySelected, { type, id: id }]
+							$currentlySelected = [...$currentlySelected, { type, id: id, featureName: name}]
+							log("Currently Selected:", id, "faces", truck_face, "edges", truck_edges)
 						}
 					}
 				}}

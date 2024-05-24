@@ -1,3 +1,4 @@
+import type { PlaneDescription } from "cadmium"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 interface IDictionary<TValue> {
@@ -21,6 +22,7 @@ type EntityType =
 interface Entity {
   id: string // perhaps we could do id:string index:number?  hmmm no there are entities that are strings not numbers represented as strings!
   type: EntityType
+  featureName?: string
 }
 
 type CircleEntity = {
@@ -117,9 +119,7 @@ interface PlaneData {
 interface SketchData {
   data: {
     type: HistoryStepType = "Sketch"
-    plane_description: {
-      PlaneId: string
-    }
+    plane_description: PlaneDescription
     width: number
     height: number
     sketch: {

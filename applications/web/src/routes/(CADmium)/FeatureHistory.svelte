@@ -69,6 +69,7 @@
 						index={featureIdx}
 						id={feature.unique_id}
 						plane_id={feature.data.plane_description.PlaneId}
+						solid_id={feature.data.plane_description.SolidId}
 					/>
 				{:else if isExtrusion(feature)}
 					<ExtrusionFeature

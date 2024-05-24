@@ -128,8 +128,8 @@ export function isEntity(obj: unknown): obj is Entity {
 	return (
 		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
 		typeof typedObj["id"] === "string" &&
-		(isEntityType(typedObj["type"]) as boolean) &&
-		Object.keys(typedObj).length === 2
+		(typeof typedObj["featureName"] === "string" || typeof typedObj["featureName"] === "undefined") &&
+		(isEntityType(typedObj["type"]) as boolean)
 	)
 }
 
@@ -646,6 +646,7 @@ export function isSketchData(obj: unknown): obj is SketchData {
 		((typedObj["data"]["plane_description"] !== null && typeof typedObj["data"]["plane_description"] === "object") ||
 			typeof typedObj["data"]["plane_description"] === "function") &&
 		typeof typedObj["data"]["plane_description"]["PlaneId"] === "string" &&
+		typeof typedObj["data"]["plane_description"]["SolidId"] === "string" &&
 		typeof typedObj["data"]["width"] === "number" &&
 		typeof typedObj["data"]["height"] === "number" &&
 		((typedObj["data"]["sketch"] !== null && typeof typedObj["data"]["sketch"] === "object") ||
