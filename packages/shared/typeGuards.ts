@@ -1,6 +1,5 @@
 import type {
 	IDictionary,
-	WithTarget,
 	SetCameraFocus,
 	EntityType,
 	Entity,
@@ -17,10 +16,7 @@ import type {
 	PreviewGeometry,
 	Plane,
 	Point,
-	PointById,
 	SketchPoint,
-	PointById,
-	Vector2Vector3PointById,
 	PointLikeById,
 	PointsById,
 	PointsLikeById,
@@ -67,23 +63,7 @@ import type {
 	TruckBoundary,
 	TruckSolid,
 	SolidRealized,
-	ExtrusionSketchData,
-	UpdateExtrusion,
-	SetSketchPlane,
-	NewSketchOnPlane,
-	NewExtrusion,
-	DeleteLines,
-	DeleteArcs,
-	DeleteCircles,
-	NewRectangleBetweenPoints,
-	NewCircleBetweenPoints,
-	NewLineOnSketch,
-	NewPointOnSketch2,
-	RenameStep,
-	Message,
-	MessageHistory,
-	RenameWorkbench,
-	RenameProject
+	PointById
 } from "./types"
 import { Vector2 } from "three"
 import { Vector3 } from "three"
@@ -93,15 +73,6 @@ export function isIDictionary(obj: unknown): obj is IDictionary<unknown> {
 	return (
 		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
 		Object.entries<any>(typedObj).every(([key, value]) => value === "TValue" && typeof key === "string")
-	)
-}
-
-export function isWithTarget(obj: unknown): obj is WithTarget<Event, unknown> {
-	const typedObj = obj as WithTarget<Event, unknown>
-	return (
-		typeof typedObj === "Event" && // new MouseEvent("mouse") instanceof MouseEvent   -> true
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["currentTarget"] === "Target"
 	)
 }
 
@@ -296,16 +267,6 @@ export function isSketchPoint(obj: unknown): obj is SketchPoint {
 		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
 		(isPoint2D(typedObj["twoD"]) as boolean) &&
 		(isPoint3D(typedObj["threeD"]) as boolean)
-	)
-}
-
-export function isVector2Vector3PointById(obj: unknown): obj is Vector2Vector3PointById {
-	const typedObj = obj as Vector2Vector3PointById
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typedObj["twoD"] instanceof Vector2 &&
-		typedObj["threeD"] instanceof Vector3 &&
-		(typedObj["id"] === null || typeof typedObj["id"] === "string")
 	)
 }
 
@@ -954,217 +915,5 @@ export function isSolidRealized(obj: unknown): obj is SolidRealized {
 		typedObj["indices"].every((e: any) => typeof e === "number") &&
 		Array.isArray(typedObj["triangles"]) &&
 		(isTruckSolid(typedObj["truck_solid"]) as boolean)
-	)
-}
-
-export function isExtrusionSketchData(obj: unknown): obj is ExtrusionSketchData {
-	const typedObj = obj as ExtrusionSketchData
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["sketch_id"] === "string" &&
-		Array.isArray(typedObj["face_ids"]) &&
-		typedObj["face_ids"].every((e: any) => typeof e === "string") &&
-		typeof typedObj["length"] === "string" &&
-		typeof typedObj["offset"] === "number" &&
-		typeof typedObj["direction"] === "string" &&
-		typeof typedObj["mode"] === "string"
-	)
-}
-
-export function isUpdateExtrusion(obj: unknown): obj is UpdateExtrusion {
-	const typedObj = obj as UpdateExtrusion
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		Array.isArray(typedObj["face_ids"]) &&
-		typedObj["face_ids"].every((e: any) => typeof e === "number") &&
-		typeof typedObj["length"] === "number" &&
-		typeof typedObj["offset"] === "number" &&
-		typeof typedObj["extrusion_name"] === "string" &&
-		typeof typedObj["direction"] === "string" &&
-		typeof typedObj["extrusion_id"] === "string"
-	)
-}
-
-export function isSetSketchPlane(obj: unknown): obj is SetSketchPlane {
-	const typedObj = obj as SetSketchPlane
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		typeof typedObj["plane_id"] === "string"
-	)
-}
-
-export function isNewSketchOnPlane(obj: unknown): obj is NewSketchOnPlane {
-	const typedObj = obj as NewSketchOnPlane
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["plane_id"] === "string" &&
-		typeof typedObj["sketch_name"] === "string"
-	)
-}
-
-export function isNewExtrusion(obj: unknown): obj is NewExtrusion {
-	const typedObj = obj as NewExtrusion
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		Array.isArray(typedObj["face_ids"]) &&
-		typedObj["face_ids"].every((e: any) => typeof e === "number") &&
-		typeof typedObj["length"] === "number" &&
-		typeof typedObj["offset"] === "number" &&
-		typeof typedObj["extrusion_name"] === "string" &&
-		typeof typedObj["direction"] === "string"
-	)
-}
-
-export function isDeleteLines(obj: unknown): obj is DeleteLines {
-	const typedObj = obj as DeleteLines
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		Array.isArray(typedObj["line_ids"]) &&
-		typedObj["line_ids"].every((e: any) => typeof e === "number")
-	)
-}
-
-export function isDeleteArcs(obj: unknown): obj is DeleteArcs {
-	const typedObj = obj as DeleteArcs
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		Array.isArray(typedObj["arc_ids"]) &&
-		typedObj["arc_ids"].every((e: any) => typeof e === "number")
-	)
-}
-
-export function isDeleteCircles(obj: unknown): obj is DeleteCircles {
-	const typedObj = obj as DeleteCircles
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		Array.isArray(typedObj["circle_ids"]) &&
-		typedObj["circle_ids"].every((e: any) => typeof e === "number")
-	)
-}
-
-export function isNewRectangleBetweenPoints(obj: unknown): obj is NewRectangleBetweenPoints {
-	const typedObj = obj as NewRectangleBetweenPoints
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		typeof typedObj["start_id"] === "number" &&
-		typeof typedObj["end_id"] === "number"
-	)
-}
-
-export function isNewCircleBetweenPoints(obj: unknown): obj is NewCircleBetweenPoints {
-	const typedObj = obj as NewCircleBetweenPoints
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		typeof typedObj["center_id"] === "number" &&
-		typeof typedObj["edge_id"] === "number"
-	)
-}
-
-export function isNewLineOnSketch(obj: unknown): obj is NewLineOnSketch {
-	const typedObj = obj as NewLineOnSketch
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		typeof typedObj["start_point_id"] === "number" &&
-		typeof typedObj["end_point_id"] === "number"
-	)
-}
-
-export function isNewPointOnSketch2(obj: unknown): obj is NewPointOnSketch2 {
-	const typedObj = obj as NewPointOnSketch2
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["sketch_id"] === "string" &&
-		typeof typedObj["x"] === "number" &&
-		typeof typedObj["y"] === "number" &&
-		typeof typedObj["hidden"] === "boolean"
-	)
-}
-
-export function isRenameStep(obj: unknown): obj is RenameStep {
-	const typedObj = obj as RenameStep
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["step_id"] === "number" &&
-		typeof typedObj["new_name"] === "string"
-	)
-}
-
-export function isRenameWorkbench(obj: unknown): obj is RenameWorkbench {
-	const typedObj = obj as RenameWorkbench
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["workbench_id"] === "number" &&
-		typeof typedObj["new_name"] === "string"
-	)
-}
-
-export function isRenameProject(obj: unknown): obj is RenameProject {
-	const typedObj = obj as RenameProject
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		typeof typedObj["new_name"] === "string"
-	)
-}
-
-export function isMessage(obj: unknown): obj is Message {
-	const typedObj = obj as Message
-	return (
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isUpdateExtrusion(typedObj["UpdateExtrusion"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isSetSketchPlane(typedObj["SetSketchPlane"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isNewSketchOnPlane(typedObj["NewSketchOnPlane"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isNewExtrusion(typedObj["NewExtrusion"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isDeleteLines(typedObj["DeleteLines"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isDeleteArcs(typedObj["DeleteArcs"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isDeleteCircles(typedObj["DeleteCircles"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isNewRectangleBetweenPoints(typedObj["NewRectangleBetweenPoints"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isNewCircleBetweenPoints(typedObj["NewCircleBetweenPoints"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isNewLineOnSketch(typedObj["NewLineOnSketch"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isNewPointOnSketch2(typedObj["NewPointOnSketch2"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isRenameStep(typedObj["RenameStep"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isRenameWorkbench(typedObj["RenameWorkbench"]) as boolean)) ||
-		(((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-			(isRenameProject(typedObj["RenameProject"]) as boolean))
-	)
-}
-
-export function isMessageHistory(obj: unknown): obj is MessageHistory {
-	const typedObj = obj as MessageHistory
-	return (
-		((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") &&
-		(isMessage(typedObj["message"]) as boolean)
 	)
 }

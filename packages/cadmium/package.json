@@ -27,6 +27,7 @@
   "types": "pkg/cadmium.d.ts",
   "type": "module",
   "devDependencies": {
-    "onchange": "^7.1.0"
+    "onchange": "^7.1.0",
+    "ts-auto-guard": "^4.2.0"
   }
 }
