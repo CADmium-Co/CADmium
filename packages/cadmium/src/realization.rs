@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::project::{Point3, RealPlane, RealSketch};
-use crate::extrusion::Solid;
+use crate::archetypes::Point3;
+use crate::project::{RealPlane, RealSketch};
+use crate::solid::Solid;
 use std::collections::HashMap;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]

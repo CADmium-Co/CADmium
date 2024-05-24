@@ -2,10 +2,12 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::extrusion::{fuse, Extrusion, ExtrusionMode, Solid};
-use crate::project::{Plane, PlaneDescription, Point3, RealPlane, RealSketch, Vector3};
+use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
+use crate::extrusion::{fuse, Extrusion, ExtrusionMode};
+use crate::project::{RealPlane, RealSketch};
 use crate::realization::Realization;
 use crate::sketch::Sketch;
+use crate::solid::Solid;
 use crate::step::{Step, StepData};
 
 use std::collections::HashMap;
