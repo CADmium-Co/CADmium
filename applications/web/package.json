@@ -3,7 +3,7 @@
 	"version": "0.0.1",
 	"private": true,
 	"scripts": {
-		"dev": "vite dev",
+		"dev": "vite dev --host",
 		"build": "vite build",
 		"serve": "pnpm build && serve -p 5174 dist",
 		"clean": "rm -rf .turbo .svelte-kit dist node_modules",
