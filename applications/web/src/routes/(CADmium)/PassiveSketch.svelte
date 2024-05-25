@@ -10,10 +10,6 @@
 	import Face from "./Face.svelte"
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
 	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
-	import NewLineTool from "./tools/Line.svelte"
-	import NewCircleTool from "./tools/Circle.svelte"
-	import NewRectangleTool from "./tools/Rectangle.svelte"
-	import SelectTool from "./tools/Select.svelte"
 	import type {
 		ArcTuple,
 		CircleTuple,

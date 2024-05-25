@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import {
 		currentlySelected,
 		currentlyMousedOver,
@@ -9,15 +9,15 @@
 		workbench,
 		hiddenSketches
 	} from "shared/stores"
+	import * as AllTools from "./tools";
 	import { newExtrusion, newSketchOnPlane } from "shared/projectUtils"
 	import { base } from "$app/paths"
+	import type { ToolType } from "shared/types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	let solving = false
-	// todo ask Matt why is this a no-op?
-	const solveSketch = () => {}
 	const createNewExtrusion = () => {
 		newExtrusion()
 		// set that as the current feature being edited
@@ -28,7 +28,6 @@
 		newSketchOnPlane()
 		$featureIndex = $workbench.history.length - 1
 	}
-	const stepSketch = () => {}
 	const debugging = false
 
 	const actions = [
@@ -42,13 +41,20 @@
 		// { alt: 'plane', src: '/actions/plane_min.svg' }
 	]
 
-	const sketchActions = [
-		{ alt: "solve", src: `${base}/actions/solve_min.svg`, text: "Solve", handler: solveSketch },
-		{ alt: "step", src: `${base}/actions/step_min.svg`, text: "Step", handler: stepSketch },
-		{ alt: "line", src: `${base}/actions/line.svg`, handler: () => ($sketchTool = "Line") },
-		{ alt: "circle", src: `${base}/actions/circle.svg`, handler: () => ($sketchTool = "Circle") },
-		{ alt: "rectangle", src: `${base}/actions/rectangle.svg`, handler: () => ($sketchTool = "Rectangle") }
-	]
+	interface SketchActionType {
+		alt: string
+		src: string
+		text: string
+		// tooltip: string // TODO
+		handler: () => void
+	}
+
+	const sketchActions: SketchActionType[] = Object.keys(AllTools).filter(toolName => toolName !== "Select").map((toolName: string): SketchActionType => ({
+		alt: toolName,
+		src: `${base}/actions/${toolName.toLowerCase()}.svg`,
+		text: toolName,
+		handler: () => ($sketchTool = (toolName as ToolType))
+	}))
 </script>
 
 <div class="col-span-2 flex flex-none items-center gap-1 bg-gray-100 h-[45px] select-none">

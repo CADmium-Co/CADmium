@@ -2,7 +2,7 @@
 	import type { LineMaterial } from "three/examples/jsm/lines/LineMaterial.js"
 	import PassiveSketch from "./PassiveSketch.svelte"
 	import { currentlySelected, previewGeometry, sketchTool } from "shared/stores"
-	import type { PlaneRealized, SketchTuple } from "shared/types"
+	import type { PlaneRealized, SketchTuple, ToolType } from "shared/types"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -18,7 +18,7 @@
 		solidSelectedMaterial: LineMaterial,
 		collisionLineMaterial: LineMaterial
 
-	function setTool(tool: string): void {
+	function setTool(tool: ToolType): void {
 		$sketchTool = tool
 		$currentlySelected = []
 		$previewGeometry = []

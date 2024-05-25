@@ -11,7 +11,6 @@
 
 	interface ToolComponentInstance {
 		name: string
-		// component: (new (...args: any[]) => AllTools.ToolComponentType)
 		component: AllTools.ToolComponentType
 	}
 
@@ -31,6 +30,10 @@
 			})
 		}))
 
+	export function getToolNames(): ToolType[] {
+		return instances.map(i => i.name as ToolType)
+	}
+
 	export function meshMouseMove(event: Event, data: Vector2) {
 		const inst = instances.find(i => i.name === $sketchTool)
 		inst !== undefined && inst.component.mouseMove(event, data)
@@ -41,3 +44,7 @@
 		inst !== undefined && inst.component.click(event, data)
 	}
 </script>
+
+<div
+	id="tool-instance"
+></div>
