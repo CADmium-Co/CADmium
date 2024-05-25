@@ -1,7 +1,9 @@
+use message::Message;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
 pub mod archetypes;
+pub mod error;
 pub mod extrusion;
 pub mod message;
 pub mod project;
@@ -76,11 +78,10 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn send_message(&mut self, message: String) -> String {
-        let result = self.native.handle_message_string(&message);
-        match result {
-            Ok(s) => format!("{{ \"success\": {{ {} }} }}", s),
-            Err(e) => format!("{{ \"error\": {{ {} }} }}", e),
+    pub fn send_message(&mut self, message: Message) -> String {
+        match message.handle(&mut self.native) {
+            Ok(d) => format!(r#"{{ "success": {{ {} }}"#, d),
+            Err(e) => format!(r#"{{ "error": {{ {} }}"#, e),
         }
     }
 
