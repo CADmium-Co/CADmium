@@ -3,14 +3,11 @@
 	import { addRectangleBetweenPoints, addPointToSketch } from "shared/projectUtils"
 	import { Vector3 } from "three"
 	import type { IDictionary, PointLikeById, ProjectToPlane, SketchPoint } from "shared/types"
-	// import Sketch from "./Sketch.svelte"
 
 	// prettier-ignore
 	const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
-
-	// log("[props]", pointsById, sketchIndex, active /** , projectToPlane */)
+	export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, projectToPlane: ProjectToPlane
 
 	let anchorPoint: PointLikeById | null
 
@@ -153,14 +150,8 @@
 		} else previewGeometry.set([])
 	}
 
-	export function onKeyDown(event: KeyboardEvent) {
-		if (!active) return
-		if (event.key === "Escape") {
-			previewGeometry.set([])
-			anchorPoint = null
-			$sketchTool = "Select"
-		}
+	export function cancel() {
+		previewGeometry.set([])
+		anchorPoint = null
 	}
 </script>
-
-<svelte:window on:keydown={onKeyDown} />

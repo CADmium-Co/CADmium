@@ -10,4 +10,5 @@ export { default as Select } from "./Select.svelte";
 export interface ToolComponentType extends SvelteComponent {
 	click: (event: Event, data: { twoD: Vector2; threeD: Vector3 }) => void;
 	mouseMove: (event: Event, data: Vector2) => void;
+	cancel: () => void;
 }

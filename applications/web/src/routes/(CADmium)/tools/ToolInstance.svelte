@@ -24,7 +24,6 @@
 				props: {
 					pointsById,
 					sketchIndex,
-					active: $sketchTool === name,
 					projectToPlane
 				}
 			})
@@ -43,8 +42,18 @@
 		const inst = instances.find(i => i.name === $sketchTool)
 		inst !== undefined && inst.component.click(event, data)
 	}
+
+	export function onKeyDown(event: KeyboardEvent) {
+		if (event.key === "Escape") {
+			const inst = instances.find(i => i.name === $sketchTool)
+			inst !== undefined && inst.component.cancel()
+			$sketchTool = "Select"
+		}
+	}
 </script>
 
 <div
 	id="tool-instance"
 ></div>
+
+<svelte:window on:keydown={onKeyDown} />

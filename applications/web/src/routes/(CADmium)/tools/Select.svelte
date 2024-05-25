@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { currentlyMousedOver, currentlySelected } from "shared/stores"
+	import { currentlyMousedOver, currentlySelected, sketchTool } from "shared/stores"
 	import { deleteEntities } from "shared/projectUtils"
 
 	// prettier-ignore
 	const log = (function () { const context = "[SelectTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let sketchIndex: string, active: boolean
+	export let sketchIndex: string
 
 	export function mouseMove(_event: Event, projected: any) {
 		// log("mouse move", projected)
@@ -35,24 +35,23 @@
 		currentlySelected.set(alreadySelected)
 	}
 
+	// if the user presses the escape key, then we should deselect the currently selected things
+	export function cancel() {
+		currentlySelected.set([])
+	}
+
 	// export a function to handle keyboard events
 	// if the user presses the delete key, then we should delete the currently selected things
-	// if the user presses the escape key, then we should deselect the currently selected things
 	export function onKeyDown(event: KeyboardEvent) {
-		if (!active) return
+		if ($sketchTool !== "Select") return
 
-		// log('key press', event)
-		if (event.key === "Escape") {
-			currentlySelected.set([])
-		} else if (event.key === "Delete" || event.key === "Backspace") {
+		if (event.key === "Delete" || event.key === "Backspace") {
 			// delete the currently selected things
 			deleteEntities(sketchIndex, $currentlySelected)
 			currentlyMousedOver.set([])
 			currentlySelected.set([])
 		}
 	}
-
-	log("[props]", "sketchIndex:", sketchIndex, "active:", active)
 </script>
 
 <svelte:window on:keydown={onKeyDown} />

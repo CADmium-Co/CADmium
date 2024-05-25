@@ -7,10 +7,7 @@
 	// prettier-ignore
 	const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let pointsById: PointsLikeById
-	export let sketchIndex: string
-	export let active: boolean
-	export let projectToPlane: ProjectToPlane
+	export let pointsById: PointsLikeById, sketchIndex: string, projectToPlane: ProjectToPlane
 
 	// log("[props]", "pointsById:", pointsById, "sketchIndex:", sketchIndex, "active:", active)
 
@@ -137,14 +134,8 @@
 		}
 	}
 
-	export function onKeyDown(event: KeyboardEvent) {
-		if (!active) return
-		if (event.key === "Escape") {
-			previewGeometry.set([])
-			centerPoint = null
-			$sketchTool = "Select"
-		}
+	export function cancel() {
+		previewGeometry.set([])
+		centerPoint = null
 	}
 </script>
-
-<svelte:window on:keydown={onKeyDown} />

@@ -7,7 +7,7 @@
 	// prettier-ignore
 	const log = (function () { const context = "[NewLineTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
+	export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, projectToPlane: ProjectToPlane
 
 	// $: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
 
@@ -113,14 +113,8 @@
 		} else previewGeometry.set([])
 	}
 
-	export function onKeyDown(event: KeyboardEvent) {
-		if (!active) return
-		if (event.key === "Escape") {
-			previewGeometry.set([])
-			previousPoint = null
-			$sketchTool = "Select"
-		}
+	export function cancel() {
+		previewGeometry.set([])
+		previousPoint = null
 	}
 </script>
-
-<svelte:window on:keydown={onKeyDown} />
