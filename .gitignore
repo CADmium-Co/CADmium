@@ -2,6 +2,7 @@
 /node_modules/
 /build
 /dist
+/target
 /.svelte-kit
 /package
 *.env*
