@@ -1,14 +1,14 @@
 {
   "private": true,
   "scripts": {
-    "build": "turbo run build --cache-dir=.turbo",
-    "dev": "turbo run dev",
-    "serve": "turbo run serve",
-    "test": "turbo run test",
+    "build": "turbo run build --cache-dir=.turbo --no-daemon",
+    "dev": "turbo run dev --no-daemon",
+    "serve": "turbo run serve --no-daemon",
+    "test": "turbo run test --no-daemon",
     "test:rust": "cd packages/cadmium && cargo test",
-    "clean": "turbo run clean",
-    "lint": "turbo run lint",
-    "format": "turbo run format",
+    "clean": "turbo run clean --no-daemon",
+    "lint": "turbo run lint --no-daemon",
+    "format": "turbo run format --no-daemon",
     "build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
     "build:wasm": "wasm-pack build --target web packages/cadmium && ./packages/cadmium/patchpackage.cjs"
   },
