@@ -9,7 +9,8 @@
     "build:dev": "cargo check && wasm-pack build --no-pack --target web --dev",
     "build": "wasm-pack build --target web --no-pack",
     "clean": "rm -rf target pkg node_modules",
-    "test": "cargo test"
+    "test": "cargo test",
+    "postinstall": "pnpm build"
   },
   "version": "0.1.0",
   "license": "Elastic License 2.0",
