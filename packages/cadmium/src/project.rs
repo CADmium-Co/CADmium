@@ -3,7 +3,7 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::*;
-use crate::message::Message;
+use crate::error::CADmiumError;
 use crate::realization::Realization;
 use crate::sketch::constraints::Constraint;
 use crate::step::StepData;
@@ -66,34 +66,23 @@ impl Project {
         }
     }
 
-    pub fn get_workbench_mut(&mut self, name: &str) -> Option<&mut Workbench> {
-        for workbench in self.workbenches.iter_mut() {
-            if workbench.name == name {
-                return Some(workbench);
-            }
-        }
-        None
+    pub fn get_workbench_mut(&mut self, name: &str) -> Result<&mut Workbench, CADmiumError> {
+        self.workbenches
+            .iter_mut()
+            .find(|wb| wb.name == name)
+            .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
+    }
+
+    pub fn get_workbench_by_id_mut(&mut self, id: u64) -> Result<&mut Workbench, CADmiumError> {
+        self.workbenches
+            .get_mut(id as usize)
+            .ok_or(CADmiumError::WorkbenchIDNotFound(id))
     }
 
     pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Realization {
         let workbench = &self.workbenches[workbench_id as usize];
         let realization = workbench.realize(max_steps);
         realization
-    }
-
-    pub fn handle_message_string(&mut self, message_string: &str) -> Result<String, String> {
-        let message = Message::from_json(message_string);
-        match message {
-            Err(e) => Err(format!("parsing_error: \"{}\"", e)),
-            Ok(msg) => {
-                let result = msg.handle(self);
-
-                match result {
-                    Ok(res) => Ok(res),
-                    Err(e) => Err(format!("message_handling_error: \"{}\"", e)),
-                }
-            }
-        }
     }
 }
 
@@ -235,6 +224,7 @@ pub mod tests {
     use crate::extrusion::Direction;
     use crate::extrusion::Extrusion;
     use crate::extrusion::ExtrusionMode;
+    use crate::message::Message;
     use truck_meshalgo::tessellation::*;
     use truck_meshalgo::filters::*;
 

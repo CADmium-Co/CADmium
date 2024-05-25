@@ -4,10 +4,10 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use crate::archetypes::PlaneDescription;
+use crate::error::CADmiumError;
 use crate::extrusion::{Direction, Extrusion, ExtrusionMode};
 use crate::project::Project;
 use crate::step::StepData;
-
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -96,9 +96,9 @@ pub enum Message {
         sketch_id: String,
         plane_id: String,
     },
-    DeleteSketch {
+    DeleteStep {
         workbench_id: u64,
-        sketch_name: String,
+        step_name: String,
     },
     NewExtrusion {
         workbench_id: u64,
@@ -128,22 +128,17 @@ pub enum Message {
 
 impl Message {
     pub fn as_json(&self) -> String {
-        let result = serde_json::to_string(self);
-        match result {
+        match serde_json::to_string(self) {
             Ok(json) => json,
             Err(e) => format!("Error: {}", e),
         }
     }
 
-    pub fn from_json(json: &str) -> Result<Message, String> {
-        let result = serde_json::from_str(json);
-        match result {
-            Ok(msg) => Ok(msg),
-            Err(e) => Err(format!("Error: {}", e)),
-        }
+    pub fn from_json(json: &str) -> Result<Message, anyhow::Error> {
+        Ok(serde_json::from_str(json)?)
     }
 
-    pub fn handle(&self, project: &mut Project) -> Result<String, String> {
+    pub fn handle(&self, project: &mut Project) -> Result<String, anyhow::Error> {
         match self {
             Message::RenameProject { new_name } => {
                 project.name = new_name.to_owned();
@@ -153,7 +148,8 @@ impl Message {
                 workbench_id,
                 new_name,
             } => {
-                project.workbenches[*workbench_id as usize].name = new_name.to_owned();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                workbench.name = new_name.to_owned();
                 Ok(format!("\"name\": \"{}\"", new_name))
             }
             Message::RenameStep {
@@ -161,14 +157,11 @@ impl Message {
                 step_id,
                 new_name,
             } => {
-                // let workbench = &mut self.workbenches[*workbench_id as usize];
-                // let current_step_name = workbench.history[*step_id as usize].name.clone();
-                // let current_step = workbench.history.get(*step_id as usize).unwrap();
-
-                project.workbenches[*workbench_id as usize]
+                project
+                    .get_workbench_by_id_mut(*workbench_id)?
                     .history
                     .get_mut(*step_id as usize)
-                    .unwrap()
+                    .ok_or(CADmiumError::StepIDNotFound(step_id.to_string()))?
                     .name = new_name.to_owned();
 
                 Ok(format!("\"name\": \"{}\"", new_name))
@@ -178,8 +171,8 @@ impl Message {
                 sketch_id,
                 line_ids,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 for line_id in line_ids {
                     sketch.delete_line_segment(*line_id);
                 }
@@ -190,8 +183,8 @@ impl Message {
                 sketch_id,
                 arc_ids,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 for arc_id in arc_ids {
                     sketch.delete_arc(*arc_id);
                 }
@@ -202,8 +195,8 @@ impl Message {
                 sketch_id,
                 circle_ids,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 for circle_id in circle_ids {
                     sketch.delete_circle(*circle_id);
                 }
@@ -216,8 +209,8 @@ impl Message {
                 y,
                 hidden,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 let point_id;
                 if *hidden {
                     point_id = sketch.add_hidden_point(*x, *y);
@@ -233,8 +226,8 @@ impl Message {
                 center_id,
                 edge_id,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 let circle_id = sketch.add_circle_between_points(*center_id, *edge_id);
                 Ok(format!("\"id\": \"{}\"", circle_id))
             }
@@ -244,8 +237,8 @@ impl Message {
                 start_id,
                 end_id,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 let (point_ids, line_ids) = sketch.add_rectangle_between_points(*start_id, *end_id);
                 Ok(format!(
                     "\"point_ids\": [{}], \"line_ids\": [{}]",
@@ -260,9 +253,9 @@ impl Message {
                 x,
                 y,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
-                sketch.add_point_with_id(*x, *y, *point_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
+                sketch.add_point_with_id(*x, *y, *point_id)?;
                 Ok("".to_owned())
             }
             Message::NewLineOnSketch {
@@ -271,8 +264,8 @@ impl Message {
                 start_point_id,
                 end_point_id,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 let line_id = sketch.add_segment(*start_point_id, *end_point_id);
                 Ok(format!("\"id\": \"{}\"", line_id))
             }
@@ -281,8 +274,8 @@ impl Message {
                 sketch_name,
                 line_segment_id,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_mut(sketch_name)?;
                 sketch.delete_line_segment(*line_segment_id);
                 Ok("".to_owned())
             }
@@ -291,8 +284,8 @@ impl Message {
                 sketch_name,
                 steps,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_mut(sketch_name)?;
                 let mut max_change = 0.0;
                 for _ in 0..*steps {
                     max_change = sketch.take_a_step();
@@ -304,8 +297,8 @@ impl Message {
                 sketch_name,
                 max_steps,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let sketch = workbench.get_sketch_mut(sketch_name).unwrap();
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_mut(sketch_name)?;
                 sketch.solve(*max_steps);
                 Ok("".to_owned())
             }
@@ -314,7 +307,7 @@ impl Message {
                 sketch_name,
                 plane_id,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
 
                 let new_sketch_id = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
                 Ok(format!("\"sketch_id\": \"{}\"", new_sketch_id))
@@ -324,52 +317,33 @@ impl Message {
                 sketch_id,
                 plane_id: pid,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let step = workbench.get_step_by_id_mut(&sketch_id)?;
+                let plane_description: &mut PlaneDescription = if let StepData::Sketch { plane_description, .. } = &mut step.data {
+                    plane_description
+                } else {
+                    return Err(CADmiumError::IncorrectStepDataType("Sketch".to_owned()).into());
+                };
 
-                for step in workbench.history.iter_mut() {
-                    if step.unique_id == *sketch_id {
-                        match &mut step.data {
-                            StepData::Sketch {
-                                plane_description,
-                                width: _width,
-                                height: _height,
-                                sketch: _sketch,
-                            } => {
-                                match plane_description {
-                                    PlaneDescription::PlaneId(plane_id) => {
-                                        *plane_id = pid.to_owned();
-                                        return Ok(format!("\"plane_id\": \"{}\"", pid));
-                                    }
-                                    _ => {
-                                        panic!("Not implemented yet");
-                                    }
-                                }
-                                // *pn2 = pid.to_owned();
-                            }
-                            _ => {}
-                        }
+                match plane_description {
+                    PlaneDescription::PlaneId(ref mut plane_id) => {
+                        *plane_id = pid.to_owned();
+                        Ok(format!("\"plane_id\": \"{}\"", pid))
                     }
+                    _ => Err(CADmiumError::NotImplemented.into())
                 }
-
-                Ok("".to_owned())
             }
-            Message::DeleteSketch {
+            Message::DeleteStep {
                 workbench_id,
-                sketch_name,
+                step_name,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                let mut index = 0;
-                for step in workbench.history.iter() {
-                    match &step.data {
-                        StepData::Sketch { .. } => {
-                            if step.name == *sketch_name {
-                                break;
-                            }
-                        }
-                        _ => {}
-                    }
-                    index += 1;
-                }
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let index = workbench.history
+                    .iter()
+                    .position(|step| step.name == *step_name)
+                    .ok_or(CADmiumError::StepNameNotFound(step_name.to_owned()))?;
+
+                // Since the index was found and not given by the user, it should be safe to remove
                 workbench.history.remove(index);
                 Ok("".to_owned())
             }
@@ -382,7 +356,7 @@ impl Message {
                 offset,
                 direction,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 let extrusion = Extrusion::new(
                     sketch_id.to_owned(),
                     face_ids.to_owned(),
@@ -404,7 +378,7 @@ impl Message {
                 offset,
                 direction,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 let extrusion = Extrusion::new(
                     sketch_id.to_owned(),
                     face_ids.to_owned(),
@@ -422,19 +396,15 @@ impl Message {
                 extrusion_name,
                 length,
             } => {
-                let workbench = &mut project.workbenches[*workbench_id as usize];
-                for step in workbench.history.iter_mut() {
-                    match &mut step.data {
-                        StepData::Extrusion { extrusion } => {
-                            if step.name == *extrusion_name {
-                                extrusion.length = *length;
-                                return Ok(format!("\"length\": {}", length));
-                            }
-                        }
-                        _ => {}
-                    }
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let step = workbench.get_step_mut(&extrusion_name)?;
+
+                if let StepData::Extrusion { extrusion } = &mut step.data {
+                    extrusion.length = *length;
+                    return Ok(format!("\"length\": {}", length));
                 }
-                Err(format!("Extrusion {} not found", extrusion_name))
+
+                Err(CADmiumError::IncorrectStepDataType("Extrusion".to_owned()).into())
             }
         }
     }

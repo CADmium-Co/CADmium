@@ -3,6 +3,7 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
+use crate::error::CADmiumError;
 use crate::extrusion::{fuse, Extrusion, ExtrusionMode};
 use crate::project::{RealPlane, RealSketch};
 use crate::realization::Realization;
@@ -90,42 +91,36 @@ impl Workbench {
         }
     }
 
-    pub fn get_sketch_mut(&mut self, name: &str) -> Option<&mut Sketch> {
-        for step in self.history.iter_mut() {
-            match &mut step.data {
-                StepData::Sketch {
-                    plane_description: _,
-                    width: _,
-                    height: _,
-                    sketch,
-                } => {
-                    if name == step.name {
-                        return Some(sketch);
-                    }
-                }
-                _ => {}
-            }
-        }
-        None
+    pub fn get_step_mut(&mut self, name: &str) -> Result<&mut Step, CADmiumError> {
+        self.history
+            .iter_mut()
+            .find(|step| step.name == name)
+            .ok_or(CADmiumError::StepNameNotFound(name.to_string()))
     }
 
-    pub fn get_sketch_by_id_mut(&mut self, id: &str) -> Option<&mut Sketch> {
-        for step in self.history.iter_mut() {
-            match &mut step.data {
-                StepData::Sketch {
-                    plane_description: _,
-                    width: _,
-                    height: _,
-                    sketch,
-                } => {
-                    if id == step.unique_id {
-                        return Some(sketch);
-                    }
-                }
-                _ => {}
-            }
+    pub fn get_step_by_id_mut(&mut self, id: &str) -> Result<&mut Step, CADmiumError> {
+        self.history
+            .iter_mut()
+            .find(|step| step.unique_id == id)
+            .ok_or(CADmiumError::StepIDNotFound(id.to_string()))
+    }
+
+    pub fn get_sketch_mut(&mut self, name: &str) -> Result<&mut Sketch, CADmiumError> {
+        let step = self.get_step_mut(name)?;
+
+        match step.data {
+            StepData::Sketch { ref mut sketch, .. } => Ok(sketch),
+            _ => Err(CADmiumError::IncorrectStepDataType(step.unique_id.clone())),
         }
-        None
+    }
+
+    pub fn get_sketch_by_id_mut(&mut self, id: &str) -> Result<&mut Sketch, CADmiumError> {
+        let step = self.get_step_by_id_mut(id)?;
+
+        match step.data {
+            StepData::Sketch { ref mut sketch, .. } => Ok(sketch),
+            _ => Err(CADmiumError::IncorrectStepDataType(step.unique_id.clone())),
+        }
     }
 
     pub fn add_defaults_2(&mut self) {
@@ -133,137 +128,13 @@ impl Workbench {
         self.add_plane("Top", Plane::top());
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
-
-        // let sketch_id = self.add_sketch_to_plane("Sketch 1", "Top");
-
-        // let sketch = self.get_sketch_mut("Sketch 1").unwrap();
-
-        // square in center
-        // let width = 0.5;
-        // let height = 0.5;
-        // let p0 = sketch.add_fixed_point(-width / 2.0, -height / 2.0);
-        // let p1 = sketch.add_point(-width / 2.0, height / 2.0);
-        // let p2 = sketch.add_point(width / 2.0, height / 2.0);
-        // let p3 = sketch.add_point(width / 2.0, -height / 2.0);
-        // let seg_0 = sketch.add_segment(p0, p1);
-        // let seg_1 = sketch.add_segment(p1, p2);
-        // let seg_2 = sketch.add_segment(p2, p3);
-        // let seg_3 = sketch.add_segment(p3, p0);
-
-        // let big_p0 = sketch.add_point(-0.1, -0.1);
-        // let big_p1 = sketch.add_point(0.55, -0.1);
-        // let big_p2 = sketch.add_point(0.55, 0.55);
-        // let big_p3 = sketch.add_point(-0.1, 0.55);
-        // let big_seg_0 = sketch.add_segment(big_p0, big_p1);
-        // let big_seg_1 = sketch.add_segment(big_p1, big_p2);
-        // let big_seg_2 = sketch.add_segment(big_p2, big_p3);
-        // let big_seg_3 = sketch.add_segment(big_p3, big_p0);
-
-        // self.add_extrusion(
-        //     "Ext 1",
-        //     Extrusion {
-        //         sketch_id,
-        //         face_ids: vec![0, 1],
-        //         length: 0.15,
-        //         offset: 0.0,
-        //         direction: Direction::Normal,
-        //     },
-        // );
     }
 
     pub fn add_defaults(&mut self) {
         self.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
         self.add_plane("Front", Plane::front());
         self.add_plane("Right", Plane::right());
-        // let top_plane_id = self.add_plane("Top", Plane::top());
-
-        // let sketch_id = self.add_sketch_to_plane("Sketch 1", &top_plane_id);
-
-        // let sketch = self.get_sketch_mut("Sketch 1").unwrap();
-
-        // square in upper right
-        // let p0 = sketch.add_fixed_point(0.0, 0.0);
-        // let p1 = sketch.add_point(45.0, 0.0);
-        // let p2 = sketch.add_point(45.0, 45.0);
-        // let p3 = sketch.add_point(0.0, 45.0);
-        // let seg_0 = sketch.add_segment(p0, p1);
-        // let seg_1 = sketch.add_segment(p1, p2);
-        // let seg_2 = sketch.add_segment(p2, p3);
-        // let seg_3 = sketch.add_segment(p3, p0);
-
-        // let big_p0 = sketch.add_point(-0.1, -0.1);
-        // let big_p1 = sketch.add_point(0.55, -0.1);
-        // let big_p2 = sketch.add_point(0.55, 0.55);
-        // let big_p3 = sketch.add_point(-0.1, 0.55);
-        // let big_seg_0 = sketch.add_segment(big_p0, big_p1);
-        // let big_seg_1 = sketch.add_segment(big_p1, big_p2);
-        // let big_seg_2 = sketch.add_segment(big_p2, big_p3);
-        // let big_seg_3 = sketch.add_segment(big_p3, big_p0);
-
-        // sketch.add_segment_vertical_constraint(seg_3);
-        // sketch.add_segment_horizontal_constraint(seg_0);
-        // sketch.add_segment_length_constraint(seg_0, 0.52);
-        // sketch.add_segment_length_constraint(seg_1, 0.52);
-        // sketch.add_segment_length_constraint(seg_2, 0.52);
-        // sketch.add_segment_length_constraint(seg_3, 0.52);
-
-        // Simple circle in lower left
-        // let p4 = sketch.add_point(-0.5, -0.25);
-        // sketch.add_circle(p4, 0.3);
-
-        // // intersecting circle!
-        // let p5 = sketch.add_point(-0.8, -0.25);
-        // let c2 = sketch.add_circle(p5, 0.3);
-
-        // sketch.add_circle_diameter_constraint(c2, 0.6);
-
-        // Rounded square in lower right
-        // let shrink = 0.4;
-        // let offset_x = 0.1;
-        // let offset_y = -0.70;
-        // let a = sketch.add_point(0.25 * shrink + offset_x, 0.00 * shrink + offset_y);
-        // let b = sketch.add_point(0.75 * shrink + offset_x, 0.00 * shrink + offset_y);
-        // let c = sketch.add_point(1.00 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let d = sketch.add_point(1.00 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let e = sketch.add_point(0.75 * shrink + offset_x, 1.00 * shrink + offset_y);
-        // let f = sketch.add_point(0.25 * shrink + offset_x, 1.00 * shrink + offset_y);
-        // let g = sketch.add_point(0.00 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let h = sketch.add_point(0.00 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let i = sketch.add_point(0.75 * shrink + offset_x, 0.25 * shrink + offset_y);
-        // let j = sketch.add_point(0.75 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let k = sketch.add_point(0.25 * shrink + offset_x, 0.75 * shrink + offset_y);
-        // let l = sketch.add_point(0.25 * shrink + offset_x, 0.25 * shrink + offset_y);
-
-        // sketch.add_segment(a, b);
-        // sketch.add_arc(i, b, c, false);
-        // sketch.add_segment(c, d);
-        // sketch.add_arc(j, d, e, false);
-        // sketch.add_segment(e, f);
-        // sketch.add_arc(k, f, g, false);
-        // sketch.add_segment(g, h);
-        // sketch.add_arc(l, h, a, false);
-
-        // self.add_extrusion(
-        //     "Ext 1",
-        //     Extrusion {
-        //         sketch_id,
-        //         face_ids: vec![],
-        //         length: 0.25,
-        //         offset: 0.0,
-        //         direction: Direction::Normal,
-        //     },
-        // );
-
-        // self.add_extrusion(
-        //     "Ext 2",
-        //     Extrusion {
-        //         sketch_name: "Sketch 1".to_owned(),
-        //         face_ids: vec![0, 1],
-        //         length: 0.15,
-        //         offset: 0.0,
-        //         direction: Vector3::new(0.0, 0.0, 1.0),
-        //     },
-        // );
+        self.add_plane("Top", Plane::top());
     }
 
     pub fn add_point(&mut self, name: &str, point: Point3) {

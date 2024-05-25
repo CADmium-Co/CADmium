@@ -19,6 +19,7 @@ use std::f64::consts::{PI, TAU};
 use std::hash::{Hash, Hasher};
 
 use crate::archetypes::{Circle3, Plane};
+use crate::error::CADmiumError;
 use crate::project::{Project, RealSketch};
 
 pub(crate) mod constraints;
@@ -26,6 +27,15 @@ mod intersections;
 mod svg;
 
 use crate::sketch::constraints::Constraint;
+
+#[derive(strum::Display, Debug, Serialize, Deserialize)]
+pub enum SketchFeatureType {
+    Point,
+    Line,
+    Circle,
+    Arc,
+    Constraint,
+}
 
 #[serde_as]
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
@@ -343,12 +353,12 @@ impl Sketch {
         id
     }
 
-    pub fn add_point_with_id(&mut self, x: f64, y: f64, id0: u64) -> Result<(), String> {
+    pub fn add_point_with_id(&mut self, x: f64, y: f64, id0: u64) -> Result<(), CADmiumError> {
         if self.points.contains_key(&id0) {
-            return Err("Point already exists".to_string());
+            return Err(CADmiumError::SketchFeatureAlreadyExists(SketchFeatureType::Point, id0));
         }
         if self.highest_point_id >= id0 {
-            return Err("Point ID too low".to_string());
+            return Err(CADmiumError::SketchFeatureIDTooLow(SketchFeatureType::Point, id0));
         }
         self.points.insert(id0, Point2::new(x, y));
         self.highest_point_id = id0;
@@ -631,18 +641,18 @@ impl Sketch {
         self.line_segments.remove(&id);
     }
 
-    pub fn add_line_with_id(&mut self, start_id: u64, end_id: u64, id: u64) -> Result<(), String> {
+    pub fn add_line_with_id(&mut self, start_id: u64, end_id: u64, id: u64) -> Result<(), CADmiumError> {
         if self.line_segments.contains_key(&id) {
-            return Err("Line already exists".to_string());
+            return Err(CADmiumError::SketchFeatureAlreadyExists(SketchFeatureType::Line, id));
         }
         if self.highest_line_segment_id >= id {
-            return Err("Line ID too low".to_string());
+            return Err(CADmiumError::SketchFeatureIDTooLow(SketchFeatureType::Line, id));
         }
         if !self.points.contains_key(&start_id) {
-            return Err("Start point does not exist".to_string());
+            return Err(CADmiumError::SketchFeatureMissingStart(SketchFeatureType::Line, id));
         }
         if !self.points.contains_key(&end_id) {
-            return Err("End point does not exist".to_string());
+            return Err(CADmiumError::SketchFeatureMissingEnd(SketchFeatureType::Line, id));
         }
 
         let l = Line2 {
