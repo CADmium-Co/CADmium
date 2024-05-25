@@ -28,16 +28,16 @@
 		if (!editing) return
 		switch (event.key) {
 			case "l":
-				setTool("line")
+				setTool("Line")
 				break
 			case "r":
-				setTool("rectangle")
+				setTool("Rectangle")
 				break
 			case "c":
-				setTool("circle")
+				setTool("Circle")
 				break
 			case "Escape":
-				setTool("select")
+				setTool("Select")
 				break
 			default:
 				break

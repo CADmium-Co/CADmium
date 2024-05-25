@@ -8,6 +8,13 @@ type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
 type SetCameraFocus = (goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void
 
+type ToolType =
+	| "Arc"
+	| "Circle"
+	| "Line"
+	| "Rectangle"
+	| "Select"
+
 type EntityType =
   | "circle"
   | "arc"

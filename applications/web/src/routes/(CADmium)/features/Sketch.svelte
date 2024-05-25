@@ -79,7 +79,7 @@
 		$selectionMax = 1000
 		$selectionMin = 0
 		selectingForSketchPlane = false
-		$sketchTool = "select"
+		$sketchTool = "Select"
 		$currentlyMousedOver = []
 		// log("search is disengaged")
 	}
@@ -112,7 +112,7 @@
 			closeAndRefresh()
 		} else {
 			$featureIndex = featureIdx
-			$sketchTool = "select"
+			$sketchTool = "Select"
 		}
 	}}
 >

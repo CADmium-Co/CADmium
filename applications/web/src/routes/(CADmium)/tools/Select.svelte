@@ -7,6 +7,10 @@
 
 	export let sketchIndex: string, active: boolean
 
+	export function mouseMove(_event: Event, projected: any) {
+		// log("mouse move", projected)
+	}
+
 	export function click(_event: Event, _projected: any) {
 		if ($currentlyMousedOver.length === 0) {
 			// they clicked off into empty space. deselect everything
@@ -47,6 +51,8 @@
 			currentlySelected.set([])
 		}
 	}
+
+	log("[props]", "sketchIndex:", sketchIndex, "active:", active)
 </script>
 
 <svelte:window on:keydown={onKeyDown} />

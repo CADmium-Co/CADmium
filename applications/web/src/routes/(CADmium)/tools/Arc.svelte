@@ -5,7 +5,7 @@
 	import type { PointLikeById, Point2D, PointsLikeById, ProjectToPlane } from "shared/types"
 
 	// prettier-ignore
-	const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
+	const log = (function () { const context = "[NewArcTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let pointsById: PointsLikeById
 	export let sketchIndex: string
@@ -16,7 +16,7 @@
 
 	let centerPoint: PointLikeById | null
 
-	$: if ($sketchTool !== "circle") centerPoint = null
+	$: if ($sketchTool !== "Arc") centerPoint = null
 	// $: centerPoint, log("[centerPoint]", centerPoint)
 
 	function processPoint(point: PointLikeById) {
@@ -142,7 +142,7 @@
 		if (event.key === "Escape") {
 			previewGeometry.set([])
 			centerPoint = null
-			$sketchTool = "select"
+			$sketchTool = "Select"
 		}
 	}
 </script>

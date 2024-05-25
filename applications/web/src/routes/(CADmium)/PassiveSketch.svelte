@@ -10,10 +10,10 @@
 	import Face from "./Face.svelte"
 	import { LineMaterial } from "three/addons/lines/LineMaterial.js"
 	import { LineGeometry } from "three/addons/lines/LineGeometry.js"
-	import NewLineTool from "./NewLineTool.svelte"
-	import NewCircleTool from "./NewCircleTool.svelte"
-	import NewRectangleTool from "./NewRectangleTool.svelte"
-	import SelectTool from "./SelectTool.svelte"
+	import NewLineTool from "./tools/Line.svelte"
+	import NewCircleTool from "./tools/Circle.svelte"
+	import NewRectangleTool from "./tools/Rectangle.svelte"
+	import SelectTool from "./tools/Select.svelte"
 	import type {
 		ArcTuple,
 		CircleTuple,
@@ -26,6 +26,7 @@
 		PointById,
 		SketchRealized
 	} from "shared/types"
+	import ToolInstance from "./tools/ToolInstance.svelte"
 
 	// prettier-ignore
 	const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -47,7 +48,7 @@
 		solidSelectedMaterial: LineMaterial,
 		collisionLineMaterial: LineMaterial
 
-	let newLineTool: NewLineTool, newCircleTool: NewCircleTool, newRectangleTool: NewRectangleTool, selectTool: SelectTool
+	let toolsInstance: ToolInstance
 
 	let pointTuples: PointById[] = []
 	let lineTuples: LineTuple[] = []
@@ -168,7 +169,7 @@
 	$: hidden = $hiddenSketches.includes(uniqueId) && !editing
 	// $: $hiddenSketches, log("[$hiddenSketches]", $hiddenSketches)
 
-	$: if (editing) $sketchTool = "select"
+	$: if (editing) $sketchTool = "Select"
 
 	function projectToPlane(point3D: Vector3): Vector2 {
 		const xComponent = point3D.clone().sub(plane.origin).dot(primary)
@@ -193,56 +194,13 @@
 	>
 		<T.Mesh
 			material={planeMaterial}
-			on:click={(e) => {
-				if (editing) {
-					if ($sketchTool === "line") {
-						newLineTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
-					} else if ($sketchTool === "circle") {
-						newCircleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
-					} else if ($sketchTool === "rectangle") {
-						newRectangleTool.click(e, { twoD: projectToPlane(e.point), threeD: e.point })
-					} else if ($sketchTool === "select") {
-						selectTool.click(e, projectToPlane(e.point))
-					}
-				}
-			}}
-			on:pointermove={(e) => {
-				if (editing) {
-					if ($sketchTool === "line") {
-						newLineTool.mouseMove(e, projectToPlane(e.point))
-					} else if ($sketchTool === "circle") {
-						newCircleTool.mouseMove(e, projectToPlane(e.point))
-					} else if ($sketchTool === "rectangle") {
-						newRectangleTool.mouseMove(e, projectToPlane(e.point))
-					}
-				}
-			}}
+			on:click={e => editing && toolsInstance.meshClick(e, { twoD: projectToPlane(e.point), threeD: e.point })}
+			on:pointermove={e => editing && toolsInstance.meshMouseMove(e, projectToPlane(e.point))}
 		>
 			<T.PlaneGeometry args={[width * 100, height * 100]} />
 		</T.Mesh>
 
-		<SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool === "select"} />
-		<NewLineTool
-			bind:this={newLineTool}
-			{pointsById}
-			sketchIndex={uniqueId}
-			active={$sketchTool === "line"}
-			{projectToPlane}
-		/>
-		<NewCircleTool
-			bind:this={newCircleTool}
-			{pointsById}
-			sketchIndex={uniqueId}
-			active={$sketchTool === "circle"}
-			{projectToPlane}
-		/>
-		<NewRectangleTool
-			bind:this={newRectangleTool}
-			{pointsById}
-			sketchIndex={uniqueId}
-			active={$sketchTool === "rectangle"}
-			{projectToPlane}
-		/>
+		<ToolInstance bind:this={toolsInstance} {pointsById} sketchIndex={uniqueId} {projectToPlane} />
 
 		<T.Line2
 			geometry={lineGeometry}

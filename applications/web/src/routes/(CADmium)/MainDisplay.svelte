@@ -53,7 +53,7 @@
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-	class="bg-white {$sketchTool === 'line' || $sketchTool === 'circle' || $sketchTool === 'rectangle'
+	class="bg-white {$sketchTool === 'Line' || $sketchTool === 'Circle' || $sketchTool === 'Rectangle'
 		? 'cursor-crosshair'
 		: ''}"
 	style="width:{viewportWidth}px; height:{height}px"

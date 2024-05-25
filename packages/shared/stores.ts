@@ -9,7 +9,8 @@ import type {
 	EntityType,
 	SnapEntity,
 	PointLikeById,
-	PreviewGeometry
+	PreviewGeometry,
+	ToolType
 } from "./types"
 import {
 	isArcEntity,
@@ -44,7 +45,7 @@ export const realizationIsStale = writable(false)
 
 export const hiddenSketches = writable<string[]>([])
 export const sketchBeingEdited = writable("")
-export const sketchTool = writable("")
+export const sketchTool = writable<ToolType>("Select")
 
 // could be looking for 'face' or 'plane' or other things
 export const selectingFor = writable<EntityType[]>([])
@@ -117,6 +118,7 @@ function latestIsEntity(store: Entity[], type: EntityType) {
 function emptyWorkBench(): WorkBench {
 	return {
 		name: "",
+		renaming: false,
 		history: [],
 		step_counters: {
 			Extrusion: 0,

@@ -58,13 +58,13 @@
 			ref.computeLineDistances()
 		}}
 		on:pointerover={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === "Select") {
 				hovered = true
 				$currentlyMousedOver = [...$currentlyMousedOver, { type, id }]
 			}
 		}}
 		on:pointerout={() => {
-			if ($sketchTool === "select") {
+			if ($sketchTool === "Select") {
 				hovered = false
 				$currentlyMousedOver = $currentlyMousedOver.filter((item) => !(item.id === id && item.type === type))
 			}

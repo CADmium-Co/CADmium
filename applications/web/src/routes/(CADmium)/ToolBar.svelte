@@ -45,9 +45,9 @@
 	const sketchActions = [
 		{ alt: "solve", src: `${base}/actions/solve_min.svg`, text: "Solve", handler: solveSketch },
 		{ alt: "step", src: `${base}/actions/step_min.svg`, text: "Step", handler: stepSketch },
-		{ alt: "line", src: `${base}/actions/line.svg`, handler: () => ($sketchTool = "line") },
-		{ alt: "circle", src: `${base}/actions/circle.svg`, handler: () => ($sketchTool = "circle") },
-		{ alt: "rectangle", src: `${base}/actions/rectangle.svg`, handler: () => ($sketchTool = "rectangle") }
+		{ alt: "line", src: `${base}/actions/line.svg`, handler: () => ($sketchTool = "Line") },
+		{ alt: "circle", src: `${base}/actions/circle.svg`, handler: () => ($sketchTool = "Circle") },
+		{ alt: "rectangle", src: `${base}/actions/rectangle.svg`, handler: () => ($sketchTool = "Rectangle") }
 	]
 </script>
 

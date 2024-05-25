@@ -38,7 +38,7 @@
 	const vertices = new Float32Array([x, y, z])
 	geom.setAttribute("position", new Float32BufferAttribute(vertices, 3))
 
-	const validTools = ["select", "line", "circle", "rectangle"]
+	const validTools = ["Select", "Line", "Circle", "Rectangle"]
 </script>
 
 {#if !hidden}

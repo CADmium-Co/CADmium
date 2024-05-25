@@ -13,7 +13,7 @@
 
 	let previousPoint: PointLikeById | null
 
-	$: if ($sketchTool !== "line") previousPoint = null
+	$: if ($sketchTool !== "Line") previousPoint = null
 
 	function processPoint(point: PointLikeById | null) {
 		if (!previousPoint && point) {
@@ -118,7 +118,7 @@
 		if (event.key === "Escape") {
 			previewGeometry.set([])
 			previousPoint = null
-			$sketchTool = "select"
+			$sketchTool = "Select"
 		}
 	}
 </script>

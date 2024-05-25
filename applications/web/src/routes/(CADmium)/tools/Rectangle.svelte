@@ -14,7 +14,7 @@
 
 	let anchorPoint: PointLikeById | null
 
-	$: if ($sketchTool !== "rectangle") anchorPoint = null
+	$: if ($sketchTool !== "Rectangle") anchorPoint = null
 
 	function processPoint(point: PointLikeById) {
 		if (!anchorPoint) {
@@ -158,7 +158,7 @@
 		if (event.key === "Escape") {
 			previewGeometry.set([])
 			anchorPoint = null
-			$sketchTool = "select"
+			$sketchTool = "Select"
 		}
 	}
 </script>
