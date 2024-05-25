@@ -10,6 +10,7 @@
 		hiddenSketches
 	} from "shared/stores"
 	import * as AllTools from "./tools";
+	import * as AllFeatures from "./features";
 	import { newExtrusion, newSketchOnPlane } from "shared/projectUtils"
 	import { base } from "$app/paths"
 	import type { ToolType } from "shared/types"
@@ -30,6 +31,21 @@
 	}
 	const debugging = false
 
+	interface ActionType {
+		alt: string
+		src: string
+		text: string
+		// tooltip: string // TODO
+		handler: () => void
+	}
+
+	// const actions: ActionType[] = Object.keys(AllFeatures).map((featureName: string): ActionType => ({
+	// 	alt: featureName,
+	// 	src: `${base}/actions/${featureName.toLowerCase()}_min.svg`,
+	// 	text: featureName,
+	// 	handler: () => ($sketchTool = (featureName as ToolType))
+	// }))
+
 	const actions = [
 		{
 			alt: "new sketch",
@@ -41,15 +57,7 @@
 		// { alt: 'plane', src: '/actions/plane_min.svg' }
 	]
 
-	interface SketchActionType {
-		alt: string
-		src: string
-		text: string
-		// tooltip: string // TODO
-		handler: () => void
-	}
-
-	const sketchActions: SketchActionType[] = Object.keys(AllTools).filter(toolName => toolName !== "Select").map((toolName: string): SketchActionType => ({
+	const sketchActions: ActionType[] = Object.keys(AllTools).filter(toolName => toolName !== "Select").map((toolName: string): ActionType => ({
 		alt: toolName,
 		src: `${base}/actions/${toolName.toLowerCase()}.svg`,
 		text: toolName,

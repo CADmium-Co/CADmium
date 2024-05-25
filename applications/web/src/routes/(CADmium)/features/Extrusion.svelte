@@ -10,15 +10,16 @@
 	// prettier-ignore
 	const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, unique_id: string, data: ExtrusionData["data"]["extrusion"], featureIdx: number
+	export let name: string, unique_id: string, data: ExtrusionData["data"], featureIdx: number
+	log("[ExtrusionFeature.svelte]", name, unique_id, data, featureIdx)
 
 	// coerce from number[] to string[] for frontend as we use strings for ids here
-	let faceIdsFromInputs = data.face_ids.sort().map((e) => e + "")
+	let faceIdsFromInputs = data.extrusion.face_ids ? data.extrusion.face_ids.sort().map((e) => e + "") : []
 
 	// reactive update of selected faces
-	$: if (data && data.face_ids) faceIdsFromInputs = data.face_ids.map((e) => e + "").sort()
+	$: if (data.extrusion && data.extrusion.face_ids) faceIdsFromInputs = data.extrusion.face_ids.map((e) => e + "").sort()
 
-	let length = data.length
+	let length = data.extrusion.length
 
 	const closeAndRefresh = () => {
 		// log("[closeAndRefresh] extrusion feature closing")
@@ -26,9 +27,9 @@
 		$currentlySelected = []
 		$selectingFor = []
 		// hide the sketch that this extrusion uses
-		if (!$hiddenSketches.includes(data.sketch_id)) {
+		if (!$hiddenSketches.includes(data.extrusion.sketch_id)) {
 			// log("[closeAndRefresh] Oh, we're hiding the sketch that this extrusion uses")
-			$hiddenSketches = [...$hiddenSketches, data.sketch_id]
+			$hiddenSketches = [...$hiddenSketches, data.extrusion.sketch_id]
 		}
 
 		workbenchIsStale.set(true)
@@ -39,7 +40,7 @@
 			.filter((e) => e.type === "face")
 			.map((e) => e.id)
 			.sort()
-		updateExtrusion(unique_id, data.sketch_id, length, faceIdsFromSelection)
+		updateExtrusion(unique_id, data.extrusion.sketch_id, length, faceIdsFromSelection)
 	}
 
 	currentlySelected.subscribe((e) => {

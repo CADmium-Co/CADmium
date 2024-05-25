@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { SvelteComponent } from "svelte"
 	import * as AllFeatures from "./";
 	import type { HistoryStep } from "shared/types"
 
@@ -8,8 +9,6 @@
 	export let feature: HistoryStep, featureIdx: number;
 
 	const FeatureComponent: ConstructorOfATypedSvelteComponent = AllFeatures[feature.data.type];
-
-	log("FeatureComponent:", FeatureComponent, "feature:", feature, "featureIdx:", featureIdx, "args:");
 </script>
 
 {#if FeatureComponent}

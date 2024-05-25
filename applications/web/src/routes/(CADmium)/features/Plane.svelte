@@ -10,7 +10,7 @@
 	// prettier-ignore
 	const log = (function () { const context = "[PlaneFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, featureIdx: number//, data: PlaneData["data"]["plane"]
+	export let name: string, featureIdx: number//, data: PlaneData["data"]
 
 	const source = `${base}/actions/plane_min.svg`
 

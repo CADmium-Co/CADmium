@@ -22,7 +22,7 @@
 	// prettier-ignore
 	const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, featureIdx: number, unique_id: string, data: SketchData["data"]["plane_description"]
+	export let name: string, featureIdx: number, unique_id: string, data: SketchData["data"]
 
 	// $: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
 
@@ -32,8 +32,8 @@
 	let selectingForSketchPlane = false
 
 	$: {
-		if (data.PlaneId !== "") {
-			surface = { type: "plane", id: data.PlaneId }
+		if (data.plane_description.PlaneId !== "") {
+			surface = { type: "plane", id: data.plane_description.PlaneId }
 		} else {
 			surface = null
 			engageSearchForPlane()

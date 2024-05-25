@@ -151,16 +151,14 @@ export function newSketchOnPlane() {
 
 export function newExtrusion() {
 	const bench: WorkBench = get(workbench)
-	// log("[newExtrusion] workbench:", workbench)
-	// log("[newExtrusion] bench:", bench)
 
-	let sketchId = null
+	let sketchId = ""
 	for (let step of bench.history) {
 		if (step.data.type === "Sketch") {
 			sketchId = step.unique_id
 		}
 	}
-	if (sketchId === null) {
+	if (sketchId === "") {
 		log("No sketch found in history")
 		return
 	}
@@ -449,7 +447,7 @@ export function arcToPoints(center: Vector2, start: Vector2, end: Vector2, clock
 
 	const startAngle = Math.atan2(start.y - center.y, start.x - center.x)
 
-	const lineVertices = []
+	const lineVertices: Vector2[] = []
 	lineVertices.push(start.clone())
 	for (let i = 1; i <= Math.abs(n); i++) {
 		const theta = ((2 * Math.PI) / n) * i + startAngle
@@ -478,7 +476,7 @@ export function circleToPoints(centerPoint: Vector2Like, radius: number): Vector
 	// faster to calculate, at most only overestimates by 1:
 	const n = Math.ceil(Math.PI / Math.sqrt(2 * k))
 
-	const lineVertices = []
+	const lineVertices: Vector2 = []
 	for (let i = 0; i <= n; i++) {
 		const theta = ((2 * Math.PI) / n) * i
 		const xComponent = radius * Math.cos(theta)
@@ -490,7 +488,7 @@ export function circleToPoints(centerPoint: Vector2Like, radius: number): Vector
 }
 
 export function promoteTo3(points: Vector2[]): Vector3[] {
-	const points3 = []
+	const points3: Vector3 = []
 	for (const point of points) {
 		points3.push(new Vector3(point.x, point.y, 0))
 	}
@@ -498,7 +496,7 @@ export function promoteTo3(points: Vector2[]): Vector3[] {
 }
 
 export function flatten(points: Vector3[]): number[] {
-	const pointsFlat = []
+	const pointsFlat: number[] = []
 	for (const point of points) {
 		pointsFlat.push(point.x, point.y, point.z)
 	}
