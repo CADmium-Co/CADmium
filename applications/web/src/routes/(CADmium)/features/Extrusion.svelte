@@ -67,7 +67,7 @@
 	// $: log($currentlySelected)
 	// $: faceIds = $currentlySelected.filter((e) => e.type === 'face').map((e) => e.id)
 
-	const source = `${base}/actions/extrude_min.svg`
+	const source = `${base}/actions/extrusion_min.svg`
 
 	$: if ($featureIndex === featureIdx) {
 		$selectingFor = ["face"]

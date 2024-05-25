@@ -14,21 +14,12 @@
 	import { newExtrusion, newSketchOnPlane } from "shared/projectUtils"
 	import { base } from "$app/paths"
 	import type { ToolType } from "shared/types"
+	import { createFeatureList } from "./features"
 
 	// prettier-ignore
 	const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	let solving = false
-	const createNewExtrusion = () => {
-		newExtrusion()
-		// set that as the current feature being edited
-		$featureIndex = $workbench.history.length - 1
-	}
-	const createNewSketch = () => {
-		// log('Create new sketch')
-		newSketchOnPlane()
-		$featureIndex = $workbench.history.length - 1
-	}
 	const debugging = false
 
 	interface ActionType {
@@ -39,23 +30,15 @@
 		handler: () => void
 	}
 
-	// const actions: ActionType[] = Object.keys(AllFeatures).map((featureName: string): ActionType => ({
-	// 	alt: featureName,
-	// 	src: `${base}/actions/${featureName.toLowerCase()}_min.svg`,
-	// 	text: featureName,
-	// 	handler: () => ($sketchTool = (featureName as ToolType))
-	// }))
-
-	const actions = [
-		{
-			alt: "new sketch",
-			src: `${base}/actions/sketch_min.svg`,
-			text: "New Sketch",
-			handler: createNewSketch
-		},
-		{ alt: "extrude", src: `${base}/actions/extrude_min.svg`, handler: createNewExtrusion }
-		// { alt: 'plane', src: '/actions/plane_min.svg' }
-	]
+	const actions: ActionType[] = Object.values(createFeatureList).map((feature): ActionType => ({
+		alt: feature.name,
+		src: `${base}/actions/${feature.name.toLowerCase()}_min.svg`,
+		text: feature.name,
+		handler: () => {
+			feature.new()
+			$featureIndex = $workbench.history.length - 1
+		}
+	}))
 
 	const sketchActions: ActionType[] = Object.keys(AllTools).filter(toolName => toolName !== "Select").map((toolName: string): ActionType => ({
 		alt: toolName,
