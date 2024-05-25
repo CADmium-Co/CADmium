@@ -14,7 +14,8 @@
 		"svelte-check": "svelte-check",
 		"test:integration": "playwright test",
 		"test:unit": "vitest",
-		"types:guard": "ts-auto-guard --export-all src/types.d.ts"
+		"types:guard": "ts-auto-guard --export-all src/types.d.ts",
+		"postinstall": "svelte-kit sync"
 	},
 	"devDependencies": {
 		"@playwright/test": "^1.42.1",
