@@ -1,13 +1,13 @@
 {
   "private": true,
   "scripts": {
-    "build": "turbo run build --cache-dir=.turbo",
-    "dev": "turbo run dev",
-    "serve": "turbo run serve",
-    "test": "turbo run test",
-    "clean": "turbo run clean",
-    "lint": "turbo run lint",
-    "format": "turbo run format"
+    "build": "turbo run build --cache-dir=.turbo --no-daemon",
+    "dev": "turbo run dev --no-daemon",
+    "serve": "turbo run serve --no-daemon",
+    "test": "turbo run test --no-daemon",
+    "clean": "turbo run clean --no-daemon",
+    "lint": "turbo run lint --no-daemon",
+    "format": "turbo run format --no-daemon"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
