@@ -754,6 +754,13 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // Then, add every face from solid1 to the combined solid.
     combined.append(&mut boundary1_copy);
 
+    // For now we just have this shitty version that only works in the particular case where
+    // one face is completely enveloped by the other, and the bigger one was passed in first.
+    // TODO: Delete this garbage and implement the correct version.
+    let mut outer_face = boundary0[fusable_faces.0].clone();
+    let inner_face = boundary1[fusable_faces.1].clone();
+    outer_face.add_boundary(inner_face.boundaries().first().unwrap().clone());
+
     // TODO: implement this correctly:
     // The two faces as coplanar and some of their features might overlap
     // but in general:
@@ -762,15 +769,21 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // maybe zero portion covered by Face 1.
     // Our primary task is to isolate those disjoint portions, orient each one correctly,
     // and add them as faces to the combined solid.
-    // Any portion which is covered by BOTH facese can be ignored completely.
+    // Any portion which ifs covered by BOTH facese can be ignored completely.
 
-    // For now we just have this shitty version that only works in the particular case where
-    // one face is completely enveloped by the other, and the bigger one was passed in first.
-    // TODO: Delete this garbage and implement the correct version.
-    let mut outer_face = boundary0[fusable_faces.0].clone();
-    let inner_face = boundary1[fusable_faces.1].clone();
-    outer_face.add_boundary(inner_face.boundaries().first().unwrap().clone());
+    let f0: truck_topology::Face<truck_meshalgo::prelude::cgmath::Point3<f64>, C, Surface> =
+        boundary0[fusable_faces.0].clone();
 
+    // not yet functional, but an attempt at the real thing:
+    if let Some((overlap, disjoint0, disjoint1)) = find_overlap(
+        &boundary0[fusable_faces.0].clone(),
+        &boundary1[fusable_faces.1].clone(),
+    ) {
+        // We found some overlap!
+        println!("The overlap: {:?}", overlap);
+    }
+
+    // back to the crappy but working version:
     // Then add that merged face to the solid and we've fused!
     combined.push(outer_face);
 
@@ -785,6 +798,38 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     // And then we're done!
     // None
     Some(TruckSolid::new(vec![combined]))
+}
+
+fn find_overlap<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt::Debug>(
+    face0: &truck_topology::Face<truck_meshalgo::prelude::cgmath::Point3<f64>, C, Surface>,
+    face1: &truck_topology::Face<truck_meshalgo::prelude::cgmath::Point3<f64>, C, Surface>,
+) -> Option<(
+    truck_topology::Face<truck_meshalgo::prelude::cgmath::Point3<f64>, C, Surface>,
+    truck_topology::Face<truck_meshalgo::prelude::cgmath::Point3<f64>, C, Surface>,
+    truck_topology::Face<truck_meshalgo::prelude::cgmath::Point3<f64>, C, Surface>,
+)> {
+    let surface0 = face0.oriented_surface();
+    let surface1 = face1.oriented_surface();
+
+    None
+    // match (surface0, surface1) {
+    //     (Surface::Plane(p0), Surface::Plane(p1)) => {
+    //         let normal0 = p0.normal();
+    //         let normal1 = p1.normal();
+
+    //         if !normal0.near(&normal1) {
+    //             return None;
+    //         }
+
+    //         let difference = p0.origin() - p1.origin();
+    //         let dot = normal0.dot(difference);
+    //         if dot.abs() > 0.0001 {
+    //             return None;
+    //         }
+
+    //         // Now we know the faces are coplanar. We need to find the overlap
+    //     }
+    // }
 }
 
 fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
