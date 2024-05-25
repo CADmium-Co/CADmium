@@ -96,10 +96,9 @@ pnpm test:unit -w
 
 ### rust
 
-Change the working directory to packages/cadmium and to run rust tests:
+To build and run the Rust tests:
 
 ```shell
-cd packages/cadmium
 cargo test
 ```
 
