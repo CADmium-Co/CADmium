@@ -31,7 +31,7 @@ The boundary representation engine under the hood is [truck](https://github.com/
 
 Leveraging truck, we wrote a small rust library called [cadmium](https://github.com/CADmium-Co/CADmium/tree/main/src/rust/cadmium) which provides structs for projects, workspaces, sketches, extrusions, and constraints. Our goal is that this rust library provides all the same functionality as the UI for anyone who prefers code-first CAD. This library is able to save and load projects to disk as json. We have also built a set of javascript bindings so that the whole thing can be compiled to wasm and run in a browser.
 
-The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is hosted with Github Pages. We use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. We use [Threlte](https://github.com/threlte/threlte) to manage the scene graph decaratively.
+The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is hosted with Github Pages. We use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. We use [Threlte](https://github.com/threlte/threlte) to manage the scene graph declaratively.
 
 ## License
 
