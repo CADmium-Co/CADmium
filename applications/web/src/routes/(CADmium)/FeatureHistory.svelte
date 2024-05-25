@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { workbench, realization } from "shared/stores"
-	import PointFeature from "./PointFeature.svelte"
-	import PlaneFeature from "./PlaneFeature.svelte"
-	import SketchFeature from "./SketchFeature.svelte"
-	import ExtrusionFeature from "./ExtrusionFeature.svelte"
+	import PointFeature from "./features/Point.svelte"
+	import PlaneFeature from "./features/Plane.svelte"
+	import SketchFeature from "./features/Sketch.svelte"
+	import ExtrusionFeature from "./features/Extrusion.svelte"
 	import SolidItem from "./SolidItem.svelte"
 	import { isPoint, isPlane, isExtrusion, isSketch } from "shared/projectUtils"
 	import type { SetCameraFocus } from "shared/types"
+	import FeatureInstance from "./features/FeatureInstance.svelte"
 
 	// prettier-ignore
 	const log = (function () { const context = "[FeatureHistory.svelte]"; const color="pink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -58,29 +59,7 @@
 	<div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
 		<div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
 		{#each history as feature, featureIdx (feature.data.type + ":" + feature.unique_id)}
-			<div>
-				{#if isPoint(feature)}
-					<PointFeature name={feature.name} index={featureIdx} />
-				{:else if isPlane(feature)}
-					<PlaneFeature name={feature.name} index={featureIdx} plane={feature.data.plane} {setCameraFocus} />
-				{:else if isSketch(feature)}
-					<SketchFeature
-						name={feature.name}
-						index={featureIdx}
-						id={feature.unique_id}
-						plane_id={feature.data.plane_description.PlaneId}
-					/>
-				{:else if isExtrusion(feature)}
-					<ExtrusionFeature
-						name={feature.name}
-						index={featureIdx}
-						data={feature.data.extrusion}
-						id={feature.unique_id}
-					/>
-				{:else}
-					TODO: {feature.name} {feature.data.type}
-				{/if}
-			</div>
+			<FeatureInstance {feature} {featureIdx} />
 		{/each}
 	</div>
 	<!-- svelte-ignore a11y-no-static-element-interactions -->

@@ -8,7 +8,7 @@
 	// prettier-ignore
 	const log = (function () { const context = "[PointFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, index: number
+	export let name: string, featureIdx: number
 
 	const source = `${base}/actions/point_min_icon.svg`
 	const closeAndRefresh = () => {
@@ -23,10 +23,10 @@
 	role="button"
 	tabindex="0"
 	on:dblclick={() => {
-		if ($featureIndex === index) {
+		if ($featureIndex === featureIdx) {
 			closeAndRefresh()
 		} else {
-			$featureIndex = index
+			$featureIndex = featureIdx
 		}
 	}}
 >
@@ -34,7 +34,7 @@
 	{name}
 </div>
 
-{#if $featureIndex === index}
+{#if $featureIndex === featureIdx}
 	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
@@ -57,7 +57,7 @@
 				<button
 					class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
 					on:click={() => {
-						renameStep(index, name)
+						renameStep(featureIdx, name)
 					}}>Done</button
 				>
 

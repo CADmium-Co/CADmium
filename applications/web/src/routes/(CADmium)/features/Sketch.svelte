@@ -16,13 +16,13 @@
 	import EyeSlash from "phosphor-svelte/lib/EyeSlash"
 	import Eye from "phosphor-svelte/lib/Eye"
 	import X from "phosphor-svelte/lib/X"
-	import type { Entity } from "shared/types"
+	import type { Entity, SketchData } from "shared/types"
 	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, index: number, id: string, plane_id: string
+	export let name: string, featureIdx: number, unique_id: string, data: SketchData["data"]["plane_description"]
 
 	// $: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
 
@@ -32,8 +32,8 @@
 	let selectingForSketchPlane = false
 
 	$: {
-		if (plane_id !== "") {
-			surface = { type: "plane", id: plane_id }
+		if (data.PlaneId !== "") {
+			surface = { type: "plane", id: data.PlaneId }
 		} else {
 			surface = null
 			engageSearchForPlane()
@@ -53,7 +53,7 @@
 		$currentlySelected = []
 	}
 
-	$: if ($featureIndex === index) $sketchBeingEdited = id
+	$: if ($featureIndex === featureIdx) $sketchBeingEdited = unique_id
 
 	// $: $sketchBeingEdited,
 	// 	log("[$sketchBeingEdited]", `${$sketchBeingEdited === "" ? "empty" : ""}`, $sketchBeingEdited)
@@ -86,13 +86,13 @@
 
 	currentlySelected.subscribe(() => {
 		if (!selectingForSketchPlane) return
-		if (!id) return
+		if (!unique_id) return
 		if (!$currentlySelected.length) return
 		// log("CS changed when selecting for Sketch Plane:", $currentlySelected)
 
 		let thingSelected = $currentlySelected[0]
 		if (thingSelected.type === "plane") {
-			setSketchPlane(id, thingSelected.id)
+			setSketchPlane(unique_id, thingSelected.id)
 		} else if (thingSelected.type === "meshFace") {
 			log("HOW DO I HANDLE THIS?")
 			log(thingSelected)
@@ -108,15 +108,15 @@
 	role="button"
 	tabindex="0"
 	on:dblclick={() => {
-		if ($featureIndex === index) {
+		if ($featureIndex === featureIdx) {
 			closeAndRefresh()
 		} else {
-			$featureIndex = index
+			$featureIndex = featureIdx
 			$sketchTool = "select"
 		}
 	}}
 >
-	{#if $featureIndex < index}
+	{#if $featureIndex < featureIdx}
 		<img class="h-8 w-8 px-1 opacity-50" src={source} alt={name} />
 		<span class="italic opacity-50">{name}</span>
 	{:else}
@@ -129,20 +129,20 @@
 	<div
 		class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded"
 		on:click={() => {
-			if ($hiddenSketches.includes(id)) {
+			if ($hiddenSketches.includes(unique_id)) {
 				// cool, unhide
 				hiddenSketches.update((sketches) => {
-					return sketches.filter((sketch) => sketch !== id)
+					return sketches.filter((sketch) => sketch !== unique_id)
 				})
 			} else {
 				// cool, hide
 				hiddenSketches.update((sketches) => {
-					return [...sketches, id]
+					return [...sketches, unique_id]
 				})
 			}
 		}}
 	>
-		{#if $hiddenSketches.includes(id)}
+		{#if $hiddenSketches.includes(unique_id)}
 			<EyeSlash weight="light" size="18px" />
 		{:else}
 			<Eye weight="light" size="18px" />
@@ -150,7 +150,7 @@
 	</div>
 </div>
 
-{#if $featureIndex === index}
+{#if $featureIndex === featureIdx}
 	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
@@ -195,7 +195,7 @@
 					class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
 					on:click={() => {
 						// This is a form button so remember that it triggers the form's on:submit
-						renameStep(index, name)
+						renameStep(featureIdx, name)
 					}}>Done</button
 				>
 

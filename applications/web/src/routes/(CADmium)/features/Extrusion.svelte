@@ -10,11 +10,7 @@
 	// prettier-ignore
 	const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
-
-	// $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
-	// $: data, log("[props]", "typeof id:", typeof id, "id:", id)
-	// $: data, log("[props]", "typeof data.face_ids[0]:", typeof data.face_ids[0], "data.face_ids:", data.face_ids)
+	export let name: string, unique_id: string, data: ExtrusionData["data"]["extrusion"], featureIdx: number
 
 	// coerce from number[] to string[] for frontend as we use strings for ids here
 	let faceIdsFromInputs = data.face_ids.sort().map((e) => e + "")
@@ -43,11 +39,11 @@
 			.filter((e) => e.type === "face")
 			.map((e) => e.id)
 			.sort()
-		updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
+		updateExtrusion(unique_id, data.sketch_id, length, faceIdsFromSelection)
 	}
 
 	currentlySelected.subscribe((e) => {
-		if ($featureIndex !== index) return
+		if ($featureIndex !== featureIdx) return
 
 		// log("[$currentlySelected]", $currentlySelected)
 		// log("[$featureIndex]", typeof $featureIndex, $featureIndex)
@@ -72,7 +68,7 @@
 
 	const source = `${base}/actions/extrude_min.svg`
 
-	$: if ($featureIndex === index) {
+	$: if ($featureIndex === featureIdx) {
 		$selectingFor = ["face"]
 		$currentlySelected = faceIdsFromInputs.map((id) => ({ type: "face", id }))
 		// log("[$currentlySelected]", $currentlySelected)
@@ -84,15 +80,15 @@
 	role="button"
 	tabindex="0"
 	on:dblclick={() => {
-		if ($featureIndex === index) {
+		if ($featureIndex === featureIdx) {
 			closeAndRefresh()
 		} else {
-			$featureIndex = index
+			$featureIndex = featureIdx
 			// $selectingFor = []
 		}
 	}}
 >
-	{#if $featureIndex < index}
+	{#if $featureIndex < featureIdx}
 		<img class="h-8 w-8 px-1 opacity-50" src={source} alt={name} />
 		<span class="italic opacity-50">{name}</span>
 	{:else}
@@ -101,7 +97,7 @@
 	{/if}
 </div>
 
-{#if $featureIndex === index}
+{#if $featureIndex === featureIdx}
 	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
@@ -156,7 +152,7 @@
 				<button
 					class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
 					on:click={() => {
-						renameStep(index, name)
+						renameStep(featureIdx, name)
 					}}>Done</button
 				>
 

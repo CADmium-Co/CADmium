@@ -4,14 +4,13 @@
 	import { renameStep } from "shared/projectUtils"
 	import { workbenchIsStale, featureIndex } from "shared/stores"
 	import MagnifyingGlass from "phosphor-svelte/lib/MagnifyingGlass"
-	import type { Plane, SetCameraFocus } from "shared/types"
+	import type { Plane, PlaneData, SetCameraFocus } from "shared/types"
 	import { base } from "$app/paths"
 
 	// prettier-ignore
 	const log = (function () { const context = "[PlaneFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
-	export let name: string, index: number, plane: Plane, setCameraFocus: SetCameraFocus
-	// log("[props]", "name:", name, "index:", index, "plane:", plane, "setCameraFocus:", "(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void")
+	export let name: string, featureIdx: number//, data: PlaneData["data"]["plane"]
 
 	const source = `${base}/actions/plane_min.svg`
 
@@ -27,14 +26,14 @@
 	role="button"
 	tabindex="0"
 	on:dblclick={() => {
-		if ($featureIndex === index) {
+		if ($featureIndex === featureIdx) {
 			closeAndRefresh()
 		} else {
-			$featureIndex = index
+			$featureIndex = featureIdx
 		}
 	}}
 >
-	{#if $featureIndex < index}
+	{#if $featureIndex < featureIdx}
 		<img class="h-8 w-8 px-1 opacity-50" src={source} alt={name} />
 		<span class="italic opacity-50">{name}</span>
 	{:else}
@@ -47,7 +46,8 @@
 	<div
 		class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded hover:bg-slate-200"
 		on:mousedown={() => {
-			setCameraFocus(plane.tertiary, plane.origin, plane.secondary)
+			// TODO: Pass setCameraFocus from FeatureInstance
+			// setCameraFocus(data.tertiary, data.origin, data.secondary)
 			// move camera to focus on plane
 		}}
 	>
@@ -55,7 +55,7 @@
 	</div>
 </div>
 
-{#if $featureIndex === index}
+{#if $featureIndex === featureIdx}
 	<div transition:slide={{ delay: 0, duration: 400, easing: quintOut, axis: "y" }}>
 		<form
 			on:submit|preventDefault={() => {
@@ -79,7 +79,7 @@
 				<button
 					class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
 					on:click={() => {
-						renameStep(index, name)
+						renameStep(featureIdx, name)
 					}}>Done</button
 				>
 
