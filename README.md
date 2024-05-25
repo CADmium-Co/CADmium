@@ -2,7 +2,7 @@
 
 This project aims to create a new CAD program from scratch. It is small, it runs in a web browser, and the source code is available for free here on Github.
 
-Legacy CAD programs have taken many thousands of years of collective engineering time to get where they are so this program will never be able to compete on breadth of features. But CADmium is intended to capture 80% of the most common CAD use cases while doing less than 10% of the work. For now we are targetting the home hobbyist who just wants to design a widget for their 3D printer, not a company that wants to design a car or airplane, though that will come later.
+Legacy CAD programs have taken many thousands of years of collective engineering time to get where they are so this program will never be able to compete on breadth of features. But CADmium is intended to capture 80% of the most common CAD use cases while doing less than 10% of the work. For now we are targeting the home hobbyist who just wants to design a widget for their 3D printer, not a company that wants to design a car or airplane, although that will come later.
 
 If you're looking for:
 
@@ -21,7 +21,7 @@ Then this project may be for you!
 
 After that we will do a few more demo (V0.0.*) releases, aggregating features until it feels pretty usable.
 
-**Alpha:** When it feels like we've reached an MVP that people might actually want to use, it's time to release an Alpha version (V0.1.0) and actively solicit feedback from users. We'll use that feedback to make more and more improvements, re-inventing things if necessary to achieve a great workflow.
+**Alpha:** When it feels like we've reached an MVP that people might actually want to use, it's time to release an Alpha version (V0.1.0) and actively solicit feedback from users. We'll use that feedback to make more improvements, re-inventing things if necessary to achieve a great workflow.
 
 Beyond that, we'll see!
 
@@ -111,7 +111,7 @@ We are actively seeking contributors! Please join the [Discord](https://discord.
 Most especially, we need help in the following areas:
 
 **Design:** The tool must look and feel good and we are not designers. We would love contributions in the form of:
-- Advice, mockups, or tailwindcss examples of how to make different elements look and behave better.
+- Advice, mockups, or tailwindcss examples of how to make different elements look and behave better
 - In particular, help picking a color palette that works well and is unique
 - Help figuring out how to implement dark mode
 
@@ -135,7 +135,7 @@ Github project for tracking progress is [here](https://github.com/orgs/CADmium-C
   - [ ] Ability to create a sketch on the face of a solid
   - [ ] Ability to create and modify constraints in the UI
 - [ ] Extrusion
-  - [ ] Configure an extrusion to or create new solid or subtract from existing solid
+  - [ ] Configure an extrusion to create new solid or subtract from existing solid
 - [ ] Project
   - [ ] Ability to rename the project
   - [ ] Ability to delete steps
