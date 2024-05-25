@@ -1,11 +1,30 @@
 {
-  "name": "cadmium-root",
+  "name": "cadmium",
+  "collaborators": [
+    "Matt Ferraro"
+  ],
+  "description": "A CAD program written in Rust with a JS front end",
   "scripts": {
-    "dev": "onchange 'src/**/*.rs' -- pnpm run build:dev",
-    "build:dev": "cargo check && pnpm run build:wasm",
-    "build:wasm": "wasm-pack build --target web && ./patchpackage.cjs",
+    "dev": "pnpm run build:dev; onchange 'src/**/*.rs' -- pnpm run build:dev",
+    "build:dev": "cargo check && wasm-pack build --no-pack --target web --dev",
+    "build": "wasm-pack build --target web --no-pack",
+    "clean": "rm -rf target pkg node_modules",
     "test": "cargo test"
   },
+  "version": "0.1.0",
+  "license": "Elastic License 2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mattferraro/cadmium"
+  },
+  "files": [
+    "pkg/cadmium_bg.wasm",
+    "pkg/cadmium.js",
+    "pkg/cadmium.d.ts"
+  ],
+  "module": "pkg/cadmium.js",
+  "types": "pkg/cadmium.d.ts",
+  "type": "module",
   "devDependencies": {
     "onchange": "^7.1.0"
   }

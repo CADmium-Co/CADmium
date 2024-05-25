@@ -49,20 +49,14 @@ jobs:
         with:
           # Optional version of wasm-pack to install(eg. 'v0.9.1', 'latest')
           version: "latest"
-      - name: Build cadmium
-        run: pnpm build:wasm
       - name: Install dependencies
         run: pnpm install
+      - name: Build cadmium
+        run: pnpm build
       - name: Install playwright dependencies
         run: pnpm exec playwright install
-      - name: Build
-        env:
-          BASE_PATH: "/${{ github.event.repository.name }}"
-        run: pnpm turbo run build
       - name: Test Web
         run: pnpm turbo run test
-      - name: Test Rust
-        run: pnpm run test:rust
       - uses: actions/upload-artifact@v4
         with:
           name: cadmium
@@ -76,6 +70,7 @@ jobs:
 
   # https://kit.svelte.dev/docs/adapter-static#github-pages
   deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
 
