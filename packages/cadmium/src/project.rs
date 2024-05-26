@@ -21,17 +21,16 @@ pub struct Project {
 
 impl Project {
     pub fn new(name: &str) -> Self {
-        Project {
+        let mut p = Project {
             name: name.to_owned(),
             assemblies: vec![],
             workbenches: vec![],
-        }
-    }
+        };
 
-    pub fn add_defaults(&mut self) {
-        let mut w = Workbench::new("Workbench 1");
-        w.add_defaults();
-        self.workbenches.push(w);
+        let wb = Workbench::new("Workbench 1");
+        p.workbenches.push(wb);
+
+        p
     }
 
     pub fn json(&self) -> String {
@@ -232,7 +231,6 @@ pub mod tests {
 
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
-        p.add_defaults();
         let wb = p.workbenches.get_mut(0).unwrap();
         wb.add_sketch_to_plane("Sketch 1", "Plane-0");
         let s = wb.get_sketch_mut("Sketch 1").unwrap();
@@ -273,7 +271,6 @@ pub mod tests {
     // #[test]
     // fn move_sketch() {
     //     let mut p = Project::new("Test Project");
-    //     p.add_defaults();
 
     //     let right_plane_id = p.workbenches[0].plane_name_to_id("Right").unwrap();
 
@@ -315,7 +312,6 @@ pub mod tests {
     // #[test]
     // fn to_and_from_json() {
     //     // let mut p = Project::new("Test Project");
-    //     // p.add_defaults();
 
     //     let file_contents =
     //         std::fs::read_to_string("/Users/matthewferraro/Downloads/first_project.cadmium")
@@ -327,11 +323,7 @@ pub mod tests {
 
     #[test]
     fn circle_crashing() {
-        // let mut p = Project::new("Test Project");
-        // p.add_defaults();
-
-        let file_contents =
-            std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
+        let file_contents = std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
         let p2 = Project::from_json(&file_contents);
 

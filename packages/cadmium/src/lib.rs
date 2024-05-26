@@ -23,12 +23,10 @@ impl Project {
     #[wasm_bindgen(constructor)]
     pub fn new(name: &str) -> Project {
         console_error_panic_hook::set_once();
-        let mut p = Project {
-            native: project::Project::new(name),
-        };
 
-        p.native.add_defaults();
-        p
+        Project {
+            native: project::Project::new(name),
+        }
     }
 
     #[wasm_bindgen(getter)]

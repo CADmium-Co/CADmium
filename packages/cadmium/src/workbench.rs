@@ -26,7 +26,7 @@ pub struct Workbench {
 
 impl Workbench {
     pub fn new(name: &str) -> Self {
-        Workbench {
+        let mut wb = Workbench {
             name: name.to_owned(),
             history: vec![],
             step_counters: HashMap::from([
@@ -35,7 +35,14 @@ impl Workbench {
                 ("Sketch".to_owned(), 0),
                 ("Extrusion".to_owned(), 0),
             ]),
-        }
+        };
+
+        wb.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
+        wb.add_plane("Front", Plane::front());
+        wb.add_plane("Right", Plane::right());
+        wb.add_plane("Top", Plane::top());
+
+        wb
     }
 
     pub fn get_first_plane_id(&self) -> Option<String> {
@@ -121,20 +128,6 @@ impl Workbench {
             StepData::Sketch { ref mut sketch, .. } => Ok(sketch),
             _ => Err(CADmiumError::IncorrectStepDataType(step.unique_id.clone())),
         }
-    }
-
-    pub fn add_defaults_2(&mut self) {
-        self.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
-        self.add_plane("Top", Plane::top());
-        self.add_plane("Front", Plane::front());
-        self.add_plane("Right", Plane::right());
-    }
-
-    pub fn add_defaults(&mut self) {
-        self.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
-        self.add_plane("Front", Plane::front());
-        self.add_plane("Right", Plane::right());
-        self.add_plane("Top", Plane::top());
     }
 
     pub fn add_point(&mut self, name: &str, point: Point3) {
