@@ -11,6 +11,24 @@ use crate::step::StepData;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+pub enum MessageResult {
+    #[serde(rename = "success")]
+    Success(String),
+    #[serde(rename = "error")]
+    Error(String),
+}
+
+impl From<Result<String, anyhow::Error>> for MessageResult {
+    fn from(result: Result<String, anyhow::Error>) -> Self {
+        match result {
+            Ok(msg) => MessageResult::Success(msg),
+            Err(e) => MessageResult::Error(e.to_string()),
+        }
+    }
+}
+
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Message {
     RenameWorkbench {
         workbench_id: u64,
