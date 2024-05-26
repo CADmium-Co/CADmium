@@ -51,7 +51,7 @@
 		<div class="select-none">CADmium</div>
 		{#if renaming}
 		<input
-			class="bg-gray-300 text-gray-700 py-2 px-4 text-xl font-medium"
+			class="bg-gray-300 text-gray-700 py-2 px-4 font-medium"
 			type="text"
 			bind:value={newProjectName}
 			on:blur={() => {
@@ -69,8 +69,9 @@
 			}}
 		/>
 		{:else}
+		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
-			class="text-xl font-medium"
+			class="font-medium"
 			on:dblclick={() => {
 				log("Renaming project")
 				renaming = true
