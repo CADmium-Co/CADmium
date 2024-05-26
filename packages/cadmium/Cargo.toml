@@ -27,7 +27,7 @@ geo = "0.26.0"
 serde_with = "3.4.0"
 crc32fast = "1.3.2"
 indexmap = "2.1.0"
-anyhow = "1.0.86"
+anyhow = { version = "1.0.86", features = ["backtrace"] }
 thiserror = "1.0.61"
 strum = { version = "0.26.2", features = ["derive"] }
 

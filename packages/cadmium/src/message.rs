@@ -21,8 +21,9 @@ pub enum MessageResult {
 impl From<Result<String, anyhow::Error>> for MessageResult {
     fn from(result: Result<String, anyhow::Error>) -> Self {
         match result {
-            Ok(msg) => MessageResult::Success(msg),
-            Err(e) => MessageResult::Error(e.to_string()),
+            // TODO: The Success should be a stable enum
+            Ok(msg) => MessageResult::Success(format!("{{ {} }}", msg)),
+            Err(e) => MessageResult::Error(e.backtrace().to_string()),
         }
     }
 }
