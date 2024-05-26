@@ -1,4 +1,4 @@
-use message::Message;
+use message::{Message, MessageResult};
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
@@ -76,11 +76,8 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn send_message(&mut self, message: Message) -> String {
-        match message.handle(&mut self.native) {
-            Ok(d) => format!(r#"{{ "success": {{ {} }}"#, d),
-            Err(e) => format!(r#"{{ "error": {{ {} }}"#, e),
-        }
+    pub fn send_message(&mut self, message: Message) -> MessageResult {
+        message.handle(&mut self.native).into()
     }
 
     // #[wasm_bindgen(getter)]
