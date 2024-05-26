@@ -455,7 +455,7 @@ version = "0.7.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9705398c5c7b26132e74513f4ee7c1d7dafd786004991b375c172be2be0eecaa"
 dependencies = [
- "approx 0.4.0",
+ "approx 0.5.1",
  "num-traits",
  "rstar",
  "serde",
@@ -608,6 +608,8 @@ name = "isotope"
 version = "0.1.0"
 dependencies = [
  "nalgebra",
+ "serde",
+ "thiserror",
 ]
 
 [[package]]
@@ -777,6 +779,7 @@ dependencies = [
  "num-complex",
  "num-rational",
  "num-traits",
+ "serde",
  "simba",
  "typenum",
 ]
@@ -818,6 +821,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ba157ca0885411de85d6ca030ba7e2a83a28636056c7c699b07c8b6f7383214"
 dependencies = [
  "num-traits",
+ "serde",
 ]
 
 [[package]]
