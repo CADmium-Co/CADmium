@@ -1594,156 +1594,113 @@ mod tests {
     }
 
     #[test]
-    fn line_line_overlap_shared_point() {
-        /*
-        |--------|----|
-        |        |    |
-        |        |----|
-        |        |
-        |--------|
-         */
-        let mut w = Workbench::new("Workbench 1");
+    fn line_line_overlap_tests() {
+        let all_tests = [
+            [
+                /*
+                        |--------|
+                        |        |
+                |--------|        |
+                |        |        |
+                |        |--------|
+                |        |
+                |--------|
+                */
+                [0.0, 0.0],
+                [2.0, 0.0],
+                [2.0, 2.0],
+                [0.0, 2.0],
 
-        let top_plane_id = w.add_plane("Top", Plane::top());
-        w.add_plane("Front", Plane::front());
-        w.add_plane("Right", Plane::right());
-        let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
-        let sketch = w.get_sketch_mut("Sketch 1").unwrap();
+                [2.0, 1.0],
+                [4.0, 1.0],
+                [4.0, 3.0],
+                [2.0, 3.0],
 
-        let a = sketch.add_point(0.0, 0.0);
-        let b = sketch.add_point(0.0, -2.0);
-        let c = sketch.add_point(2.0, -2.0);
-        let d = sketch.add_point(2.0, 0.0);
-        let e = sketch.add_point(3.0, 0.0);
-        let f = sketch.add_point(3.0, -1.0);
-        let g = sketch.add_point(2.0, -1.0);
+                [2.0, 9.0]
+            ], [
+                /*
+                |--------|
+                |        |----|
+                |        |    |
+                |        |----|
+                |--------|
+                */
+                [0.0, 0.0],
+                [2.0, 0.0],
+                [2.0, 2.0],
+                [0.0, 2.0],
 
-        // big one
-        sketch.add_segment(a, b);
-        sketch.add_segment(b, c);
-        sketch.add_segment(c, d);
-        sketch.add_segment(d, a);
+                [2.0, 0.5],
+                [3.0, 0.5],
+                [3.0, 1.5],
+                [2.0, 1.5],
 
-        // small one
-        sketch.add_segment(d, e);
-        sketch.add_segment(e, f);
-        sketch.add_segment(f, g);
-        sketch.add_segment(g, d);
+                [2.0, 9.0]
+            ], [
+                /*
+                |--------|----|
+                |        |    |
+                |        |----|
+                |        |
+                |--------|
+                */
+                [0.0, 0.0],
+                [0.0, -2.0],
+                [2.0, -2.0],
+                [2.0, 0.0],
 
-        let mut p = Project::new("A");
-        p.workbenches.push(w);
+                [3.0, 0.0],
+                [3.0, -1.0],
+                [2.0, -1.0],
+                [2.0, 0.0],
 
-        let realized = p.get_realization(0, 1000);
-        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
+                [2.0, 8.0]
+            ]
+        ];
 
-        println!("Number of faces: {:?}", sketch_split.faces.len());
-        assert_eq!(sketch_split.faces.len(), 2);
+        for test in all_tests {
+            let mut p = Project::new("A");
+            let mut w = p.workbenches.get_mut(0).unwrap();
 
-        assert_eq!(sketch_split.line_segments.len(), 8);
-    }
+            let top_plane_id = w.get_first_plane_id().unwrap();
+            let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
+            let sketch = w.get_sketch_mut("Sketch 1").unwrap();
 
-    #[test]
-    fn line_line_overlap_one_segment_is_a_subset() {
-        /*
-        |--------|
-        |        |----|
-        |        |    |
-        |        |----|
-        |--------|
-         */
-        let mut w = Workbench::new("Workbench 1");
+            let a = sketch.add_point(test[0][0], test[0][1]);
+            let b = sketch.add_point(test[1][0], test[1][1]);
+            let c = sketch.add_point(test[2][0], test[2][1]);
+            let d = sketch.add_point(test[3][0], test[3][1]);
 
-        let top_plane_id = w.add_plane("Top", Plane::top());
-        w.add_plane("Front", Plane::front());
-        w.add_plane("Right", Plane::right());
-        let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
-        let sketch = w.get_sketch_mut("Sketch 1").unwrap();
+            let e = sketch.add_point(test[4][0], test[4][1]);
+            let f = sketch.add_point(test[5][0], test[5][1]);
+            let g = sketch.add_point(test[6][0], test[6][1]);
+            let h = if test[7] == test[3] {
+                // For the last test, we want to make sure the line is closed
+                d.clone()
+            } else {
+                sketch.add_point(test[7][0], test[7][1])
+            };
 
-        let a = sketch.add_point(0.0, 0.0);
-        let b = sketch.add_point(2.0, 0.0);
-        let c = sketch.add_point(2.0, 2.0);
-        let d = sketch.add_point(0.0, 2.0);
+            // big one
+            sketch.add_segment(a, b);
+            sketch.add_segment(b, c);
+            sketch.add_segment(c, d);
+            sketch.add_segment(d, a);
 
-        let e = sketch.add_point(2.0, 0.5);
-        let f = sketch.add_point(3.0, 0.5);
-        let g = sketch.add_point(3.0, 1.5);
-        let h = sketch.add_point(2.0, 1.5);
+            // small one
+            sketch.add_segment(e, f);
+            sketch.add_segment(f, g);
+            sketch.add_segment(g, h);
+            sketch.add_segment(h, e);
 
-        // big one
-        sketch.add_segment(a, b);
-        sketch.add_segment(b, c);
-        sketch.add_segment(c, d);
-        sketch.add_segment(d, a);
+            let realized = p.get_realization(0, 1000);
+            let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
 
-        // small one
-        sketch.add_segment(e, f);
-        sketch.add_segment(f, g);
-        sketch.add_segment(g, h);
-        sketch.add_segment(h, e);
+            println!("Number of faces: {:?}", sketch_split.faces.len());
+            assert_eq!(sketch_split.faces.len(), test[8][0] as usize);
 
-        let mut p = Project::new("A");
-        p.workbenches.push(w);
-
-        let realized = p.get_realization(0, 1000);
-        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
-
-        println!("Number of faces: {:?}", sketch_split.faces.len());
-        assert_eq!(sketch_split.faces.len(), 2);
-
-        assert_eq!(sketch_split.line_segments.len(), 9);
-    }
-
-    #[test]
-    fn line_line_overlap_no_shared_points_only_overlap() {
-        /*
-                 |--------|
-                 |        |
-        |--------|        |
-        |        |        |
-        |        |--------|
-        |        |
-        |--------|
-         */
-        let mut w = Workbench::new("Workbench 1");
-
-        let top_plane_id = w.add_plane("Top", Plane::top());
-        w.add_plane("Front", Plane::front());
-        w.add_plane("Right", Plane::right());
-        let sketch_id = w.add_sketch_to_plane("Sketch 1", &top_plane_id);
-        let sketch = w.get_sketch_mut("Sketch 1").unwrap();
-
-        let a = sketch.add_point(0.0, 0.0);
-        let b = sketch.add_point(2.0, 0.0);
-        let c = sketch.add_point(2.0, 2.0);
-        let d = sketch.add_point(0.0, 2.0);
-
-        let e = sketch.add_point(2.0, 1.0);
-        let f = sketch.add_point(4.0, 1.0);
-        let g = sketch.add_point(4.0, 3.0);
-        let h = sketch.add_point(2.0, 3.0);
-
-        // big one
-        sketch.add_segment(a, b);
-        sketch.add_segment(b, c);
-        sketch.add_segment(c, d);
-        sketch.add_segment(d, a);
-
-        // small one
-        sketch.add_segment(e, f);
-        sketch.add_segment(f, g);
-        sketch.add_segment(g, h);
-        sketch.add_segment(h, e);
-
-        let mut p = Project::new("A");
-        p.workbenches.push(w);
-
-        let realized = p.get_realization(0, 1000);
-        let (sketch_unsplit, sketch_split, _) = realized.sketches.get("Sketch-0").unwrap();
-
-        println!("Number of faces: {:?}", sketch_split.faces.len());
-        assert_eq!(sketch_split.faces.len(), 2);
-
-        assert_eq!(sketch_split.line_segments.len(), 9);
+            assert_eq!(sketch_split.line_segments.len(), test[8][1] as usize);
+        }
     }
 
     #[test]

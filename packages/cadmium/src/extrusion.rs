@@ -393,7 +393,6 @@ mod tests {
     #[test]
     fn create_project_solid() {
         let mut p = Project::new("Test Extrusion");
-        p.add_defaults();
 
         // now get solids? save as obj or stl or step?
         let workbench = p.workbenches.get_mut(0).unwrap();
