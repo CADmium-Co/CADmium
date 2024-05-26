@@ -17,7 +17,6 @@ import type {
 	Entity,
 	ExtrusionHistoryStep,
 	HistoryStep,
-	Message,
 	MessageHistory,
 	PlaneHistoryStep,
 	PointHistoryStep,
@@ -26,7 +25,7 @@ import type {
 	WithTarget,
 	WorkBench
 } from "./types"
-import type { Realization as WasmRealization } from "cadmium"
+import type { Realization as WasmRealization, Message } from "cadmium"
 import {
 	isDeleteArcs,
 	isDeleteCircles,
@@ -73,11 +72,9 @@ export function arraysEqual(a: any[], b: any[]) {
 
 function sendWasmMessage(message: Message) {
 	let wp = get(wasmProject)
-	const messageStr = JSON.stringify(message)
 	log("[sendWasmMessage] sending message:", message)
-	let reply = wp.send_message(messageStr)
-	log("[sendWasmMessage] reply:", reply)
-	let result = JSON.parse(reply)
+	let result = wp.send_message(message)
+	log("[sendWasmMessage] reply:", result)
 
 	messageHistory.update((history: MessageHistory[]) => {
 		log("[sendWasmMessage] [messageHistory.update] update:", { message, result })
@@ -321,26 +318,11 @@ export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: 
 	const reply = sendWasmMessage(message)
 	// log("[addPointToSketch sendWasmMessage]", "message:", message, "reply:", reply)
 
-	const exampleMessage = {
-		NewPointOnSketch2: {
-			workbench_id: 0,
-			sketch_id: "Sketch-1",
-			x: -35.45466015827466,
-			y: 34.131346610327284,
-			hidden: false
-		}
-	}
-	const exampleReplySuccess = {
-		success: {
-			id: "1"
-		}
-	}
-
 	if (!reply.success)
 		console.error("ERROR [projectUtils.ts addPointToSketch sendWasmMessage]", "message:", message, "reply:", reply)
 
 	workbenchIsStale.set(true)
-	return reply.success.id
+	return JSON.parse(reply.success).id
 }
 
 export function renameStep(stepIdx: number, newName: string): void {

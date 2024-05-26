@@ -392,10 +392,10 @@ pub mod tests {
         println!("Final solid: {:?}", final_solid.truck_solid);
         let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
         mesh.put_together_same_attrs();
-        let file = std::fs::File::create("target/bruno.obj").unwrap();
+        let file = std::fs::File::create("pkg/bruno.obj").unwrap();
         obj::write(&mesh, file).unwrap();
 
-        let file = std::fs::File::create("target/bruno.json").unwrap();
+        let file = std::fs::File::create("pkg/bruno.json").unwrap();
         serde_json::to_writer(file, &p).unwrap();
     }
 

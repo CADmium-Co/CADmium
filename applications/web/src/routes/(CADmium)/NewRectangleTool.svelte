@@ -34,7 +34,7 @@
 			// there WAS an anchor point, so we should create a rectangle!
 
 			// if the anchor point doesn't exist, then we should create a point
-			if (anchorPoint.id === null) anchorPoint.id = addPointToSketch(sketchIndex, anchorPoint.twoD!, false)
+			if (anchorPoint.id === null || anchorPoint.id === undefined) anchorPoint.id = addPointToSketch(sketchIndex, anchorPoint.twoD!, false)
 
 			// if (point?.id && anchorPoint.id) {
 			// 	// if the point exists, then we should create a circle between the two existing points
@@ -44,9 +44,9 @@
 			if (point) point.id = addPointToSketch(sketchIndex, point.twoD!, false)
 
 			// }
-			// log("setting rectangle")
+			log("setting rectangle", anchorPoint, point)
 			addRectangleBetweenPoints(sketchIndex, +anchorPoint.id!, +point.id!)
-			anchorPoint = null
+			// anchorPoint = null
 		}
 	}
 

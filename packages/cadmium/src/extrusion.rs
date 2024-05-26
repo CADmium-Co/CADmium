@@ -440,8 +440,8 @@ mod tests {
         let realization = workbench.realize(1000);
         let keys = Vec::from_iter(realization.solids.keys());
 
-        realization.save_solid_as_step_file(keys[0], "target/test.step");
-        realization.save_solid_as_obj_file(keys[0], "target/test.obj", 0.001);
+        realization.save_solid_as_step_file(keys[0], "pkg/test.step");
+        realization.save_solid_as_obj_file(keys[0], "pkg/test.obj", 0.001);
     }
 
 }
