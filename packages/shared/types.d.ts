@@ -1,5 +1,6 @@
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 import { Line2, Arc2, Circle2, Point2, Constraint, Message } from "cadmium";
+import type { Face } from "cadmium";
 
 interface IDictionary<TValue> {
   [id: string]: TValue
@@ -211,7 +212,7 @@ interface SketchRealized {
   highest_arc_id: number
   constraints: object // todo
   highest_constraint_id: number
-  faces: array // todo
+  faces: Face[] // todo
 }
 
 interface PlaneRealized {
@@ -249,7 +250,7 @@ interface SolidRealized {
   normals: Vector3Like[]
   uvs: Vector3Like[]
   indices: number[]
-  triangles: array // todo
+  triangles: number[][]
   truck_solid: TruckSolid
 }
 

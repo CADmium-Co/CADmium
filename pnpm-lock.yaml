@@ -126,6 +126,9 @@ importers:
       onchange:
         specifier: ^7.1.0
         version: 7.1.0
+      ts-auto-guard:
+        specifier: ^4.2.0
+        version: 4.2.0
 
   packages/shared:
     dependencies:
@@ -136,6 +139,10 @@ importers:
         specifier: ^4.2.12
         version: 4.2.12
       three:
+        specifier: ^0.162.0
+        version: 0.162.0
+    devDependencies:
+      '@types/three':
         specifier: ^0.162.0
         version: 0.162.0
 

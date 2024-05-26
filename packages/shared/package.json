@@ -10,5 +10,8 @@
     "cadmium": "workspace:*",
     "svelte": "^4.2.12",
     "three": "^0.162.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.162.0"
   }
 }

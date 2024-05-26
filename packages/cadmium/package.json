@@ -6,8 +6,9 @@
   "description": "A CAD program written in Rust with a JS front end",
   "scripts": {
     "dev": "pnpm run build:dev; onchange 'src/**/*.rs' -- pnpm run build:dev",
+    "build": "wasm-pack build --target web --no-pack && pnpm run build:typeguards",
     "build:dev": "cargo check && wasm-pack build --no-pack --target web --dev",
-    "build": "wasm-pack build --target web --no-pack",
+    "build:typeguards": "ts-auto-guard --project ../shared/tsconfig.json --export-all pkg/cadmium.d.ts",
     "clean": "rm -rf target pkg node_modules",
     "test": "cargo test",
     "postinstall": "pnpm build"
@@ -21,7 +22,8 @@
   "files": [
     "pkg/cadmium_bg.wasm",
     "pkg/cadmium.js",
-    "pkg/cadmium.d.ts"
+    "pkg/cadmium.d.ts",
+    "pkg/cadmium.guard.ts"
   ],
   "module": "pkg/cadmium.js",
   "types": "pkg/cadmium.d.ts",

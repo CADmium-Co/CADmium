@@ -1,6 +1,6 @@
 {
 	"compilerOptions": {
-		"allowJs": true,
+		"allowJs": false,
 		"checkJs": true,
 		"esModuleInterop": true,
 		"forceConsistentCasingInFileNames": true,
@@ -8,6 +8,12 @@
 		"skipLibCheck": true,
 		"sourceMap": true,
 		"strict": true,
+		"module": "esnext",
+		"lib": ["esnext", "dom"],
 		"moduleResolution": "bundler"
-	}
+	},
+	"exclude": [
+		"../cadmium/pkg",
+		"node_modules",
+	]
 }

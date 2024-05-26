@@ -20,13 +20,12 @@ import type {
 	MessageHistory,
 	PlaneHistoryStep,
 	PointHistoryStep,
-	Point2D,
 	SketchHistoryStep,
 	WithTarget,
 	WorkBench
 } from "./types"
 import type { Realization as WasmRealization, Message } from "cadmium"
-import { isMessage } from "cadmium/cadmium.guard"
+import { isMessage } from "cadmium/pkg/cadmium.guard"
 
 // prettier-ignore
 const log = (function () { const context = "[projectUtils.ts]"; const color = "aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
