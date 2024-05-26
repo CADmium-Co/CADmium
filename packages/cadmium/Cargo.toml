@@ -30,6 +30,8 @@ indexmap = "2.1.0"
 anyhow = { version = "1.0.86", features = ["backtrace"] }
 thiserror = "1.0.61"
 strum = { version = "0.26.2", features = ["derive"] }
+# isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*" }
+isotope = { path = "../../../isotope", version = "*" }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

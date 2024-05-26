@@ -11,14 +11,13 @@ use truck_polymesh::obj;
 use truck_polymesh::Rad;
 use truck_stepio::out;
 
+use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
 use crate::extrusion::find_transit;
 use crate::extrusion::merge_faces;
 use crate::extrusion::Direction;
 use crate::extrusion::Extrusion;
 use crate::project::{RealPlane, RealSketch};
-use crate::sketch::Vector2;
-use crate::sketch::{Face, Ring, Segment};
 
 use truck_modeling::{builder, builder::translated, Edge, Face as TruckFace, Vertex, Wire};
 

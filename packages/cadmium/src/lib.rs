@@ -9,7 +9,7 @@ pub mod message;
 pub mod project;
 pub mod realization;
 pub mod solid;
-pub mod sketch;
+// pub mod sketch;
 pub mod step;
 pub mod workbench;
 

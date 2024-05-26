@@ -1,3 +1,6 @@
+use isotope::constraints::Constraint;
+use isotope::primitives::point2::Point2;
+use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
@@ -5,11 +8,12 @@ use wasm_bindgen::prelude::*;
 use crate::archetypes::*;
 use crate::error::CADmiumError;
 use crate::realization::Realization;
-use crate::sketch::constraints::Constraint;
-use crate::sketch::{Face, Point2, Sketch};
 use crate::step::StepData;
 use crate::workbench::Workbench;
+
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -105,7 +109,7 @@ pub struct RealSketch {
     pub highest_circle_id: u64,
     pub arcs: HashMap<u64, Arc3>,
     pub highest_arc_id: u64,
-    pub constraints: HashMap<u64, Constraint>,
+    pub constraints: HashMap<u64, Rc<RefCell<dyn Constraint>>>,
     pub highest_constraint_id: u64,
     pub faces: Vec<Face>,
 }

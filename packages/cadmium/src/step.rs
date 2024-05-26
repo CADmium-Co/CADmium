@@ -1,10 +1,10 @@
 
+use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
-use crate::sketch::Sketch;
 use crate::extrusion::Extrusion;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
