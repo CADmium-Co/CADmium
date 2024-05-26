@@ -1,4 +1,5 @@
-use isotope::constraints::Constraint;
+use isotope::constraints::{Constraint, ConstraintCell};
+use isotope::decompose::face::Face;
 use isotope::primitives::point2::Point2;
 use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
@@ -109,7 +110,7 @@ pub struct RealSketch {
     pub highest_circle_id: u64,
     pub arcs: HashMap<u64, Arc3>,
     pub highest_arc_id: u64,
-    pub constraints: HashMap<u64, Rc<RefCell<dyn Constraint>>>,
+    pub constraints: HashMap<u64, ConstraintCell>,
     pub highest_constraint_id: u64,
     pub faces: Vec<Face>,
 }
