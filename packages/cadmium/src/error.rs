@@ -1,7 +1,5 @@
 use thiserror::Error;
 
-use crate::sketch::SketchFeatureType;
-
 #[derive(Error, Debug)]
 pub enum CADmiumError {
 	// Message errors
@@ -19,17 +17,6 @@ pub enum CADmiumError {
 	// StepData errors
 	#[error("The step {0} data type is not as expected")]
 	IncorrectStepDataType(String),
-
-	// Sketch errors
-	#[error("The {0} with ID {1} already exists in the sketch")]
-	SketchFeatureAlreadyExists(SketchFeatureType, u64),
-	#[error("The {0} ID is too low for {1}")]
-	SketchFeatureIDTooLow(SketchFeatureType, u64),
-	#[error("The {0} with ID {1} has a start point that doesn't exist in the current sketch")]
-	SketchFeatureMissingStart(SketchFeatureType, u64),
-	#[error("The {0} with ID {1} has an end point that doesn't exist in the current sketch")]
-	SketchFeatureMissingEnd(SketchFeatureType, u64),
-
 
 	#[error("This function is not implemented yet")]
 	NotImplemented,
