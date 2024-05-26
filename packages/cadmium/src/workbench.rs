@@ -1,3 +1,4 @@
+use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
@@ -7,7 +8,6 @@ use crate::error::CADmiumError;
 use crate::extrusion::{fuse, Extrusion, ExtrusionMode};
 use crate::project::{RealPlane, RealSketch};
 use crate::realization::Realization;
-use crate::sketch::Sketch;
 use crate::solid::Solid;
 use crate::step::{Step, StepData};
 

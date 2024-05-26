@@ -2,6 +2,7 @@ use geo::Contains;
 use geo::InteriorPoint;
 use geo::Polygon;
 
+use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
@@ -14,7 +15,6 @@ use truck_topology::Shell;
 
 use crate::archetypes::{Point3, Vector3};
 use crate::project::{RealPlane, RealSketch};
-use crate::sketch::{arc_to_points, Face, Sketch};
 
 use truck_modeling::{Plane, Point3 as TruckPoint3, Surface};
 

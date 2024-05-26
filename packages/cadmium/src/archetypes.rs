@@ -1,9 +1,8 @@
+use isotope::primitives::point2::Point2;
 use tsify::Tsify;
 use serde::{Deserialize, Serialize};
 use truck_modeling::Plane as TruckPlane;
 use truck_modeling::InnerSpace;
-
-use crate::sketch::Point2;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -98,6 +97,20 @@ impl Plane {
         let x = self.origin.plus(self.primary.times(point.x));
         let y = self.origin.plus(self.secondary.times(point.y));
         x.plus(y).to_point3()
+    }
+}
+
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct Vector2 {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl Vector2 {
+    pub fn new(x: f64, y: f64) -> Self {
+        Vector2 { x, y }
     }
 }
 
