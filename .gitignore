@@ -3,6 +3,7 @@
 /build
 /dist
 /target
+/packages/cadmium/target
 /.svelte-kit
 /package
 *.env*
