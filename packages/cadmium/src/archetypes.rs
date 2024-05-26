@@ -94,8 +94,8 @@ impl Plane {
     }
 
     pub fn unproject(&self, point: &Point2) -> Point3 {
-        let x = self.origin.plus(self.primary.times(point.x));
-        let y = self.origin.plus(self.secondary.times(point.y));
+        let x = self.origin.plus(self.primary.times(point.x()));
+        let y = self.origin.plus(self.secondary.times(point.y()));
         x.plus(y).to_point3()
     }
 }

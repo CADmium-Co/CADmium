@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
+use isotope::decompose::face::Face;
+use isotope::decompose::ring::Ring;
+use isotope::decompose::segment::Segment;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
@@ -257,9 +260,11 @@ impl Solid {
                 let mut edges: Vec<Edge> = Vec::new();
                 // Now add the segments to the wire
                 for segment in segments.iter() {
+                    let start_point = segment.get_start();
+                    let end_point = segment.get_end();
                     match segment {
                         Segment::Line(line) => {
-                            let start_vertex = vertices.get(&line.start).unwrap();
+                            let start_vertex = vertices.get(start_point).unwrap();
                             let end_vertex = vertices.get(&line.end).unwrap();
                             let edge = builder::line(start_vertex, end_vertex);
                             edges.push(edge);
