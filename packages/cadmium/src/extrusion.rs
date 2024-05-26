@@ -2,6 +2,7 @@ use geo::Contains;
 use geo::InteriorPoint;
 use geo::Polygon;
 
+use isotope::decompose::face::Face;
 use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -74,13 +75,10 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
             if a == b {
                 continue;
             }
-            let face_b_exterior = &face_b.exterior.canonical_form();
 
             // check if b's exterior is equal to any of a's holes
             for (_hole_index, hole) in face_a.holes.iter().enumerate() {
-                let hole = hole.canonical_form();
-
-                if face_b_exterior.equals(&hole) {
+                if hole == &face_b.exterior {
                     retval.push((b, a)); // (small, big)
                 }
             }
@@ -91,7 +89,7 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
 }
 
 pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
-    // create  new sketch using these faces
+    // create new sketch using these faces
     let sketch = Sketch::from_faces(faces, real_sketch);
 
     let (mut all_sketch_faces, _unused_segments) = sketch.find_faces();
