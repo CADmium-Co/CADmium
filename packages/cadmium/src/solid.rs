@@ -174,7 +174,7 @@ impl Solid {
 
             // then the interior wires
             for interior in &face.holes {
-                wires.push(Self::to_wire(plane, sketch, extrusion, interior).inverse());
+                wires.push(Self::to_wire(plane, sketch, extrusion, &interior.exterior).inverse());
             }
 
             let face = builder::try_attach_plane(&wires).unwrap();
