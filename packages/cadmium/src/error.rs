@@ -19,6 +19,8 @@ pub enum CADmiumError {
 	PrimitiveNotInSketch,
 	#[error("Couldn't calculate the 3D position of the supplied point")]
 	Point3DCalculationFailed,
+	#[error("The calculated 3D point was not found in the sketch")]
+	Point3DNotFound,
 
 	// StepData errors
 	#[error("The step {0} data type is not as expected")]

@@ -1,9 +1,4 @@
-use geo::Contains;
-use geo::InteriorPoint;
-use geo::Polygon;
-
 use isotope::decompose::face::Face;
-use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
@@ -14,8 +9,7 @@ use truck_shapeops::ShapeOpsCurve;
 use truck_shapeops::ShapeOpsSurface;
 use truck_topology::Shell;
 
-use crate::archetypes::{Point3, Vector3};
-use crate::project::{RealPlane, RealSketch};
+use crate::archetypes::Vector3;
 
 use truck_modeling::{Plane, Point3 as TruckPoint3, Surface};
 
@@ -86,65 +80,6 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
     }
 
     return retval;
-}
-
-pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
-    // create new sketch using these faces
-    let sketch = Sketch::from_faces(faces, real_sketch);
-
-    let (mut all_sketch_faces, _unused_segments) = sketch.find_faces();
-
-    // check whether each of these new faces should returned or not by picking a
-    // random point on the new face and then checking every one of the original faces
-    // to see if it contains that point. If so, we can keep that new face
-    let mut faces_to_remove: Vec<usize> = vec![];
-    let old_faces_as_polygons: Vec<Polygon> = faces
-        .iter()
-        .map(|face| sketch.face_as_polygon(face))
-        .collect::<Vec<_>>();
-    for (new_face_idx, face) in all_sketch_faces.iter().enumerate() {
-        // println!("\nNew face: {}: {:?}", new_face_idx, face);
-
-        let as_geo_polygon = sketch.face_as_polygon(face);
-        // println!("as_geo_polygon: {:?}", as_geo_polygon);
-
-        let random_point_on_face = as_geo_polygon
-            .interior_point()
-            .expect("Every polygon should be able to yield an interior point");
-        // println!("Random point on face: {:?}", random_point_on_face);
-
-        let mut located = false;
-        for (_old_face_idx, old_face) in old_faces_as_polygons.iter().enumerate() {
-            if old_face.contains(&random_point_on_face) {
-                // println!(
-                //     "Old face {} contains point {:?}",
-                //     old_face_idx, random_point_on_face
-                // );
-                // this means the old face contains the random point on the new face
-                // so we can keep this new face
-                located = true;
-                break;
-            }
-        }
-        if !located {
-            // println!(
-            //     "Random point from new face {} is not contained by any old faces",
-            //     new_face_idx
-            // );
-            faces_to_remove.push(new_face_idx);
-        }
-    }
-
-    // remove the faces that we don't want
-    faces_to_remove.sort();
-    faces_to_remove.reverse();
-    // println!("New Faces to remove: {:?}", faces_to_remove);
-    for face_to_remove in faces_to_remove {
-        all_sketch_faces.remove(face_to_remove);
-    }
-
-    // println!("Merge faces 2 output: {}", faces.len());
-    all_sketch_faces
 }
 
 // pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
