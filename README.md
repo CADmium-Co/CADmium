@@ -19,7 +19,7 @@ Then this project may be for you!
 
 **Demos:** We are currently racing toward our first demo release, [V0.0.1](https://github.com/orgs/CADmium-Co/projects/1?pane=info). This is a good first exercise for us to decide on build and release processes.
 
-After that we will do a few more demo (V0.0.*) releases, aggregating features until it feels pretty usable.
+After that we will do a few more demo (V0.0.\*) releases, aggregating features until it feels pretty usable.
 
 **Alpha:** When it feels like we've reached an MVP that people might actually want to use, it's time to release an Alpha version (V0.1.0) and actively solicit feedback from users. We'll use that feedback to make more improvements, re-inventing things if necessary to achieve a great workflow.
 
@@ -109,17 +109,20 @@ We are actively seeking contributors! Please join the [Discord](https://discord.
 Most especially, we need help in the following areas:
 
 **Design:** The tool must look and feel good and we are not designers. We would love contributions in the form of:
+
 - Advice, mockups, or tailwindcss examples of how to make different elements look and behave better
 - In particular, help picking a color palette that works well and is unique
 - Help figuring out how to implement dark mode
 
 **Rust:** This is our first project in Rust. We need help from experienced Rustaceans to:
-  - Figure out how to better lay out the rust code
-  - Point out any glaring issues with how I'm using the language (We've thus far completely avoided Lifetimes, Traits, Rc, RefCell, etc and that may be hampering things)
+
+- Figure out how to better lay out the rust code
+- Point out any glaring issues with how I'm using the language (We've thus far completely avoided Lifetimes, Traits, Rc, RefCell, etc and that may be hampering things)
 
 **Svelte:** This is our first project using Svelte. We'd love an experienced set of eyes to:
-  - Look over the basic structure and tell us if we're making any big mistakes
-  - Help us migrate to Svelte 5 when it comes out
+
+- Look over the basic structure and tell us if we're making any big mistakes
+- Help us migrate to Svelte 5 when it comes out
 
 If you feel like you would be willing and able to help, please join [our discord](https://discord.gg/qJCsKJeyZv)!
 

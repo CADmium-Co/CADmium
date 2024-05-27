@@ -1,19 +1,19 @@
 /** @type {import('tailwindcss').Config}*/
 const config = {
-	content: ["./src/**/*.{html,js,svelte,ts}"],
+  content: ["./src/**/*.{html,js,svelte,ts}"],
 
-	theme: {
-		extend: {
-			gridTemplateColumns: {
-				editor: "250px 1fr"
-			},
-			gridTemplateRows: {
-				editor: "45px 45px 1fr 45px"
-			}
-		}
-	},
+  theme: {
+    extend: {
+      gridTemplateColumns: {
+        editor: "250px 1fr",
+      },
+      gridTemplateRows: {
+        editor: "45px 45px 1fr 45px",
+      },
+    },
+  },
 
-	plugins: []
+  plugins: [],
 }
 
 module.exports = config

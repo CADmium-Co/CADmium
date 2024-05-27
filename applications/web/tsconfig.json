@@ -1,8 +1,4 @@
 {
-	"extends": [
-		// "@repo/config-typescript/base.json",
-		"@tsconfig/svelte/tsconfig.json"
-	],
-	"include": ["src"],
-	"exclude": ["node_modules"]
+  "extends": ["@repo/config-typescript/vite.json", "@tsconfig/svelte/tsconfig.json"],
+  "include": ["src", "vite.config.ts"]
 }

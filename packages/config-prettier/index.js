@@ -1,12 +1,12 @@
 module.exports = {
+  semi: false,
   singleQuote: false,
+  useTabs: false,
+  tabWidth: 2,
   trailingComma: "all",
   bracketSpacing: false,
   arrowParens: "avoid",
-  useTabs: false,
-  tabWidth: 2,
   printWidth: 160,
-  semi: false,
   plugins: ["prettier-plugin-svelte"],
   overrides: [
     {
