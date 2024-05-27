@@ -5,13 +5,19 @@ extern crate console_error_panic_hook;
 pub mod archetypes;
 pub mod error;
 pub mod extrusion;
+pub mod isketch;
 pub mod message;
 pub mod project;
 pub mod realization;
 pub mod solid;
-// pub mod sketch;
+#[macro_use]
 pub mod step;
 pub mod workbench;
+
+// pub use isotope::primitives::ParametricCell;
+// pub use isotope::constraints::ConstraintCell;
+
+pub type IDType = u64;
 
 #[wasm_bindgen]
 pub struct Project {
@@ -70,9 +76,9 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn get_workbench(&self, workbench_index: u32) -> String {
-        let wb = &self.native.workbenches[workbench_index as usize];
-        wb.json()
+    pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
+        // TODO: Use get() and return a Result
+        self.native.workbenches[workbench_index as usize]
     }
 
     #[wasm_bindgen]

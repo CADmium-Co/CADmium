@@ -1,111 +1,155 @@
 
-use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
+use crate::archetypes::{Plane, PlaneDescription, Point3};
 use crate::extrusion::Extrusion;
+use crate::isketch::ISketch;
+use crate::solid::Solid;
+use crate::workbench::Workbench;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
-#[serde(tag = "type")]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum StepData {
-    Point {
-        point: Point3,
-    },
-    Plane {
-        plane: Plane,
-        width: f64,
-        height: f64,
-    },
-    Sketch {
-        plane_description: PlaneDescription,
-        width: f64,
-        height: f64,
-        sketch: Sketch,
-    },
-    Extrusion {
-        extrusion: Extrusion,
-    },
+pub enum StepOperation {
+    Add,
+    Update,
+    Delete,
 }
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
+    pub(crate) operation: StepOperation,
     pub(crate) name: String,
     pub(crate) unique_id: String,
     pub(crate) suppressed: bool,
     pub(crate) data: StepData,
 }
 
-impl Step {
-    pub fn new_point(name: &str, point: Point3, point_id: u64) -> Self {
-        Step {
-            name: name.to_owned(),
-            unique_id: format!("Point-{}", point_id),
-            suppressed: false,
-            data: StepData::Point {
-                point: point.clone(),
-            },
+macro_rules! define_steps {
+    ($($parent:ident {
+        $($name:ident {
+            $($field:ident: $type:ty),* $(,)?
+        }),* $(,)?
+    }),* $(,)?) => {
+        paste::paste! {
+            #[derive(tsify::Tsify, Debug, serde::Serialize, serde::Deserialize)]
+            #[tsify(into_wasm_abi, from_wasm_abi)]
+            pub enum StepData {
+                $(
+                    $(
+                        [<$parent $name>] {
+                            $($field: $type),*
+                        }
+                    ),*
+                ),*
+            }
         }
-    }
 
-    pub fn new_plane(name: &str, plane: Plane, plane_id: u64) -> Self {
-        Step {
-            name: name.to_owned(),
-            unique_id: format!("Plane-{}", plane_id),
-            suppressed: false,
-            data: StepData::Plane {
-                plane,
-                height: 100.0,
-                width: 100.0,
-            },
-        }
-    }
+        impl crate::workbench::Workbench {
+            $(
+                paste::paste! {
+                    pub fn [<delete_ $parent:lower _id>](name: String, id: crate::IDType) -> Step {
+                        todo!("Delete ID step")
+                    }
+                }
 
-    pub fn new_sketch(name: &str, plane_id: &str, sketch_id: u64) -> Self {
-        Step {
-            name: name.to_owned(),
-            unique_id: format!("Sketch-{}", sketch_id),
-            suppressed: false,
-            data: StepData::Sketch {
-                plane_description: PlaneDescription::PlaneId(plane_id.to_owned()),
-                width: 1.25,
-                height: 0.75,
-                sketch: Sketch::new(),
-            },
-        }
-    }
+                $(
+                    paste::paste! {
+                        pub fn [<add_ $parent:lower _ $name:lower>](&mut self, name: String, $($field: $type),*) -> Result<crate::IDType, anyhow::Error> {
+                            let id = $parent::[<add_ $name:lower>](self, $($field),* )?;
 
-    pub fn new_sketch_on_solid_face(
-        name: &str,
-        solid_id: &str,
-        normal: Vector3,
-        sketch_id: u64,
-    ) -> Self {
-        Step {
-            name: name.to_owned(),
-            unique_id: format!("Sketch-{}", sketch_id),
-            suppressed: false,
-            data: StepData::Sketch {
-                plane_description: PlaneDescription::SolidFace {
-                    solid_id: solid_id.to_owned(),
-                    normal,
-                },
-                width: 12.5,
-                height: 7.5,
-                sketch: Sketch::new(),
-            },
-        }
-    }
+                            let step = Step {
+                                name,
+                                operation: StepOperation::Add,
+                                unique_id: format!(concat!("Add:", stringify!($parent), stringify!($name), "-{}"), id),
+                                suppressed: false,
+                                data: StepData::[<$parent $name>] {
+                                    $($field),*
+                                },
+                            };
 
-    pub fn new_extrusion(name: &str, extrusion: Extrusion, extrusion_id: u64) -> Self {
-        Step {
-            name: name.to_owned(),
-            unique_id: format!("Extrusion-{}", extrusion_id),
-            suppressed: false,
-            data: StepData::Extrusion { extrusion },
+                            self.history.push(step);
+
+                            Ok(id)
+                        }
+
+                        pub fn [<update_ $parent:lower $name:lower>](name: String, $($field: $type),*) -> Step {
+                            todo!("Update step")
+                        }
+                    }
+
+                )*
+            )*
+
+            paste::paste! {
+                pub fn do_step(&self, step: Step) -> Result<(), crate::error::CADmiumError> {
+                    match step.data {
+                        $(
+                            $(
+                                StepData::[<$parent $name>] {
+                                    $($field),*
+                                } => {
+                                    todo!("Do step")
+                                }
+                            ),*
+                        ),*
+                    }
+
+                    // Ok(())
+                }
+
+                pub fn undo_step(&self, step: Step) -> Result<(), crate::error::CADmiumError> {
+                    match step.data {
+                        $(
+                            $(
+                                StepData::[<$parent $name>] {
+                                    $($field),*
+                                } => {
+                                    todo!("Undo step")
+                                }
+                            ),*
+                        ),*
+                    }
+
+                    // Ok(())
+                }
+            }
         }
     }
+}
+
+define_steps! {
+    // ISketch {
+    //     Point {
+    //         x: f64,
+    //         y: f64,
+    //     },
+    //     Line {
+    //         start: isotope::primitives::point2::Point2,
+    //         end: isotope::primitives::point2::Point2,
+    //     }
+    // },
+    Workbench {
+        Point {
+            point: Point3,
+        },
+        Plane {
+            plane: Plane,
+            width: f64,
+            height: f64,
+        },
+        Sketch {
+            plane_description: PlaneDescription,
+            // sketch: ISketch,
+            // width: f64,
+            // height: f64,
+        },
+    },
+    // Solid {
+    //     Extrusion {
+    //         extrusion: Extrusion,
+    //     },
+    // }
 }

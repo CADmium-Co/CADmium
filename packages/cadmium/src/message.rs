@@ -1,4 +1,4 @@
-use isotope::primitives::ParametricCell;
+use isotope::primitives::Primitive;
 
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -11,19 +11,23 @@ use crate::step::StepData;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum MessageResult {
-    #[serde(rename = "success")]
-    Success(String),
-    #[serde(rename = "error")]
-    Error(String),
+pub struct MessageResult {
+    pub success: bool,
+    pub data: String,
 }
 
 impl From<Result<String, anyhow::Error>> for MessageResult {
     fn from(result: Result<String, anyhow::Error>) -> Self {
         match result {
             // TODO: The Success should be a stable enum
-            Ok(msg) => MessageResult::Success(format!("{{ {} }}", msg)),
-            Err(e) => MessageResult::Error(e.backtrace().to_string()),
+            Ok(msg) => Self {
+                success: true,
+                data: format!("{{ {} }}", msg)
+            },
+            Err(e) => Self {
+                success: false,
+                data: e.backtrace().to_string()
+            },
         }
     }
 }
@@ -51,7 +55,34 @@ pub enum Message {
     AddSketchPrimitive {
         workbench_id: u64,
         sketch_id: String,
-        primitive: ParametricCell,
+        primitive: Primitive,
+    },
+    AddSketchArc {
+        workbench_id: u64,
+        sketch_id: String,
+        center_id: u64,
+        radius: f64,
+        clockwise: bool,
+        start_angle: f64,
+        end_angle: f64,
+    },
+    AddSketchCircle {
+        workbench_id: u64,
+        sketch_id: String,
+        center_id: String,
+        radius: f64,
+    },
+    AddSketchLine {
+        workbench_id: u64,
+        sketch_id: String,
+        start_id: String,
+        end_id: String,
+    },
+    AddSketchPoint {
+        workbench_id: u64,
+        sketch_id: String,
+        x: f64,
+        y: f64,
     },
     NewSketchOnPlane {
         workbench_id: u64,
@@ -154,6 +185,29 @@ impl Message {
                 let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
                 let id = sketch.add_primitive(primitive.clone())?;
                 Ok(format!("\"id\": \"{}\"", id))
+            },
+            Message::AddSketchArc {
+                workbench_id,
+                sketch_id,
+                center_id,
+                radius,
+                clockwise,
+                start_angle,
+                end_angle,
+            } => {
+                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
+                let center = sketch.get_all_points().get(center_id)
+                    .ok_or(CADmiumError::PrimitiveNotInSketch)?;
+                // let arc = arc::Arc::new(
+                //     center.clone(),
+                //     *radius,
+                //     *clockwise,
+                //     *start_angle,
+                //     *end_angle,
+                // );
+                // Ok(format!("\"id\": \"{}\"", id))
+                Ok("".to_owned())
             },
             Message::NewSketchOnPlane {
                 workbench_id,

@@ -1,0 +1,15 @@
+{
+	"[markdown]": {
+		"editor.formatOnSave": false
+	},
+	"javascript.format.semicolons": "remove",
+	"typescript.preferences.quoteStyle": "double",
+	"javascript.preferences.quoteStyle": "double",
+	"editor.tabSize": 2,
+	"eslint.workingDirectories": [
+    {
+      "mode": "auto"
+    }
+	],
+	"rust-analyzer.references.excludeTests": true
+}

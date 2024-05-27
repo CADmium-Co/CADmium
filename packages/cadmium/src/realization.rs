@@ -3,7 +3,7 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::Point3;
-use crate::project::{RealPlane, RealSketch};
+use crate::isketch::{IPlane, ISketch};
 use crate::solid::Solid;
 use std::collections::HashMap;
 
@@ -12,9 +12,9 @@ use std::collections::HashMap;
 pub struct Realization {
     // a Realization is what you get if you apply the steps in a Workbench's
     // history and build a bunch of geometry
-    pub planes: HashMap<String, RealPlane>,
+    pub planes: HashMap<String, IPlane>,
     pub points: HashMap<String, Point3>,
-    pub sketches: HashMap<String, (RealSketch, RealSketch, String)>,
+    pub sketches: HashMap<String, (ISketch, ISketch, String)>,
     pub solids: HashMap<String, Solid>,
 }
 
