@@ -245,26 +245,26 @@ pub fn merge_faces(faces: &Vec<Face>, real_sketch: &RealSketch) -> Vec<Face> {
 //     faces
 // }
 
-pub fn find_transit(
-    real_plane: &RealPlane,
-    start: &Point3,
-    end: &Point3,
-    center: &Point3,
-    clockwise: bool,
-) -> Point3 {
-    // let radius = start.distance_to(center);
+// pub fn find_transit(
+//     real_plane: &RealPlane,
+//     start: &Point3,
+//     end: &Point3,
+//     center: &Point3,
+//     clockwise: bool,
+// ) -> Point3 {
+//     // let radius = start.distance_to(center);
 
-    let start = real_plane.plane.project(start);
-    let end = real_plane.plane.project(end);
-    let center = real_plane.plane.project(center);
+//     let start = real_plane.plane.project(start);
+//     let end = real_plane.plane.project(end);
+//     let center = real_plane.plane.project(center);
 
-    let pts = arc_to_points(&start, &end, &center, clockwise);
+//     let pts = arc_to_points(&start, &end, &center, clockwise);
 
-    let transit = &pts[pts.len() / 2];
+//     let transit = &pts[pts.len() / 2];
 
-    let transit_3d = real_plane.plane.unproject(&transit);
-    transit_3d
-}
+//     let transit_3d = real_plane.plane.unproject(&transit);
+//     transit_3d
+// }
 
 pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt::Debug>(
     solid0: &TruckSolid<TruckPoint3, C, Surface>,

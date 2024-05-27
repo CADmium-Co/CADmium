@@ -16,7 +16,7 @@ use truck_stepio::out;
 
 use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
-use crate::extrusion::find_transit;
+// use crate::extrusion::find_transit;
 use crate::extrusion::merge_faces;
 use crate::extrusion::Direction;
 use crate::extrusion::Extrusion;
@@ -205,11 +205,11 @@ impl Solid {
             Ring::Circle(circle) => {
                 println!("circle: {:?}", circle);
 
-                let center = sketch.points.get(&circle.center()).unwrap();
-                let center_point = TruckPoint3::new(center.x, center.y, center.z);
+                let (_center_id, center_point_3d) = sketch.get_point_3d(circle.center()).unwrap();
+                let center_point = TruckPoint3::new(center_point_3d.x, center_point_3d.y, center_point_3d.z);
 
-                let top = sketch.points.get(&circle.top).unwrap();
-                let top_point = TruckPoint3::new(top.x, top.y, top.z);
+                // TODO: PR: Is this correct?
+                let top_point = TruckPoint3::new(center_point_3d.x, center_point_3d.y + circle.radius(), center_point_3d.z);
 
                 let vector = TruckVector3::new(
                     plane.plane.tertiary.x,
@@ -226,6 +226,8 @@ impl Solid {
                 // println!("segments: {:?}", segments);
                 // let mut builder = builder::FaceBuilder::new();
                 let mut vertices: HashMap<u64, Vertex> = HashMap::new();
+                let mut start_id = None;
+                let mut end_id = None;
 
                 // First just collect all the points as Truck Vertices
                 // This is important because for shapes to be closed,
@@ -233,26 +235,30 @@ impl Solid {
                 for segment in segments.iter() {
                     match segment {
                         Segment::Line(line) => {
-                            let start = sketch.points.get(&line.start).unwrap();
+                            let (new_start_id, start) = sketch.get_point_3d(line.start()).unwrap();
                             let start_vertex =
                                 builder::vertex(TruckPoint3::new(start.x, start.y, start.z));
-                            let end = sketch.points.get(&line.end).unwrap();
+                            let (new_end_id, end) = sketch.get_point_3d(line.end()).unwrap();
                             let end_vertex = builder::vertex(TruckPoint3::new(end.x, end.y, end.z));
-                            vertices.insert(line.start, start_vertex);
-                            vertices.insert(line.end, end_vertex);
+                            vertices.insert(new_start_id, start_vertex);
+                            vertices.insert(new_end_id, end_vertex);
+
+                            start_id = Some(new_start_id);
+                            end_id = Some(new_end_id);
                         }
                         Segment::Arc(arc) => {
-                            let start = sketch.points.get(&arc.start).unwrap();
-                            let start_vertex =
-                                builder::vertex(TruckPoint3::new(start.x, start.y, start.z));
-                            let end = sketch.points.get(&arc.end).unwrap();
-                            let end_vertex = builder::vertex(TruckPoint3::new(end.x, end.y, end.z));
-                            let center = sketch.points.get(&arc.center).unwrap();
-                            let center_vertex =
-                                builder::vertex(TruckPoint3::new(center.x, center.y, center.z));
-                            vertices.insert(arc.start, start_vertex);
-                            vertices.insert(arc.end, end_vertex);
-                            vertices.insert(arc.center, center_vertex);
+                            // TODO: PR: We went from 3 point arc to 2 angles + center arc. No idea what to do with it
+                            // let start = sketch.get_point_3d(arc.start_point()).unwrap();
+                            // let start_vertex =
+                            //     builder::vertex(TruckPoint3::new(start.x, start.y, start.z));
+                            // let end = sketch.get_point_3d(arc.end_point()).unwrap();
+                            // let end_vertex = builder::vertex(TruckPoint3::new(end.x, end.y, end.z));
+                            // let center = sketch.get_point_3d(arc.center()).unwrap();
+                            // let center_vertex =
+                            //     builder::vertex(TruckPoint3::new(center.x, center.y, center.z));
+                            // vertices.insert(arc.start, start_vertex);
+                            // vertices.insert(arc.end, end_vertex);
+                            // vertices.insert(arc.center, center_vertex);
                         }
                     }
                 }
@@ -264,30 +270,31 @@ impl Solid {
                     let end_point = segment.get_end();
                     match segment {
                         Segment::Line(line) => {
-                            let start_vertex = vertices.get(start_point).unwrap();
-                            let end_vertex = vertices.get(&line.end).unwrap();
+                            // TODO: We can just keep the found start/center/end ids
+                            let start_vertex = vertices.get(&start_id.unwrap()).unwrap();
+                            let end_vertex = vertices.get(&end_id.unwrap()).unwrap();
                             let edge = builder::line(start_vertex, end_vertex);
                             edges.push(edge);
                         }
                         Segment::Arc(arc) => {
-                            let start_point = sketch.points.get(&arc.start).unwrap();
-                            let end_point = sketch.points.get(&arc.end).unwrap();
-                            let center_point = sketch.points.get(&arc.center).unwrap();
-                            let transit = find_transit(
-                                plane,
-                                start_point,
-                                end_point,
-                                center_point,
-                                arc.clockwise,
-                            );
+                            // let start_point = sketch.points.get(&arc.start).unwrap();
+                            // let end_point = sketch.points.get(&arc.end).unwrap();
+                            // let center_point = sketch.points.get(&arc.center).unwrap();
+                            // let transit = find_transit(
+                            //     plane,
+                            //     start_point,
+                            //     end_point,
+                            //     center_point,
+                            //     arc.clockwise,
+                            // );
 
-                            let start_vertex = vertices.get(&arc.start).unwrap();
-                            let end_vertex = vertices.get(&arc.end).unwrap();
-                            let transit_point = TruckPoint3::new(transit.x, transit.y, transit.z);
+                            // let start_vertex = vertices.get(&arc.start).unwrap();
+                            // let end_vertex = vertices.get(&arc.end).unwrap();
+                            // let transit_point = TruckPoint3::new(transit.x, transit.y, transit.z);
 
-                            // center point is not a vertex, but a point
-                            let edge = builder::circle_arc(start_vertex, end_vertex, transit_point);
-                            edges.push(edge);
+                            // // center point is not a vertex, but a point
+                            // let edge = builder::circle_arc(start_vertex, end_vertex, transit_point);
+                            // edges.push(edge);
                         }
                     }
                 }
