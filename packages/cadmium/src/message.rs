@@ -152,7 +152,7 @@ impl Message {
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
-                let id = sketch.add_primitive(*primitive)?;
+                let id = sketch.add_primitive(primitive.clone())?;
                 Ok(format!("\"id\": \"{}\"", id))
             },
             Message::NewSketchOnPlane {
