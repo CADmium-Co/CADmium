@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 use std::f64::consts::PI;
 
-use isotope::decompose::face::Face;
 use isotope::decompose::ring::Ring;
 use isotope::decompose::segment::Segment;
 use serde::{Deserialize, Serialize};
@@ -16,8 +15,6 @@ use truck_stepio::out;
 
 use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
-// use crate::extrusion::find_transit;
-use crate::extrusion::merge_faces;
 use crate::extrusion::Direction;
 use crate::extrusion::Extrusion;
 use crate::project::{RealPlane, RealSketch};
@@ -160,12 +157,13 @@ impl Solid {
 
         // Sometimes the chosen faces are touching, or one even envelops another. Let's
         // merge those faces together so that we have single solid wherever possible
-        let unmerged_faces: Vec<Face> = extrusion
-            .face_ids
-            .iter()
-            .map(|face_id| sketch.faces.get(*face_id as usize).unwrap().clone())
-            .collect();
-        let merged_faces = merge_faces(&unmerged_faces, sketch);
+        // TODO: We should move this to isotope
+        // let unmerged_faces: Vec<Face> = extrusion
+        //     .face_ids
+        //     .iter()
+        //     .map(|face_id| sketch.faces.get(*face_id as usize).unwrap().clone())
+        //     .collect();
+        let merged_faces = sketch.sketch.borrow().get_merged_faces();
 
         for (f_index, face) in merged_faces.iter().enumerate() {
             // let face = sketch.faces.get(*face_id as usize).unwrap();
@@ -246,7 +244,7 @@ impl Solid {
                             start_id = Some(new_start_id);
                             end_id = Some(new_end_id);
                         }
-                        Segment::Arc(arc) => {
+                        Segment::Arc(_arc) => {
                             // TODO: PR: We went from 3 point arc to 2 angles + center arc. No idea what to do with it
                             // let start = sketch.get_point_3d(arc.start_point()).unwrap();
                             // let start_vertex =
@@ -266,17 +264,14 @@ impl Solid {
                 let mut edges: Vec<Edge> = Vec::new();
                 // Now add the segments to the wire
                 for segment in segments.iter() {
-                    let start_point = segment.get_start();
-                    let end_point = segment.get_end();
                     match segment {
-                        Segment::Line(line) => {
-                            // TODO: We can just keep the found start/center/end ids
+                        Segment::Line(_line) => {
                             let start_vertex = vertices.get(&start_id.unwrap()).unwrap();
                             let end_vertex = vertices.get(&end_id.unwrap()).unwrap();
                             let edge = builder::line(start_vertex, end_vertex);
                             edges.push(edge);
                         }
-                        Segment::Arc(arc) => {
+                        Segment::Arc(_arc) => {
                             // let start_point = sketch.points.get(&arc.start).unwrap();
                             // let end_point = sketch.points.get(&arc.end).unwrap();
                             // let center_point = sketch.points.get(&arc.center).unwrap();
