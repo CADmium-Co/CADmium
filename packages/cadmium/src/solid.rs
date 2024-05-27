@@ -17,7 +17,7 @@ use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
 use crate::extrusion::Direction;
 use crate::extrusion::Extrusion;
-use crate::project::{RealPlane, RealSketch};
+use crate::isketch::{IPlane, ISketch};
 
 use truck_modeling::{builder, builder::translated, Edge, Face as TruckFace, Vertex, Wire};
 
@@ -137,8 +137,8 @@ impl Solid {
 
     pub fn from_extrusion(
         name: String,
-        plane: &RealPlane,
-        sketch: &RealSketch,
+        plane: &IPlane,
+        sketch: &ISketch,
         extrusion: &Extrusion,
     ) -> HashMap<String, Self> {
         let mut retval = HashMap::new();
@@ -194,8 +194,8 @@ impl Solid {
     }
 
     pub fn to_wire(
-        plane: &RealPlane,
-        sketch: &RealSketch,
+        plane: &IPlane,
+        sketch: &ISketch,
         _extrusion: &Extrusion,
         exterior: &Ring,
     ) -> Wire {

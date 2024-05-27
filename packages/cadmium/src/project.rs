@@ -1,19 +1,10 @@
-use isotope::decompose::face::Face;
-use isotope::primitives::point2::Point2;
-use isotope::primitives::Parametric;
-use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::archetypes::*;
 use crate::error::CADmiumError;
 use crate::realization::Realization;
 use crate::workbench::Workbench;
-
-use std::cell::RefCell;
-use std::collections::BTreeMap;
-use std::rc::Rc;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -93,78 +84,6 @@ impl Project {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Assembly {
     name: String,
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct RealSketch {
-    // TODO: Don't keep the plane_id here
-    pub plane_id: String,
-    plane: Rc<RefCell<RealPlane>>,
-    // TODO: Make the sketch private
-    pub sketch: Rc<RefCell<Sketch>>,
-    points_3d: BTreeMap<u64, Point3>,
-    // TODO: Make the faces private
-    pub faces: Vec<Face>,
-}
-
-impl RealSketch {
-    // TODO: Maybe pass the plane as refcell?
-    pub fn new(plane_id: &str, plane: &RealPlane, sketch: Rc<RefCell<Sketch>>) -> Self {
-        // The key difference between Sketch and RealSketch is that Sketch lives
-        // in 2D and RealSketch lives in 3D. So we need to convert the points
-
-        let mut real_sketch = RealSketch {
-            plane_id: plane_id.to_owned(),
-            plane: Rc::new(RefCell::new(plane.clone())),
-            points_3d: BTreeMap::new(),
-            sketch: sketch,
-            faces: vec![],
-        };
-
-        for (id, point) in real_sketch.sketch.borrow().get_all_points().iter() {
-            real_sketch.points_3d.insert(*id, Self::calculate_point_3d(plane, point));
-        }
-
-        real_sketch
-    }
-
-    /// Helper function to go from an isotope point2D to a point_3D, as calculated during new
-    pub fn get_point_3d(&self, point: Rc<RefCell<Point2>>) -> Result<(u64, Point3), CADmiumError> {
-        let parametric: Rc<RefCell<dyn Parametric>> = point.clone();
-        let point_id = self.sketch.borrow().get_primitive_id(&parametric).unwrap();
-
-        if let Some(result) = self.points_3d.get(&point_id) {
-            Ok((point_id, result.clone()))
-        } else {
-            // TODO: While I'd like to calculate and add the point_3d here, we'll pollute everything with mut
-            // let point_3d = Self::calculate_point_3d(&self.plane.borrow(), &point.borrow());
-
-            // Ok((point_id,
-            //     self.points_3d
-            //         .insert(point_id, point_3d)
-            //         .ok_or(CADmiumError::Point3DCalculationFailed)?))
-            Err(CADmiumError::Point3DCalculationFailed)
-        }
-    }
-
-    fn calculate_point_3d(plane: &RealPlane, point: &Point2) -> Point3 {
-        let o = plane.plane.origin.clone();
-        let x = plane.plane.primary.clone();
-        let y = plane.plane.secondary.clone();
-
-        let pt3 = o.plus(x.times(point.x())).plus(y.times(point.y()));
-        Point3::new(pt3.x, pt3.y, pt3.z)
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct RealPlane {
-    pub plane: Plane,
-    pub name: String,
-    pub width: f64,
-    pub height: f64,
 }
 
 #[cfg(test)]
