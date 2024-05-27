@@ -57,7 +57,7 @@ impl Project {
 
     #[wasm_bindgen]
     pub fn compute_constraint_errors(&mut self) {
-        self.native.compute_constraint_errors();
+        // self.native.compute_constraint_errors();
     }
 
     #[wasm_bindgen]

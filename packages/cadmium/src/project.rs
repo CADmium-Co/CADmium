@@ -1,6 +1,6 @@
-use isotope::constraints::{Constraint, ConstraintCell};
 use isotope::decompose::face::Face;
-use isotope::primitives::point2::Point2;
+use isotope::primitives::point2::{self, Point2};
+use isotope::primitives::Primitive;
 use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -13,7 +13,7 @@ use crate::step::StepData;
 use crate::workbench::Workbench;
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -57,18 +57,18 @@ impl Project {
         }
     }
 
-    pub fn compute_constraint_errors(&mut self) {
-        for workbench in self.workbenches.iter_mut() {
-            for step in workbench.history.iter_mut() {
-                match &mut step.data {
-                    StepData::Sketch { sketch, .. } => {
-                        sketch.compute_constraint_errors();
-                    }
-                    _ => {}
-                }
-            }
-        }
-    }
+    // pub fn compute_constraint_errors(&mut self) {
+    //     for workbench in self.workbenches.iter_mut() {
+    //         for step in workbench.history.iter_mut() {
+    //             match &mut step.data {
+    //                 StepData::Sketch { sketch, .. } => {
+    //                     sketch.compute_constraint_errors();
+    //                 }
+    //                 _ => {}
+    //             }
+    //         }
+    //     }
+    // }
 
     pub fn get_workbench_mut(&mut self, name: &str) -> Result<&mut Workbench, CADmiumError> {
         self.workbenches
@@ -101,39 +101,21 @@ pub struct Assembly {
 pub struct RealSketch {
     pub plane_id: String,
     pub plane_name: String,
-    pub points: HashMap<u64, Point3>,
-    pub points_2d: HashMap<u64, Point2>,
-    pub highest_point_id: u64,
-    pub line_segments: HashMap<u64, Line3>,
-    pub highest_line_segment_id: u64,
-    pub circles: HashMap<u64, Circle3>,
-    pub highest_circle_id: u64,
-    pub arcs: HashMap<u64, Arc3>,
-    pub highest_arc_id: u64,
-    pub constraints: HashMap<u64, ConstraintCell>,
-    pub highest_constraint_id: u64,
+    pub points_3d: BTreeMap<u64, Point3>,
+    pub sketch: Rc<RefCell<Sketch>>,
     pub faces: Vec<Face>,
 }
 
 impl RealSketch {
-    pub fn new(plane_name: &str, plane_id: &str, plane: &RealPlane, sketch: &Sketch) -> Self {
+    pub fn new(plane_name: &str, plane_id: &str, plane: &RealPlane, sketch: Rc<RefCell<Sketch>>) -> Self {
         // The key difference between Sketch and RealSketch is that Sketch lives
         // in 2D and RealSketch lives in 3D. So we need to convert the points
 
         let mut real_sketch = RealSketch {
             plane_name: plane_name.to_owned(),
             plane_id: plane_id.to_owned(),
-            points_2d: HashMap::new(),
-            points: HashMap::new(),
-            highest_point_id: 0,
-            line_segments: HashMap::new(),
-            highest_line_segment_id: 0,
-            circles: HashMap::new(),
-            highest_circle_id: 0,
-            arcs: HashMap::new(),
-            highest_arc_id: 0,
-            constraints: HashMap::new(),
-            highest_constraint_id: 0,
+            points_3d: BTreeMap::new(),
+            sketch: sketch,
             faces: vec![],
         };
 
@@ -141,72 +123,15 @@ impl RealSketch {
         let x = plane.plane.primary.clone();
         let y = plane.plane.secondary.clone();
 
-        for (point_id, point) in sketch.points.iter() {
-            let pt3 = o.plus(x.times(point.x)).plus(y.times(point.y));
+        for (id, parametric_ref) in sketch.borrow().primitives().iter() {
+            let point: point2::Point2 = match parametric_ref.borrow().to_primitive() {
+                Primitive::Point2(p) => p,
+                _ => continue,
+            };
+            let pt3 = o.plus(x.times(point.x())).plus(y.times(point.y()));
             let mut real_point = Point3::new(pt3.x, pt3.y, pt3.z);
-            if point.hidden {
-                real_point.hidden = true;
-            }
-            real_sketch.points.insert(*point_id, real_point);
-
-            let pt2 = point.clone();
-            real_sketch.points_2d.insert(*point_id, pt2);
+            real_sketch.points_3d.insert(*id, real_point);
         }
-        real_sketch.highest_point_id = sketch.highest_point_id;
-
-        for (line_id, line) in sketch.line_segments.iter() {
-            let real_line = Line3 {
-                start: line.start,
-                end: line.end,
-            };
-            real_sketch.line_segments.insert(*line_id, real_line);
-        }
-
-        for (circle_id, circle) in sketch.circles.iter() {
-            let real_circle = Circle3 {
-                center: circle.center,
-                radius: circle.radius,
-                top: circle.top,
-            };
-            real_sketch.circles.insert(*circle_id, real_circle);
-        }
-
-        // let mut arc3_lookup: HashMap<(u64, u64, u64), Arc3> = HashMap::new();
-        for (arc_id, arc) in sketch.arcs.iter() {
-            // println!("\nConverting arc to points");
-            // let as_points = sketch.arc_to_points(arc);
-            // println!("How many points? {}", as_points.len());
-            // let transit = as_points[as_points.len() / 2].clone();
-
-            // let transit_3d = o.plus(x.times(transit.x)).plus(y.times(transit.y));
-            // let mut real_point = Point3::new(transit_3d.x, transit_3d.y, transit_3d.z);
-            // real_point.hidden = true;
-
-            // let point_id = real_sketch.highest_point_id + 1;
-            // real_sketch.points.insert(point_id, real_point);
-            // real_sketch.points_2d.insert(point_id, transit);
-            // real_sketch.highest_point_id += 1;
-
-            let real_arc = Arc3 {
-                center: arc.center,
-                start: arc.start,
-                end: arc.end,
-                // transit: point_id,
-                clockwise: arc.clockwise,
-            };
-            real_sketch.arcs.insert(*arc_id, real_arc);
-            // arc3_lookup.insert((arc.start, arc.end, arc.center), real_arc);
-        }
-
-        for (constraint_id, constraint) in sketch.constraints.iter() {
-            let real_constraint = constraint.clone();
-            real_sketch
-                .constraints
-                .insert(*constraint_id, real_constraint);
-        }
-
-        let (faces, _unused_segments) = sketch.find_faces();
-        real_sketch.faces = faces;
 
         real_sketch
     }
