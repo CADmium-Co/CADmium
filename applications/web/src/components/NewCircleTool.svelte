@@ -11,26 +11,21 @@
   export let active: boolean
   export let projectToPlane: ProjectToPlane
 
-  // log("[props]", "pointsById:", pointsById, "sketchIndex:", sketchIndex, "active:", active)
+	let centerPoint: PointLikeById | null
 
-  let centerPoint: PointLikeById | null
+	$: if ($sketchTool !== "circle") centerPoint = null
 
-  $: if ($sketchTool !== "circle") centerPoint = null
-  // $: centerPoint, log("[centerPoint]", centerPoint)
-
-  function processPoint(point: PointLikeById) {
-    if (!centerPoint) {
-      // if there is no center point, set one
-      if (point.id) {
-        // nothing to do, the point exists!
-        // log('nothing to do the point exists!')
-      } else {
-        // again, don't actually DO anything yet to the sketch
-        point.id = null
-      }
-      centerPoint = point
-    } else {
-      // there WAS an center point, so we should create a circle!
+	function processPoint(point: PointLikeById) {
+		if (!centerPoint) {
+			// if there is no center point, set one
+			if (!point.id) {
+				// don't actually DO anything yet to the sketch
+				point.id = null
+			}
+			// else nothing to do, the point exists!
+			centerPoint = point
+		} else {
+			// there WAS an center point, so we should create a circle!
 
       // if the center point doesn't exist, then we should create a point
       if (centerPoint.id === null) centerPoint.id = addPointToSketch(sketchIndex, centerPoint.twoD!, false)
@@ -97,17 +92,15 @@
       }
     }
 
-    // if (snappedTo) log("[snappedTo]", snappedTo)
-
-    // only reset $snapPoints if something has changed
-    if (snappedTo) {
-      // @ts-ignore todo rework snapping
-      $snapPoints = [snappedTo] // todo all these different point representations need work!
-    } else {
-      if ($snapPoints.length > 0) {
-        $snapPoints = []
-      }
-    }
+		// only reset $snapPoints if something has changed
+		if (snappedTo) {
+			// @ts-ignore todo rework snapping
+			$snapPoints = [snappedTo] // todo all these different point representations need work!
+		} else {
+			if ($snapPoints.length > 0) {
+				$snapPoints = []
+			}
+		}
 
     if (centerPoint) {
       function calcDeltas(a: Vector2Like | Point2D | {x: number; y: number}, b: Vector2Like | undefined) {
