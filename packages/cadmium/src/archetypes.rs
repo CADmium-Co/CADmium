@@ -4,11 +4,13 @@ use serde::{Deserialize, Serialize};
 use truck_modeling::Plane as TruckPlane;
 use truck_modeling::InnerSpace;
 
+use crate::IDType;
+
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum PlaneDescription {
-    PlaneId(String),
-    SolidFace { solid_id: String, normal: Vector3 },
+    PlaneId(IDType),
+    SolidFace { solid_id: IDType, normal: Vector3 },
 }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]

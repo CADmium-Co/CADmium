@@ -6,13 +6,14 @@ use wasm_bindgen::prelude::*;
 use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
 use crate::error::CADmiumError;
 use crate::extrusion::{fuse, Extrusion, ExtrusionMode};
-use crate::project::{RealPlane, RealSketch};
+use crate::isketch::{IPlane, ISketch};
 use crate::realization::Realization;
 use crate::solid::Solid;
 use crate::step::{Step, StepData};
+use crate::IDType;
 
 use std::cell::RefCell;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
 
 // use truck_base::math::Vector3 as truck_vector3;
@@ -24,6 +25,15 @@ pub struct Workbench {
     pub(crate) name: String,
     pub(crate) history: Vec<Step>,
     pub(crate) step_counters: HashMap<String, u64>,
+    // These are free-standing points in 3D space, not part of sketches
+    pub(crate) points: BTreeMap<IDType, Point3>,
+    pub(crate) points_next_id: IDType,
+    pub(crate) sketches: BTreeMap<IDType, ISketch>,
+    pub(crate) sketches_next_id: IDType,
+    pub(crate) planes: BTreeMap<IDType, Plane>,
+    pub(crate) planes_next_id: IDType,
+    pub(crate) solids: BTreeMap<IDType, Solid>,
+    pub(crate) solids_next_id: IDType,
 }
 
 impl Workbench {
@@ -37,30 +47,38 @@ impl Workbench {
                 ("Sketch".to_owned(), 0),
                 ("Extrusion".to_owned(), 0),
             ]),
+            points: BTreeMap::new(),
+            points_next_id: 0,
+            sketches: BTreeMap::new(),
+            sketches_next_id: 0,
+            planes: BTreeMap::new(),
+            planes_next_id: 0,
+            solids: BTreeMap::new(),
+            solids_next_id: 0,
         };
 
-        wb.add_point("Origin", Point3::new(0.0, 0.0, 0.0));
-        wb.add_plane("Front", Plane::front());
-        wb.add_plane("Right", Plane::right());
-        wb.add_plane("Top", Plane::top());
+        wb.add_workbench_point("Origin".to_string(), Point3::new(0.0, 0.0, 0.0)).unwrap();
+        wb.add_workbench_plane("Front".to_string(), Plane::front(), 100.0, 100.0).unwrap();
+        wb.add_workbench_plane("Right".to_string(), Plane::right(), 100.0, 100.0).unwrap();
+        wb.add_workbench_plane("Top".to_string(), Plane::top(), 100.0, 100.0).unwrap();
 
         wb
     }
 
-    pub fn get_first_plane_id(&self) -> Option<String> {
-        for step in self.history.iter() {
-            match &step.data {
-                StepData::Plane {
-                    plane: _,
-                    width: _,
-                    height: _,
-                } => {
-                    return Some(step.unique_id.clone());
-                }
-                _ => {}
-            }
+    pub fn get_first_plane_id(&self) -> Option<IDType> {
+        if self.planes.len() > 0 {
+            Some(self.planes.keys().next().unwrap().to_owned())
+        } else {
+            None
         }
-        None
+    }
+
+    pub fn get_last_plane_id(&self) -> Option<IDType> {
+        if self.planes.len() > 0 {
+            Some(self.planes.keys().last().unwrap().to_owned())
+        } else {
+            None
+        }
     }
 
     pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
@@ -73,157 +91,6 @@ impl Workbench {
         }
 
         self.history[index].data = new_step_data;
-    }
-
-    pub fn last_plane_id(&self) -> Option<String> {
-        let mut last_plane_id = None;
-        for step in self.history.iter() {
-            match &step.data {
-                StepData::Plane {
-                    plane: _,
-                    width: _,
-                    height: _,
-                } => {
-                    last_plane_id = Some(step.unique_id.clone());
-                }
-                _ => {}
-            }
-        }
-        last_plane_id
-    }
-
-    pub fn json(&self) -> String {
-        let result = serde_json::to_string(self);
-        match result {
-            Ok(json) => json,
-            Err(e) => format!("Error: {}", e),
-        }
-    }
-
-    pub fn get_step_mut(&mut self, name: &str) -> Result<&mut Step, CADmiumError> {
-        self.history
-            .iter_mut()
-            .find(|step| step.name == name)
-            .ok_or(CADmiumError::StepNameNotFound(name.to_string()))
-    }
-
-    pub fn get_step_by_id_mut(&mut self, id: &str) -> Result<&mut Step, CADmiumError> {
-        self.history
-            .iter_mut()
-            .find(|step| step.unique_id == id)
-            .ok_or(CADmiumError::StepIDNotFound(id.to_string()))
-    }
-
-    pub fn get_sketch_mut(&mut self, name: &str) -> Result<&mut Sketch, CADmiumError> {
-        let step = self.get_step_mut(name)?;
-
-        match step.data {
-            StepData::Sketch { ref mut sketch, .. } => Ok(sketch),
-            _ => Err(CADmiumError::IncorrectStepDataType(step.unique_id.clone())),
-        }
-    }
-
-    pub fn get_sketch_by_id_mut(&mut self, id: &str) -> Result<&mut Sketch, CADmiumError> {
-        let step = self.get_step_by_id_mut(id)?;
-
-        match step.data {
-            StepData::Sketch { ref mut sketch, .. } => Ok(sketch),
-            _ => Err(CADmiumError::IncorrectStepDataType(step.unique_id.clone())),
-        }
-    }
-
-    pub fn add_point(&mut self, name: &str, point: Point3) {
-        let counter = self.step_counters.get_mut("Point").unwrap();
-        self.history.push(Step::new_point(name, point, *counter));
-        *counter += 1;
-    }
-
-    pub fn add_plane(&mut self, name: &str, plane: Plane) -> String {
-        let counter = self.step_counters.get_mut("Plane").unwrap();
-        self.history.push(Step::new_plane(name, plane, *counter));
-        *counter += 1;
-
-        self.plane_name_to_id(name).unwrap()
-    }
-
-    pub fn plane_name_to_id(&self, plane_name: &str) -> Option<String> {
-        for step in self.history.iter() {
-            if step.name == plane_name {
-                match &step.data {
-                    StepData::Plane {
-                        plane: _,
-                        width: _,
-                        height: _,
-                    } => {
-                        return Some(step.unique_id.clone());
-                    }
-                    _ => {}
-                }
-            }
-        }
-        None
-    }
-
-    pub fn add_sketch_to_solid_face(
-        &mut self,
-        new_sketch_name: &str,
-        solid_id: &str,
-        normal: Vector3,
-    ) -> String {
-        // TODO: maybe this shouldn't just take in a normal. Maybe it should take in the o, p, q points as well
-        // that way it could try to match even if there are multiple faces on this solid which have the same normal vector
-        // println!("New Normal! {:?}", normal);
-        // called like: wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
-
-        let counter = self.step_counters.get_mut("Sketch").unwrap();
-        let new_step = Step::new_sketch_on_solid_face(&new_sketch_name, solid_id, normal, *counter);
-        let new_step_id = new_step.unique_id.clone();
-        self.history.push(new_step);
-        *counter += 1;
-
-        new_step_id
-    }
-
-    pub fn add_sketch_to_plane(&mut self, name: &str, plane_id: &str) -> String {
-        if plane_id != "" {
-            // if the plane id is specified, check to make sure a plane with that ID exists
-            let mut plane_exists = false;
-            for step in self.history.iter() {
-                if step.unique_id == plane_id {
-                    match &step.data {
-                        StepData::Plane {
-                            plane: _,
-                            width: _,
-                            height: _,
-                        } => {
-                            plane_exists = true;
-                        }
-                        _ => {}
-                    }
-                }
-            }
-
-            if !plane_exists {
-                return format!("failed to find plane with id {}", plane_id);
-            }
-        }
-        // if the plane id is empty string, that's okay it's a placeholder
-
-        // If the sketch name is empty string, then we need to generate a new name
-        // Let's use "Sketch n" where n is the number of sketches
-        let counter = self.step_counters.get_mut("Sketch").unwrap();
-        let sketch_name = if name == "" {
-            format!("Sketch {}", *counter + 1)
-        } else {
-            name.to_owned()
-        };
-
-        let new_step = Step::new_sketch(&sketch_name, &plane_id, *counter);
-        let new_step_id = new_step.unique_id.clone();
-        self.history.push(new_step);
-        *counter += 1;
-
-        new_step_id
     }
 
     pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
@@ -264,7 +131,7 @@ impl Workbench {
                     width,
                     height,
                 } => {
-                    let rp = RealPlane {
+                    let rp = IPlane {
                         plane: plane.clone(),
                         width: *width,
                         height: *height,
@@ -284,15 +151,15 @@ impl Workbench {
                             continue;
                         }
 
-                        let plane = &realized.planes[plane_id];
+                        let plane = &realized.planes[&plane_id];
                         let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
 
                         realized.sketches.insert(
                             step.unique_id.to_owned(),
                             (
-                                RealSketch::new(plane_id, &plane, sketch_ref.clone()),
-                                RealSketch::new(
-                                    plane_id,
+                                ISketch::new(&plane_id, &plane, sketch_ref.clone()),
+                                ISketch::new(
+                                    &plane_id,
                                     &plane,
                                     sketch_ref,
                                 ),
@@ -301,8 +168,8 @@ impl Workbench {
                         );
                     }
                     PlaneDescription::SolidFace { solid_id, normal } => {
-                        let solid = &realized.solids[solid_id];
-                        let face = solid.get_face_by_normal(normal).unwrap();
+                        let solid = &realized.solids[&solid_id];
+                        let face = solid.get_face_by_normal(&normal).unwrap();
                         let oriented_surface = face.oriented_surface();
 
                         println!("Surface: {:?}", oriented_surface);
@@ -320,7 +187,7 @@ impl Workbench {
 
                         let new_plane_id = format!("derived_plane_for:{}", step.name);
 
-                        let rp = RealPlane {
+                        let rp = IPlane {
                             plane: sketch_plane.clone(),
                             width: 90.0,
                             height: 60.0,
@@ -334,8 +201,8 @@ impl Workbench {
                         realized.sketches.insert(
                             step.unique_id.to_owned(),
                             (
-                                RealSketch::new(&new_plane_id, &rp, sketch_ref.clone()),
-                                RealSketch::new(
+                                ISketch::new(&new_plane_id, &rp, sketch_ref.clone()),
+                                ISketch::new(
                                     &new_plane_id,
                                     &rp,
                                     // TODO: &sketch.split_intersections(false),
@@ -391,7 +258,7 @@ impl Workbench {
 
                             for existing_solid_name in merge_scope {
                                 let mut existing_solid_to_merge_with =
-                                    realized.solids.remove(existing_solid_name).unwrap();
+                                    realized.solids.remove(&existing_solid_name).unwrap();
 
                                 // merge this existing solid with as many of the new solids as possible
                                 for (_, new_solid) in new_solids.iter() {
@@ -442,7 +309,7 @@ impl Workbench {
 
                             for existing_solid_name in merge_scope {
                                 let mut existing_solid_to_merge_with =
-                                    realized.solids.remove(existing_solid_name).unwrap();
+                                    realized.solids.remove(&existing_solid_name).unwrap();
 
                                 // merge this existing solid with as many of the new solids as possible
                                 for (_, new_solid) in new_solids.iter() {
