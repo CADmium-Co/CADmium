@@ -1,16 +1,15 @@
-export const prerender = true
+// currently not used since projectUtils & stores were pulled out and placed in packages/shared
+// todo
 
-_setDevelopment(true)
-
-export function _isDevelopment() {
+export function isDevelopment() {
 	return (globalThis as any).process.env.NODE_ENV === "development"
 }
 
-export function _isProduction() {
+export function isProduction() {
 	return (globalThis as any).process.env.NODE_ENV !== "development"
 }
 
-export function _setDevelopment(shouldSet: boolean): void {
+export function setDevelopment(shouldSet: boolean): void {
 	;(globalThis as any).process = (globalThis as any).process ?? {}
 	const env = (globalThis as any).process.env ?? {}
 	if (shouldSet) (globalThis as any).process.env = { ...env, NODE_ENV: "development" }
@@ -18,7 +17,7 @@ export function _setDevelopment(shouldSet: boolean): void {
 }
 
 // disable logging
-if (_isProduction()) {
+if (isProduction()) {
 	const methods = ["log", "debug", "warn", "info"]
 	for (let i = 0; i < methods.length; i++) {
 		// @ts-ignore

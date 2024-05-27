@@ -10,7 +10,7 @@
 		hiddenSketches
 	} from "shared/stores"
 	import { newExtrusion, newSketchOnPlane } from "shared/projectUtils"
-	import { base } from "$app/paths"
+	import { base } from "../base"
 
 	// prettier-ignore
 	const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()

@@ -7,7 +7,7 @@
 	import Bug from "phosphor-svelte/lib/Bug"
 	import type { WithTarget } from "shared/types"
 	import { isProject } from "shared/typeGuards"
-	import { base } from "$app/paths"
+	import { base } from "../base"
 	import { renameProject } from "shared/projectUtils"
 
 	// prettier-ignore
@@ -50,34 +50,36 @@
 		</div>
 		<div class="select-none">CADmium</div>
 		{#if renaming}
-		<input
-			class="bg-gray-300 text-gray-700 py-2 px-4 font-medium"
-			type="text"
-			bind:value={newProjectName}
-			on:blur={() => {
-				log("Renaming project aborted")
-				renaming = false
-				newProjectName = project.name ?? ""
-			}}
-			on:keydown={(e) => {
-				if (e.key === "Enter") {
-					log("Renaming project")
-					renameProject(newProjectName)
-					project.name = newProjectName
+			<input
+				class="bg-gray-300 text-gray-700 py-2 px-4 font-medium"
+				type="text"
+				bind:value={newProjectName}
+				on:blur={() => {
+					log("Renaming project aborted")
 					renaming = false
-				}
-			}}
-		/>
+					newProjectName = project.name ?? ""
+				}}
+				on:keydown={(e) => {
+					if (e.key === "Enter") {
+						log("Renaming project")
+						renameProject(newProjectName)
+						project.name = newProjectName
+						renaming = false
+					}
+				}}
+			/>
 		{:else}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<div
-			class="font-medium"
-			on:dblclick={() => {
-				log("Renaming project")
-				renaming = true
-				newProjectName = project.name ?? ""
-			}}
-		>{project.name ?? ""}</div>
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				class="font-medium"
+				on:dblclick={() => {
+					log("Renaming project")
+					renaming = true
+					newProjectName = project.name ?? ""
+				}}
+			>
+				{project.name ?? ""}
+			</div>
 		{/if}
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
