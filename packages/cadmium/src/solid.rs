@@ -205,7 +205,7 @@ impl Solid {
             Ring::Circle(circle) => {
                 println!("circle: {:?}", circle);
 
-                let center = sketch.points.get(&circle.center).unwrap();
+                let center = sketch.points.get(&circle.center()).unwrap();
                 let center_point = TruckPoint3::new(center.x, center.y, center.z);
 
                 let top = sketch.points.get(&circle.top).unwrap();
