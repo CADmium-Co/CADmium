@@ -1,0 +1,10 @@
+{
+  "name": "@repo/config-prettier",
+  "version": "0.0.0",
+  "main": "index.js",
+  "private": true,
+  "dependencies": {},
+  "publishConfig": {
+    "access": "public"
+  }
+}
