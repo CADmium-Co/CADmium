@@ -72,7 +72,7 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
 
             // check if b's exterior is equal to any of a's holes
             for (_hole_index, hole) in face_a.holes.iter().enumerate() {
-                if hole == &face_b.exterior {
+                if hole == face_b {
                     retval.push((b, a)); // (small, big)
                 }
             }
