@@ -3,7 +3,7 @@
   "scripts": {
     "build": "turbo run build --cache-dir=.turbo --no-daemon",
     "dev": "turbo run dev --no-daemon",
-    "serve": "turbo run serve --no-daemon",
+    "preview": "turbo run preview --no-daemon",
     "test": "turbo run test --no-daemon",
     "clean": "turbo run clean --no-daemon",
     "lint": "turbo run lint --no-daemon",

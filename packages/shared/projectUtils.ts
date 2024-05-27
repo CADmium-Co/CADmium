@@ -42,7 +42,7 @@ import {
 	isSetSketchPlane,
 	isUpdateExtrusion
 } from "./typeGuards"
-// import { _isDevelopment } from "../+layout"
+// import { isDevelopment } from "../+layout"
 
 // prettier-ignore
 const log = (function () { const context = "[projectUtils.ts]"; const color = "aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
@@ -633,7 +633,7 @@ function checkWasmMessage(message: Message, abort = true, logError = true): bool
 	function logOrAbort() {
 		const error = `[${key}] message failed typecheck:`
 		if (logError) console.error("[projectUtils.ts]", error, message)
-		// if (abort && _isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
+		// if (abort && isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
 		return false
 	}
 }
