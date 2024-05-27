@@ -6,9 +6,9 @@
   "description": "A CAD program written in Rust with a JS front end",
   "scripts": {
     "dev": "pnpm run build:dev; onchange 'src/**/*.rs' -- pnpm run build:dev",
-    "build:dev": "cargo check && RUST_BACKTRACE=1 wasm-pack build --no-pack --target web --dev",
+    "build:dev": "cross-env cargo check && RUST_BACKTRACE=1 wasm-pack build --no-pack --target web --dev",
     "build": "wasm-pack build --target web --no-pack",
-    "clean": "rm -rf target pkg node_modules",
+    "clean": "rimraf target pkg node_modules",
     "test": "cargo test",
     "postinstall": "pnpm build"
   },
