@@ -11,7 +11,9 @@ use crate::realization::Realization;
 use crate::solid::Solid;
 use crate::step::{Step, StepData};
 
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 // use truck_base::math::Vector3 as truck_vector3;
 use truck_shapeops::and as solid_and;
@@ -283,17 +285,16 @@ impl Workbench {
                         }
 
                         let plane = &realized.planes[plane_id];
+                        let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
 
                         realized.sketches.insert(
                             step.unique_id.to_owned(),
                             (
-                                RealSketch::new(&plane.name, plane_id, plane, sketch),
+                                RealSketch::new(plane_id, &plane, sketch_ref),
                                 RealSketch::new(
-                                    &plane.name,
                                     plane_id,
-                                    plane,
-                                    // TODO: &sketch.split_intersections(false),
-                                    &sketch,
+                                    &plane,
+                                    sketch_ref,
                                 ),
                                 step.name.clone(),
                             ),
@@ -327,17 +328,18 @@ impl Workbench {
                         };
                         realized.planes.insert(new_plane_id.clone(), rp);
                         let rp = &realized.planes[&new_plane_id];
+                        let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
 
+                        // TODO: There's no way this is correct. Also a lot of prelude is the same fo Plane case
                         realized.sketches.insert(
                             step.unique_id.to_owned(),
                             (
-                                RealSketch::new(&new_plane_id, &new_plane_id, &rp, sketch),
+                                RealSketch::new(&new_plane_id, &rp, sketch_ref),
                                 RealSketch::new(
-                                    &new_plane_id,
                                     &new_plane_id,
                                     &rp,
                                     // TODO: &sketch.split_intersections(false),
-                                    &sketch,
+                                    sketch_ref,
                                 ),
                                 step.name.clone(),
                             ),

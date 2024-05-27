@@ -14,6 +14,12 @@ pub enum CADmiumError {
 	#[error("The sketch ID {0} was not found")]
 	SketchIDNotFound(u64),
 
+	// RealSketch errors
+	#[error("The primitive could not be found inside the sketch")]
+	PrimitiveNotInSketch,
+	#[error("Couldn't calculate the 3D position of the supplied point")]
+	Point3DCalculationFailed,
+
 	// StepData errors
 	#[error("The step {0} data type is not as expected")]
 	IncorrectStepDataType(String),
