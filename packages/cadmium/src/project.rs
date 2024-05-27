@@ -1,6 +1,6 @@
 use isotope::decompose::face::Face;
-use isotope::primitives::point2::{self, Point2};
-use isotope::primitives::{Parametric, Primitive};
+use isotope::primitives::point2::Point2;
+use isotope::primitives::Parametric;
 use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -9,11 +9,10 @@ use wasm_bindgen::prelude::*;
 use crate::archetypes::*;
 use crate::error::CADmiumError;
 use crate::realization::Realization;
-use crate::step::StepData;
 use crate::workbench::Workbench;
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -123,11 +122,7 @@ impl RealSketch {
             faces: vec![],
         };
 
-        let o = plane.plane.origin.clone();
-        let x = plane.plane.primary.clone();
-        let y = plane.plane.secondary.clone();
-
-        for (id, point) in sketch.borrow().get_all_points().iter() {
+        for (id, point) in real_sketch.sketch.borrow().get_all_points().iter() {
             real_sketch.points_3d.insert(*id, Self::calculate_point_3d(plane, point));
         }
 
@@ -135,23 +130,21 @@ impl RealSketch {
     }
 
     /// Helper function to go from an isotope point2D to a point_3D, as calculated during new
-    pub fn get_point_3d(&self, point: Rc<RefCell<Point2>>) -> Result<(u64, &Point3), CADmiumError> {
+    pub fn get_point_3d(&self, point: Rc<RefCell<Point2>>) -> Result<(u64, Point3), CADmiumError> {
         let parametric: Rc<RefCell<dyn Parametric>> = point.clone();
         let point_id = self.sketch.borrow().get_primitive_id(&parametric).unwrap();
 
         if let Some(result) = self.points_3d.get(&point_id) {
-            Ok((point_id, result))
+            Ok((point_id, result.clone()))
         } else {
-            let point_2d = self.sketch
-                .borrow()
-                .primitives()
-                .get(&point_id)
-                .ok_or(CADmiumError::PrimitiveNotInSketch)?;
+            // TODO: While I'd like to calculate and add the point_3d here, we'll pollute everything with mut
+            // let point_3d = Self::calculate_point_3d(&self.plane.borrow(), &point.borrow());
 
-            Ok((point_id,
-                &self.points_3d
-                    .insert(point_id, Self::calculate_point_3d(&self.plane.borrow(), &point.borrow()))
-                    .ok_or(CADmiumError::Point3DCalculationFailed)?))
+            // Ok((point_id,
+            //     self.points_3d
+            //         .insert(point_id, point_3d)
+            //         .ok_or(CADmiumError::Point3DCalculationFailed)?))
+            Err(CADmiumError::Point3DCalculationFailed)
         }
     }
 

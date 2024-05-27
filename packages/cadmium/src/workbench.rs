@@ -290,7 +290,7 @@ impl Workbench {
                         realized.sketches.insert(
                             step.unique_id.to_owned(),
                             (
-                                RealSketch::new(plane_id, &plane, sketch_ref),
+                                RealSketch::new(plane_id, &plane, sketch_ref.clone()),
                                 RealSketch::new(
                                     plane_id,
                                     &plane,
@@ -334,7 +334,7 @@ impl Workbench {
                         realized.sketches.insert(
                             step.unique_id.to_owned(),
                             (
-                                RealSketch::new(&new_plane_id, &rp, sketch_ref),
+                                RealSketch::new(&new_plane_id, &rp, sketch_ref.clone()),
                                 RealSketch::new(
                                     &new_plane_id,
                                     &rp,
