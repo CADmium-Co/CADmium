@@ -8,6 +8,7 @@ use crate::error::CADmiumError;
 use crate::extrusion::{Direction, Extrusion, ExtrusionMode};
 use crate::project::Project;
 use crate::step::StepData;
+use crate::IDType;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -35,7 +36,10 @@ impl From<Result<String, anyhow::Error>> for MessageResult {
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Message {
-    StepAction(StepData),
+    StepAction {
+        name: String,
+        data: StepData,
+    },
     RenameWorkbench {
         workbench_id: u64,
         new_name: String,
@@ -139,8 +143,12 @@ impl Message {
 
     pub fn handle(&self, project: &mut Project) -> Result<String, anyhow::Error> {
         match self {
-            Message::StepAction(data) => {
-
+            Message::StepAction {
+                name,
+                data,
+            } => {
+                let id = data.do_action(project, *name)?;
+                Ok(format!("\"id\": \"{}\"", id))
             }
             Message::RenameProject { new_name } => {
                 project.name = new_name.to_owned();
