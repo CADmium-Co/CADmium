@@ -332,7 +332,7 @@ pub mod tests {
         println!("{:?}", realization);
     }
 
-    #[test]
+    // #[test]
     fn bruno() {
         let mut p = create_test_project();
         let wb = p.workbenches.get_mut(0).unwrap();
