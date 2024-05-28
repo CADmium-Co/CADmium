@@ -29,14 +29,17 @@ pub struct Step {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
     WorkbenchPoint {
+        workbench_id: IDType,
         point: Point3,
     },
     WorkbenchPlane {
+        workbench_id: IDType,
         plane: Plane,
         width: f64,
         height: f64,
     },
     WorkbenchSketch {
+        workbench_id: IDType,
         plane_description: PlaneDescription,
         // sketch: ISketch,
         // width: f64,
@@ -44,10 +47,14 @@ pub enum StepData {
     },
     #[step_data(workbench_field = "sketches", type = "Sketch")]
     SketchPoint {
+        workbench_id: IDType,
+        sketch_id: IDType,
         point: Point2,
     },
     #[step_data(workbench_field = "sketches", type = "Sketch")]
     SketchArc {
+        workbench_id: IDType,
+        sketch_id: IDType,
         center: IDType,
         radius: f64,
         clockwise: bool,
@@ -56,11 +63,15 @@ pub enum StepData {
     },
     #[step_data(workbench_field = "sketches", type = "Sketch")]
     SketchCircle {
+        workbench_id: IDType,
+        sketch_id: IDType,
         center: IDType,
         radius: f64,
     },
     #[step_data(workbench_field = "sketches", type = "Sketch")]
     SketchLine {
+        workbench_id: IDType,
+        sketch_id: IDType,
         start: IDType,
         end: IDType,
     }

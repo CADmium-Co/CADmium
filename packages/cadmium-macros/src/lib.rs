@@ -56,22 +56,16 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
 
         // Process not skipped workbench
         let mut wb_var = quote! {};
-        let mut wb_id_def = quote! {};
-        let mut wb_id_arg = quote! {};
         if !skip_workbench {
             wb_var = quote! {
                 let wb_ = self.native.workbenches
                     .get_mut(workbench_id as usize)
                     .ok_or(anyhow::anyhow!("Could not find workbench"))?;
             };
-            wb_id_def = quote! { workbench_id: crate::IDType, };
-            wb_id_arg = quote! { workbench_id, };
         }
 
         // Process type and workbench_field
         let mut field_var = quote! {};
-        let mut field_id_def = quote! {};
-        let mut field_id_arg = quote! {};
         let id_arg_name = if let Some(f) = parent_type.clone() {
             Ident::new(format!("{}_id", f.to_string().to_case(Case::Snake)).as_str(), f.span())
         } else {
@@ -85,8 +79,6 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                     .ok_or(anyhow::anyhow!("Could not find parent"))?;
                 let parent_ = parent_ref_.borrow_mut();
             };
-            field_id_def = quote! { #id_arg_name: crate::IDType, };
-            field_id_arg = quote! { #id_arg_name, };
         } else if !skip_workbench {
             field_var = quote! { let parent_ = wb_; };
         } else {
@@ -100,19 +92,27 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
             let field_type = &field.ty;
 
             quote! { #field_name: #field_type }
-        }).into_iter();
-        let function_args = variant.fields.iter().map(|field| {
+        }).collect::<Vec<_>>();
+        let function_args_full = variant.fields.iter().map(|field| {
             let field_name = &field.ident;
 
             quote! { #field_name }
-        }).into_iter();
-        let function_args2 = function_args.clone();
+        }).collect::<Vec<_>>();
+
+        let function_args2 = function_args_full.clone();
+        let function_args_noauto = function_args2
+            .iter()
+            .filter(|field|
+                field.to_string() != "workbench_id"
+                && field.to_string() != id_arg_name.to_string()
+            ).collect::<Vec<_>>();
+
 
         quote! {
-            pub fn #add_func_name(&mut self, #wb_id_def #field_id_def name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
+            pub fn #add_func_name(&mut self, name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
                 #wb_var
                 #field_var
-                let result_id_ = parent_.#add_func_name(#( #function_args ),*)?;
+                let result_id_ = parent_.#add_func_name(#( #function_args_noauto ),*)?;
 
                 let step_ = Step {
                     name,
@@ -120,9 +120,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                     unique_id: format!(concat!("Add:", stringify!(#name), "-{}"), result_id_),
                     suppressed: false,
                     data: #name::#variant_name {
-                        // #wb_id_arg
-                        // #field_id_arg
-                        #( #function_args2 ),*
+                        #( #function_args_full ),*
                     },
                 };
 
