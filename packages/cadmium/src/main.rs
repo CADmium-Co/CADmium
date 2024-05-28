@@ -63,7 +63,7 @@ fn main() {
     );
 
     let mut mesh = combined.triangulation(0.01).to_polygon();
-    mesh.put_together_same_attrs();
+    mesh.put_together_same_attrs(0.1);
     let file = std::fs::File::create("combined_cube.obj").unwrap();
     obj::write(&mesh, file).unwrap();
 }

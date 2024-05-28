@@ -20,11 +20,11 @@ use crate::project::{RealPlane, RealSketch};
 use crate::sketch::Vector2;
 use crate::sketch::{Face, Ring, Segment};
 
-use truck_modeling::{builder, Edge, Vertex, Wire, Face as TruckFace, builder::translated};
+use truck_modeling::{builder, builder::translated, Edge, Face as TruckFace, Vertex, Wire};
 
-use truck_topology::Solid as TruckSolid;
-use truck_polymesh::Vector3 as TruckVector3;
 use truck_polymesh::Point3 as TruckPoint3;
+use truck_polymesh::Vector3 as TruckVector3;
+use truck_topology::Solid as TruckSolid;
 
 const MESH_TOLERANCE: f64 = 0.1;
 
@@ -65,7 +65,7 @@ impl Solid {
             truck_solid,
         };
         let mut mesh = solid.truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
 
         // the mesh is prepared for obj export, but we need to convert it
         // to a format compatible for rendering
@@ -296,7 +296,7 @@ impl Solid {
 
     pub fn to_obj_string(&self, tolerance: f64) -> String {
         let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let mut buf = Vec::new();
         obj::write(&mesh, &mut buf).unwrap();
         let string = String::from_utf8(buf).unwrap();
@@ -305,7 +305,7 @@ impl Solid {
 
     pub fn save_as_obj(&self, filename: &str, tolerance: f64) {
         let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let file = std::fs::File::create(filename).unwrap();
         obj::write(&mesh, file).unwrap();
     }
@@ -315,7 +315,7 @@ impl Solid {
         let step_string = out::CompleteStepDisplay::new(
             out::StepModel::from(&compressed),
             out::StepHeaderDescriptor {
-                origination_system: "cadmium-shape-to-step".to_owned(),
+                organization_system: "cadmium-shape-to-step".to_owned(),
                 ..Default::default()
             },
         )
@@ -328,5 +328,4 @@ impl Solid {
         let mut step_file = std::fs::File::create(filename).unwrap();
         std::io::Write::write_all(&mut step_file, step_text.as_ref()).unwrap();
     }
-
 }
