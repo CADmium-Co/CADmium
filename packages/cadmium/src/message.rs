@@ -164,51 +164,6 @@ impl Message {
 
                 Ok(format!("\"name\": \"{}\"", new_name))
             }
-            Message::DeleteSketchPrimitives {
-                workbench_id,
-                sketch_id,
-                ids,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
-                for id in ids {
-                    sketch.delete_primitive(*id)?;
-                }
-                Ok("".to_owned())
-            }
-            Message::AddSketchPrimitive {
-                workbench_id,
-                sketch_id,
-                primitive,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
-                let id = sketch.add_primitive(primitive.clone())?;
-                Ok(format!("\"id\": \"{}\"", id))
-            },
-            Message::AddSketchArc {
-                workbench_id,
-                sketch_id,
-                center_id,
-                radius,
-                clockwise,
-                start_angle,
-                end_angle,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let sketch = workbench.get_sketch_by_id_mut(sketch_id)?;
-                let center = sketch.get_all_points().get(center_id)
-                    .ok_or(CADmiumError::PrimitiveNotInSketch)?;
-                // let arc = arc::Arc::new(
-                //     center.clone(),
-                //     *radius,
-                //     *clockwise,
-                //     *start_angle,
-                //     *end_angle,
-                // );
-                // Ok(format!("\"id\": \"{}\"", id))
-                Ok("".to_owned())
-            },
             Message::NewSketchOnPlane {
                 workbench_id,
                 sketch_name,

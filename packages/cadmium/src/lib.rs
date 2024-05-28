@@ -67,16 +67,16 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn get_realization(&self, workbench_id: u32, max_steps: u32) -> Realization {
+    pub fn get_realization(&self, workbench_id: IDType, max_steps: u64) -> Realization {
         let realized = self
             .native
-            .get_realization(workbench_id as u64, max_steps as u64);
+            .get_realization(workbench_id, max_steps);
 
         Realization { native: realized }
     }
 
     #[wasm_bindgen]
-    pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
+    pub fn get_workbench(&self, workbench_index: IDType) -> workbench::Workbench {
         // TODO: Use get() and return a Result
         self.native.workbenches[workbench_index as usize]
     }
