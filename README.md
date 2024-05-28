@@ -76,7 +76,7 @@ cargo install wasm-pack
 ## Running Tests
 
 ```shell
-turbo test
+pnpm test
 ```
 
 Playwright is used for e2e testing. You may be prompted with a command to install it.
@@ -100,6 +100,14 @@ To build and run the Rust tests:
 
 ```shell
 cargo test
+```
+
+## git blame
+
+To ignore commits used purely for formatting changes, to preserve correct authorship, set your local git config:
+
+```shell
+git config blame.ignoreRevsFile .git-blame-ignore-revs
 ```
 
 ## Contributing
