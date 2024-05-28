@@ -96,8 +96,8 @@ pub enum Message {
     },
     SetSketchPlane {
         workbench_id: u64,
-        sketch_id: String,
-        plane_id: String,
+        sketch_id: IDType,
+        plane_id: IDType,
     },
     DeleteStep {
         workbench_id: u64,
@@ -182,20 +182,11 @@ impl Message {
                 plane_id: pid,
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let step = workbench.get_step_by_id_mut(&sketch_id)?;
-                let plane_description: &mut PlaneDescription = if let StepData::Sketch { plane_description, .. } = &mut step.data {
-                    plane_description
-                } else {
-                    return Err(CADmiumError::IncorrectStepDataType("Sketch".to_owned()).into());
-                };
+                let plane = workbench.planes.iter().find(|(p, _)| *p == pid).ok_or(anyhow::anyhow!(""))?;
+                let sketch = workbench.get_sketch_by_id(*sketch_id)?.borrow_mut();
+                sketch.plane = plane.1.clone();
 
-                match plane_description {
-                    PlaneDescription::PlaneId(ref mut plane_id) => {
-                        *plane_id = pid.to_owned();
-                        Ok(format!("\"plane_id\": \"{}\"", pid))
-                    }
-                    _ => Err(CADmiumError::NotImplemented.into())
-                }
+                Ok(format!("\"plane_id\": \"{}\"", plane.0))
             }
             Message::DeleteStep {
                 workbench_id,
