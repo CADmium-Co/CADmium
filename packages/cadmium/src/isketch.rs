@@ -94,7 +94,7 @@ impl ISketch {
 }
 
 impl ISketch {
-    pub(super) fn add_point(&mut self, point: Point2) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_sketch_point(&mut self, point: Point2) -> Result<IDType, anyhow::Error> {
         let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(point.into())));
 
         let mut sketch = self.sketch.borrow_mut();
@@ -103,7 +103,7 @@ impl ISketch {
         Ok(point_id)
     }
 
-    pub(super) fn add_arc(&mut self, center: IDType, radius: f64, clockwise: bool, start_angle: f64, end_angle: f64) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_sketch_arc(&mut self, center: IDType, radius: f64, clockwise: bool, start_angle: f64, end_angle: f64) -> Result<IDType, anyhow::Error> {
         let mut sketch = self.sketch.borrow_mut();
 
         let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center).unwrap() {
@@ -118,7 +118,7 @@ impl ISketch {
         Ok(point_id)
     }
 
-    pub(super) fn add_circle(&mut self, center: IDType, radius: f64) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_sketch_circle(&mut self, center: IDType, radius: f64) -> Result<IDType, anyhow::Error> {
         let mut sketch = self.sketch.borrow_mut();
 
         let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center).unwrap() {
@@ -133,7 +133,7 @@ impl ISketch {
         Ok(point_id)
     }
 
-    pub(super) fn add_line(&mut self, start: IDType, end: IDType) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_sketch_line(&mut self, start: IDType, end: IDType) -> Result<IDType, anyhow::Error> {
         let mut sketch = self.sketch.borrow_mut();
 
         let start_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(start).unwrap() {

@@ -366,19 +366,19 @@ impl Workbench {
 
 // Step operations
 impl Workbench {
-    pub(super) fn add_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
         self.points.insert(self.points_next_id, point).ok_or(anyhow::anyhow!("Failed to insert point"));
         self.points_next_id += 1;
         Ok(self.points_next_id - 1)
     }
 
-    pub(super) fn add_plane(&mut self, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_workbench_plane(&mut self, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
         self.planes.insert(self.planes_next_id, plane).ok_or(anyhow::anyhow!("Failed to insert plane"));
         self.planes_next_id += 1;
         Ok(self.planes_next_id - 1)
     }
 
-    pub(super) fn add_sketch(
+    pub(super) fn add_workbench_sketch(
         &mut self,
         plane_description: PlaneDescription,
     ) -> Result<IDType, anyhow::Error> {
