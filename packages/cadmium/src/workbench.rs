@@ -367,31 +367,31 @@ impl Workbench {
 
 // Step operations
 impl Workbench {
-    pub(super) fn add_point(wb: &mut Workbench, point: Point3) -> Result<IDType, anyhow::Error> {
-        wb.points.insert(wb.points_next_id, point).ok_or(anyhow::anyhow!("Failed to insert point"));
-        wb.points_next_id += 1;
-        Ok(wb.points_next_id - 1)
+    pub(super) fn add_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
+        self.points.insert(self.points_next_id, point).ok_or(anyhow::anyhow!("Failed to insert point"));
+        self.points_next_id += 1;
+        Ok(self.points_next_id - 1)
     }
 
-    pub(super) fn add_plane(wb: &mut Workbench, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
-        wb.planes.insert(wb.planes_next_id, plane).ok_or(anyhow::anyhow!("Failed to insert plane"));
-        wb.planes_next_id += 1;
-        Ok(wb.planes_next_id - 1)
+    pub(super) fn add_plane(&mut self, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
+        self.planes.insert(self.planes_next_id, plane).ok_or(anyhow::anyhow!("Failed to insert plane"));
+        self.planes_next_id += 1;
+        Ok(self.planes_next_id - 1)
     }
 
     pub(super) fn add_sketch(
-        wb: &mut Workbench,
+        &mut self,
         plane_description: PlaneDescription,
     ) -> Result<IDType, anyhow::Error> {
         let plane = match plane_description {
             PlaneDescription::PlaneId(plane_id) =>
-                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+                self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
             PlaneDescription::SolidFace { solid_id, normal } => todo!("Implement SolidFace"),
         };
 
         let sketch = ISketch::new(plane);
-        wb.sketches.insert(wb.sketches_next_id, sketch).ok_or(anyhow::anyhow!("Failed to insert sketch"));
-        wb.sketches_next_id += 1;
-        Ok(wb.sketches_next_id - 1)
+        self.sketches.insert(self.sketches_next_id, sketch).ok_or(anyhow::anyhow!("Failed to insert sketch"));
+        self.sketches_next_id += 1;
+        Ok(self.sketches_next_id - 1)
     }
 }
