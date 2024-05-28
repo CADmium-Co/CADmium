@@ -143,7 +143,18 @@ define_steps! {
     // },
     "sketches" => ISketch {
         Point {
-            point: Point2
+            point: Point2,
+        },
+        Arc {
+            center: IDType,
+            radius: f64,
+            clockwise: bool,
+            start_angle: f64,
+            end_angle: f64,
+        },
+        Circle {
+            center: IDType,
+            radius: f64,
         },
         Line {
             start: IDType,

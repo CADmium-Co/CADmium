@@ -104,6 +104,36 @@ impl ISketch {
         Ok(point_id)
     }
 
+    pub(super) fn add_arc(&mut self, center: IDType, radius: f64, clockwise: bool, start_angle: f64, end_angle: f64) -> Result<IDType, anyhow::Error> {
+        let mut sketch = self.sketch.borrow_mut();
+
+        let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center).unwrap() {
+            point
+        } else {
+            return Err(anyhow::anyhow!("Center point is not a point"));
+        };
+
+        let arc = PrimitiveCell::Arc(Rc::new(RefCell::new(isotope::primitives::arc::Arc::new(center_point.clone(), radius, clockwise, start_angle, end_angle))));
+
+        let point_id = sketch.add_primitive(arc)?;
+        Ok(point_id)
+    }
+
+    pub(super) fn add_circle(&mut self, center: IDType, radius: f64) -> Result<IDType, anyhow::Error> {
+        let mut sketch = self.sketch.borrow_mut();
+
+        let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center).unwrap() {
+            point
+        } else {
+            return Err(anyhow::anyhow!("Center point is not a point"));
+        };
+
+        let circle = PrimitiveCell::Circle(Rc::new(RefCell::new(isotope::primitives::circle::Circle::new(center_point.clone(), radius))));
+
+        let point_id = sketch.add_primitive(circle)?;
+        Ok(point_id)
+    }
+
     pub(super) fn add_line(&mut self, start: IDType, end: IDType) -> Result<IDType, anyhow::Error> {
         let mut sketch = self.sketch.borrow_mut();
 
