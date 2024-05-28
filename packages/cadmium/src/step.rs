@@ -29,6 +29,7 @@ pub struct Step {
 #[derive(StepDataActions, Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
+    // Workbench Primitives
     WorkbenchPoint {
         workbench_id: IDType,
         point: Point3,
@@ -46,6 +47,8 @@ pub enum StepData {
         // width: f64,
         // height: f64,
     },
+
+    // Sketch Primitives
     #[step_data(workbench_field = "sketches", type = "Sketch")]
     SketchPoint {
         workbench_id: IDType,

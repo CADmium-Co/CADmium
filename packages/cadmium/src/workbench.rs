@@ -29,7 +29,7 @@ pub struct Workbench {
     pub(crate) points: BTreeMap<IDType, Point3>,
     pub(crate) points_next_id: IDType,
 
-    pub(crate) planes: BTreeMap<IDType, Plane>,
+    pub(crate) planes: BTreeMap<IDType, Rc<RefCell<Plane>>>,
     pub(crate) planes_next_id: IDType,
 
     pub(crate) sketches: BTreeMap<IDType, Rc<RefCell<ISketch>>>,
@@ -369,7 +369,8 @@ impl Workbench {
     }
 
     pub(super) fn add_workbench_plane(&mut self, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
-        self.planes.insert(self.planes_next_id, plane).ok_or(anyhow::anyhow!("Failed to insert plane"));
+        let plane_cell = Rc::new(RefCell::new(plane));
+        self.planes.insert(self.planes_next_id, plane_cell).ok_or(anyhow::anyhow!("Failed to insert plane"));
         self.planes_next_id += 1;
         Ok(self.planes_next_id - 1)
     }
@@ -382,11 +383,9 @@ impl Workbench {
             PlaneDescription::PlaneId(plane_id) =>
                 self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
             PlaneDescription::SolidFace { solid_id, normal } => todo!("Implement SolidFace"),
-        };
+        }.clone();
 
-        let plane_cell = Rc::new(RefCell::new(plane.clone()));
-
-        let sketch = ISketch::new(plane_cell);
+        let sketch = ISketch::new(plane);
         self.sketches
             .insert(self.sketches_next_id, Rc::new(RefCell::new(sketch)))
             .ok_or(anyhow::anyhow!("Failed to insert sketch"));
