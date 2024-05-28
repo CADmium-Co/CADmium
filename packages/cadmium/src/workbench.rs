@@ -95,17 +95,9 @@ impl Workbench {
         self.history[index].data = new_step_data;
     }
 
-    // pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
-    //     // If the extrusion name is empty string, then we need to generate a new name
-    //     // Let's use "Extrusion n" where n is the number of extrusions
-    //     let extrusion_name = if name == "" {
-    //         format!("Extrusion {}", *counter + 1)
-    //     } else {
-    //         name.to_owned()
-    //     };
-    //     self.history
-    //         .push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
-    // }
+    pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
+        self.history.push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
+    }
 
     pub fn realize(&self, max_steps: u64) -> Result<Realization, anyhow::Error> {
         let mut realized = Realization::new();
