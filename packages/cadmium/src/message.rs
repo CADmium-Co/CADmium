@@ -35,6 +35,7 @@ impl From<Result<String, anyhow::Error>> for MessageResult {
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Message {
+    StepAction(StepData),
     RenameWorkbench {
         workbench_id: u64,
         new_name: String,
@@ -138,6 +139,9 @@ impl Message {
 
     pub fn handle(&self, project: &mut Project) -> Result<String, anyhow::Error> {
         match self {
+            Message::StepAction(data) => {
+
+            }
             Message::RenameProject { new_name } => {
                 project.name = new_name.to_owned();
                 Ok(format!("\"name\": \"{}\"", new_name))
@@ -163,16 +167,6 @@ impl Message {
                     .name = new_name.to_owned();
 
                 Ok(format!("\"name\": \"{}\"", new_name))
-            }
-            Message::NewSketchOnPlane {
-                workbench_id,
-                sketch_name,
-                plane_id,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-
-                let new_sketch_id = workbench.add_sketch_to_plane(&sketch_name, &plane_id);
-                Ok(format!("\"sketch_id\": \"{}\"", new_sketch_id))
             }
             Message::SetSketchPlane {
                 workbench_id,

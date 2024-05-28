@@ -18,9 +18,10 @@ pub enum StepOperation {
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
+    pub(crate) id: IDType,
     pub(crate) operation: StepOperation,
     pub(crate) name: String,
-    pub(crate) unique_id: String,
+    pub(crate) unique_id: String, // TODO: remove this field, it's not needed
     pub(crate) suppressed: bool,
     pub(crate) data: StepData,
 }
