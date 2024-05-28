@@ -116,6 +116,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
 
                 let step_ = Step {
                     name,
+                    id: result_id_,
                     operation: StepOperation::Add,
                     unique_id: format!(concat!("Add:", stringify!(#name), "-{}"), result_id_),
                     suppressed: false,
