@@ -3,14 +3,16 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 
 use isotope::decompose::face::Face;
-use isotope::primitives::point2::Point2;
-use isotope::primitives::PrimitiveCell;
+use isotope::primitives::line::Line;
+use isotope::primitives::point2::Point2 as ISOPoint2;
+use isotope::primitives::{Primitive, PrimitiveCell};
 use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::archetypes::{Plane, Point3};
+use crate::archetypes::{Plane, Point2, Point3};
 use crate::error::CADmiumError;
+use crate::IDType;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -64,7 +66,7 @@ impl ISketch {
     }
 
     /// Helper function to go from an isotope point2D to a point_3D, as calculated during new
-    pub fn get_point_3d(&self, point: Rc<RefCell<Point2>>) -> Result<(u64, Point3), CADmiumError> {
+    pub fn get_point_3d(&self, point: Rc<RefCell<ISOPoint2>>) -> Result<(u64, Point3), CADmiumError> {
         let cell = PrimitiveCell::Point2(point.clone());
         let point_id = self.sketch.borrow().get_primitive_id(&cell).unwrap();
 
@@ -82,12 +84,43 @@ impl ISketch {
         }
     }
 
-    fn calculate_point_3d(plane: &IPlane, point: &Point2) -> Point3 {
+    fn calculate_point_3d(plane: &IPlane, point: &ISOPoint2) -> Point3 {
         let o = plane.plane.origin.clone();
         let x = plane.plane.primary.clone();
         let y = plane.plane.secondary.clone();
 
         let pt3 = o.plus(x.times(point.x())).plus(y.times(point.y()));
         Point3::new(pt3.x, pt3.y, pt3.z)
+    }
+}
+
+impl ISketch {
+    pub(super) fn add_point(&mut self, point: Point2) -> Result<IDType, anyhow::Error> {
+        let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(point.into())));
+
+        let mut sketch = self.sketch.borrow_mut();
+        let point_id = sketch.add_primitive(iso_point)?;
+        self.points_3d.insert(point_id, Self::calculate_point_3d(&self.plane.borrow(), &point.into()));
+        Ok(point_id)
+    }
+
+    pub(super) fn add_line(&mut self, start: IDType, end: IDType) -> Result<IDType, anyhow::Error> {
+        let mut sketch = self.sketch.borrow_mut();
+
+        let start_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(start).unwrap() {
+            point
+        } else {
+            return Err(anyhow::anyhow!("Start point is not a point"));
+        };
+        let end_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(end).unwrap() {
+            point
+        } else {
+            return Err(anyhow::anyhow!("End point is not a point"));
+        };
+
+        let line = PrimitiveCell::Line(Rc::new(RefCell::new(Line::new(start_point.clone(), end_point.clone()))));
+
+        let point_id = sketch.add_primitive(line)?;
+        Ok(point_id)
     }
 }
