@@ -6,9 +6,9 @@ use crate::archetypes::*;
 use crate::error::CADmiumError;
 use crate::realization::Realization;
 use crate::sketch::constraints::Constraint;
+use crate::sketch::{Face, Point2, Sketch};
 use crate::step::StepData;
 use crate::workbench::Workbench;
-use crate::sketch::{Face, Point2, Sketch};
 use std::collections::HashMap;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -224,8 +224,8 @@ pub mod tests {
     use crate::extrusion::Extrusion;
     use crate::extrusion::ExtrusionMode;
     use crate::message::Message;
-    use truck_meshalgo::tessellation::*;
     use truck_meshalgo::filters::*;
+    use truck_meshalgo::tessellation::*;
 
     use super::*;
 
@@ -323,7 +323,8 @@ pub mod tests {
 
     #[test]
     fn circle_crashing() {
-        let file_contents = std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
+        let file_contents =
+            std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
         let p2 = Project::from_json(&file_contents);
 
@@ -391,7 +392,7 @@ pub mod tests {
         let final_solid = &solids["Ext1:0"];
         println!("Final solid: {:?}", final_solid.truck_solid);
         let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let file = std::fs::File::create("pkg/bruno.obj").unwrap();
         obj::write(&mesh, file).unwrap();
 
@@ -438,7 +439,7 @@ pub mod tests {
 
         let final_solid = &solids["Ext1:0"];
         let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
-        mesh.put_together_same_attrs();
+        mesh.put_together_same_attrs(0.1);
         let file = std::fs::File::create("secondary_extrusion.obj").unwrap();
         obj::write(&mesh, file).unwrap();
 
