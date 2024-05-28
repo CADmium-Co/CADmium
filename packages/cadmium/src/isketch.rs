@@ -28,15 +28,10 @@ pub struct IPlane {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ISketch {
-    pub plane_id: String,
-    plane: Rc<RefCell<IPlane>>,
+    plane: Rc<RefCell<Plane>>,
 
-    // TODO: Make the sketch private
-    pub sketch: Rc<RefCell<Sketch>>,
+    sketch: Rc<RefCell<Sketch>>,
     points_3d: BTreeMap<u64, Point3>,
-
-    // primitives: BTreeMap<u64, Rc<RefCell<Primitive>>>,
-    // constraints: VecDeque<Rc<RefCell<ConstraintType>>>,
 
     // TODO: Make the faces private
     pub faces: Vec<Face>,
@@ -44,22 +39,21 @@ pub struct ISketch {
 
 impl ISketch {
     // TODO: Maybe pass the plane as refcell?
-    pub fn new(plane_id: &str, plane: &IPlane, sketch: Rc<RefCell<Sketch>>) -> Self {
+    pub fn new(plane: Rc<RefCell<Plane>>) -> Self {
         // The key difference between Sketch and RealSketch is that Sketch lives
         // in 2D and RealSketch lives in 3D. So we need to convert the points
 
         let mut real_sketch = Self {
-            plane_id: plane_id.to_owned(),
-            plane: Rc::new(RefCell::new(plane.clone())),
+            plane,
             points_3d: BTreeMap::new(),
             // primitives: sketch.borrow().primitives().iter().map(|(id, prim)| (*id, prim.borrow().to_primitive())).collect(),
             // constraints: sketch.borrow().constraints().iter().map(|c| c.borrow().get_type()).collect(),
-            sketch: sketch,
+            sketch: Rc::new(RefCell::new(Sketch::new())),
             faces: vec![],
         };
 
         for (id, point) in real_sketch.sketch.borrow().get_all_points().iter() {
-            real_sketch.points_3d.insert(*id, Self::calculate_point_3d(plane, point));
+            real_sketch.points_3d.insert(*id, Self::calculate_point_3d(&plane, point));
         }
 
         real_sketch
@@ -84,10 +78,15 @@ impl ISketch {
         }
     }
 
-    fn calculate_point_3d(plane: &IPlane, point: &ISOPoint2) -> Point3 {
-        let o = plane.plane.origin.clone();
-        let x = plane.plane.primary.clone();
-        let y = plane.plane.secondary.clone();
+    pub fn sketch(&self) -> Rc<RefCell<Sketch>> {
+        self.sketch.clone()
+    }
+
+    fn calculate_point_3d(plane_cell: &Rc<RefCell<Plane>>, point: &ISOPoint2) -> Point3 {
+        let plane = plane_cell.borrow();
+        let o = plane.origin.clone();
+        let x = plane.primary.clone();
+        let y = plane.secondary.clone();
 
         let pt3 = o.plus(x.times(point.x())).plus(y.times(point.y()));
         Point3::new(pt3.x, pt3.y, pt3.z)
@@ -100,7 +99,7 @@ impl ISketch {
 
         let mut sketch = self.sketch.borrow_mut();
         let point_id = sketch.add_primitive(iso_point)?;
-        self.points_3d.insert(point_id, Self::calculate_point_3d(&self.plane.borrow(), &point.into()));
+        self.points_3d.insert(point_id, Self::calculate_point_3d(&self.plane, &point.into()));
         Ok(point_id)
     }
 
