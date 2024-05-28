@@ -67,12 +67,13 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn get_realization(&self, workbench_id: IDType, max_steps: u64) -> Realization {
+    pub fn get_realization(&self, workbench_id: IDType, max_steps: u64) -> Result<Realization, String> {
         let realized = self
             .native
-            .get_realization(workbench_id, max_steps);
+            .get_realization(workbench_id, max_steps)
+            .map_err(|e| format!("Realization Error: {}", e))?;
 
-        Realization { native: realized }
+        Ok(Realization { native: realized })
     }
 
     #[wasm_bindgen]

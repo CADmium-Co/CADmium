@@ -73,10 +73,9 @@ impl Project {
             .ok_or(CADmiumError::WorkbenchIDNotFound(id))
     }
 
-    pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Realization {
+    pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Result<Realization, anyhow::Error> {
         let workbench = &self.workbenches[workbench_id as usize];
-        let realization = workbench.realize(max_steps);
-        realization
+        workbench.realize(max_steps)
     }
 }
 

@@ -28,7 +28,8 @@ pub struct IPlane {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ISketch {
-    plane: Rc<RefCell<Plane>>,
+    // TODO: Make it private with a setter
+    pub plane: Rc<RefCell<Plane>>,
 
     sketch: Rc<RefCell<Sketch>>,
     points_3d: BTreeMap<u64, Point3>,
