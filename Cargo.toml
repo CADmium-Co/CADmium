@@ -1,5 +1,5 @@
 [workspace]
-members = ["packages/cadmium"]
+members = [ "packages/cadmium", "packages/cadmium-macros"]
 resolver = "2"
 
 [patch.crates-io]
