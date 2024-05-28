@@ -89,6 +89,8 @@ pub struct Assembly {
 pub mod tests {
     use truck_polymesh::obj;
 
+    use crate::archetypes::PlaneDescription;
+    use crate::archetypes::Point2;
     use crate::extrusion::Direction;
     use crate::extrusion::Extrusion;
     use crate::extrusion::ExtrusionMode;
@@ -100,17 +102,18 @@ pub mod tests {
 
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
+        let plane_desc = PlaneDescription::PlaneId(0);
         let wb = p.workbenches.get_mut(0).unwrap();
-        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
-        let s = wb.get_sketch_mut("Sketch 1").unwrap();
-        let ll = s.add_point(0.0, 0.0);
-        let lr = s.add_point(40.0, 0.0);
-        let ul = s.add_point(0.0, 40.0);
-        let ur = s.add_point(40.0, 40.0);
-        s.add_segment(ll, lr);
-        s.add_segment(lr, ur);
-        s.add_segment(ur, ul);
-        s.add_segment(ul, ll);
+        let sid = p.add_workbench_sketch("Sketch 1".to_string(), 0, plane_desc).unwrap();
+        let s = wb.get_sketch_by_id(sid).unwrap().borrow_mut();
+        let ll = s.add_sketch_point(Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
+        let lr = s.add_sketch_point(Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
+        let ul = s.add_sketch_point(Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
+        let ur = s.add_sketch_point(Point2 { x: 40.0, y: 40.0, hidden: false }).unwrap();
+        s.add_sketch_line(ll, lr);
+        s.add_sketch_line(lr, ur);
+        s.add_sketch_line(ur, ul);
+        s.add_sketch_line(ul, ll);
 
         let extrusion = Extrusion::new(
             "Sketch-0".to_owned(),
@@ -129,10 +132,10 @@ pub mod tests {
     fn one_extrusion() {
         let p = create_test_project();
 
-        let realization = p.get_realization(0, 1000);
+        let realization = p.get_realization(0, 1000).unwrap();
         let solids = realization.solids;
 
-        let solid = &solids["Ext1:0"];
+        let solid = &solids.get(&0).unwrap();
 
         println!("{:?}", solid);
     }
