@@ -13,12 +13,12 @@ license = "Elastic License 2.0"
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.87"
 tsify = "0.4.5"
-truck-meshalgo = { git = "https://github.com/ricosjp/truck.git" }
-truck-modeling = { git = "https://github.com/ricosjp/truck.git" }
-truck-shapeops = { git = "https://github.com/ricosjp/truck.git" }
-truck-polymesh = { git = "https://github.com/ricosjp/truck.git" }
-truck-topology = { git = "https://github.com/ricosjp/truck.git" }
-truck-stepio = { git = "https://github.com/ricosjp/truck.git" }
+truck-meshalgo = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
+truck-modeling = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
+truck-shapeops = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
+truck-polymesh = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
+truck-topology = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
+truck-stepio = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
 serde_json = "1.0.117"
 serde = "1.0.202"
 itertools = "0.12.0"
