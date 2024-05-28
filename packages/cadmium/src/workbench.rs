@@ -364,52 +364,29 @@ impl Workbench {
     }
 }
 
-#[cfg(test)]
-pub mod tests {
-    use crate::extrusion::Direction;
-
-    use super::*;
-
-    #[test]
-    fn make_empty_workbench() {
-        let wb = Workbench::new("Test Workbench");
-        assert_eq!(wb.history.len(), 4);
-        assert_eq!(wb.get_first_plane_id().unwrap(), "Plane-0".to_owned());
-        assert_eq!(wb.last_plane_id().unwrap(), "Plane-2".to_owned());
-        assert_eq!(wb.plane_name_to_id("Front").unwrap(), "Plane-0".to_owned());
-        assert_eq!(wb.plane_name_to_id("Right").unwrap(), "Plane-1".to_owned());
-        assert_eq!(wb.plane_name_to_id("Top").unwrap(), "Plane-2".to_owned());
-
-        let realization = wb.realize(1000);
-        assert_eq!(realization.points.len(), 1); //origin
-        assert_eq!(realization.planes.len(), 3); // origin, front, right, top
-        assert_eq!(realization.sketches.len(), 0);
-        assert_eq!(realization.solids.len(), 0);
+// Step operations
+impl Workbench {
+    pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
+        self.points.insert(self.points_next_id, point).ok_or(anyhow::anyhow!("Failed to insert point"));
+        self.points_next_id += 1;
+        Ok(self.points_next_id - 1)
     }
 
-    #[test]
-    fn make_and_workbench_with_extrusion() {
-        let mut wb = Workbench::new("Test Workbench");
-        wb.add_sketch_to_plane("Sketch 1", "Plane-0");
-        let s = wb.get_sketch_mut("Sketch 1").unwrap();
-        let ll = s.add_point(0.0, 0.0);
-        let lr = s.add_point(40.0, 0.0);
-        let ul = s.add_point(0.0, 40.0);
-        let ur = s.add_point(40.0, 40.0);
-        s.add_segment(ll, lr);
-        s.add_segment(lr, ur);
-        s.add_segment(ur, ul);
-        s.add_segment(ul, ll);
+    pub(super) fn add_workbench_plane(&mut self, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
+        self.planes.insert(self.planes_next_id, plane).ok_or(anyhow::anyhow!("Failed to insert plane"));
+        self.planes_next_id += 1;
+        Ok(self.planes_next_id - 1)
+    }
 
-        let extrusion = Extrusion::new(
-            "Sketch-0".to_owned(),
-            vec![0],
-            25.0,
-            0.0,
-            Direction::Normal,
-            ExtrusionMode::New,
-        );
-        wb.add_extrusion("Ext1", extrusion);
+    pub(super) fn add_workbench_sketch(
+        &mut self,
+        plane_description: PlaneDescription,
+    ) -> Result<IDType, anyhow::Error> {
+        let plane = match plane_description {
+            PlaneDescription::PlaneId(plane_id) =>
+                self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::SolidFace { solid_id, normal } => todo!("Implement SolidFace"),
+        };
 
         let realization = wb.realize(1000);
         assert_eq!(realization.planes.len(), 3);
