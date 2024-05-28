@@ -55,10 +55,10 @@ impl Workbench {
             solids_next_id: 0,
         };
 
-        wb.add_point(Point3::new(0.0, 0.0, 0.0)).unwrap();
-        wb.add_plane(Plane::front(), 100.0, 100.0).unwrap();
-        wb.add_plane(Plane::right(), 100.0, 100.0).unwrap();
-        wb.add_plane(Plane::top(), 100.0, 100.0).unwrap();
+        wb.add_workbench_point(Point3::new(0.0, 0.0, 0.0)).unwrap();
+        wb.add_workbench_plane(Plane::front(), 100.0, 100.0).unwrap();
+        wb.add_workbench_plane(Plane::right(), 100.0, 100.0).unwrap();
+        wb.add_workbench_plane(Plane::top(), 100.0, 100.0).unwrap();
 
         wb
     }
@@ -95,19 +95,19 @@ impl Workbench {
         self.history[index].data = new_step_data;
     }
 
-    pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
-        // If the extrusion name is empty string, then we need to generate a new name
-        // Let's use "Extrusion n" where n is the number of extrusions
-        let extrusion_name = if name == "" {
-            format!("Extrusion {}", *counter + 1)
-        } else {
-            name.to_owned()
-        };
-        self.history
-            .push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
-    }
+    // pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
+    //     // If the extrusion name is empty string, then we need to generate a new name
+    //     // Let's use "Extrusion n" where n is the number of extrusions
+    //     let extrusion_name = if name == "" {
+    //         format!("Extrusion {}", *counter + 1)
+    //     } else {
+    //         name.to_owned()
+    //     };
+    //     self.history
+    //         .push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
+    // }
 
-    pub fn realize(&self, max_steps: u64) -> Realization {
+    pub fn realize(&self, max_steps: u64) -> Result<Realization, anyhow::Error> {
         let mut realized = Realization::new();
         let max_steps = max_steps as usize; // just coerce the type once
 
@@ -120,98 +120,93 @@ impl Workbench {
             let step_data = &step.data;
             // println!("{:?}", step_data);
             match step_data {
-                StepData::Point { point } => {
+                StepData::WorkbenchPoint { point, .. } => {
                     realized
                         .points
-                        .insert(step.unique_id.to_owned(), point.clone());
+                        .insert(step.id, point.clone());
                 }
-                StepData::Plane {
+                StepData::WorkbenchPlane {
                     plane,
                     width,
                     height,
+                    ..
                 } => {
+                    // Do we need to store the IPlane or just the Plane?
                     let rp = IPlane {
                         plane: plane.clone(),
                         width: *width,
                         height: *height,
                         name: step.name.clone(),
                     };
-                    realized.planes.insert(step.unique_id.to_owned(), rp);
+                    realized.planes.insert(step.id, rp);
                 }
-                StepData::Sketch {
-                    width: _,
-                    height: _,
+                StepData::WorkbenchSketch {
                     plane_description,
-                    sketch,
+                    // sketch_id,
+                    // width: _,
+                    // height: _,
+                    ..
                 } => match plane_description {
                     PlaneDescription::PlaneId(plane_id) => {
-                        if plane_id == "" {
-                            println!("Sketch {} has no plane", step.name);
-                            continue;
-                        }
-
-                        let plane = &realized.planes[&plane_id];
-                        let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
+                        let plane = &realized.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
+                        let sketch = self.get_sketch_by_id(step.id)?.borrow().clone();
 
                         realized.sketches.insert(
-                            step.unique_id.to_owned(),
+                            step.id,
                             (
-                                ISketch::new(&plane_id, &plane, sketch_ref.clone()),
-                                ISketch::new(
-                                    &plane_id,
-                                    &plane,
-                                    sketch_ref,
-                                ),
+                                sketch.clone(),
+                                sketch.clone(),
                                 step.name.clone(),
                             ),
                         );
                     }
                     PlaneDescription::SolidFace { solid_id, normal } => {
-                        let solid = &realized.solids[&solid_id];
-                        let face = solid.get_face_by_normal(&normal).unwrap();
-                        let oriented_surface = face.oriented_surface();
+                        // let solid = &realized.solids[&solid_id];
+                        // let face = solid.get_face_by_normal(&normal).unwrap();
+                        // let oriented_surface = face.oriented_surface();
 
-                        println!("Surface: {:?}", oriented_surface);
-                        let sketch_plane;
-                        match oriented_surface {
-                            truck_modeling::geometry::Surface::Plane(p) => {
-                                let plane = Plane::from_truck(p);
-                                println!("Plane: {:?}", plane);
-                                sketch_plane = plane;
-                            }
-                            _ => {
-                                panic!("I only know how to put sketches on planes");
-                            }
-                        }
+                        // println!("Surface: {:?}", oriented_surface);
+                        // let sketch_plane;
+                        // match oriented_surface {
+                        //     truck_modeling::geometry::Surface::Plane(p) => {
+                        //         let plane = Plane::from_truck(p);
+                        //         println!("Plane: {:?}", plane);
+                        //         sketch_plane = plane;
+                        //     }
+                        //     _ => {
+                        //         panic!("I only know how to put sketches on planes");
+                        //     }
+                        // }
 
-                        let new_plane_id = format!("derived_plane_for:{}", step.name);
+                        // let new_plane_id = format!("derived_plane_for:{}", step.name);
 
-                        let rp = IPlane {
-                            plane: sketch_plane.clone(),
-                            width: 90.0,
-                            height: 60.0,
-                            name: new_plane_id.clone(),
-                        };
-                        realized.planes.insert(new_plane_id.clone(), rp);
-                        let rp = &realized.planes[&new_plane_id];
-                        let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
+                        // let rp = IPlane {
+                        //     plane: sketch_plane.clone(),
+                        //     width: 90.0,
+                        //     height: 60.0,
+                        //     name: new_plane_id.clone(),
+                        // };
+                        // realized.planes.insert(new_plane_id.clone(), rp);
+                        // let rp = &realized.planes[&new_plane_id];
+                        // let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
 
-                        // TODO: There's no way this is correct. Also a lot of prelude is the same fo Plane case
-                        realized.sketches.insert(
-                            step.unique_id.to_owned(),
-                            (
-                                ISketch::new(&new_plane_id, &rp, sketch_ref.clone()),
-                                ISketch::new(
-                                    &new_plane_id,
-                                    &rp,
-                                    // TODO: &sketch.split_intersections(false),
-                                    sketch_ref,
-                                ),
-                                step.name.clone(),
-                            ),
-                        );
+                        // // TODO: There's no way this is correct. Also a lot of prelude is the same fo Plane case
+                        // realized.sketches.insert(
+                        //     step.unique_id.to_owned(),
+                        //     (
+                        //         ISketch::new(&new_plane_id, &rp, sketch_ref.clone()),
+                        //         ISketch::new(
+                        //             &new_plane_id,
+                        //             &rp,
+                        //             // TODO: &sketch.split_intersections(false),
+                        //             sketch_ref,
+                        //         ),
+                        //         step.name.clone(),
+                        //     ),
+                        // );
                     }
                 },
+                /*
                 StepData::Extrusion { extrusion } => {
                     let (_sketch, split_sketch, _name) = &realized.sketches[&extrusion.sketch_id];
                     let plane = &realized.planes[&split_sketch.plane_id];
@@ -357,10 +352,11 @@ impl Workbench {
                         }
                     }
                 }
+            */
             }
         }
 
-        realized
+        Ok(realized)
     }
 }
 
@@ -388,9 +384,13 @@ impl Workbench {
             PlaneDescription::SolidFace { solid_id, normal } => todo!("Implement SolidFace"),
         };
 
-        let realization = wb.realize(1000);
-        assert_eq!(realization.planes.len(), 3);
-        assert_eq!(realization.sketches.len(), 1);
-        assert_eq!(realization.solids.len(), 1);
+        let plane_cell = Rc::new(RefCell::new(plane.clone()));
+
+        let sketch = ISketch::new(plane_cell);
+        self.sketches
+            .insert(self.sketches_next_id, Rc::new(RefCell::new(sketch)))
+            .ok_or(anyhow::anyhow!("Failed to insert sketch"));
+        self.sketches_next_id += 1;
+        Ok(self.sketches_next_id - 1)
     }
 }

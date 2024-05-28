@@ -114,12 +114,12 @@ impl Realization {
     }
 
     #[wasm_bindgen]
-    pub fn solid_to_obj(&self, solid_name: String, tolerance: f64) -> String {
-        self.native.solid_to_obj(&solid_name, tolerance)
+    pub fn solid_to_obj(&self, solid_name: IDType, tolerance: f64) -> String {
+        self.native.solid_to_obj(solid_name, tolerance)
     }
 
     #[wasm_bindgen]
-    pub fn solid_to_step(&self, solid_name: String) -> String {
-        self.native.solid_to_step(&solid_name)
+    pub fn solid_to_step(&self, solid_name: IDType) -> String {
+        self.native.solid_to_step(solid_name)
     }
 }

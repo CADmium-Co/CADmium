@@ -5,7 +5,7 @@ use std::rc::Rc;
 use isotope::decompose::face::Face;
 use isotope::primitives::line::Line;
 use isotope::primitives::point2::Point2 as ISOPoint2;
-use isotope::primitives::{Primitive, PrimitiveCell};
+use isotope::primitives::PrimitiveCell;
 use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
