@@ -1,4 +1,4 @@
-use isotope::primitives::point2::Point2;
+use isotope::primitives::point2::Point2 as ISOPoint2;
 use tsify::Tsify;
 use serde::{Deserialize, Serialize};
 use truck_modeling::Plane as TruckPlane;
@@ -88,14 +88,14 @@ impl Plane {
         }
     }
 
-    pub fn project(&self, point: &Point3) -> Point2 {
+    pub fn project(&self, point: &Point3) -> ISOPoint2 {
         let minus_origin = point.minus(&self.origin);
         let x = minus_origin.dot(&self.primary);
         let y = minus_origin.dot(&self.secondary);
-        Point2::new(x, y)
+        ISOPoint2::new(x, y)
     }
 
-    pub fn unproject(&self, point: &Point2) -> Point3 {
+    pub fn unproject(&self, point: &ISOPoint2) -> Point3 {
         let x = self.origin.plus(self.primary.times(point.x()));
         let y = self.origin.plus(self.secondary.times(point.y()));
         x.plus(y).to_point3()
@@ -151,6 +151,20 @@ impl Vector3 {
 
     pub fn dot(&self, other: &Vector3) -> f64 {
         self.x * other.x + self.y * other.y + self.z * other.z
+    }
+}
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct Point2 {
+    pub x: f64,
+    pub y: f64,
+    pub hidden: bool,
+}
+
+impl Into<ISOPoint2> for Point2 {
+    fn into(self) -> ISOPoint2 {
+        ISOPoint2::new(self.x, self.y)
     }
 }
 
