@@ -359,7 +359,7 @@ mod tests {
 
             // get a realization
             let workbench = p.workbenches.get_mut(0).unwrap();
-            let realization = workbench.realize(100);
+            let realization = workbench.realize(100).unwrap();
             let solids = realization.solids;
             println!("[{}] solids: {:?}", file, solids.len());
 
@@ -371,10 +371,10 @@ mod tests {
     fn step_export() {
         let p = create_test_project();
         let workbench = &p.workbenches[0 as usize];
-        let realization = workbench.realize(1000);
+        let realization = workbench.realize(1000).unwrap();
         let keys = Vec::from_iter(realization.solids.keys());
 
-        realization.save_solid_as_step_file(keys[0], "pkg/test.step");
-        realization.save_solid_as_obj_file(keys[0], "pkg/test.obj", 0.001);
+        realization.save_solid_as_step_file(*keys[0], "pkg/test.step");
+        realization.save_solid_as_obj_file(*keys[0], "pkg/test.obj", 0.001);
     }
 }
