@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
@@ -14,6 +16,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         syn::Data::Enum(data) => data,
         _ => panic!("StepData can only be derived for enums"),
     };
+    let mut actions = vec![];
 
     let variants = data.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
@@ -58,7 +61,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         let mut wb_var = quote! {};
         if !skip_workbench {
             wb_var = quote! {
-                let wb_ = self.native.workbenches
+                let wb_ = self.workbenches
                     .get_mut(workbench_id as usize)
                     .ok_or(anyhow::anyhow!("Could not find workbench"))?;
             };
@@ -107,6 +110,10 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                 && field.to_string() != id_arg_name.to_string()
             ).collect::<Vec<_>>();
 
+        actions.push(quote! {
+            #name::#variant_name {
+                #( #function_args_full ),*
+            } => project.#add_func_name(name, #(* #function_args_full ),* ) , });
 
         quote! {
             pub fn #add_func_name(&mut self, name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
@@ -133,8 +140,16 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
     });
 
     let expanded = quote! {
-        impl crate::Project {
+        impl crate::project::Project {
             #( #variants )*
+        }
+
+        impl #name {
+            pub fn do_action(&self, project: &mut crate::project::Project, name: String) -> Result<IDType, anyhow::Error> {
+                match self {
+                    #( #actions )*
+                }
+            }
         }
     };
 
