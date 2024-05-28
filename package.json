@@ -1,23 +1,22 @@
 {
   "private": true,
   "scripts": {
-    "build": "turbo run build --cache-dir=.turbo",
-    "dev": "turbo run dev",
-    "serve": "turbo run serve",
-    "test": "turbo run test",
-    "test:rust": "cd packages/cadmium && cargo test",
-    "clean": "turbo run clean",
-    "lint": "turbo run lint",
-    "format": "turbo run format",
-    "build:wasm:dev": "wasm-pack build --target web packages/cadmium --dev --no-typescript",
-    "build:wasm": "wasm-pack build --target web packages/cadmium && ./packages/cadmium/patchpackage.cjs"
+    "build": "turbo run build --cache-dir=.turbo --no-daemon",
+    "dev": "turbo run dev --no-daemon",
+    "preview": "turbo run preview --no-daemon",
+    "test": "turbo run test --no-daemon",
+    "clean": "turbo run clean --no-daemon",
+    "lint": "turbo run lint --no-daemon",
+    "format": "turbo run format --no-daemon"
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",
+    "cross-env": "^7.0.3",
+    "rimraf": "^5.0.7",
     "turbo": "^1.13.2"
   },
   "engines": {
     "node": ">=20.13.1",
-    "pnpm": ">=9.1.2"
+    "pnpm": ">=9.1.0"
   }
 }

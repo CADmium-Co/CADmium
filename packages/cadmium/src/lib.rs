@@ -1,15 +1,17 @@
-#![allow(dead_code, unused)]
+use message::{Message, MessageResult};
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
+pub mod archetypes;
+pub mod error;
 pub mod extrusion;
+pub mod message;
 pub mod project;
+pub mod realization;
+pub mod solid;
 pub mod sketch;
-
-// #[wasm_bindgen]
-// pub fn add(a: usize, b: usize) -> usize {
-//     a + b
-// }
+pub mod step;
+pub mod workbench;
 
 #[wasm_bindgen]
 pub struct Project {
@@ -21,12 +23,10 @@ impl Project {
     #[wasm_bindgen(constructor)]
     pub fn new(name: &str) -> Project {
         console_error_panic_hook::set_once();
-        let mut p = Project {
-            native: project::Project::new(name),
-        };
 
-        p.native.add_defaults();
-        p
+        Project {
+            native: project::Project::new(name),
+        }
     }
 
     #[wasm_bindgen(getter)]
@@ -76,12 +76,8 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn send_message(&mut self, message: String) -> String {
-        let result = self.native.handle_message_string(&message);
-        match result {
-            Ok(s) => format!("{{ \"success\": {{ {} }} }}", s),
-            Err(e) => format!("{{ \"error\": {{ {} }} }}", e),
-        }
+    pub fn send_message(&mut self, message: Message) -> MessageResult {
+        message.handle(&mut self.native).into()
     }
 
     // #[wasm_bindgen(getter)]
@@ -97,7 +93,7 @@ impl Project {
 
 #[wasm_bindgen]
 pub struct Realization {
-    native: project::Realization,
+    native: realization::Realization,
 }
 
 #[wasm_bindgen]

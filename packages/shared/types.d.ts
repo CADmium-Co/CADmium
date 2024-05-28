@@ -1,3 +1,4 @@
+import { Message, MessageResult } from "cadmium"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 interface IDictionary<TValue> {
@@ -312,46 +313,9 @@ interface RenameWorkbench {
   new_name: string
 }
 
-export type Message_GeneratedFromRust =
-  | { RenameWorkbench: { workbench_id: number; new_name: string } }
-  | { RenameStep: { workbench_id: number; step_id: number; new_name: string } }
-  | { RenameProject: { new_name: string } }
-  | { DeleteLines: { workbench_id: number; sketch_id: string; line_ids: number[] } }
-  | { DeleteArcs: { workbench_id: number; sketch_id: string; arc_ids: number[] } }
-  | { DeleteCircles: { workbench_id: number; sketch_id: string; circle_ids: number[] } }
-  | { NewPointOnSketch: { workbench_id: number; sketch_id: string; point_id: number; x: number; y: number } }
-  | { NewPointOnSketch2: { workbench_id: number; sketch_id: string; x: number; y: number; hidden: boolean } }
-  | { NewCircleBetweenPoints: { workbench_id: number; sketch_id: string; center_id: number; edge_id: number } }
-  | { NewRectangleBetweenPoints: { workbench_id: number; sketch_id: string; start_id: number; end_id: number } }
-  | { NewLineOnSketch: { workbench_id: number; sketch_id: string; start_point_id: number; end_point_id: number } }
-  | { DeleteLineSegment: { workbench_id: number; sketch_name: string; line_segment_id: number } }
-  | { StepSketch: { workbench_id: number; sketch_name: string; steps: number } }
-  | { SolveSketch: { workbench_id: number; sketch_name: string; max_steps: number } }
-  | { NewSketchOnPlane: { workbench_id: number; sketch_name: string; plane_id: string } }
-  | { SetSketchPlane: { workbench_id: number; sketch_id: string; plane_id: string } }
-  | { DeleteSketch: { workbench_id: number; sketch_name: string } }
-  | { NewExtrusion: { workbench_id: number; extrusion_name: string; sketch_id: string; face_ids: number[]; length: number; offset: number; direction: Direction } }
-  | { UpdateExtrusion: { workbench_id: number; extrusion_name: string; extrusion_id: string; sketch_id: string; face_ids: number[]; length: number; offset: number; direction: Direction } }
-  | { UpdateExtrusionLength: { workbench_id: number; extrusion_name: string; length: number } }
-
-type Message =
-  | { UpdateExtrusion: UpdateExtrusion }
-  | { SetSketchPlane: SetSketchPlane }
-  | { NewSketchOnPlane: NewSketchOnPlane }
-  | { NewExtrusion: NewExtrusion }
-  | { DeleteLines: DeleteLines }
-  | { DeleteArcs: DeleteArcs }
-  | { DeleteCircles: DeleteCircles }
-  | { NewRectangleBetweenPoints: NewRectangleBetweenPoints }
-  | { NewCircleBetweenPoints: NewCircleBetweenPoints }
-  | { NewLineOnSketch: NewLineOnSketch }
-  | { NewPointOnSketch2: NewPointOnSketch2 }
-  | { RenameStep: RenameStep }
-  | { RenameWorkbench: RenameWorkbench }
-
 interface MessageHistory {
   message: Message
-  result: any
+  result: MessageResult
 }
 
 interface Point2D {

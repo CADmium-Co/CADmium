@@ -22,7 +22,7 @@ import {
 	isPoint3DEntity,
 	isPointEntity
 } from "./typeGuards"
-// import { _isDevelopment } from "../+layout"
+// import { isDevelopment } from "../+layout"
 
 // prettier-ignore
 const log = (function () { const context = "[stores.ts]"; const color = "hotpink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
@@ -58,7 +58,7 @@ export const previewGeometry = writable<PreviewGeometry[]>([])
 
 export const messageHistory = writable<MessageHistory[]>([])
 
-// if (_isDevelopment()) {
+// if (isDevelopment()) {
 	project.subscribe((store) => log("[project]", store))
 	workbenchIndex.subscribe((store) => log("[workbenchIndex]", store))
 	workbench.subscribe((store) => log("[workbench]", store))

@@ -5,7 +5,7 @@
 	import { selectingFor, workbenchIsStale, featureIndex, currentlySelected, hiddenSketches } from "shared/stores"
 	import X from "phosphor-svelte/lib/X"
 	import type { ExtrusionData } from "shared/types"
-	import { base } from "$app/paths"
+	import { base } from "../base"
 
 	// prettier-ignore
 	const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()

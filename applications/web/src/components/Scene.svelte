@@ -12,7 +12,7 @@
 	import Solid from "./Solid.svelte"
 	import Sketch from "./Sketch.svelte"
 	import CubeGizmo from "./CubeGizmo/CubeGizmo.svelte"
-	import { base } from "$app/paths"
+	import { base } from "../base"
 
 	// prettier-ignore
 	const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()

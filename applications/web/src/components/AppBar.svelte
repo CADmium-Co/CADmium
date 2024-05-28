@@ -7,13 +7,16 @@
 	import Bug from "phosphor-svelte/lib/Bug"
 	import type { WithTarget } from "shared/types"
 	import { isProject } from "shared/typeGuards"
-	import { base } from "$app/paths"
+	import { base } from "../base"
+	import { renameProject } from "shared/projectUtils"
 
 	// prettier-ignore
 	const log = (function () { const context = "[AppBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
 
 	export let userName = "mattferraro.dev"
 	export let project: Project
+	export let renaming: boolean = false
+	export let newProjectName: string = ""
 
 	export let newFileContent: string | null = null
 
@@ -46,7 +49,38 @@
 			<img class="object-cover h-10 w-10 ml-4" alt="logo" src="{base}/cadmium_logo_min.svg" />
 		</div>
 		<div class="select-none">CADmium</div>
-		<div class="text-xl font-medium">{project.name ?? ""}</div>
+		{#if renaming}
+			<input
+				class="bg-gray-300 text-gray-700 py-2 px-4 font-medium"
+				type="text"
+				bind:value={newProjectName}
+				on:blur={() => {
+					log("Renaming project aborted")
+					renaming = false
+					newProjectName = project.name ?? ""
+				}}
+				on:keydown={(e) => {
+					if (e.key === "Enter") {
+						log("Renaming project")
+						renameProject(newProjectName)
+						project.name = newProjectName
+						renaming = false
+					}
+				}}
+			/>
+		{:else}
+			<!-- svelte-ignore a11y-no-static-element-interactions -->
+			<div
+				class="font-medium"
+				on:dblclick={() => {
+					log("Renaming project")
+					renaming = true
+					newProjectName = project.name ?? ""
+				}}
+			>
+				{project.name ?? ""}
+			</div>
+		{/if}
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="hover:bg-gray-300 rounded p-1"

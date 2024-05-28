@@ -13,7 +13,7 @@
       "cache": false,
       "persistent": false
     },
-    "serve": {},
+    "preview": {},
     "clean": {
       "cache": false,
       "persistent": false

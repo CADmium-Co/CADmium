@@ -2,14 +2,12 @@ use super::*;
 
 #[test]
 fn my_test() {
-    let mut p = Project::new("Test Project");
-    p.add_defaults();
+    Project::new("Test Project");
 }
 
 #[test]
 fn secondary_extrusion_simple() {
     let mut p = Project::new("Test Project");
-    p.add_defaults();
     let mut wb = p.workbenches.get_mut(0).unwrap();
     wb.add_sketch_to_plane("Sketch 1", "Plane-0");
     let mut s = wb.get_sketch_mut("Sketch 1").unwrap();
