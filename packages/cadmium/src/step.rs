@@ -41,6 +41,7 @@ macro_rules! define_steps {
                 $(
                     $(
                         [<$parent_type $name>] {
+                            workbench_id: crate::IDType,
                             [<$parent_type:snake _id>]: crate::IDType,
                             $($field: $type),*
                         }
@@ -49,7 +50,7 @@ macro_rules! define_steps {
             }
         }
 
-        impl crate::workbench::Workbench {
+        impl crate::Project {
             $(
                 paste::paste! {
                     pub fn [<delete_ $parent_type:snake _id>](name: String, id: crate::IDType) -> Step {
@@ -59,9 +60,10 @@ macro_rules! define_steps {
 
                 $(
                     paste::paste! {
-                        pub fn [<add_ $parent_type:snake _ $name:snake>](&mut self, [< $parent_type:snake _id >]: crate::IDType, name: String, $($field: $type),*) -> Result<crate::IDType, anyhow::Error> {
-                            let parent = self.[<$wb_field>].get_mut(&[< $parent_type:snake _id >]).ok_or(anyhow::anyhow!("Could not find parent"))?;
-                            let result_id_ = parent.[< add_ $name:snake >]($($field),* )?;
+                        pub fn [<add_ $parent_type:snake _ $name:snake>](&mut self, workbench_id: crate::IDType, [< $parent_type:snake _id >]: crate::IDType, name: String, $($field: $type),*) -> Result<crate::IDType, anyhow::Error> {
+                            let wb_ = self.native.workbenches.get_mut(workbench_id as usize).ok_or(anyhow::anyhow!("Could not find workbench"))?;
+                            let parent_ = wb_.[<$wb_field>].get_mut(&[< $parent_type:snake _id >]).ok_or(anyhow::anyhow!("Could not find parent"))?;
+                            let result_id_ = parent_.borrow_mut().[< add_ $name:snake >]($($field),* )?;
 
                             let step_ = Step {
                                 name,
@@ -69,12 +71,13 @@ macro_rules! define_steps {
                                 unique_id: format!(concat!("Add:", stringify!($parent_type), stringify!($name), "-{}"), result_id_),
                                 suppressed: false,
                                 data: StepData::[<$parent_type $name>] {
+                                    workbench_id,
                                     [< $parent_type:snake _id >],
                                     $($field),*
                                 },
                             };
 
-                            self.history.push(step_);
+                            wb_.history.push(step_);
 
                             Ok(result_id_)
                         }

@@ -163,7 +163,7 @@ impl Solid {
         //     .iter()
         //     .map(|face_id| sketch.faces.get(*face_id as usize).unwrap().clone())
         //     .collect();
-        let merged_faces = sketch.sketch.borrow().get_merged_faces();
+        let merged_faces = sketch.sketch().borrow().get_merged_faces();
 
         for (f_index, face) in merged_faces.iter().enumerate() {
             // let face = sketch.faces.get(*face_id as usize).unwrap();

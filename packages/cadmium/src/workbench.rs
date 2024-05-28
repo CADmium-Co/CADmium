@@ -24,15 +24,17 @@ use truck_shapeops::and as solid_and;
 pub struct Workbench {
     pub(crate) name: String,
     pub(crate) history: Vec<Step>,
-    pub(crate) step_counters: HashMap<String, u64>,
+
     // These are free-standing points in 3D space, not part of sketches
     pub(crate) points: BTreeMap<IDType, Point3>,
     pub(crate) points_next_id: IDType,
-    pub(crate) sketches: BTreeMap<IDType, ISketch>,
-    pub(crate) sketches_next_id: IDType,
+
     pub(crate) planes: BTreeMap<IDType, Plane>,
     pub(crate) planes_next_id: IDType,
-    pub(crate) solids: BTreeMap<IDType, Solid>,
+
+    pub(crate) sketches: BTreeMap<IDType, Rc<RefCell<ISketch>>>,
+    pub(crate) sketches_next_id: IDType,
+    pub(crate) solids: BTreeMap<IDType, Rc<RefCell<Solid>>>,
     pub(crate) solids_next_id: IDType,
 }
 
@@ -41,26 +43,22 @@ impl Workbench {
         let mut wb = Workbench {
             name: name.to_owned(),
             history: vec![],
-            step_counters: HashMap::from([
-                ("Point".to_owned(), 0),
-                ("Plane".to_owned(), 0),
-                ("Sketch".to_owned(), 0),
-                ("Extrusion".to_owned(), 0),
-            ]),
+
             points: BTreeMap::new(),
             points_next_id: 0,
-            sketches: BTreeMap::new(),
-            sketches_next_id: 0,
             planes: BTreeMap::new(),
             planes_next_id: 0,
+
+            sketches: BTreeMap::new(),
+            sketches_next_id: 0,
             solids: BTreeMap::new(),
             solids_next_id: 0,
         };
 
-        wb.add_workbench_point("Origin".to_string(), Point3::new(0.0, 0.0, 0.0)).unwrap();
-        wb.add_workbench_plane("Front".to_string(), Plane::front(), 100.0, 100.0).unwrap();
-        wb.add_workbench_plane("Right".to_string(), Plane::right(), 100.0, 100.0).unwrap();
-        wb.add_workbench_plane("Top".to_string(), Plane::top(), 100.0, 100.0).unwrap();
+        wb.add_point(Point3::new(0.0, 0.0, 0.0)).unwrap();
+        wb.add_plane(Plane::front(), 100.0, 100.0).unwrap();
+        wb.add_plane(Plane::right(), 100.0, 100.0).unwrap();
+        wb.add_plane(Plane::top(), 100.0, 100.0).unwrap();
 
         wb
     }
@@ -81,6 +79,10 @@ impl Workbench {
         }
     }
 
+    pub fn get_sketch_by_id(&mut self, id: IDType) -> Result<&mut Rc<RefCell<ISketch>>, CADmiumError> {
+        self.sketches.get_mut(&id).ok_or(CADmiumError::SketchIDNotFound(id))
+    }
+
     pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
         let mut index = 0;
         for step in self.history.iter() {
@@ -96,7 +98,6 @@ impl Workbench {
     pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
         // If the extrusion name is empty string, then we need to generate a new name
         // Let's use "Extrusion n" where n is the number of extrusions
-        let counter = self.step_counters.get_mut("Extrusion").unwrap();
         let extrusion_name = if name == "" {
             format!("Extrusion {}", *counter + 1)
         } else {
@@ -104,8 +105,6 @@ impl Workbench {
         };
         self.history
             .push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
-        *counter += 1;
-        *counter - 1
     }
 
     pub fn realize(&self, max_steps: u64) -> Realization {
