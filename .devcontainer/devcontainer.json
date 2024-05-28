@@ -18,7 +18,8 @@
         "rust-lang.rust-analyzer",
         "svelte.svelte-vscode",
         "bradlc.vscode-tailwindcss",
-        "esbenp.prettier-vscode"
+        "esbenp.prettier-vscode",
+        "ms-playwright.playwright"
       ]
     }
   }
