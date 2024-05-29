@@ -1,25 +1,26 @@
-use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
+use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
-use crate::extrusion::{fuse, Extrusion, ExtrusionMode};
+use crate::solid::extrusion::{self, fuse, Extrusion};
 use crate::isketch::{IPlane, ISketch};
 use crate::realization::Realization;
+use crate::solid::point::Point3;
 use crate::solid::Solid;
+use crate::solid::SolidLike;
 use crate::step::{Step, StepData};
 use crate::IDType;
 
 use std::cell::RefCell;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::rc::Rc;
 
 // use truck_base::math::Vector3 as truck_vector3;
 use truck_shapeops::and as solid_and;
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
     pub(crate) name: String,
@@ -79,8 +80,8 @@ impl Workbench {
         }
     }
 
-    pub fn get_sketch_by_id(&mut self, id: IDType) -> Result<&mut Rc<RefCell<ISketch>>, CADmiumError> {
-        self.sketches.get_mut(&id).ok_or(CADmiumError::SketchIDNotFound(id))
+    pub fn get_sketch_by_id(&self, id: IDType) -> Result<Rc<RefCell<ISketch>>, CADmiumError> {
+        self.sketches.get(&id).ok_or(CADmiumError::SketchIDNotFound(id)).cloned()
     }
 
     pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
@@ -95,11 +96,7 @@ impl Workbench {
         self.history[index].data = new_step_data;
     }
 
-    pub fn add_extrusion(&mut self, name: &str, extrusion: Extrusion) -> u64 {
-        self.history.push(Step::new_extrusion(&extrusion_name, extrusion, *counter));
-    }
-
-    pub fn realize(&self, max_steps: u64) -> Result<Realization, anyhow::Error> {
+    pub fn realize(&mut self, max_steps: u64) -> Result<Realization, anyhow::Error> {
         let mut realized = Realization::new();
         let max_steps = max_steps as usize; // just coerce the type once
 
@@ -198,153 +195,86 @@ impl Workbench {
                         // );
                     }
                 },
-                /*
-                StepData::Extrusion { extrusion } => {
-                    let (_sketch, split_sketch, _name) = &realized.sketches[&extrusion.sketch_id];
-                    let plane = &realized.planes[&split_sketch.plane_id];
+                StepData::SolidExtrusion {
+                    face_ids,
+                    sketch_id,
+                    length,
+                    offset,
+                    mode,
+                    direction,
+                    ..
+                } => {
+                    // TODO: Make realization a trait and implement it for Extrusion
+                    let sketch_ref = self.sketches.get(sketch_id).unwrap();
+                    let sketch = sketch_ref.borrow();
+                    let faces = face_ids.iter().map(|id| sketch.faces().get(*id as usize).unwrap().clone()).collect();
 
-                    match &extrusion.mode {
-                        ExtrusionMode::New => {
-                            // if this extrusion is in mode "New" then this old behavior is correct!
+                    let new_extrusion = Extrusion::new(faces, sketch_ref.clone(), *length, *offset, direction.clone(), mode.clone());
+                    let feature = new_extrusion.to_feature();
+                    let solid_like = feature.as_solid_like();
+                    let new_solids = solid_like.to_solids()?;
 
-                            let solids = Solid::from_extrusion(
-                                step.name.clone(),
-                                plane,
-                                split_sketch,
-                                extrusion,
-                            );
-
-                            for (name, solid) in solids {
-                                realized.solids.insert(name, solid);
-                            }
+                    match &new_extrusion.mode {
+                        extrusion::Mode::New => {
+                            new_solids.iter().map(|s| {
+                                realized.solids.insert(self.solids_next_id, s.clone());
+                                self.solids_next_id += 1;
+                            });
                         }
-                        ExtrusionMode::Add(merge_scope) => {
-                            // if this extrusion is in mode "Add" Then we need to merge the resulting solids
-                            // with each of the solids listed in the merge scope
-
-                            let new_solids = Solid::from_extrusion(
-                                step.name.clone(),
-                                plane,
-                                split_sketch,
-                                extrusion,
-                            );
-
-                            // NO LONGER NEEDED
-                            // // this is some bullshit, but bear with me. To make the solids merge properly we need to
-                            // // lengthen the extrusion a tiny bit, basically build in some buffer
-                            // let mut longer_extrusion = extrusion.clone();
-                            // longer_extrusion.length += 0.001;
-                            // longer_extrusion.offset -= 0.001;
-                            // let solids = Solid::from_extrusion(
-                            //     step.name.clone(),
-                            //     plane,
-                            //     split_sketch,
-                            //     &longer_extrusion,
-                            // );
-
-                            for existing_solid_name in merge_scope {
+                        extrusion::Mode::Add(merge_scope) => {
+                            for existing_solid_id in merge_scope {
+                                let existing_solid = realized.solids.get(&existing_solid_id).unwrap().clone();
                                 let mut existing_solid_to_merge_with =
-                                    realized.solids.remove(&existing_solid_name).unwrap();
+                                    realized.solids.remove(&existing_solid_id).unwrap();
 
                                 // merge this existing solid with as many of the new solids as possible
-                                for (_, new_solid) in new_solids.iter() {
-                                    // let new_candidate = translated(
-                                    //     &solid.truck_solid,
-                                    //     TruckVector3::new(0.0, 0.0, 1.0),
-                                    // );
-                                    // println!("\nTranslated new candidate: {:?}", new_candidate);
-
-                                    // let result =
-                                    //     solid_or(&existing_solid.truck_solid, &new_candidate, 0.1);
-
+                                for new_solid in new_solids.iter() {
                                     let fused = fuse(
                                         &existing_solid_to_merge_with.truck_solid,
                                         &new_solid.truck_solid,
-                                    );
+                                    ).unwrap();
 
-                                    match fused {
-                                        Some(s) => {
-                                            existing_solid_to_merge_with = Solid::from_truck_solid(
-                                                existing_solid_name.to_owned(),
-                                                s,
-                                            );
-                                        }
-                                        None => {
-                                            println!("Failed to merge with OR");
-                                        }
-                                    }
+                                    let new_merged_sold = Solid::from_truck_solid(existing_solid.name.clone(), fused);
+                                    existing_solid_to_merge_with = new_merged_sold;
                                 }
 
                                 realized.solids.insert(
-                                    existing_solid_name.to_owned(),
+                                    existing_solid_id.to_owned(),
                                     existing_solid_to_merge_with,
                                 );
                             }
                         }
-
-                        ExtrusionMode::Remove(merge_scope) => {
+                        extrusion::Mode::Remove(merge_scope) => {
                             // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
                             // with each of the solids listed in the merge scope
-                            println!("Okay, let's remove");
-                            let new_solids = Solid::from_extrusion(
-                                step.name.clone(),
-                                plane,
-                                split_sketch,
-                                extrusion,
-                            );
-
-                            for existing_solid_name in merge_scope {
+                            for existing_solid_id in merge_scope {
+                                let existing_solid = realized.solids.get(&existing_solid_id).unwrap().clone();
                                 let mut existing_solid_to_merge_with =
-                                    realized.solids.remove(&existing_solid_name).unwrap();
+                                    realized.solids.remove(&existing_solid_id).unwrap();
 
                                 // merge this existing solid with as many of the new solids as possible
-                                for (_, new_solid) in new_solids.iter() {
-                                    // let translated_solid = translated(
-                                    //     &solid.truck_solid,
-                                    //     TruckVector3::new(0.0, 0.0, 1.0),
-                                    // );
-                                    // println!("\nTranslated new candidate: {:?}", new_candidate);
-
-                                    // let result =
-                                    //     solid_or(&existing_solid.truck_solid, &new_candidate, 0.1);
-
+                                for new_solid in new_solids.iter() {
                                     let punch = new_solid.truck_solid.clone();
-                                    // punch.not();
-                                    println!("Have a punch");
 
                                     let cleared = solid_and(
                                         &existing_solid_to_merge_with.truck_solid,
                                         &punch,
                                         0.1,
-                                    );
+                                    ).unwrap();
 
-                                    println!("have cleared");
-
-                                    match cleared {
-                                        Some(s) => {
-                                            println!("Merged with AND");
-                                            // println!("{:?}", s);
-                                            existing_solid_to_merge_with = Solid::from_truck_solid(
-                                                existing_solid_name.to_owned(),
-                                                s,
-                                            );
-                                        }
-                                        None => {
-                                            println!("Failed to merge with AND");
-                                        }
-                                    }
+                                    let new_merged_sold = Solid::from_truck_solid(existing_solid.name.clone(), cleared);
+                                    existing_solid_to_merge_with = new_merged_sold;
                                 }
 
                                 realized.solids.insert(
-                                    existing_solid_name.to_owned(),
+                                    existing_solid_id.to_owned(),
                                     existing_solid_to_merge_with,
                                 );
-                                println!("inserted the solid back in")
                             }
                         }
                     }
                 }
-            */
+                _ => {}
             }
         }
 
@@ -383,5 +313,19 @@ impl Workbench {
             .ok_or(anyhow::anyhow!("Failed to insert sketch"));
         self.sketches_next_id += 1;
         Ok(self.sketches_next_id - 1)
+    }
+
+    pub(crate) fn add_solid_extrusion(
+        &mut self,
+        face_ids: Vec<IDType>,
+        sketch_id: IDType,
+        length: f64,
+        offset: f64,
+        mode: extrusion::Mode,
+        direction: extrusion::Direction,
+    ) -> Result<IDType, anyhow::Error> {
+        // I guess nothing to do? only realization?
+        // TODO: What ID should be returned here?
+        Ok(0)
     }
 }
