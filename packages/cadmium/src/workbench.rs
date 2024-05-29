@@ -41,6 +41,7 @@ pub struct Workbench {
 
 impl Workbench {
     pub fn new(name: &str) -> Self {
+        println!("Creating new workbench: {:?}", name);
         let mut wb = Workbench {
             name: name.to_owned(),
             history: vec![],
@@ -81,6 +82,7 @@ impl Workbench {
     }
 
     pub fn get_sketch_by_id(&self, id: IDType) -> Result<Rc<RefCell<ISketch>>, CADmiumError> {
+        println!("Getting sketch by id: {:?} {:?}", id, self.sketches);
         self.sketches.get(&id).ok_or(CADmiumError::SketchIDNotFound(id)).cloned()
     }
 
@@ -137,8 +139,8 @@ impl Workbench {
                     ..
                 } => match plane_description {
                     PlaneDescription::PlaneId(plane_id) => {
-                        let plane = realized.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
-                        let plane_ref = Rc::new(RefCell::new(plane.plane.clone()));
+                        let plane = self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
+                        let plane_ref = plane.clone();
                         let sketch = ISketch::new(plane_ref);
 
                         realized.sketches.insert(
@@ -217,7 +219,7 @@ impl Workbench {
 
                     match &new_extrusion.mode {
                         extrusion::Mode::New => {
-                            new_solids.iter().map(|s| {
+                            new_solids.iter().for_each(|s| {
                                 realized.solids.insert(self.solids_next_id, s.clone());
                                 self.solids_next_id += 1;
                             });
@@ -286,14 +288,14 @@ impl Workbench {
 // Step operations
 impl Workbench {
     pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
-        self.points.insert(self.points_next_id, point).ok_or(anyhow::anyhow!("Failed to insert point"));
+        self.points.insert(self.points_next_id, point);
         self.points_next_id += 1;
         Ok(self.points_next_id - 1)
     }
 
     pub(super) fn add_workbench_plane(&mut self, plane: Plane, _width: f64, _height: f64) -> Result<IDType, anyhow::Error> {
         let plane_cell = Rc::new(RefCell::new(plane));
-        self.planes.insert(self.planes_next_id, plane_cell).ok_or(anyhow::anyhow!("Failed to insert plane"));
+        self.planes.insert(self.planes_next_id, plane_cell);
         self.planes_next_id += 1;
         Ok(self.planes_next_id - 1)
     }
@@ -302,6 +304,7 @@ impl Workbench {
         &mut self,
         plane_description: PlaneDescription,
     ) -> Result<IDType, anyhow::Error> {
+        println!("Adding sketch with plane description: {:?}", plane_description);
         let plane = match plane_description {
             PlaneDescription::PlaneId(plane_id) =>
                 self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
@@ -309,9 +312,8 @@ impl Workbench {
         }.clone();
 
         let sketch = ISketch::new(plane);
-        self.sketches
-            .insert(self.sketches_next_id, Rc::new(RefCell::new(sketch)))
-            .ok_or(anyhow::anyhow!("Failed to insert sketch"));
+        self.sketches.insert(self.sketches_next_id, Rc::new(RefCell::new(sketch)));
+        println!("Added sketch with id: {:?}", self.sketches);
         self.sketches_next_id += 1;
         Ok(self.sketches_next_id - 1)
     }
