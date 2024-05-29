@@ -1,69 +1,60 @@
-#![allow(dead_code, unused)]
-
-use std::ops::{Sub, SubAssign};
-
-use cadmium::extrusion::fuse;
-use truck_meshalgo::filters::OptimizingFilter;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
-use truck_modeling::builder::{translated, tsweep, vertex};
-use truck_modeling::{Plane, Point3, Surface, Vector3};
-use truck_polymesh::{obj, InnerSpace, Invertible, ParametricSurface, Tolerance};
-use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
-use truck_topology::{Shell, Solid};
+use truck_modeling::builder::{rsweep, try_attach_plane, tsweep, vertex};
+use truck_modeling::{Point3, Vector3};
+use truck_polymesh::{obj, Rad};
+use truck_shapeops::{and, or};
 
 fn main() {
-    let point_a = vertex(Point3::new(0.0, 0.0, 0.0));
-    let line_a = tsweep(&point_a, Vector3::new(1.0, 0.0, 0.0));
-    let square_a = tsweep(&line_a, Vector3::new(0.0, 1.0, 0.0));
-    let cube_a = tsweep(&square_a, Vector3::new(0.0, 0.0, 1.0));
+    // Make a cube with side length 100
+    let origin = vertex(Point3::new(0.0, 0.0, 0.0));
+    let x_axis = tsweep(&origin, Vector3::new(100.0, 0.0, 0.0));
+    let xy_square = tsweep(&x_axis, Vector3::new(0.0, 100.0, 0.0));
+    let cube = tsweep(&xy_square, Vector3::new(0.0, 0.0, 100.0));
 
-    // simplest case!
-    // let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
-    // let line_b = tsweep(&point_b, Vector3::new(0.2, 0.0, 0.0));
-    // let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
-    // let cube_b: Solid<
-    //     truck_meshalgo::prelude::cgmath::Point3<f64>,
-    //     truck_modeling::Curve,
-    //     truck_modeling::Surface,
-    // > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
+    // Save it as an obj file
+    // let mesh = cube.triangulation(0.01).to_polygon();
+    // let file = std::fs::File::create("test_cube.obj").unwrap();
+    // obj::write(&mesh, file).unwrap();
 
-    // one flush side!
-    let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
-    let line_b = tsweep(&point_b, Vector3::new(0.6, 0.0, 0.0));
-    let square_b = tsweep(&line_b, Vector3::new(0.0, 0.2, 0.0));
-    let cube_b: Solid<
-        truck_meshalgo::prelude::cgmath::Point3<f64>,
-        truck_modeling::Curve,
-        truck_modeling::Surface,
-    > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
-
-    // two flush sides!
-    // let point_b = vertex(Point3::new(0.4, 0.4, 1.0));
-    // let line_b = tsweep(&point_b, Vector3::new(0.6, 0.0, 0.0));
-    // let square_b = tsweep(&line_b, Vector3::new(0.0, 0.6, 0.0));
-    // let cube_b: Solid<
-    //     truck_meshalgo::prelude::cgmath::Point3<f64>,
-    //     truck_modeling::Curve,
-    //     truck_modeling::Surface,
-    // > = tsweep(&square_b, Vector3::new(0.0, 0.0, 0.2));
-
-    // extend the cube to be just 0.01 longer than it needs to be
-    // let cube_b = tsweep(&square_b, Vector3::new(0.0, 0.0, 1.01));
-    // let bad_volume = tsweep(&square_b, Vector3::new(0.0, 0.0, -0.01));
-    // then translate it down
-    // let cube_b = translated(&cube_b, Vector3::new(0.0, 0.0, -0.01));
-    // let combined_big = or(&cube_a, &cube_b, 0.01).unwrap();
-
-    // let combined = or(&cube_a, &cube_b, 0.01).unwrap();
-    let combined = fuse(&cube_a, &cube_b).unwrap();
-
-    println!(
-        "combined_cube_or has {:?} shell boundaries",
-        combined.boundaries().len()
+    // Make a cylinder that is centered at (50, 50) so it will interfere with the cube
+    let point = vertex(Point3::new(104.0, 50.0, -20.0));
+    let circle = rsweep(
+        &point,
+        Point3::new(80.0, 50.0, -20.0),
+        Vector3::new(0.0, 0.0, 1.0),
+        Rad(7.0),
     );
+    let disk = try_attach_plane(&[circle]).unwrap();
+    let cylinder = tsweep(&disk, Vector3::new(0.0, 0.0, 140.0));
 
-    let mut mesh = combined.triangulation(0.01).to_polygon();
-    mesh.put_together_same_attrs(0.1);
-    let file = std::fs::File::create("combined_cube.obj").unwrap();
+    // save the cylinder to a file
+    // let mesh = cylinder.triangulation(0.01).to_polygon();
+    // let file = std::fs::File::create("test_cylinder.obj").unwrap();
+    // obj::write(&mesh, file).unwrap();
+
+    // Now we let's do the boolean operations!
+
+    // let and_result = and(&cube, &cylinder, 1.0);
+    // let mesh = and_result.unwrap().triangulation(0.01).to_polygon();
+    // let file = std::fs::File::create("test_AND.obj").unwrap();
+    // obj::write(&mesh, file).unwrap();
+    // This results in the cylinder, but truncated. This is the region where the cylinder intersects the cube
+    // Aka the region of space which is both inside the cube AND inside the cylinder
+
+    let or_result = or(&cube, &cylinder, 0.9);
+    let mesh = or_result.unwrap().triangulation(0.01).to_polygon();
+    let file = std::fs::File::create("test_OR.obj").unwrap();
     obj::write(&mesh, file).unwrap();
+    // This results in a cube on a stick, aka the union of the cube and the cylinder
+    // Aka the region of space which is inside the cube OR inside the cylinder
+
+    // let mut not_cylinder = cylinder.clone();
+    // not_cylinder.not();
+    // // not_cylinder is a weird thing...it's the entire universe _except_ the cylinder
+    // let and_not_result = and(&cube, &not_cylinder, 1.0);
+    // let mesh = and_not_result.unwrap().triangulation(0.01).to_polygon();
+    // let file = std::fs::File::create("test_AND_NOT.obj").unwrap();
+    // obj::write(&mesh, file).unwrap();
+    // This results in a cube with a hole in it, aka the cube with the cylinder subtracted from it
+    // Aka the region of space which is inside the cube AND NOT inside the cylinder
 }
