@@ -1,4 +1,5 @@
 use message::{Message, MessageResult};
+use tsify::declare;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
@@ -16,6 +17,7 @@ pub mod workbench;
 // pub use isotope::primitives::ParametricCell;
 // pub use isotope::constraints::ConstraintCell;
 
+#[declare]
 pub type IDType = u64;
 
 #[wasm_bindgen]
@@ -66,17 +68,17 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn get_realization(&mut self, workbench_id: IDType, max_steps: u64) -> Result<Realization, String> {
+    pub fn get_realization(&mut self, workbench_id: u32, max_steps: u32) -> Result<Realization, String> {
         let realized = self
             .native
-            .get_realization(workbench_id, max_steps)
+            .get_realization(workbench_id as IDType, max_steps as u64)
             .map_err(|e| format!("Realization Error: {}", e))?;
 
         Ok(Realization { native: realized })
     }
 
     #[wasm_bindgen]
-    pub fn get_workbench(&self, workbench_index: IDType) -> workbench::Workbench {
+    pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
         // TODO: Use get() and return a Result
         self.native.workbenches.get(workbench_index as usize).unwrap().clone()
     }

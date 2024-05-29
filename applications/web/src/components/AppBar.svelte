@@ -19,11 +19,7 @@
 
   export let newFileContent: string | null = null
 
-  $: project,
-    (() => {
-      // log("[project]", project)
-      project && !isProject(project) && console.error("[AppBar.svelte] [project] fails isProject(project) typecheck", project)
-    })()
+  $: project
 
   function fileInput(e: WithTarget<Event, HTMLInputElement>) {
     const target = e.target as HTMLInputElement
