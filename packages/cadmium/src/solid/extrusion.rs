@@ -1,5 +1,9 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use isotope::decompose::face::Face;
 use serde::{Deserialize, Serialize};
+use truck_modeling::Wire;
 use tsify::Tsify;
 
 use truck_polymesh::InnerSpace;
@@ -9,49 +13,23 @@ use truck_shapeops::ShapeOpsCurve;
 use truck_shapeops::ShapeOpsSurface;
 use truck_topology::Shell;
 
+use super::prelude::*;
+
 use crate::archetypes::Vector3;
+use crate::isketch::ISketch;
+use crate::IDType;
 
-use truck_modeling::{Plane, Point3 as TruckPoint3, Surface};
-
-use truck_topology::Solid as TruckSolid;
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Extrusion {
-    pub sketch_id: String,
-    pub face_ids: Vec<u64>,
-    pub length: f64,
-    pub offset: f64,
-    pub direction: Direction,
-    pub mode: ExtrusionMode,
-}
+use super::get_isoface_wires;
+use super::Feature;
+use super::FeatureCell;
+use super::SolidLike;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum ExtrusionMode {
+pub enum Mode {
     New,
-    Add(Vec<String>),
-    Remove(Vec<String>),
-}
-
-impl Extrusion {
-    pub fn new(
-        sketch_id: String,
-        face_ids: Vec<u64>,
-        length: f64,
-        offset: f64,
-        direction: Direction,
-        mode: ExtrusionMode,
-    ) -> Self {
-        Extrusion {
-            sketch_id,
-            face_ids,
-            length,
-            offset,
-            direction,
-            mode,
-        }
-    }
+    Add(Vec<IDType>),
+    Remove(Vec<IDType>),
 }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
@@ -60,6 +38,66 @@ pub enum Direction {
     Normal,
     NegativeNormal,
     Specified(Vector3),
+}
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct Extrusion {
+    pub faces: Vec<Face>,
+    pub sketch: Rc<RefCell<ISketch>>,
+    pub length: f64,
+    pub offset: f64,
+    pub direction: Direction,
+    pub mode: Mode,
+}
+
+impl Extrusion {
+    pub fn new(
+        faces: Vec<Face>,
+        sketch: Rc<RefCell<ISketch>>,
+        length: f64,
+        offset: f64,
+        direction: Direction,
+        mode: Mode,
+    ) -> Self {
+        Extrusion {
+            faces,
+            sketch,
+            length,
+            offset,
+            direction,
+            mode,
+        }
+    }
+}
+
+impl SolidLike for Extrusion {
+    fn references(&self) -> Vec<FeatureCell> {
+        // self.faces.iter().map(|f| FeatureCell::Face(f.clone())).collect()
+        todo!("Extrusion::references")
+    }
+
+    fn to_feature(&self) -> Feature {
+        Feature::Extrusion(self.clone())
+    }
+
+    fn get_truck_solids(&self) -> anyhow::Result<Vec<TruckClosedSolid>> {
+        let mut retval = vec![];
+        let plane = self.sketch.borrow().plane.borrow().clone();
+
+        let extrusion_direction = match &self.direction {
+            Direction::Normal => plane.tertiary.clone(),
+            Direction::NegativeNormal => plane.tertiary.times(-1.0),
+            Direction::Specified(vector) => vector.clone(),
+        };
+
+        let extrusion_vector = extrusion_direction.times(self.length - self.offset);
+        let offset_vector = extrusion_direction.times(self.offset);
+
+        let wires = self.faces.iter().flat_map(|f| get_isoface_wires(self.sketch.clone(), f)).flatten().collect::<Vec<Wire>>();
+
+        Ok(retval)
+    }
 }
 
 pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
@@ -82,103 +120,24 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
     return retval;
 }
 
-// pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
-//     for (a, face_a) in faces.iter().enumerate() {
-//         for (b, face_b) in faces.iter().enumerate() {
-//             if a == b || a > b {
-//                 continue;
-//             }
+pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
+    for (a, face_a) in faces.iter().enumerate() {
+        for (b, face_b) in faces.iter().enumerate() {
+            if a == b || a > b {
+                continue;
+            }
 
-//             let adjacent_edges = face_a.exterior.adjacent_edges(&face_b.exterior);
+            let adjacent_edges = face_a.exterior.adjacent_edges(&face_b.exterior);
 
-//             match adjacent_edges {
-//                 None => continue,
-//                 Some(matched_edges) => return Some((a, b, matched_edges.0, matched_edges.1)),
-//             }
-//         }
-//     }
+            match adjacent_edges {
+                None => continue,
+                Some(matched_edges) => return Some((a, b, matched_edges.0, matched_edges.1)),
+            }
+        }
+    }
 
-//     None
-// }
-
-// pub fn merge_faces(faces: Vec<Face>) -> Vec<Face> {
-//     let mut faces = faces.clone();
-//     // adjacency:
-//     // check if this shape's exterior is adjacent to any other shape's exterior
-//     // if so, merge them into a single shape by deleting any shared sides
-//     // and recomputing the faces
-
-//     while let Some((a, b, a_indices, b_indices)) = find_adjacent_shapes(&faces) {
-//         println!("touching_shapes: {:?}", (a, b, a_indices, b_indices));
-//         let face_a = &faces[a];
-//         let face_b = &faces[b];
-
-//         match (&face_a.exterior, &face_b.exterior) {
-//             (Ring::Segments(segments_a), Ring::Segments(segments_b)) => {
-//                 let mut face_a_location = 0;
-//                 let mut face_b_location = 0;
-//                 let mut pulling_from_a = true;
-//                 let mut new_exterior_segments: Vec<Segment> = vec![];
-
-//                 loop {
-//                     if pulling_from_a {
-//                         let segment = segments_a[face_a_location].clone();
-//                         new_exterior_segments.push(segment);
-//                         face_a_location += 1;
-//                     } else {
-//                         // pull from b
-//                         let segment = segments_b[face_b_location].clone();
-//                         new_exterior_segments.push(segment);
-//                         face_b_location += 1;
-//                     }
-//                 }
-//             }
-//             _ => panic!("Only Rings made of Segments can have adjacent edges!"),
-//         }
-
-//         // let mut new_face = Face {
-//         //     exterior: new_exterior_segments,
-//         //     holes: vec![],
-//         // };
-
-//         // remove face a and face b
-//         // add new_face
-
-//         break;
-//     }
-
-//     // envelopment:
-//     // check if this shape's exterior is equal to any other shape's hole
-//     // if so, merge them into a single shape by deleting that hole from the
-//     // other shape, and adding this shape's holes to that shape's holes
-//     while let Some((a, b, c)) = find_enveloped_shapes(&faces) {
-//         // this means a's exterior is equal to one of b's holes. Hole c in particular
-//         let face_a = &faces[a];
-//         let face_b = &faces[b];
-
-//         // to fix this we need to remove the information contained in a's exterior completely.
-//         // to do that we remove the c indexed hole from face_b's list of holes
-//         let mut b_new_holes = face_b.holes.clone();
-//         b_new_holes.remove(c);
-//         b_new_holes.append(&mut face_a.holes.clone());
-
-//         let mut new_face_b = Face {
-//             exterior: face_b.exterior.clone(),
-//             holes: b_new_holes,
-//         };
-
-//         let mut new_faces = faces.clone();
-
-//         // replace the larger face with our modified face
-//         new_faces[b] = new_face_b.clone();
-
-//         // remove the smaller face from the list of faces
-//         new_faces.remove(a);
-//         faces = new_faces;
-//     }
-
-//     faces
-// }
+    None
+}
 
 // pub fn find_transit(
 //     real_plane: &RealPlane,
@@ -202,9 +161,9 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
 // }
 
 pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt::Debug>(
-    solid0: &TruckSolid<TruckPoint3, C, Surface>,
-    solid1: &TruckSolid<TruckPoint3, C, Surface>,
-) -> Option<TruckSolid<TruckPoint3, C, Surface>> {
+    solid0: &TruckTopoSolid<TruckPoint3, C, TruckSurface>,
+    solid1: &TruckTopoSolid<TruckPoint3, C, TruckSurface>,
+) -> Option<TruckTopoSolid<TruckPoint3, C, TruckSurface>> {
     println!("Okay let's fuse!");
 
     let solid0_boundaries = solid0.boundaries();
@@ -264,12 +223,12 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
 
     // And then we're done!
     // None
-    Some(TruckSolid::new(vec![combined]))
+    Some(TruckTopoSolid::new(vec![combined]))
 }
 
 fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
-    boundary0: &Shell<TruckPoint3, C, Surface>,
-    boundary1: &Shell<TruckPoint3, C, Surface>,
+    boundary0: &Shell<TruckPoint3, C, TruckSurface>,
+    boundary1: &Shell<TruckPoint3, C, TruckSurface>,
     flip_second: bool,
 ) -> Vec<(usize, usize)> {
     let mut coplanar_faces: Vec<(usize, usize)> = vec![];
@@ -277,7 +236,7 @@ fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
         let surface_0 = face_0.oriented_surface();
 
         match surface_0 {
-            Surface::Plane(p0) => {
+            TruckSurface::Plane(p0) => {
                 for (face_1_idx, face_1) in boundary1.face_iter().enumerate() {
                     let mut surface_1 = face_1.oriented_surface();
 
@@ -286,7 +245,7 @@ fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
                     }
 
                     match surface_1 {
-                        Surface::Plane(p1) => {
+                        TruckSurface::Plane(p1) => {
                             if are_coplanar(p0, p1) {
                                 coplanar_faces.push((face_0_idx, face_1_idx));
                             }
@@ -302,7 +261,7 @@ fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
     coplanar_faces
 }
 
-fn are_coplanar(p0: Plane, p1: Plane) -> bool {
+fn are_coplanar(p0: TruckPlane, p1: TruckPlane) -> bool {
     let normal0 = p0.normal();
     let normal1 = p1.normal();
 
@@ -369,8 +328,8 @@ mod tests {
 
     #[test]
     fn step_export() {
-        let p = create_test_project();
-        let workbench = &p.workbenches[0 as usize];
+        let mut p = create_test_project();
+        let workbench = p.get_workbench_by_id_mut(0).unwrap();
         let realization = workbench.realize(1000).unwrap();
         let keys = Vec::from_iter(realization.solids.keys());
 

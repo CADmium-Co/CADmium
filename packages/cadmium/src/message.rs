@@ -3,10 +3,10 @@ use isotope::primitives::Primitive;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::archetypes::PlaneDescription;
 use crate::error::CADmiumError;
-use crate::extrusion::{Direction, Extrusion, ExtrusionMode};
+use crate::solid::extrusion::{self, Direction, Extrusion, Mode};
 use crate::project::Project;
+use crate::solid::SolidLike;
 use crate::step::StepData;
 use crate::IDType;
 
@@ -52,48 +52,6 @@ pub enum Message {
     RenameProject {
         new_name: String,
     },
-    DeleteSketchPrimitives {
-        workbench_id: u64,
-        sketch_id: String,
-        ids: Vec<u64>,
-    },
-    AddSketchPrimitive {
-        workbench_id: u64,
-        sketch_id: String,
-        primitive: Primitive,
-    },
-    AddSketchArc {
-        workbench_id: u64,
-        sketch_id: String,
-        center_id: u64,
-        radius: f64,
-        clockwise: bool,
-        start_angle: f64,
-        end_angle: f64,
-    },
-    AddSketchCircle {
-        workbench_id: u64,
-        sketch_id: String,
-        center_id: String,
-        radius: f64,
-    },
-    AddSketchLine {
-        workbench_id: u64,
-        sketch_id: String,
-        start_id: String,
-        end_id: String,
-    },
-    AddSketchPoint {
-        workbench_id: u64,
-        sketch_id: String,
-        x: f64,
-        y: f64,
-    },
-    NewSketchOnPlane {
-        workbench_id: u64,
-        sketch_name: String,
-        plane_id: String,
-    },
     SetSketchPlane {
         workbench_id: u64,
         sketch_id: IDType,
@@ -103,20 +61,11 @@ pub enum Message {
         workbench_id: u64,
         step_name: String,
     },
-    NewExtrusion {
-        workbench_id: u64,
-        extrusion_name: String,
-        sketch_id: String,
-        face_ids: Vec<u64>,
-        length: f64,
-        offset: f64,
-        direction: Direction,
-    },
     UpdateExtrusion {
-        workbench_id: u64,
+        workbench_id: IDType,
         extrusion_name: String,
-        extrusion_id: String,
-        sketch_id: String,
+        extrusion_id: IDType,
+        sketch_id: IDType,
         face_ids: Vec<u64>,
         length: f64,
         offset: f64,
@@ -147,7 +96,7 @@ impl Message {
                 name,
                 data,
             } => {
-                let id = data.do_action(project, *name)?;
+                let id = data.do_action(project, name.clone())?;
                 Ok(format!("\"id\": \"{}\"", id))
             }
             Message::RenameProject { new_name } => {
@@ -183,7 +132,8 @@ impl Message {
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 let plane = workbench.planes.iter().find(|(p, _)| *p == pid).ok_or(anyhow::anyhow!(""))?;
-                let sketch = workbench.get_sketch_by_id(*sketch_id)?.borrow_mut();
+                let sketch_ref = workbench.get_sketch_by_id(*sketch_id)?;
+                let mut sketch = sketch_ref.borrow_mut();
                 sketch.plane = plane.1.clone();
 
                 Ok(format!("\"plane_id\": \"{}\"", plane.0))
@@ -202,27 +152,6 @@ impl Message {
                 workbench.history.remove(index);
                 Ok("".to_owned())
             }
-            Message::NewExtrusion {
-                workbench_id,
-                extrusion_name,
-                sketch_id,
-                face_ids,
-                length,
-                offset,
-                direction,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let extrusion = Extrusion::new(
-                    sketch_id.to_owned(),
-                    face_ids.to_owned(),
-                    *length,
-                    *offset,
-                    direction.to_owned(),
-                    ExtrusionMode::New,
-                );
-                let extrusion_id = workbench.add_extrusion(extrusion_name, extrusion);
-                Ok(format!("\"id\": \"{}\"", extrusion_id))
-            }
             Message::UpdateExtrusion {
                 workbench_id,
                 extrusion_name: _extrusion_name,
@@ -234,32 +163,43 @@ impl Message {
                 direction,
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let extrusion = Extrusion::new(
-                    sketch_id.to_owned(),
-                    face_ids.to_owned(),
-                    *length,
-                    *offset,
-                    direction.to_owned(),
-                    ExtrusionMode::New,
-                );
-                let as_step_data = StepData::Extrusion { extrusion };
-                workbench.update_step_data(extrusion_id, as_step_data);
-                Ok(format!("\"id\": \"{}\"", extrusion_id))
+                let sketch = workbench.get_sketch_by_id(*sketch_id)?;
+                let faces = sketch
+                    .borrow()
+                    .faces()
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(k, v)| {
+                        if face_ids.contains(&(k as u64)) {
+                            Some(v.clone())
+                        } else {
+                            None
+                        }
+                    }).collect::<Vec<_>>();
+                let extrusion = workbench.solids.get(extrusion_id).ok_or(anyhow::anyhow!("Could not find extrusion ID!"))?.borrow_mut();
+
+                todo!("Update Extrusion")
+                // let new_extrusion = extrusion::Extrusion::new(faces, sketch, *length, *offset, *direction, extrusion.mode).to_feature().as_solid_like();
+
+                // let as_step_data = StepData::Extrusion { extrusion };
+                // workbench.update_step_data(extrusion_id, as_step_data);
+                // Ok(format!("\"id\": \"{}\"", extrusion_id))
             }
             Message::UpdateExtrusionLength {
                 workbench_id,
                 extrusion_name,
                 length,
             } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let step = workbench.get_step_mut(&extrusion_name)?;
+                // let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
+                // let step = workbench.get_step_mut(&extrusion_name)?;
 
-                if let StepData::Extrusion { extrusion } = &mut step.data {
-                    extrusion.length = *length;
-                    return Ok(format!("\"length\": {}", length));
-                }
+                // if let StepData::Extrusion { extrusion } = &mut step.data {
+                //     extrusion.length = *length;
+                //     return Ok(format!("\"length\": {}", length));
+                // }
 
-                Err(CADmiumError::IncorrectStepDataType("Extrusion".to_owned()).into())
+                // Err(CADmiumError::IncorrectStepDataType("Extrusion".to_owned()).into())
+                todo!("Update Extrusion Length")
             }
         }
     }

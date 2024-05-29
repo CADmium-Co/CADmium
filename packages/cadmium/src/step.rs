@@ -4,10 +4,12 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::archetypes::{Plane, PlaneDescription, Point2, Point3};
+use crate::archetypes::{Plane, PlaneDescription, Point2};
+use crate::solid::extrusion;
+use crate::solid::point::Point3;
 use crate::IDType;
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepOperation {
     Add,
@@ -15,7 +17,7 @@ pub enum StepOperation {
     Delete,
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
     pub(crate) id: IDType,
@@ -26,7 +28,7 @@ pub struct Step {
     pub(crate) data: StepData,
 }
 
-#[derive(StepDataActions, Tsify, Debug, Serialize, Deserialize)]
+#[derive(StepDataActions, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
     // Workbench Primitives
@@ -78,10 +80,14 @@ pub enum StepData {
         sketch_id: IDType,
         start: IDType,
         end: IDType,
-    }
-    // Solid {
-    //     Extrusion {
-    //         extrusion: Extrusion,
-    //     },
-    // }
+    },
+    SolidExtrusion {
+        workbench_id: IDType,
+        face_ids: Vec<IDType>,
+        sketch_id: IDType,
+        length: f64,
+        offset: f64,
+        mode: extrusion::Mode,
+        direction: extrusion::Direction,
+    },
 }

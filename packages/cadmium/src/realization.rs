@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::archetypes::Point3;
+use crate::solid::point::Point3;
 use crate::isketch::{IPlane, ISketch};
 use crate::solid::Solid;
 use crate::IDType;
