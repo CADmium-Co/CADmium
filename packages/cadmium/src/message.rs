@@ -338,7 +338,11 @@ impl Message {
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 let step = workbench.get_step_by_id_mut(&sketch_id)?;
-                let plane_description: &mut PlaneDescription = if let StepData::Sketch { plane_description, .. } = &mut step.data {
+                let plane_description: &mut PlaneDescription = if let StepData::Sketch {
+                    plane_description,
+                    ..
+                } = &mut step.data
+                {
                     plane_description
                 } else {
                     return Err(CADmiumError::IncorrectStepDataType("Sketch".to_owned()).into());
@@ -349,7 +353,7 @@ impl Message {
                         *plane_id = pid.to_owned();
                         Ok(format!("\"plane_id\": \"{}\"", pid))
                     }
-                    _ => Err(CADmiumError::NotImplemented.into())
+                    _ => Err(CADmiumError::NotImplemented.into()),
                 }
             }
             Message::DeleteStep {
@@ -357,7 +361,8 @@ impl Message {
                 step_name,
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let index = workbench.history
+                let index = workbench
+                    .history
                     .iter()
                     .position(|step| step.name == *step_name)
                     .ok_or(CADmiumError::StepNameNotFound(step_name.to_owned()))?;

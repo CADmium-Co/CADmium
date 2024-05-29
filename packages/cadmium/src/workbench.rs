@@ -61,6 +61,25 @@ impl Workbench {
         None
     }
 
+    pub fn step_id_from_unique_id(&self, unique_id: &str) -> Option<u64> {
+        for (i, step) in self.history.iter().enumerate() {
+            if step.unique_id == unique_id {
+                return Some(i as u64);
+            }
+        }
+        None
+    }
+
+    pub fn add_blank_sketch(&mut self, name: &str) -> String {
+        let counter = self.step_counters.get_mut("Sketch").unwrap();
+        let new_step = Step::new_sketch_unbound(name, *counter);
+        let new_step_id = new_step.unique_id.clone();
+        self.history.push(new_step);
+        *counter += 1;
+
+        new_step_id
+    }
+
     pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
         let mut index = 0;
         for step in self.history.iter() {
@@ -276,6 +295,9 @@ impl Workbench {
                     plane_description,
                     sketch,
                 } => match plane_description {
+                    PlaneDescription::None => {
+                        println!("Sketch {} has no plane", step.name);
+                    }
                     PlaneDescription::PlaneId(plane_id) => {
                         if plane_id == "" {
                             println!("Sketch {} has no plane", step.name);

@@ -6,10 +6,11 @@ pub mod archetypes;
 pub mod error;
 pub mod extrusion;
 pub mod message;
+pub mod oplog;
 pub mod project;
 pub mod realization;
-pub mod solid;
 pub mod sketch;
+pub mod solid;
 pub mod step;
 pub mod workbench;
 

@@ -1,13 +1,14 @@
-use tsify::Tsify;
 use serde::{Deserialize, Serialize};
-use truck_modeling::Plane as TruckPlane;
 use truck_modeling::InnerSpace;
+use truck_modeling::Plane as TruckPlane;
+use tsify::Tsify;
 
 use crate::sketch::Point2;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum PlaneDescription {
+    None,
     PlaneId(String),
     SolidFace { solid_id: String, normal: Vector3 },
 }
@@ -84,6 +85,18 @@ impl Plane {
             primary: Vector3::new(u.x, u.y, u.z),
             secondary: Vector3::new(v.x, v.y, v.z),
             tertiary: Vector3::new(n.x, n.y, n.z),
+        }
+    }
+
+    pub fn from_truck_face(tf: truck_modeling::Face) -> Self {
+        let os = tf.oriented_surface();
+        match os {
+            truck_modeling::geometry::Surface::Plane(p) => {
+                return Plane::from_truck(p);
+            }
+            _ => {
+                panic!("I only know how to put sketches on planes");
+            }
         }
     }
 

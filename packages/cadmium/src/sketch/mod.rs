@@ -346,6 +346,15 @@ impl Sketch {
         id
     }
 
+    pub fn add_or_get_point(&mut self, x: f64, y: f64) -> u64 {
+        for (id, point) in self.points.iter() {
+            if (point.x - x).abs() < 1e-6 && (point.y - y).abs() < 1e-6 {
+                return *id;
+            }
+        }
+        self.add_point(x, y)
+    }
+
     pub fn add_hidden_point(&mut self, x: f64, y: f64) -> u64 {
         let id = self.highest_point_id + 1;
         self.points.insert(id, Point2::new_hidden(x, y));
@@ -474,8 +483,8 @@ impl Sketch {
     }
 
     pub fn add_line_segment(&mut self, x0: f64, y0: f64, x1: f64, y1: f64) -> u64 {
-        let id0 = self.add_point(x0, y0);
-        let id1 = self.add_point(x1, y1);
+        let id0 = self.add_or_get_point(x0, y0);
+        let id1 = self.add_or_get_point(x1, y1);
         let l = Line2 {
             start: id0,
             end: id1,

@@ -1,11 +1,10 @@
-
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription, Point3, Vector3};
-use crate::sketch::Sketch;
 use crate::extrusion::Extrusion;
+use crate::sketch::Sketch;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[serde(tag = "type")]
@@ -71,6 +70,20 @@ impl Step {
             suppressed: false,
             data: StepData::Sketch {
                 plane_description: PlaneDescription::PlaneId(plane_id.to_owned()),
+                width: 1.25,
+                height: 0.75,
+                sketch: Sketch::new(),
+            },
+        }
+    }
+
+    pub fn new_sketch_unbound(name: &str, sketch_id: u64) -> Self {
+        Step {
+            name: name.to_owned(),
+            unique_id: format!("Sketch-{}", sketch_id),
+            suppressed: false,
+            data: StepData::Sketch {
+                plane_description: PlaneDescription::None,
                 width: 1.25,
                 height: 0.75,
                 sketch: Sketch::new(),
