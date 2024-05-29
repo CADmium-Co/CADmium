@@ -1,11 +1,33 @@
+use std::collections::HashMap;
+
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::punctuated::Punctuated;
-use syn::{parse_macro_input, DeriveInput, Ident, MetaList, MetaNameValue, NestedMeta, Token};
+use syn::{Attribute, DeriveInput, Ident, MetaNameValue, Token, parse_macro_input};
 use syn::spanned::Spanned;
 
 const ATTR_NAME: &str = "step_data";
+
+fn get_meta_kv(attrs: &Vec<Attribute>) -> HashMap<Ident, MetaNameValue> {
+    let mut result = HashMap::new();
+
+    for attr in attrs {
+        if !attr.path.is_ident(ATTR_NAME) {
+            continue;
+        }
+
+        let Ok(name_values): Result<Punctuated<MetaNameValue, Token![,]>, _> = attr
+            .parse_args_with(Punctuated::parse_terminated) else { continue; };
+
+        for nv in name_values {
+            let Some(ident) = nv.path.get_ident() else { continue; };
+            result.insert(ident.clone(), nv);
+        }
+    }
+
+    result
+}
 
 #[proc_macro_derive(StepDataActions, attributes(step_data))]
 pub fn derive_step_data(input: TokenStream) -> TokenStream {
@@ -23,45 +45,33 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
 
         let mut workbench_field = None;
         let mut parent_type = None;
-
-        // Search for skip_history
-        let skip_history = variant.attrs.iter().any(|attr| {
-            let Ok(meta_list) = attr.parse_args::<MetaList>() else { return false; };
-
-            attr.path.is_ident(ATTR_NAME) &&
-            meta_list.nested.iter().any(|meta| {
-                let NestedMeta::Meta(nested) = meta else { return false; };
-                nested.path().is_ident("skip_history")
-            })
-        });
+        let mut skip_history = false;
 
         // Parse the attributes above each variant
-        for attr in &variant.attrs {
-            if !attr.path.is_ident(ATTR_NAME) {
-                continue;
-            }
-
-            let name_values: Punctuated<MetaNameValue, Token![,]> = attr.parse_args_with(Punctuated::parse_terminated).unwrap(); // handle error instead of unwrap
-            for nv in name_values {
-                let ident = nv.path.get_ident().unwrap();
-
-                match ident.to_string().as_str() {
-                    "workbench_field" => {
-                        if let syn::Lit::Str(value) = nv.lit {
-                            workbench_field = Some(value.value());
-                        } else {
-                            panic!("workbench_field must be a string literal");
-                        }
-                    },
-                    "type_name" => {
-                        if let syn::Lit::Str(value) = nv.lit {
-                            parent_type = Some(value.value());
-                        } else {
-                            panic!("type must be a string literal");
-                        }
-                    },
-                    &_ => {}
-                }
+        for (k, v) in get_meta_kv(&variant.attrs).iter() {
+            match k.to_string().as_str() {
+                "workbench_field" => {
+                    if let syn::Lit::Str(value) = &v.lit {
+                        workbench_field = Some(value.value());
+                    } else {
+                        panic!("workbench_field must be a string literal");
+                    }
+                },
+                "type_name" => {
+                    if let syn::Lit::Str(value) = &v.lit {
+                        parent_type = Some(value.value());
+                    } else {
+                        panic!("type_name must be a string literal");
+                    }
+                },
+                "skip_history" => {
+                    if let syn::Lit::Bool(_value) = &v.lit {
+                        skip_history = true;
+                    } else {
+                        panic!("skip_history must be a bool literal");
+                    }
+                },
+                &_ => {}
             }
         }
 
@@ -131,7 +141,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
             quote! {}
         } else {
             quote! {
-                let step_ = Step {
+                let step_ = crate::step::Step {
                     name,
                     id: result_id_,
                     operation: crate::step::StepOperation::Add,
