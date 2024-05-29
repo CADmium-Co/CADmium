@@ -1,4 +1,4 @@
-import { Message, MessageResult } from "cadmium"
+import { Message, MessageResult, Workbench } from "cadmium"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 interface IDictionary<TValue> {
@@ -60,16 +60,7 @@ type MeshFaceEntity = {
 interface Project {
   name: string
   assemblies: []
-  workbenches: WorkBench[]
-}
-
-interface WorkBench {
-  name: string
-  history: HistoryStep[]
-  renaming: boolean
-  step_counters: {
-    Extrusion: number, Plane: number, Point: number, Sketch: number
-  }
+  workbenches: Workbench[]
 }
 
 interface Realization {

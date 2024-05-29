@@ -100,6 +100,10 @@ impl Workbench {
 
     pub fn realize(&mut self, max_steps: u64) -> Result<Realization, anyhow::Error> {
         let mut realized = Realization::new();
+        realized.planes.insert(0, IPlane { plane: Plane::front(), width: 100.0, height: 100.0, name: "front".to_string() });
+        realized.planes.insert(1, IPlane { plane: Plane::right(), width: 100.0, height: 100.0, name: "right".to_string() });
+        realized.planes.insert(2, IPlane { plane: Plane::top(), width: 100.0, height: 100.0, name: "top".to_string() });
+        realized.points.insert(0, Point3::new(0.0, 0.0, 0.0));
         let max_steps = max_steps as usize; // just coerce the type once
 
         for (step_n, step) in self.history.iter().enumerate() {
