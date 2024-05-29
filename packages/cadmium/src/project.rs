@@ -100,26 +100,26 @@ pub mod tests {
         let mut p = Project::new("Test Project");
         let plane_desc = PlaneDescription::PlaneId(0);
         let sid = p.add_workbench_sketch("Sketch 1".to_string(), 0, plane_desc).unwrap();
-        let wb = p.workbenches.get_mut(0).unwrap();
-        let s_ref = wb.get_sketch_by_id(sid).unwrap();
-        let mut s = s_ref.borrow_mut();
-        let ll = s.add_sketch_point(Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
-        let lr = s.add_sketch_point(Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
-        let ul = s.add_sketch_point(Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
-        let ur = s.add_sketch_point(Point2 { x: 40.0, y: 40.0, hidden: false }).unwrap();
-        s.add_sketch_line(ll, lr);
-        s.add_sketch_line(lr, ur);
-        s.add_sketch_line(ur, ul);
-        s.add_sketch_line(ul, ll);
 
-        wb.add_solid_extrusion(
+        let ll = p.add_sketch_point("bottom left".to_string(), 0, sid, Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
+        let lr = p.add_sketch_point("bottom right".to_string(), 0, sid, Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
+        let ul = p.add_sketch_point("top left".to_string(), 0, sid, Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
+        let ur = p.add_sketch_point("top right".to_string(), 0, sid, Point2 { x: 40.0, y: 40.0, hidden: false }).unwrap();
+        p.add_sketch_line("bottom".to_string(), 0, sid, ll, lr).unwrap();
+        p.add_sketch_line("right".to_string(), 0, sid, lr, ur).unwrap();
+        p.add_sketch_line("up".to_string(), 0, sid, ur, ul).unwrap();
+        p.add_sketch_line("left".to_string(), 0, sid, ul, ll).unwrap();
+
+        p.add_solid_extrusion(
+            "Extrusion 1".to_string(),
+            0,
             vec![0],
             0,
             25.0,
             0.0,
             Mode::New,
             Direction::Normal,
-        );
+        ).unwrap();
 
         p
     }
