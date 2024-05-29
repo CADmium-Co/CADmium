@@ -1,6 +1,7 @@
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::extrusion::fuse;
 use crate::project::{Project, RealPlane, RealSketch};
+use crate::sketch::Face;
 use crate::solid::Solid;
 use crate::step::StepData;
 use crate::workbench::Workbench;
@@ -8,29 +9,9 @@ use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::vec;
 use truck_meshalgo::analyzers::CalcVolume;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
-// use std::hash::{Hash, Hasher};
-use std::vec;
-// use truck_meshalgo::analyzers::CalcVolume;
-// use truck_meshalgo::filters::OptimizingFilter;
-// use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
-// use truck_polymesh::faces;
-// use truck_topology::{
-//     FaceDisplayFormat, ShellDisplayFormat, SolidDisplayFormat, VertexDisplayFormat,
-//     WireDisplayFormat,
-// };
-
-// use crate::extrusion::Solid;
-// use crate::project::{
-//     Plane, PlaneDescription, Project, RealPlane, RealSketch, StepData, Workbench,
-// };
-use crate::sketch::Face;
-// use FaceDisplayFormat as FDF;
-// use ShellDisplayFormat as ShDF;
-// use SolidDisplayFormat as SDF;
-// use VertexDisplayFormat as VDF;
-// use WireDisplayFormat as WDF;
 
 pub type Sha = String;
 
@@ -148,11 +129,11 @@ impl EvolutionLog {
                 self.project.workbenches[*workbench_index].name = name.clone();
             }
             Operation::CreatePlane {
-                nonce,
+                nonce: _,
                 workbench_id,
             } => {
                 let workbench_index = self.workbenches.get(&workbench_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_index).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_index).unwrap();
                 let plane_id = wb.add_plane("Untitled-Plane", Plane::front());
                 self.planes
                     .insert(self.cursor.clone(), (*workbench_index, plane_id));
@@ -160,13 +141,13 @@ impl EvolutionLog {
             Operation::SetPlaneName { plane_id, name } => {
                 // the plane_id passed in is a SHA, we need to look up the actual plane_id
                 let (workbench_idx, step_id) = self.planes.get(&plane_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
                 wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
             }
             Operation::SetPlane { plane_id, plane } => {
                 let (workbench_idx, step_id) = self.planes.get(&plane_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
                 let step = wb.history.get_mut(step_idx as usize).unwrap();
                 let new_plane = plane; // this is just to change the name to avoid a collision
@@ -177,18 +158,18 @@ impl EvolutionLog {
                 };
             }
             Operation::CreateSketch {
-                nonce,
+                nonce: _,
                 workbench_id,
             } => {
                 let workbench_index = self.workbenches.get(&workbench_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_index).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_index).unwrap();
                 let sketch_id = wb.add_blank_sketch("Untitled-Sketch");
                 self.sketches
                     .insert(self.cursor.clone(), (*workbench_index, sketch_id));
             }
             Operation::SetSketchName { sketch_id, name } => {
                 let (workbench_idx, step_id) = self.sketches.get(&sketch_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 let step_idx = wb.step_id_from_unique_id(step_id).unwrap();
                 wb.history.get_mut(step_idx as usize).unwrap().name = name.to_owned();
             }
@@ -198,10 +179,10 @@ impl EvolutionLog {
             } => {
                 let real_plane_sha = plane_id;
                 let (workbench_idx_sketch, sketch_id) = self.sketches.get(&sketch_id).unwrap();
-                let (workbench_idx_plane, plane_id) =
+                let (workbench_idx_plane, _plane_id) =
                     self.real_planes.get(&real_plane_sha).unwrap();
                 assert_eq!(workbench_idx_sketch, workbench_idx_plane);
-                let mut wb = self
+                let wb = self
                     .project
                     .workbenches
                     .get_mut(*workbench_idx_plane)
@@ -223,7 +204,7 @@ impl EvolutionLog {
                 end,
             } => {
                 let (workbench_idx, sketch_id) = self.sketches.get(&sketch_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
                 let step = wb.history.get_mut(step_idx as usize).unwrap();
                 if let StepData::Sketch { sketch, .. } = &mut step.data {
@@ -234,10 +215,10 @@ impl EvolutionLog {
             }
             Operation::CreateExtrusion {
                 workbench_id,
-                nonce,
+                nonce: _,
             } => {
                 let workbench_idx = self.workbenches.get(&workbench_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
 
                 let extrusion = crate::extrusion::Extrusion {
                     sketch_id: "".to_owned(),
@@ -254,7 +235,7 @@ impl EvolutionLog {
             }
             Operation::SetExtrusionName { extrusion_id, name } => {
                 let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 wb.history.get_mut(*extrusion_idx).unwrap().name = name.clone();
             }
             Operation::SetExtrusionDepth {
@@ -262,7 +243,7 @@ impl EvolutionLog {
                 depth,
             } => {
                 let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
                 {
                     extrusion.length = depth;
@@ -275,15 +256,10 @@ impl EvolutionLog {
                 faces,
             } => {
                 let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
                 {
                     extrusion.face_ids = faces.iter().map(|i| *i as u64).collect();
-                    // let actual_faces = faces
-                    //     .iter()
-                    //     .map(|sha| self.faces.get(sha).unwrap().clone())
-                    //     .collect();
-                    // extrusion.faces = actual_faces;
                 } else {
                     unreachable!()
                 };
@@ -293,11 +269,7 @@ impl EvolutionLog {
                 sketch_id,
             } => {
                 let (workbench_idx, extrusion_idx) = self.extrusions.get(&extrusion_id).unwrap();
-                let real_sketch = self
-                    .real_sketches
-                    .get(&sketch_id)
-                    .expect("No such real sketch");
-                let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+                let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
                 if let StepData::Extrusion { extrusion, .. } = &mut wb.history[*extrusion_idx].data
                 {
                     extrusion.sketch_id = sketch_id.clone();
@@ -337,43 +309,6 @@ impl EvolutionLog {
 
         self.cursor.clone()
     }
-
-    // fn find_faces_do_not_use(&mut self, workbench_id: &Sha, sketch_id: &Sha) -> Sha {
-    //     // TODO: delete this whole function. It is unnecessary
-    //     let (workbench_idx, sketch_id) = self.sketches.get(sketch_id).unwrap();
-    //     // let workbench_sha = self.workbenches_inverse.get(workbench_idx).unwrap();
-    //     let wb = self.project.workbenches.get(*workbench_idx).unwrap();
-
-    //     let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
-    //     let step = wb.history.get(step_idx as usize).unwrap();
-
-    //     let mut new_face_ops = Vec::new();
-    //     if let StepData::Sketch { sketch, .. } = &step.data {
-    //         let (faces, _unused_segments) = sketch.find_faces();
-    //         for face in faces {
-    //             let face_op = Operation::CreateFace {
-    //                 workbench_id: workbench_id.clone(),
-    //                 sketch_id: sketch_id.clone(),
-    //                 face: face.clone(),
-    //             };
-    //             println!("Face Op: {:?}", face_op);
-    //             new_face_ops.push(face_op);
-    //         }
-    //     } else {
-    //         unreachable!()
-    //     };
-
-    //     for face_op in new_face_ops {
-    //         self.append(face_op.clone());
-    //         if let Operation::CreateFace { face, .. } = face_op {
-    //             self.faces.insert(self.cursor.clone(), face.clone());
-    //         } else {
-    //             unreachable!()
-    //         }
-    //     }
-
-    //     self.cursor.clone()
-    // }
 
     pub fn realize_plane(&mut self, plane_id: &Sha) -> Sha {
         let mut new_operations = vec![];
@@ -420,7 +355,7 @@ impl EvolutionLog {
     pub fn realize_sketch(&mut self, sketch_id: &Sha) -> Sha {
         let sketch_sha = sketch_id;
         let (workbench_idx, sketch_id) = self.sketches.get(sketch_sha).unwrap();
-        let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+        let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
         let step_idx = wb.step_id_from_unique_id(sketch_id).unwrap();
         let step = wb.history.get_mut(step_idx as usize).unwrap();
 
@@ -474,7 +409,7 @@ impl EvolutionLog {
         });
         let workbench_sha = workbench_sha.unwrap().clone();
 
-        let mut wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
+        let wb = self.project.workbenches.get_mut(*workbench_idx).unwrap();
         let step = wb.history.get_mut(*extrusion_idx).unwrap();
 
         if let StepData::Extrusion { extrusion, .. } = &step.data {
@@ -538,7 +473,7 @@ impl EvolutionLog {
                 // special treatment for the root node
                 continue;
             }
-            let mut parent_commit_node = commit_node_table.get_mut(&parent).unwrap();
+            let parent_commit_node = commit_node_table.get_mut(&parent).unwrap();
             parent_commit_node.children.push(commit.id.clone());
         }
 
@@ -564,7 +499,7 @@ impl EvolutionLog {
                 // special treatment for the root node
                 continue;
             }
-            let mut parent_commit_node = commit_node_table.get_mut(&parent).unwrap();
+            let parent_commit_node = commit_node_table.get_mut(&parent).unwrap();
             parent_commit_node.children.push(commit.id.clone());
             // println!(
             //     "Parent now has: {} children",
@@ -923,7 +858,7 @@ impl Operation {
                     name
                 )
             }
-            Operation::SetPlane { plane_id, plane } => {
+            Operation::SetPlane { plane_id, plane: _ } => {
                 format!(
                     "SetPlane: {}",
                     plane_id.to_owned()[..num_chars].to_string(),
@@ -1131,21 +1066,8 @@ impl Operation {
                 )
             }
             Operation::CreateSolid { nonce, solid } => {
-                let mut mesh = solid.truck_solid.triangulation(0.1).to_polygon();
-                // mesh.put_together_same_attrs(0.1);
-                format!(
-                    "CreateSolid: {nonce} Volume: {:?}",
-                    mesh.volume(),
-                    // solid.truck_solid.display(SDF::ShellsList {
-                    //     shell_format: ShDF::FacesList {
-                    //         face_format: FDF::LoopsList {
-                    //             wire_format: WDF::VerticesList {
-                    //                 vertex_format: VDF::AsPoint
-                    //             }
-                    //         }
-                    //     }
-                    // })
-                )
+                let mesh = solid.truck_solid.triangulation(0.1).to_polygon();
+                format!("CreateSolid: {nonce} Volume: {:?}", mesh.volume(),)
             }
             Operation::FuseSolids { solid1, solid2 } => {
                 format!(
