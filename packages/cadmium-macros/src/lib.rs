@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
@@ -61,7 +59,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         let mut wb_var = quote! {};
         if !skip_workbench {
             wb_var = quote! {
-                let wb_ = self.workbenches
+                let mut wb_ = self.workbenches
                     .get_mut(workbench_id as usize)
                     .ok_or(anyhow::anyhow!("Could not find workbench"))?;
             };
@@ -80,12 +78,12 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                 let parent_ref_ = wb_.#field_name
                     .get(& #id_arg_name)
                     .ok_or(anyhow::anyhow!("Could not find parent"))?;
-                let parent_ = parent_ref_.borrow_mut();
+                let mut parent_ = parent_ref_.borrow_mut();
             };
         } else if !skip_workbench {
-            field_var = quote! { let parent_ = wb_; };
+            field_var = quote! { let mut parent_ = wb_; };
         } else {
-            field_var = quote! { let parent_ = self; };
+            field_var = quote! { let mut parent_ = self; };
         }
 
         // Function declaration
@@ -113,13 +111,14 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         actions.push(quote! {
             #name::#variant_name {
                 #( #function_args_full ),*
-            } => project.#add_func_name(name, #(* #function_args_full ),* ) , });
+            } => project.#add_func_name(name, #( #function_args_full.clone() ),* ) , });
 
         quote! {
             pub fn #add_func_name(&mut self, name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
                 #wb_var
                 #field_var
-                let result_id_ = parent_.#add_func_name(#( #function_args_noauto ),*)?;
+                let result_id_ = parent_.#add_func_name(#( #function_args_noauto.clone() ),*)?;
+                drop(parent_);
 
                 let step_ = Step {
                     name,

@@ -4,7 +4,6 @@ extern crate console_error_panic_hook;
 
 pub mod archetypes;
 pub mod error;
-pub mod extrusion;
 pub mod isketch;
 pub mod message;
 pub mod project;
@@ -67,7 +66,7 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn get_realization(&self, workbench_id: IDType, max_steps: u64) -> Result<Realization, String> {
+    pub fn get_realization(&mut self, workbench_id: IDType, max_steps: u64) -> Result<Realization, String> {
         let realized = self
             .native
             .get_realization(workbench_id, max_steps)
@@ -79,7 +78,7 @@ impl Project {
     #[wasm_bindgen]
     pub fn get_workbench(&self, workbench_index: IDType) -> workbench::Workbench {
         // TODO: Use get() and return a Result
-        self.native.workbenches[workbench_index as usize]
+        self.native.workbenches.get(workbench_index as usize).unwrap().clone()
     }
 
     #[wasm_bindgen]

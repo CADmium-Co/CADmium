@@ -73,8 +73,8 @@ impl Project {
             .ok_or(CADmiumError::WorkbenchIDNotFound(id))
     }
 
-    pub fn get_realization(&self, workbench_id: u64, max_steps: u64) -> Result<Realization, anyhow::Error> {
-        let workbench = &self.workbenches[workbench_id as usize];
+    pub fn get_realization(&mut self, workbench_id: u64, max_steps: u64) -> Result<Realization, anyhow::Error> {
+        let workbench = &mut self.workbenches.get_mut(workbench_id as usize).unwrap();
         workbench.realize(max_steps)
     }
 }
@@ -91,9 +91,9 @@ pub mod tests {
 
     use crate::archetypes::PlaneDescription;
     use crate::archetypes::Point2;
-    use crate::extrusion::Direction;
-    use crate::extrusion::Extrusion;
-    use crate::extrusion::ExtrusionMode;
+    use crate::solid::extrusion::Direction;
+    use crate::solid::extrusion::Extrusion;
+    use crate::solid::extrusion::Mode;
     use crate::message::Message;
     use truck_meshalgo::filters::*;
     use truck_meshalgo::tessellation::*;
@@ -103,9 +103,10 @@ pub mod tests {
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
         let plane_desc = PlaneDescription::PlaneId(0);
-        let wb = p.workbenches.get_mut(0).unwrap();
         let sid = p.add_workbench_sketch("Sketch 1".to_string(), 0, plane_desc).unwrap();
-        let s = wb.get_sketch_by_id(sid).unwrap().borrow_mut();
+        let wb = p.workbenches.get_mut(0).unwrap();
+        let s_ref = wb.get_sketch_by_id(sid).unwrap();
+        let mut s = s_ref.borrow_mut();
         let ll = s.add_sketch_point(Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
         let lr = s.add_sketch_point(Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
         let ul = s.add_sketch_point(Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
@@ -115,29 +116,26 @@ pub mod tests {
         s.add_sketch_line(ur, ul);
         s.add_sketch_line(ul, ll);
 
-        let extrusion = Extrusion::new(
-            "Sketch-0".to_owned(),
+        wb.add_solid_extrusion(
             vec![0],
+            0,
             25.0,
             0.0,
+            Mode::New,
             Direction::Normal,
-            ExtrusionMode::New,
         );
-        wb.add_extrusion("Ext1", extrusion);
 
         p
     }
 
     #[test]
     fn one_extrusion() {
-        let p = create_test_project();
+        let mut p = create_test_project();
 
         let realization = p.get_realization(0, 1000).unwrap();
         let solids = realization.solids;
 
-        let solid = &solids.get(&0).unwrap();
-
-        println!("{:?}", solid);
+        assert_eq!(solids.len(), 1);
     }
 
     // #[test]
@@ -198,124 +196,124 @@ pub mod tests {
         let file_contents =
             std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
-        let p2 = Project::from_json(&file_contents);
+        let mut p2 = Project::from_json(&file_contents);
 
         let realization = p2.get_realization(0, 1000);
         println!("{:?}", realization);
     }
 
     // #[test]
-    fn bruno() {
-        let mut p = create_test_project();
-        let wb = p.workbenches.get_mut(0).unwrap();
+    // fn bruno() {
+    //     let mut p = create_test_project();
+    //     let wb = p.workbenches.get_mut(0).unwrap();
 
-        let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
-        let s2 = wb.get_sketch_mut("Sketch-2").unwrap();
+    //     let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
+    //     let s2 = wb.get_sketch_mut("Sketch-2").unwrap();
 
-        // smaller
-        let ll = s2.add_point(12.0, 12.0);
-        let lr = s2.add_point(32.0, 12.0);
-        let ul = s2.add_point(12.0, 32.0);
-        let ur = s2.add_point(32.0, 32.0);
-        // bigger!
-        // let ll = s2.add_point(-10.0, -10.0);
-        // let lr = s2.add_point(50.0, -10.0);
-        // let ul = s2.add_point(-10.0, 50.0);
-        // let ur = s2.add_point(50.0, 50.0);
-        s2.add_segment(ll, lr);
-        s2.add_segment(lr, ur);
-        s2.add_segment(ur, ul);
-        s2.add_segment(ul, ll);
+    //     // smaller
+    //     let ll = s2.add_point(12.0, 12.0);
+    //     let lr = s2.add_point(32.0, 12.0);
+    //     let ul = s2.add_point(12.0, 32.0);
+    //     let ur = s2.add_point(32.0, 32.0);
+    //     // bigger!
+    //     // let ll = s2.add_point(-10.0, -10.0);
+    //     // let lr = s2.add_point(50.0, -10.0);
+    //     // let ul = s2.add_point(-10.0, 50.0);
+    //     // let ur = s2.add_point(50.0, 50.0);
+    //     s2.add_segment(ll, lr);
+    //     s2.add_segment(lr, ur);
+    //     s2.add_segment(ur, ul);
+    //     s2.add_segment(ul, ll);
 
-        // println!("S2: {:?}", s2);
+    //     // println!("S2: {:?}", s2);
 
-        let extrusion2 = Extrusion::new(
-            s2_id.to_owned(),
-            vec![0],
-            25.0,
-            0.0,
-            Direction::Normal,
-            ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
-        );
-        wb.add_extrusion("Ext2", extrusion2);
+    //     let extrusion2 = Extrusion::new(
+    //         s2_id.to_owned(),
+    //         vec![0],
+    //         25.0,
+    //         0.0,
+    //         Direction::Normal,
+    //         ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
+    //     );
+    //     wb.add_extrusion("Ext2", extrusion2);
 
-        wb.add_sketch_to_plane("Sketch 3", "Plane-1");
-        let s3 = wb.get_sketch_mut("Sketch 3").unwrap();
-        let center = s3.add_point(20.0, 15.0);
-        s3.add_circle(center, 5.0);
+    //     wb.add_sketch_to_plane("Sketch 3", "Plane-1");
+    //     let s3 = wb.get_sketch_mut("Sketch 3").unwrap();
+    //     let center = s3.add_point(20.0, 15.0);
+    //     s3.add_circle(center, 5.0);
 
-        let extrusion3 = Extrusion::new(
-            "Sketch-2".to_owned(),
-            vec![0],
-            50.0,
-            0.0,
-            Direction::NegativeNormal,
-            ExtrusionMode::Remove(vec!["Ext1:0".to_string()]),
-        );
-        wb.add_extrusion("Ext3", extrusion3);
+    //     let extrusion3 = Extrusion::new(
+    //         "Sketch-2".to_owned(),
+    //         vec![0],
+    //         50.0,
+    //         0.0,
+    //         Direction::NegativeNormal,
+    //         ExtrusionMode::Remove(vec!["Ext1:0".to_string()]),
+    //     );
+    //     wb.add_extrusion("Ext3", extrusion3);
 
-        let realization = p.get_realization(0, 1000);
-        let solids = realization.solids;
+    //     let realization = p.get_realization(0, 1000);
+    //     let solids = realization.solids;
 
-        let num_solids = solids.len();
-        println!("Num Solids: {:?}", num_solids);
-        assert!(num_solids == 1);
+    //     let num_solids = solids.len();
+    //     println!("Num Solids: {:?}", num_solids);
+    //     assert!(num_solids == 1);
 
-        let final_solid = &solids["Ext1:0"];
-        println!("Final solid: {:?}", final_solid.truck_solid);
-        let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
-        mesh.put_together_same_attrs(0.1);
-        let file = std::fs::File::create("pkg/bruno.obj").unwrap();
-        obj::write(&mesh, file).unwrap();
+    //     let final_solid = &solids["Ext1:0"];
+    //     println!("Final solid: {:?}", final_solid.truck_solid);
+    //     let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
+    //     mesh.put_together_same_attrs();
+    //     let file = std::fs::File::create("pkg/bruno.obj").unwrap();
+    //     obj::write(&mesh, file).unwrap();
 
-        let file = std::fs::File::create("pkg/bruno.json").unwrap();
-        serde_json::to_writer(file, &p).unwrap();
-    }
+    //     let file = std::fs::File::create("pkg/bruno.json").unwrap();
+    //     serde_json::to_writer(file, &p).unwrap();
+    // }
 
     // #[test]
-    fn secondary_extrusion_with_merge() {
-        let mut p = create_test_project();
-        let wb = p.workbenches.get_mut(0).unwrap();
+    // fn secondary_extrusion_with_merge() {
+    //     let mut p = create_test_project();
+    //     let wb = p.workbenches.get_mut(0).unwrap();
 
-        let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
-        let s2 = wb.get_sketch_mut("Sketch-2").unwrap();
+    //     let s2_id = wb.add_sketch_to_solid_face("Sketch-2", "Ext1:0", Vector3::new(0.0, 0.0, 1.0));
+    //     let s2 = wb.get_sketch_mut("Sketch-2").unwrap();
 
-        // smaller
-        let ll = s2.add_point(12.0, 0.0);
-        let lr = s2.add_point(32.0, 0.0);
-        let ul = s2.add_point(12.0, 32.0);
-        let ur = s2.add_point(32.0, 32.0);
-        s2.add_segment(ll, lr);
-        s2.add_segment(lr, ur);
-        s2.add_segment(ur, ul);
-        s2.add_segment(ul, ll);
+    //     // smaller
+    //     let ll = s2.add_point(12.0, 0.0);
+    //     let lr = s2.add_point(32.0, 0.0);
+    //     let ul = s2.add_point(12.0, 32.0);
+    //     let ur = s2.add_point(32.0, 32.0);
+    //     s2.add_segment(ll, lr);
+    //     s2.add_segment(lr, ur);
+    //     s2.add_segment(ur, ul);
+    //     s2.add_segment(ul, ll);
 
-        // println!("S2: {:?}", s2);
+    //     // println!("S2: {:?}", s2);
 
-        let extrusion2 = Extrusion::new(
-            s2_id.to_owned(),
-            vec![0],
-            25.0,
-            0.0,
-            Direction::Normal,
-            ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
-        );
-        wb.add_extrusion("Ext2", extrusion2);
+    //     let extrusion2 = Extrusion::new(
+    //         s2_id.to_owned(),
+    //         vec![0],
+    //         25.0,
+    //         0.0,
+    //         Direction::Normal,
+    //         ExtrusionMode::Add(vec!["Ext1:0".to_string()]),
+    //     );
+    //     wb.add_extrusion("Ext2", extrusion2);
 
-        let realization = p.get_realization(0, 1000);
-        let solids = realization.solids;
+    //     let realization = p.get_realization(0, 1000);
+    //     let solids = realization.solids;
 
-        let num_solids = solids.len();
-        println!("Num Solids: {:?}", num_solids);
-        assert!(num_solids == 1);
+    //     let num_solids = solids.len();
+    //     println!("Num Solids: {:?}", num_solids);
+    //     assert!(num_solids == 1);
 
-        let final_solid = &solids["Ext1:0"];
-        let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
-        mesh.put_together_same_attrs(0.1);
-        let file = std::fs::File::create("secondary_extrusion.obj").unwrap();
-        obj::write(&mesh, file).unwrap();
+    //     let final_solid = &solids["Ext1:0"];
+    //     let mut mesh = final_solid.truck_solid.triangulation(0.02).to_polygon();
+    //     mesh.put_together_same_attrs();
+    //     let file = std::fs::File::create("secondary_extrusion.obj").unwrap();
+    //     obj::write(&mesh, file).unwrap();
 
-        let file = std::fs::File::create("secondary_extrusion.json").unwrap();
-        serde_json::to_writer(file, &p).unwrap();
-    }
+    //     let file = std::fs::File::create("secondary_extrusion.json").unwrap();
+    //     serde_json::to_writer(file, &p).unwrap();
+    // }
 }
