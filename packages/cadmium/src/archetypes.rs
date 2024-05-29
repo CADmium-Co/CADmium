@@ -4,9 +4,10 @@ use serde::{Deserialize, Serialize};
 use truck_modeling::Plane as TruckPlane;
 use truck_modeling::InnerSpace;
 
+use crate::solid::point::Point3;
 use crate::IDType;
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum PlaneDescription {
     PlaneId(IDType),
@@ -165,49 +166,6 @@ pub struct Point2 {
 impl Into<ISOPoint2> for Point2 {
     fn into(self) -> ISOPoint2 {
         ISOPoint2::new(self.x, self.y)
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Point3 {
-    pub x: f64,
-    pub y: f64,
-    pub z: f64,
-    pub hidden: bool,
-}
-
-impl Point3 {
-    pub fn new(x: f64, y: f64, z: f64) -> Self {
-        Point3 {
-            x,
-            y,
-            z,
-            hidden: false,
-        }
-    }
-
-    pub fn plus(&self, v: Vector3) -> Vector3 {
-        Vector3 {
-            x: self.x + v.x,
-            y: self.y + v.y,
-            z: self.z + v.z,
-        }
-    }
-
-    pub fn minus(&self, other: &Point3) -> Vector3 {
-        Vector3 {
-            x: self.x - other.x,
-            y: self.y - other.y,
-            z: self.z - other.z,
-        }
-    }
-
-    pub fn distance_to(&self, other: &Point3) -> f64 {
-        let dx = self.x - other.x;
-        let dy = self.y - other.y;
-        let dz = self.z - other.z;
-        (dx * dx + dy * dy + dz * dz).sqrt()
     }
 }
 
