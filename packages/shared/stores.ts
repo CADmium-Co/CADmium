@@ -1,6 +1,6 @@
-import {Project as WasmProject, Realization as WasmRealization} from "cadmium"
+import {Project as WasmProject, Realization as WasmRealization, Workbench} from "cadmium"
 import {writable} from "svelte/store"
-import type {WorkBench, MessageHistory, Project, Realization, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry} from "./types"
+import type {MessageHistory, Project, Realization, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry} from "./types"
 import {isArcEntity, isCircleEntity, isEntity, isFaceEntity, isLineEntity, isMeshFaceEntity, isPlaneEntity, isPoint3DEntity, isPointEntity} from "./typeGuards"
 // import { isDevelopment } from "../+layout"
 
@@ -13,7 +13,7 @@ export const project = writable<Project>(emptyProject())
 export const projectIsStale = writable(false)
 
 export const workbenchIndex = writable(0)
-export const workbench = writable<WorkBench>(emptyWorkBench())
+export const workbench = writable<Workbench>(emptyWorkBench())
 export const workbenchIsStale = writable(false)
 
 export const featureIndex = writable<number>(1000)
