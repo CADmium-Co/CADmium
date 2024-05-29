@@ -41,7 +41,7 @@ fn main() {
     // This results in the cylinder, but truncated. This is the region where the cylinder intersects the cube
     // Aka the region of space which is both inside the cube AND inside the cylinder
 
-    let or_result = or(&cube, &cylinder, 0.9);
+    let or_result = or(&cube, &cylinder, 0.5);
     let mesh = or_result.unwrap().triangulation(0.01).to_polygon();
     let file = std::fs::File::create("test_OR.obj").unwrap();
     obj::write(&mesh, file).unwrap();
