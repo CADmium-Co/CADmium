@@ -2,8 +2,10 @@ use convert_case::{Case, Casing};
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::punctuated::Punctuated;
-use syn::{parse_macro_input, DeriveInput, Ident, MetaNameValue, Token};
+use syn::{parse_macro_input, DeriveInput, Ident, MetaList, MetaNameValue, NestedMeta, Token};
 use syn::spanned::Spanned;
+
+const ATTR_NAME: &str = "step_data";
 
 #[proc_macro_derive(StepDataActions, attributes(step_data))]
 pub fn derive_step_data(input: TokenStream) -> TokenStream {
@@ -19,12 +21,23 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
     let variants = data.variants.iter().map(|variant| {
         let variant_name = &variant.ident;
 
-        let mut skip_workbench = false;
         let mut workbench_field = None;
         let mut parent_type = None;
 
+        // Search for skip_history
+        let skip_history = variant.attrs.iter().any(|attr| {
+            let Ok(meta_list) = attr.parse_args::<MetaList>() else { return false; };
+
+            attr.path.is_ident(ATTR_NAME) &&
+            meta_list.nested.iter().any(|meta| {
+                let NestedMeta::Meta(nested) = meta else { return false; };
+                nested.path().is_ident("skip_history")
+            })
+        });
+
+        // Parse the attributes above each variant
         for attr in &variant.attrs {
-            if !attr.path.is_ident("step_data") {
+            if !attr.path.is_ident(ATTR_NAME) {
                 continue;
             }
 
@@ -33,9 +46,6 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                 let ident = nv.path.get_ident().unwrap();
 
                 match ident.to_string().as_str() {
-                    "skip_workbench" => {
-                        skip_workbench = true;
-                    },
                     "workbench_field" => {
                         if let syn::Lit::Str(value) = nv.lit {
                             workbench_field = Some(value.value());
@@ -43,7 +53,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                             panic!("workbench_field must be a string literal");
                         }
                     },
-                    "type" => {
+                    "type_name" => {
                         if let syn::Lit::Str(value) = nv.lit {
                             parent_type = Some(value.value());
                         } else {
@@ -55,9 +65,11 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
             }
         }
 
+        let needs_workbench = variant.fields.iter().any(|field| field.ident.as_ref().unwrap().to_string() == "workbench_id");
+
         // Process not skipped workbench
         let mut wb_var = quote! {};
-        if !skip_workbench {
+        if needs_workbench {
             wb_var = quote! {
                 let mut wb_ = self.workbenches
                     .get_mut(workbench_id as usize)
@@ -65,7 +77,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
             };
         }
 
-        // Process type and workbench_field
+        // Process type_name to expected id field (e.g. sketch_id for Sketch)
         let mut _field_var = quote! {};
         let mut _parent_var_ = quote! { wb_ };
         let id_arg_name = if let Some(f) = parent_type.clone() {
@@ -73,6 +85,8 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         } else {
             Ident::new("id", variant_name.span())
         };
+
+        // Generate the parent variable of which the actual function will be called on
         if let Some(field_ident) = workbench_field.clone() {
             let field_name = Ident::new(field_ident.as_str(), field_ident.span());
             _field_var = quote! {
@@ -82,14 +96,16 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                 let mut parent_ = parent_ref_.borrow_mut();
             };
             _parent_var_ = quote! { parent_ };
-        } else if !skip_workbench {
+        } else if needs_workbench {
             _parent_var_ = quote! { wb_ };
         } else {
             _parent_var_ = quote! { self };
         }
 
-        // Function declaration
+        // Generated function names
         let add_func_name = Ident::new(format!("add_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+
+        // Function arguments - both on definition and call
         let function_defs = variant.fields.iter().map(|field| {
             let field_name = &field.ident;
             let field_type = &field.ty;
@@ -110,6 +126,27 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                 && field.to_string() != id_arg_name.to_string()
             ).collect::<Vec<_>>();
 
+        // Generate history entry
+        let history_entry = if skip_history {
+            quote! {}
+        } else {
+            quote! {
+                let step_ = Step {
+                    name,
+                    id: result_id_,
+                    operation: crate::step::StepOperation::Add,
+                    unique_id: format!(concat!("Add:", stringify!(#variant_name), "-{}"), result_id_),
+                    suppressed: false,
+                    data: #name::#variant_name {
+                        #( #function_args_full ),*
+                    },
+                };
+
+                wb_.history.push(step_);
+            }
+        };
+
+        // Populate the `do_action` function of StepData
         actions.push(quote! {
             #name::#variant_name {
                 #( #function_args_full ),*
@@ -121,18 +158,7 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                 #_field_var
                 let result_id_ = #_parent_var_.#add_func_name(#( #function_args_noauto.clone() ),*)?;
 
-                let step_ = Step {
-                    name,
-                    id: result_id_,
-                    operation: StepOperation::Add,
-                    unique_id: format!(concat!("Add:", stringify!(#variant_name), "-{}"), result_id_),
-                    suppressed: false,
-                    data: #name::#variant_name {
-                        #( #function_args_full ),*
-                    },
-                };
-
-                wb_.history.push(step_);
+                #history_entry
 
                 Ok(result_id_)
             }

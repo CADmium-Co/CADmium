@@ -51,13 +51,13 @@ pub enum StepData {
     },
 
     // Sketch Primitives
-    #[step_data(workbench_field = "sketches", type = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
     SketchPoint {
         workbench_id: IDType,
         sketch_id: IDType,
         point: Point2,
     },
-    #[step_data(workbench_field = "sketches", type = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
     SketchArc {
         workbench_id: IDType,
         sketch_id: IDType,
@@ -67,20 +67,28 @@ pub enum StepData {
         start_angle: f64,
         end_angle: f64,
     },
-    #[step_data(workbench_field = "sketches", type = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
     SketchCircle {
         workbench_id: IDType,
         sketch_id: IDType,
         center: IDType,
         radius: f64,
     },
-    #[step_data(workbench_field = "sketches", type = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
     SketchLine {
         workbench_id: IDType,
         sketch_id: IDType,
         start: IDType,
         end: IDType,
     },
+    // #[step_data(workbench_field = "sketches", type_name = "Sketch")]
+    // SketchRectangle {
+    //     workbench_id: IDType,
+    //     sketch_id: IDType,
+    //     start: IDType,
+    //     end: IDType,
+    // },
+    // #[step_data(workbench_field = "solids", type_name = "Solid")]
     SolidExtrusion {
         workbench_id: IDType,
         face_ids: Vec<IDType>,
