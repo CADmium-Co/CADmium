@@ -87,16 +87,12 @@ pub struct Assembly {
 
 #[cfg(test)]
 pub mod tests {
-    use truck_polymesh::obj;
 
     use crate::archetypes::PlaneDescription;
     use crate::archetypes::Point2;
     use crate::solid::extrusion::Direction;
-    use crate::solid::extrusion::Extrusion;
     use crate::solid::extrusion::Mode;
     use crate::message::Message;
-    use truck_meshalgo::filters::*;
-    use truck_meshalgo::tessellation::*;
 
     use super::*;
 

@@ -1,12 +1,9 @@
-use isotope::primitives::Primitive;
-
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use crate::error::CADmiumError;
-use crate::solid::extrusion::{self, Direction, Extrusion, Mode};
+use crate::solid::extrusion::Direction;
 use crate::project::Project;
-use crate::solid::SolidLike;
 use crate::step::StepData;
 use crate::IDType;
 
@@ -158,13 +155,13 @@ impl Message {
                 extrusion_id,
                 sketch_id,
                 face_ids,
-                length,
-                offset,
-                direction,
+                length:_,
+                offset:_,
+                direction:_,
             } => {
                 let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 let sketch = workbench.get_sketch_by_id(*sketch_id)?;
-                let faces = sketch
+                let _faces = sketch
                     .borrow()
                     .faces()
                     .iter()
@@ -176,7 +173,7 @@ impl Message {
                             None
                         }
                     }).collect::<Vec<_>>();
-                let extrusion = workbench.solids.get(extrusion_id).ok_or(anyhow::anyhow!("Could not find extrusion ID!"))?.borrow_mut();
+                let _extrusion = workbench.solids.get(extrusion_id).ok_or(anyhow::anyhow!("Could not find extrusion ID!"))?.borrow_mut();
 
                 todo!("Update Extrusion")
                 // let new_extrusion = extrusion::Extrusion::new(faces, sketch, *length, *offset, *direction, extrusion.mode).to_feature().as_solid_like();
@@ -186,9 +183,9 @@ impl Message {
                 // Ok(format!("\"id\": \"{}\"", extrusion_id))
             }
             Message::UpdateExtrusionLength {
-                workbench_id,
-                extrusion_name,
-                length,
+                workbench_id:_,
+                extrusion_name:_,
+                length:_,
             } => {
                 // let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
                 // let step = workbench.get_step_mut(&extrusion_name)?;
