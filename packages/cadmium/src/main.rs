@@ -1,40 +1,15 @@
-#![allow(dead_code, unused)]
-
-use std::ops::{Sub, SubAssign};
-use std::sync::Arc;
+// #![allow(dead_code, unused)]
 
 use cadmium::archetypes::Plane;
-use cadmium::extrusion::fuse;
 use cadmium::oplog::EvolutionLog;
 use cadmium::oplog::Operation;
-use cadmium::{oplog, sketch, Realization};
 use truck_meshalgo::analyzers::CalcVolume;
-use truck_meshalgo::filters::OptimizingFilter;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
-use truck_modeling::builder::{translated, tsweep, vertex};
-use truck_modeling::{Point3, Surface, Vector3};
-use truck_polymesh::{
-    obj, InnerSpace, Invertible, ParametricSurface, ParametricSurface3D, Tolerance,
-};
-use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
-use truck_topology::{Shell, Solid};
+use truck_modeling::Vector3;
+use truck_polymesh::{ParametricSurface3D, Tolerance};
 
 fn main() {
-    // truck_test();
-    stacked_cubes();
-}
-
-fn truck_test() {
-    let point_a = vertex(Point3::new(0.0, 0.0, 0.0));
-    let line_a = tsweep(&point_a, Vector3::new(1.0, 0.0, 0.0));
-    let square_a = tsweep(&line_a, Vector3::new(0.0, 1.0, 0.0));
-    let cube_a = tsweep(&square_a, Vector3::new(0.0, 0.0, 1.0));
-
-    let result = serde_json::to_string(&cube_a);
-    match result {
-        Ok(json) => println!("{}", json),
-        Err(e) => println!("Error: {}", e),
-    }
+    simple_cube();
 }
 
 fn stacked_cubes() {
@@ -269,7 +244,7 @@ fn simple_cube() {
         plane_id: top_plane_id.clone(),
         name: "Top".to_string(),
     });
-    let set_plane = el.append(Operation::SetPlane {
+    el.append(Operation::SetPlane {
         plane_id: top_plane_id.clone(),
         plane: Plane::top(),
     });
@@ -338,7 +313,7 @@ fn simple_cube() {
     el.realize_extrusion(&extrusion_id);
 
     // print each solid
-    for (solid_id, solid) in el.solids.iter() {
+    for (_solid_id, solid) in el.solids.iter() {
         println!("Solid: {:?}", solid);
         solid.save_as_obj("first_solid.obj", 0.01);
     }
