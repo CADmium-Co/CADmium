@@ -143,14 +143,26 @@ Github project for tracking progress is [here](https://github.com/orgs/CADmium-C
   - [ ] Integrate that new solver into sketch.rs
   - [ ] Ability to create a sketch on the face of a solid
   - [ ] Ability to create and modify constraints in the UI
+  - [ ] Entities: line, rect, circle, arc, 2D fillet
+  - [ ] Constraints: horiz, vert, parallel, perp, length, radius, coincident, maybe a few others
 - [ ] Extrusion
   - [ ] Configure an extrusion to create new solid or subtract from existing solid
+  - [ ] Modes: New, Add, Cut
+  - [ ] Control: depth, offset
+  - [ ] Ability to extrude multiple faces (from one sketch) at a time while not extruding every face in the sketch
+- [ ] Revolution
+  - [ ] Same as Extrusions
+- [ ] Boolean
+  - [ ] Union, Intersection, Subtraction
 - [ ] Project
   - [x] Ability to rename the project
   - [ ] Ability to delete steps
   - [ ] bind ctrl + s to .cadmium export, and ctrl + o to .cadmium import
 - [ ] Units
   - [ ] Make it clear that the whole file uses millimeter units
+- [ ] Files
+  - [ ] Save and load CADmium files
+  - [ ] Export as STEP, OBJ, STL, SVG, DXF
 - [ ] Marketing
   - [ ] Youtube video demonstrating how to make:
     - [ ] A simple cube
