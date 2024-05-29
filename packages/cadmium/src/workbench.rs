@@ -137,8 +137,9 @@ impl Workbench {
                     ..
                 } => match plane_description {
                     PlaneDescription::PlaneId(plane_id) => {
-                        let plane = &realized.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
-                        let sketch = self.get_sketch_by_id(step.id)?.borrow().clone();
+                        let plane = realized.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
+                        let plane_ref = Rc::new(RefCell::new(plane.plane.clone()));
+                        let sketch = ISketch::new(plane_ref);
 
                         realized.sketches.insert(
                             step.id,
@@ -149,7 +150,7 @@ impl Workbench {
                             ),
                         );
                     }
-                    PlaneDescription::SolidFace { solid_id, normal } => {
+                    PlaneDescription::SolidFace { solid_id: _, normal: _ } => {
                         // let solid = &realized.solids[&solid_id];
                         // let face = solid.get_face_by_normal(&normal).unwrap();
                         // let oriented_surface = face.oriented_surface();
@@ -290,7 +291,7 @@ impl Workbench {
         Ok(self.points_next_id - 1)
     }
 
-    pub(super) fn add_workbench_plane(&mut self, plane: Plane, width: f64, height: f64) -> Result<IDType, anyhow::Error> {
+    pub(super) fn add_workbench_plane(&mut self, plane: Plane, _width: f64, _height: f64) -> Result<IDType, anyhow::Error> {
         let plane_cell = Rc::new(RefCell::new(plane));
         self.planes.insert(self.planes_next_id, plane_cell).ok_or(anyhow::anyhow!("Failed to insert plane"));
         self.planes_next_id += 1;
@@ -304,7 +305,7 @@ impl Workbench {
         let plane = match plane_description {
             PlaneDescription::PlaneId(plane_id) =>
                 self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
-            PlaneDescription::SolidFace { solid_id, normal } => todo!("Implement SolidFace"),
+            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
         }.clone();
 
         let sketch = ISketch::new(plane);
@@ -317,12 +318,12 @@ impl Workbench {
 
     pub(crate) fn add_solid_extrusion(
         &mut self,
-        face_ids: Vec<IDType>,
-        sketch_id: IDType,
-        length: f64,
-        offset: f64,
-        mode: extrusion::Mode,
-        direction: extrusion::Direction,
+        _face_ids: Vec<IDType>,
+        _sketch_id: IDType,
+        _length: f64,
+        _offset: f64,
+        _mode: extrusion::Mode,
+        _direction: extrusion::Direction,
     ) -> Result<IDType, anyhow::Error> {
         // I guess nothing to do? only realization?
         // TODO: What ID should be returned here?
