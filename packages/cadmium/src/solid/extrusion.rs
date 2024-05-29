@@ -3,7 +3,7 @@ use std::rc::Rc;
 
 use isotope::decompose::face::Face;
 use serde::{Deserialize, Serialize};
-use truck_modeling::Wire;
+use truck_modeling::builder;
 use tsify::Tsify;
 
 use truck_polymesh::InnerSpace;
@@ -82,7 +82,6 @@ impl SolidLike for Extrusion {
     }
 
     fn get_truck_solids(&self) -> anyhow::Result<Vec<TruckClosedSolid>> {
-        let mut retval = vec![];
         let plane = self.sketch.borrow().plane.borrow().clone();
 
         let extrusion_direction = match &self.direction {
@@ -93,10 +92,21 @@ impl SolidLike for Extrusion {
 
         let extrusion_vector = extrusion_direction.times(self.length - self.offset);
         let offset_vector = extrusion_direction.times(self.offset);
+        let extrusion_tvector = TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
+        let offset_tvector = TruckVector3::new(offset_vector.x, offset_vector.y, offset_vector.z);
 
-        let wires = self.faces.iter().flat_map(|f| get_isoface_wires(self.sketch.clone(), f)).flatten().collect::<Vec<Wire>>();
+        Ok(self.faces
+            .iter()
+            .map(|f| {
+                let wires = get_isoface_wires(self.sketch.clone(), f).unwrap();
+                let face = builder::try_attach_plane(&wires).unwrap();
 
-        Ok(retval)
+                // Can we calculate ALL the wires at once and not iter-sweep?
+                let sweep = builder::tsweep(&face, extrusion_tvector);
+                let translated = builder::translated(&sweep, offset_tvector);
+
+                translated
+            }).collect())
     }
 }
 

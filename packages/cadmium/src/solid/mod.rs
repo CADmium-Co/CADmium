@@ -29,10 +29,8 @@ pub trait SolidLike: Debug {
     fn references(&self) -> Vec<FeatureCell>;
     fn get_truck_solids(&self) -> anyhow::Result<Vec<TruckClosedSolid>>;
     fn to_feature(&self) -> Feature;
-}
 
-impl dyn SolidLike {
-    pub fn to_solids(&self) -> anyhow::Result<Vec<Solid>> {
+    fn to_solids(&self) -> anyhow::Result<Vec<Solid>> {
         let truck_solids = self.get_truck_solids()?;
 
         Ok(truck_solids.iter().map(|truck_solid| {
