@@ -160,4 +160,9 @@ impl ISketch {
         let point_id = sketch.add_primitive(line)?;
         Ok(point_id)
     }
+
+    pub(super) fn delete_primitive_id(&mut self, id: IDType) -> Result<IDType, anyhow::Error> {
+        self.sketch.borrow_mut().delete_primitive(id)?;
+        Ok(id)
+    }
 }
