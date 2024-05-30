@@ -89,7 +89,7 @@ impl Workbench {
     pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
         let mut index = 0;
         for step in self.history.iter() {
-            if step.unique_id == step_id {
+            if step.unique_id() == step_id {
                 break;
             }
             index += 1;

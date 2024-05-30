@@ -10,107 +10,6 @@ use syn::spanned::Spanned;
 
 const ATTR_NAME: &str = "step_data";
 
-fn get_meta_kv(attrs: &Vec<Attribute>) -> HashMap<Ident, MetaNameValue> {
-    let mut result = HashMap::new();
-
-    for attr in attrs {
-        if !attr.path.is_ident(ATTR_NAME) {
-            continue;
-        }
-
-        let Ok(name_values): Result<Punctuated<MetaNameValue, Token![,]>, _> = attr
-            .parse_args_with(Punctuated::parse_terminated) else { continue; };
-
-        for nv in name_values {
-            let Some(ident) = nv.path.get_ident() else { continue; };
-            result.insert(ident.clone(), nv);
-        }
-    }
-
-    result
-}
-
-fn get_function_body(
-    func_name: Ident,
-    name: &Ident,
-    variant_name: &Ident,
-    fields: &Fields,
-    id_ident: Ident,
-    wb_var: TokenStream,
-    self_field_code: TokenStream,
-    self_field_var: TokenStream,
-    operation: TokenStream,
-    skip_history: bool,
-    _return_type: TokenStream,
-) -> (TokenStream, TokenStream) {
-    // Function arguments - both on definition and call
-    let function_defs = fields.iter().map(|field| {
-        let field_name = &field.ident;
-        let field_type = &field.ty;
-
-        quote! { #field_name: #field_type }
-    }).collect::<Vec<_>>();
-    let function_args_full = fields.iter().map(|field| {
-        let field_name = &field.ident;
-
-        quote! { #field_name }
-    }).collect::<Vec<_>>();
-
-    let function_args2 = function_args_full.clone();
-    let function_args_noauto = function_args2
-        .iter()
-        .filter(|field|
-            field.to_string() != "workbench_id"
-            && field.to_string() != id_ident.to_string()
-        ).collect::<Vec<_>>();
-
-    // Generate history entry
-    let history_code = if skip_history {
-        quote! {}
-    } else {
-        quote! {
-            let step_ = crate::step::Step {
-                name,
-                id: result_id_,
-                operation: operation_,
-                unique_id: format!(concat!("Add:", stringify!(#variant_name), "-{}"), result_id_),
-                suppressed: false,
-                data: #name::#variant_name {
-                    #( #function_args_full ),*
-                },
-            };
-
-            wb_.history.push(step_);
-        }
-    };
-
-    // Code to run during `do_action`
-    let action = quote! {
-        #name::#variant_name {
-            #( #function_args_full ),*
-        } => project.#func_name(
-            name,
-            #( #function_args_full.clone() ),*
-        ),
-    };
-
-    // The actual function body
-    let body = quote! {
-        pub fn #func_name(&mut self, name: String, #( #function_defs ),*) -> anyhow::Result<crate::IDType> {
-            let operation_ = #operation;
-            #wb_var
-            #self_field_code
-            let result_id_ = #self_field_var.#func_name(#( #function_args_noauto.clone() ),*)?;
-
-            #history_code
-
-            Ok(result_id_)
-        }
-    };
-
-    (body, action)
-}
-
 #[proc_macro_derive(StepDataActions, attributes(step_data))]
 pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -333,4 +232,104 @@ pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     };
 
     TokenStream::from(expanded).into()
+}
+
+fn get_meta_kv(attrs: &Vec<Attribute>) -> HashMap<Ident, MetaNameValue> {
+    let mut result = HashMap::new();
+
+    for attr in attrs {
+        if !attr.path.is_ident(ATTR_NAME) {
+            continue;
+        }
+
+        let Ok(name_values): Result<Punctuated<MetaNameValue, Token![,]>, _> = attr
+            .parse_args_with(Punctuated::parse_terminated) else { continue; };
+
+        for nv in name_values {
+            let Some(ident) = nv.path.get_ident() else { continue; };
+            result.insert(ident.clone(), nv);
+        }
+    }
+
+    result
+}
+
+fn get_function_body(
+    func_name: Ident,
+    name: &Ident,
+    variant_name: &Ident,
+    fields: &Fields,
+    id_ident: Ident,
+    wb_var: TokenStream,
+    self_field_code: TokenStream,
+    self_field_var: TokenStream,
+    operation: TokenStream,
+    skip_history: bool,
+    _return_type: TokenStream,
+) -> (TokenStream, TokenStream) {
+    // Function arguments - both on definition and call
+    let function_defs = fields.iter().map(|field| {
+        let field_name = &field.ident;
+        let field_type = &field.ty;
+
+        quote! { #field_name: #field_type }
+    }).collect::<Vec<_>>();
+    let function_args_full = fields.iter().map(|field| {
+        let field_name = &field.ident;
+
+        quote! { #field_name }
+    }).collect::<Vec<_>>();
+
+    let function_args2 = function_args_full.clone();
+    let function_args_noauto = function_args2
+        .iter()
+        .filter(|field|
+            field.to_string() != "workbench_id"
+            && field.to_string() != id_ident.to_string()
+        ).collect::<Vec<_>>();
+
+    // Generate history entry
+    let history_code = if skip_history {
+        quote! {}
+    } else {
+        quote! {
+            let step_ = crate::step::Step {
+                name,
+                id: result_id_,
+                operation: operation_,
+                suppressed: false,
+                data: #name::#variant_name {
+                    #( #function_args_full ),*
+                },
+            };
+
+            wb_.history.push(step_);
+        }
+    };
+
+    // Code to run during `do_action`
+    let action = quote! {
+        #name::#variant_name {
+            #( #function_args_full ),*
+        } => project.#func_name(
+            name,
+            #( #function_args_full.clone() ),*
+        ),
+    };
+
+    // The actual function body
+    let body = quote! {
+        pub fn #func_name(&mut self, name: String, #( #function_defs ),*) -> anyhow::Result<crate::IDType> {
+            let operation_ = #operation;
+            #wb_var
+            #self_field_code
+            let result_id_ = #self_field_var.#func_name(#( #function_args_noauto.clone() ),*)?;
+
+            #history_code
+
+            Ok(result_id_)
+        }
+    };
+
+    (body, action)
 }

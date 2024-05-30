@@ -1,4 +1,6 @@
 
+use std::fmt::Display;
+
 use cadmium_macros::StepDataActions;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
@@ -17,15 +19,31 @@ pub enum StepOperation {
     Delete,
 }
 
+impl Display for StepOperation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            StepOperation::Add => write!(f, "Add"),
+            StepOperation::Update => write!(f, "Update"),
+            StepOperation::Delete => write!(f, "Delete"),
+        }
+    }
+}
+
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
     pub(crate) id: IDType,
     pub(crate) operation: StepOperation,
     pub(crate) name: String,
-    pub(crate) unique_id: String, // TODO: remove this field, it's not needed
     pub(crate) suppressed: bool,
     pub(crate) data: StepData,
+}
+
+impl Step {
+    pub fn unique_id(&self) -> String {
+        // TODO: Should use the type of StepData instead of name
+        format!("{}:{}-{}", self.operation, self.name, self.id)
+    }
 }
 
 #[derive(StepDataActions, Tsify, Debug, Clone, Serialize, Deserialize)]
