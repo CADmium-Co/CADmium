@@ -31,7 +31,19 @@ pub struct Step {
 #[derive(StepDataActions, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
-    // Workbench Primitives
+    // Project operations
+    // TODO: Steps in project::Project are not yet supported as the function just recurses forever
+    // #[step_data(skip_all = true)]
+    // ProjectRename {
+    //     new_name: String,
+    // },
+
+    // Workbench operations
+    #[step_data(skip_all = true)]
+    WorkbenchRename {
+        workbench_id: u64,
+        new_name: String,
+    },
     #[step_data(skip_update = true, skip_delete = true)]
     WorkbenchPoint {
         workbench_id: IDType,
@@ -51,6 +63,19 @@ pub enum StepData {
         // sketch: ISketch,
         // width: f64,
         // height: f64,
+    },
+    #[step_data(skip_all = true)]
+    WorkbenchStepRename {
+        workbench_id: IDType,
+        step_id: IDType,
+        new_name: String,
+    },
+    // Note that we don't use the auto-generated `delete` operation
+    // as we're deleting steps themselves, not their data
+    #[step_data(skip_all = true)]
+    WorkbenchStepDelete {
+        workbench_id: IDType,
+        step_id: IDType,
     },
 
     // Sketch Primitives

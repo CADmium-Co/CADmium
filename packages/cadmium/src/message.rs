@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::error::CADmiumError;
 use crate::solid::extrusion::Direction;
 use crate::project::Project;
 use crate::step::StepData;
@@ -37,15 +36,6 @@ pub enum Message {
         name: String,
         data: StepData,
     },
-    RenameWorkbench {
-        workbench_id: u64,
-        new_name: String,
-    },
-    RenameStep {
-        workbench_id: u64,
-        step_id: u64,
-        new_name: String,
-    },
     RenameProject {
         new_name: String,
     },
@@ -53,10 +43,6 @@ pub enum Message {
         workbench_id: u64,
         sketch_id: IDType,
         plane_id: IDType,
-    },
-    DeleteStep {
-        workbench_id: u64,
-        step_name: String,
     },
     UpdateExtrusion {
         workbench_id: IDType,
@@ -100,28 +86,6 @@ impl Message {
                 project.name = new_name.to_owned();
                 Ok(format!("\"name\": \"{}\"", new_name))
             }
-            Message::RenameWorkbench {
-                workbench_id,
-                new_name,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                workbench.name = new_name.to_owned();
-                Ok(format!("\"name\": \"{}\"", new_name))
-            }
-            Message::RenameStep {
-                workbench_id,
-                step_id,
-                new_name,
-            } => {
-                project
-                    .get_workbench_by_id_mut(*workbench_id)?
-                    .history
-                    .get_mut(*step_id as usize)
-                    .ok_or(CADmiumError::StepIDNotFound(step_id.to_string()))?
-                    .name = new_name.to_owned();
-
-                Ok(format!("\"name\": \"{}\"", new_name))
-            }
             Message::SetSketchPlane {
                 workbench_id,
                 sketch_id,
@@ -134,20 +98,6 @@ impl Message {
                 sketch.plane = plane.1.clone();
 
                 Ok(format!("\"plane_id\": \"{}\"", plane.0))
-            }
-            Message::DeleteStep {
-                workbench_id,
-                step_name,
-            } => {
-                let workbench = project.get_workbench_by_id_mut(*workbench_id)?;
-                let index = workbench.history
-                    .iter()
-                    .position(|step| step.name == *step_name)
-                    .ok_or(CADmiumError::StepNameNotFound(step_name.to_owned()))?;
-
-                // Since the index was found and not given by the user, it should be safe to remove
-                workbench.history.remove(index);
-                Ok("".to_owned())
             }
             Message::UpdateExtrusion {
                 workbench_id,

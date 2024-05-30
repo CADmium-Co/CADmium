@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use convert_case::{Case, Casing};
 use proc_macro2::TokenStream;
 // use proc_macro::TokenStream;
-use quote::{quote, TokenStreamExt};
+use quote::quote;
 use syn::punctuated::Punctuated;
 use syn::{parse_macro_input, Attribute, DeriveInput, Fields, Ident, MetaNameValue, Token};
 use syn::spanned::Spanned;
@@ -40,7 +40,8 @@ fn get_function_body(
     self_field_code: TokenStream,
     self_field_var: TokenStream,
     operation: TokenStream,
-    skip_history: bool
+    skip_history: bool,
+    _return_type: TokenStream,
 ) -> (TokenStream, TokenStream) {
     // Function arguments - both on definition and call
     let function_defs = fields.iter().map(|field| {
@@ -95,7 +96,7 @@ fn get_function_body(
 
     // The actual function body
     let body = quote! {
-        pub fn #func_name(&mut self, name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
+        pub fn #func_name(&mut self, name: String, #( #function_defs ),*) -> anyhow::Result<crate::IDType> {
             let operation_ = #operation;
             #wb_var
             #self_field_code
@@ -130,6 +131,7 @@ pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStre
         let mut skip_add = false;
         let mut skip_update = false;
         let mut skip_delete = false;
+        let mut skip_all = false;
 
         // Parse the attributes above each variant
         for (k, v) in get_meta_kv(&variant.attrs).iter() {
@@ -153,6 +155,14 @@ pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStre
                         skip_history = true;
                     } else {
                         panic!("skip_history must be a bool literal");
+                    }
+                },
+                "skip_all" => {
+                    if let syn::Lit::Bool(_value) = &v.lit {
+                        skip_all = true;
+                        skip_history = true;
+                    } else {
+                        panic!("skip_add must be a bool literal");
                     }
                 },
                 "skip_add" => {
@@ -194,7 +204,7 @@ pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStre
 
         // Process type_name to expected id field (e.g. sketch_id for Sketch)
         let mut field_var = quote! {};
-        let mut parent_var = quote! { wb_ };
+        let parent_var;
         let id_arg_name = if let Some(f) = parent_type.clone() {
             Ident::new(format!("{}_id", f.to_string().to_case(Case::Snake)).as_str(), f.span())
         } else {
@@ -217,13 +227,10 @@ pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStre
             parent_var = quote! { self };
         }
 
-        // Generated function names
-
-
-        // Populate the `do_action` function of StepData
-
-        let add_func = if !skip_add {
-            let func_name = Ident::new(format!("add_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+        // Generated function bodies
+        // TODO: Make the return types useful
+        let body = if skip_all {
+            let func_name = Ident::new(format!("do_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
             let gen = get_function_body(
                 func_name,
                 name,
@@ -234,54 +241,81 @@ pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStre
                 field_var.clone(),
                 parent_var.clone(),
                 quote! { crate::step::StepOperation::Add }.into(),
-                skip_history);
+                skip_history,
+                quote! { crate:::IDType }.into()
+            );
 
             actions.push(gen.1);
             gen.0
-        } else { quote! {} };
+        } else {
+            let add_func = if !skip_add {
+                let func_name = Ident::new(format!("add_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+                let gen = get_function_body(
+                    func_name,
+                    name,
+                    variant_name,
+                    &variant.fields,
+                    id_arg_name.clone(),
+                    wb_var.clone(),
+                    field_var.clone(),
+                    parent_var.clone(),
+                    quote! { crate::step::StepOperation::Add }.into(),
+                    skip_history,
+                    quote! { crate:::IDType }.into()
+                );
 
-        let update_func = if !skip_update {
-            let func_name = Ident::new(format!("update_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
-            let gen = get_function_body(
-                func_name,
-                name,
-                variant_name,
-                &variant.fields,
-                id_arg_name.clone(),
-                wb_var.clone(),
-                field_var.clone(),
-                parent_var.clone(),
-                quote! { crate::step::StepOperation::Add }.into(),
-                skip_history);
+                actions.push(gen.1);
+                gen.0
+            } else { quote! {} };
 
-            actions.push(gen.1);
-            gen.0
-        } else { quote! {} };
+            let update_func = if !skip_update {
+                let func_name = Ident::new(format!("update_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+                let gen = get_function_body(
+                    func_name,
+                    name,
+                    variant_name,
+                    &variant.fields,
+                    id_arg_name.clone(),
+                    wb_var.clone(),
+                    field_var.clone(),
+                    parent_var.clone(),
+                    quote! { crate::step::StepOperation::Add }.into(),
+                    skip_history,
+                    quote! { crate:::IDType }.into()
+                );
 
-        let delete_func = if !skip_delete {
-            let func_name = Ident::new(format!("delete_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
-            let gen = get_function_body(
-                func_name,
-                name,
-                variant_name,
-                &variant.fields,
-                id_arg_name,
-                wb_var,
-                field_var,
-                parent_var,
-                quote! { crate::step::StepOperation::Add }.into(),
-                skip_history);
+                actions.push(gen.1);
+                gen.0
+            } else { quote! {} };
 
-            actions.push(gen.1);
-            gen.0
-        } else { quote! {} };
+            let delete_func = if !skip_delete {
+                let func_name = Ident::new(format!("delete_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+                let gen = get_function_body(
+                    func_name,
+                    name,
+                    variant_name,
+                    &variant.fields,
+                    id_arg_name,
+                    wb_var,
+                    field_var,
+                    parent_var,
+                    quote! { crate::step::StepOperation::Add }.into(),
+                    skip_history,
+                    quote! { crate:::IDType }.into()
+                );
 
+                actions.push(gen.1);
+                gen.0
+            } else { quote! {} };
 
-        quote! {
-            #add_func
-            #update_func
-            #delete_func
-        }
+            quote! {
+                #add_func
+                #update_func
+                #delete_func
+            }
+        };
+
+        quote! { #body }
     });
 
     let expanded = quote! {

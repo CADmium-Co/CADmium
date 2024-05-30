@@ -291,6 +291,12 @@ impl Workbench {
 
 // Step operations
 impl Workbench {
+    pub(super) fn do_workbench_rename(&mut self, new_name: String) -> Result<IDType, anyhow::Error> {
+        self.name = new_name;
+        // TODO: What ID should be returned here?
+        Ok(0)
+    }
+
     pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
         self.points.insert(self.points_next_id, point);
         self.points_next_id += 1;
@@ -334,5 +340,22 @@ impl Workbench {
         // I guess nothing to do? only realization?
         // TODO: What ID should be returned here?
         Ok(0)
+    }
+
+    pub(super) fn do_workbench_step_rename(&mut self, step_id: IDType, new_name: String) -> Result<IDType, anyhow::Error> {
+        let step = self.history.iter_mut().find(|s| s.id == step_id).ok_or(anyhow::anyhow!("Failed to find step with id {}", step_id))?;
+        step.name = new_name;
+        Ok(step.id)
+    }
+
+    pub(super) fn do_workbench_step_delete(&mut self, step_id: IDType) -> Result<IDType, anyhow::Error> {
+        let old_len = self.history.len();
+        self.history.retain(|s| s.id != step_id);
+
+        if self.history.len() == old_len {
+            return Err(anyhow::anyhow!("Failed to find step with id {}", step_id));
+        }
+
+        Ok(step_id)
     }
 }
