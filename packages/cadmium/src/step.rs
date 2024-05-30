@@ -72,7 +72,8 @@ pub enum StepData {
     },
     // Note that we don't use the auto-generated `delete` operation
     // as we're deleting steps themselves, not their data
-    #[step_data(skip_all = true)]
+    // You can't add_workbench_step_delete for example like you can add_workbench_point
+    #[step_data(skip_all = true, skip_history = true)]
     WorkbenchStepDelete {
         workbench_id: IDType,
         step_id: IDType,
