@@ -4,7 +4,7 @@
 /dist
 /target
 /packages/cadmium/target
-/.svelte-kit
+**/.svelte-kit
 /package
 *.env*
 vite.config.js.timestamp-*
