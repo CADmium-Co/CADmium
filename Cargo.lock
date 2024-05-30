@@ -660,6 +660,7 @@ dependencies = [
 [[package]]
 name = "isotope"
 version = "0.1.0"
+source = "git+https://github.com/dzervas/ISOtope.git?branch=sketch-helpers#618996f9482ddf56d54981fd195dad57c8f5bcf9"
 dependencies = [
  "geo 0.28.0",
  "nalgebra",
