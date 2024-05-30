@@ -10,7 +10,7 @@
     "lint": "prettier --check . && eslint \"src/**/*.ts\"",
     "format": "prettier . --write .",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "test:integration": "playwright test",
+    "test:e2e": "playwright test",
     "test:unit": "vitest",
     "types:guard": "ts-auto-guard --export-all src/types.d.ts"
   },
