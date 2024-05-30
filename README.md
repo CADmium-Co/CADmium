@@ -102,6 +102,17 @@ To build and run the Rust tests:
 cargo test
 ```
 
+### rust examples
+
+Simple exaples using the rust code can be found in `packages/cadmium/examples`
+
+Run simple rust example with:
+```
+cargo run --example project_simple_extrusion
+```
+
+Will produce example.obj file and example.step output files, the .step file can be examined in a CAD viewer.
+
 ## git blame
 
 To ignore commits used purely for formatting changes, to preserve correct authorship, set your local git config:
