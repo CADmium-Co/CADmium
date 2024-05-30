@@ -31,7 +31,8 @@ anyhow = { version = "1.0.86", features = ["backtrace"] }
 thiserror = "1.0.61"
 strum = { version = "0.26.2", features = ["derive"] }
 # isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*", features = ["tsify"] }
-isotope = { path = "../../../isotope", version = "*", features = ["tsify"]}
+isotope = { git = "https://github.com/dzervas/ISOtope.git", branch = "sketch-helpers", version = "*", features = ["tsify"] }
+# isotope = { path = "../../../isotope", version = "*", features = ["tsify"]}
 paste = "1.0.15"
 cadmium-macros = { path = "../cadmium-macros", version = "*" }
 
