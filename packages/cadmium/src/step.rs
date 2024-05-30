@@ -32,16 +32,19 @@ pub struct Step {
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
     // Workbench Primitives
+    #[step_data(skip_update = true, skip_delete = true)]
     WorkbenchPoint {
         workbench_id: IDType,
         point: Point3,
     },
+    #[step_data(skip_update = true, skip_delete = true)]
     WorkbenchPlane {
         workbench_id: IDType,
         plane: Plane,
         width: f64,
         height: f64,
     },
+    #[step_data(skip_update = true, skip_delete = true)]
     WorkbenchSketch {
         workbench_id: IDType,
         plane_description: PlaneDescription,
@@ -51,13 +54,13 @@ pub enum StepData {
     },
 
     // Sketch Primitives
-    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch", skip_update = true, skip_delete = true)]
     SketchPoint {
         workbench_id: IDType,
         sketch_id: IDType,
         point: Point2,
     },
-    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch", skip_update = true, skip_delete = true)]
     SketchArc {
         workbench_id: IDType,
         sketch_id: IDType,
@@ -67,14 +70,14 @@ pub enum StepData {
         start_angle: f64,
         end_angle: f64,
     },
-    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch", skip_update = true, skip_delete = true)]
     SketchCircle {
         workbench_id: IDType,
         sketch_id: IDType,
         center: IDType,
         radius: f64,
     },
-    #[step_data(workbench_field = "sketches", type_name = "Sketch")]
+    #[step_data(workbench_field = "sketches", type_name = "Sketch", skip_update = true, skip_delete = true)]
     SketchLine {
         workbench_id: IDType,
         sketch_id: IDType,
@@ -89,6 +92,7 @@ pub enum StepData {
     //     end: IDType,
     // },
     // #[step_data(workbench_field = "solids", type_name = "Solid")]
+    #[step_data(skip_update = true, skip_delete = true)]
     SolidExtrusion {
         workbench_id: IDType,
         face_ids: Vec<IDType>,

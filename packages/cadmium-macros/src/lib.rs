@@ -1,10 +1,11 @@
 use std::collections::HashMap;
 
 use convert_case::{Case, Casing};
-use proc_macro::TokenStream;
-use quote::quote;
+use proc_macro2::TokenStream;
+// use proc_macro::TokenStream;
+use quote::{quote, TokenStreamExt};
 use syn::punctuated::Punctuated;
-use syn::{Attribute, DeriveInput, Ident, MetaNameValue, Token, parse_macro_input};
+use syn::{parse_macro_input, Attribute, DeriveInput, Fields, Ident, MetaNameValue, Token};
 use syn::spanned::Spanned;
 
 const ATTR_NAME: &str = "step_data";
@@ -29,8 +30,88 @@ fn get_meta_kv(attrs: &Vec<Attribute>) -> HashMap<Ident, MetaNameValue> {
     result
 }
 
+fn get_function_body(
+    func_name: Ident,
+    name: &Ident,
+    variant_name: &Ident,
+    fields: &Fields,
+    id_ident: Ident,
+    wb_var: TokenStream,
+    self_field_code: TokenStream,
+    self_field_var: TokenStream,
+    operation: TokenStream,
+    skip_history: bool
+) -> (TokenStream, TokenStream) {
+    // Function arguments - both on definition and call
+    let function_defs = fields.iter().map(|field| {
+        let field_name = &field.ident;
+        let field_type = &field.ty;
+
+        quote! { #field_name: #field_type }
+    }).collect::<Vec<_>>();
+    let function_args_full = fields.iter().map(|field| {
+        let field_name = &field.ident;
+
+        quote! { #field_name }
+    }).collect::<Vec<_>>();
+
+    let function_args2 = function_args_full.clone();
+    let function_args_noauto = function_args2
+        .iter()
+        .filter(|field|
+            field.to_string() != "workbench_id"
+            && field.to_string() != id_ident.to_string()
+        ).collect::<Vec<_>>();
+
+    // Generate history entry
+    let history_code = if skip_history {
+        quote! {}
+    } else {
+        quote! {
+            let step_ = crate::step::Step {
+                name,
+                id: result_id_,
+                operation: operation_,
+                unique_id: format!(concat!("Add:", stringify!(#variant_name), "-{}"), result_id_),
+                suppressed: false,
+                data: #name::#variant_name {
+                    #( #function_args_full ),*
+                },
+            };
+
+            wb_.history.push(step_);
+        }
+    };
+
+    // Code to run during `do_action`
+    let action = quote! {
+        #name::#variant_name {
+            #( #function_args_full ),*
+        } => project.#func_name(
+            name,
+            #( #function_args_full.clone() ),*
+        ),
+    };
+
+    // The actual function body
+    let body = quote! {
+        pub fn #func_name(&mut self, name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
+            let operation_ = #operation;
+            #wb_var
+            #self_field_code
+            let result_id_ = #self_field_var.#func_name(#( #function_args_noauto.clone() ),*)?;
+
+            #history_code
+
+            Ok(result_id_)
+        }
+    };
+
+    (body, action)
+}
+
 #[proc_macro_derive(StepDataActions, attributes(step_data))]
-pub fn derive_step_data(input: TokenStream) -> TokenStream {
+pub fn derive_step_data(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
 
     let name = &input.ident;
@@ -46,6 +127,9 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         let mut workbench_field = None;
         let mut parent_type = None;
         let mut skip_history = false;
+        let mut skip_add = false;
+        let mut skip_update = false;
+        let mut skip_delete = false;
 
         // Parse the attributes above each variant
         for (k, v) in get_meta_kv(&variant.attrs).iter() {
@@ -71,6 +155,27 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
                         panic!("skip_history must be a bool literal");
                     }
                 },
+                "skip_add" => {
+                    if let syn::Lit::Bool(_value) = &v.lit {
+                        skip_add = true;
+                    } else {
+                        panic!("skip_add must be a bool literal");
+                    }
+                },
+                "skip_update" => {
+                    if let syn::Lit::Bool(_value) = &v.lit {
+                        skip_update = true;
+                    } else {
+                        panic!("skip_update must be a bool literal");
+                    }
+                },
+                "skip_delete" => {
+                    if let syn::Lit::Bool(_value) = &v.lit {
+                        skip_delete = true;
+                    } else {
+                        panic!("skip_delete must be a bool literal");
+                    }
+                },
                 &_ => {}
             }
         }
@@ -83,13 +188,13 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
             wb_var = quote! {
                 let mut wb_ = self.workbenches
                     .get_mut(workbench_id as usize)
-                    .ok_or(anyhow::anyhow!("Could not find workbench"))?;
+                    .ok_or(anyhow::anyhow!("Could not find workbench ID {}", workbench_id))?;
             };
         }
 
         // Process type_name to expected id field (e.g. sketch_id for Sketch)
-        let mut _field_var = quote! {};
-        let mut _parent_var_ = quote! { wb_ };
+        let mut field_var = quote! {};
+        let mut parent_var = quote! { wb_ };
         let id_arg_name = if let Some(f) = parent_type.clone() {
             Ident::new(format!("{}_id", f.to_string().to_case(Case::Snake)).as_str(), f.span())
         } else {
@@ -99,79 +204,83 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         // Generate the parent variable of which the actual function will be called on
         if let Some(field_ident) = workbench_field.clone() {
             let field_name = Ident::new(field_ident.as_str(), field_ident.span());
-            _field_var = quote! {
+            field_var = quote! {
                 let parent_ref_ = wb_.#field_name
                     .get(& #id_arg_name)
                     .ok_or(anyhow::anyhow!(concat!("Could not find parent ", stringify!(#parent_type), " with ID {}"), #id_arg_name))?;
                 let mut parent_ = parent_ref_.borrow_mut();
             };
-            _parent_var_ = quote! { parent_ };
+            parent_var = quote! { parent_ };
         } else if needs_workbench {
-            _parent_var_ = quote! { wb_ };
+            parent_var = quote! { wb_ };
         } else {
-            _parent_var_ = quote! { self };
+            parent_var = quote! { self };
         }
 
         // Generated function names
-        let add_func_name = Ident::new(format!("add_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
 
-        // Function arguments - both on definition and call
-        let function_defs = variant.fields.iter().map(|field| {
-            let field_name = &field.ident;
-            let field_type = &field.ty;
-
-            quote! { #field_name: #field_type }
-        }).collect::<Vec<_>>();
-        let function_args_full = variant.fields.iter().map(|field| {
-            let field_name = &field.ident;
-
-            quote! { #field_name }
-        }).collect::<Vec<_>>();
-
-        let function_args2 = function_args_full.clone();
-        let function_args_noauto = function_args2
-            .iter()
-            .filter(|field|
-                field.to_string() != "workbench_id"
-                && field.to_string() != id_arg_name.to_string()
-            ).collect::<Vec<_>>();
-
-        // Generate history entry
-        let history_entry = if skip_history {
-            quote! {}
-        } else {
-            quote! {
-                let step_ = crate::step::Step {
-                    name,
-                    id: result_id_,
-                    operation: crate::step::StepOperation::Add,
-                    unique_id: format!(concat!("Add:", stringify!(#variant_name), "-{}"), result_id_),
-                    suppressed: false,
-                    data: #name::#variant_name {
-                        #( #function_args_full ),*
-                    },
-                };
-
-                wb_.history.push(step_);
-            }
-        };
 
         // Populate the `do_action` function of StepData
-        actions.push(quote! {
-            #name::#variant_name {
-                #( #function_args_full ),*
-            } => project.#add_func_name(name, #( #function_args_full.clone() ),* ) , });
+
+        let add_func = if !skip_add {
+            let func_name = Ident::new(format!("add_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+            let gen = get_function_body(
+                func_name,
+                name,
+                variant_name,
+                &variant.fields,
+                id_arg_name.clone(),
+                wb_var.clone(),
+                field_var.clone(),
+                parent_var.clone(),
+                quote! { crate::step::StepOperation::Add }.into(),
+                skip_history);
+
+            actions.push(gen.1);
+            gen.0
+        } else { quote! {} };
+
+        let update_func = if !skip_update {
+            let func_name = Ident::new(format!("update_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+            let gen = get_function_body(
+                func_name,
+                name,
+                variant_name,
+                &variant.fields,
+                id_arg_name.clone(),
+                wb_var.clone(),
+                field_var.clone(),
+                parent_var.clone(),
+                quote! { crate::step::StepOperation::Add }.into(),
+                skip_history);
+
+            actions.push(gen.1);
+            gen.0
+        } else { quote! {} };
+
+        let delete_func = if !skip_delete {
+            let func_name = Ident::new(format!("delete_{}", variant_name.to_string().to_case(Case::Snake)).as_str(), variant_name.span());
+            let gen = get_function_body(
+                func_name,
+                name,
+                variant_name,
+                &variant.fields,
+                id_arg_name,
+                wb_var,
+                field_var,
+                parent_var,
+                quote! { crate::step::StepOperation::Add }.into(),
+                skip_history);
+
+            actions.push(gen.1);
+            gen.0
+        } else { quote! {} };
+
 
         quote! {
-            pub fn #add_func_name(&mut self, name: String, #( #function_defs ),*) -> Result<crate::IDType, anyhow::Error> {
-                #wb_var
-                #_field_var
-                let result_id_ = #_parent_var_.#add_func_name(#( #function_args_noauto.clone() ),*)?;
-
-                #history_entry
-
-                Ok(result_id_)
-            }
+            #add_func
+            #update_func
+            #delete_func
         }
     });
 
@@ -189,5 +298,5 @@ pub fn derive_step_data(input: TokenStream) -> TokenStream {
         }
     };
 
-    TokenStream::from(expanded)
+    TokenStream::from(expanded).into()
 }
