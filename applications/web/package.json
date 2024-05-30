@@ -6,7 +6,7 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "pnpm test:integration && pnpm test:unit",
+    "test": "pnpm test:e2e && pnpm test:unit",
     "lint": "prettier --check . && eslint \"src/**/*.ts\"",
     "format": "prettier . --write .",
     "check": "svelte-check --tsconfig ./tsconfig.json",
