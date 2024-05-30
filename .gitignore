@@ -13,3 +13,4 @@ vite.config.ts.timestamp-*
 /.pnpm-store/
 **/*.obj
 **/*.step
+.vscode
