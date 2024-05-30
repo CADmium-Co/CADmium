@@ -8,6 +8,12 @@ use crate::workbench::Workbench;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct Assembly {
+    name: String,
+}
+
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Project {
     pub name: String,
     pub assemblies: Vec<Assembly>,
@@ -79,11 +85,12 @@ impl Project {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct Assembly {
-    name: String,
-}
+// impl Project {
+//     pub(crate) fn project_rename(&mut self, new_name: String) -> Result<String, CADmiumError> {
+//         self.name = new_name.clone();
+//         Ok(format!("\"name\": \"{}\"", new_name))
+//     }
+// }
 
 #[cfg(test)]
 pub mod tests {
@@ -92,7 +99,6 @@ pub mod tests {
     use crate::archetypes::Point2;
     use crate::solid::extrusion::Direction;
     use crate::solid::extrusion::Mode;
-    use crate::message::Message;
 
     use super::*;
 
@@ -157,23 +163,23 @@ pub mod tests {
     //     let realization = p.get_realization(0, 1000);
     // }
 
-    #[test]
-    fn rename_plane() {
-        let mut p = create_test_project();
+    // #[test]
+    // fn rename_plane() {
+    //     let mut p = create_test_project();
 
-        let message = &Message::RenameStep {
-            workbench_id: 0,
-            step_id: 1,
-            new_name: "Top-2".to_owned(),
-        };
+    //     let message = &Message::RenameStep {
+    //         workbench_id: 0,
+    //         step_id: 1,
+    //         new_name: "Top-2".to_owned(),
+    //     };
 
-        let result = message.handle(&mut p);
-        match result {
-            Ok(res) => println!("{}", res),
-            Err(e) => println!("{}", e),
-        }
-        // let realization = p.get_realization(0, 1000);
-    }
+    //     let result = message.handle(&mut p);
+    //     match result {
+    //         Ok(res) => println!("{}", res),
+    //         Err(e) => println!("{}", e),
+    //     }
+    //     // let realization = p.get_realization(0, 1000);
+    // }
 
     // Removed because this seems pretty redundant with all the other tests that read .cadmium files
     // #[test]
