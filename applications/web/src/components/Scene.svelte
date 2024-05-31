@@ -1,6 +1,6 @@
 <script lang="ts">
   import {T, useThrelte} from "@threlte/core"
-  import {TrackballControls, Environment} from "@threlte/extras"
+  import {Environment} from "@threlte/extras"
   import {Vector2, Vector3, type Vector3Like} from "three"
   import {interactivity} from "@threlte/extras"
   import {LineMaterial} from "three/addons/lines/LineMaterial.js"
@@ -11,6 +11,7 @@
   import Sketch from "./Sketch.svelte"
   import CubeGizmo from "./CubeGizmo/CubeGizmo.svelte"
   import {base} from "../base"
+  import CadControls from "./CadControls.svelte"
 
   const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
@@ -121,7 +122,7 @@
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={5} up={[0, 0, 1]}>
-  <TrackballControls rotateSpeed={1.8} panSpeed={0.5} on:create={({ref}) => {}} mouseButtons={{LEFT: 2, MIDDLE: 50, RIGHT: 1}} />
+  <CadControls rotateSpeed={1.8} panSpeed={0.5} on:create={({ref}) => {}} mouseButtons={{LEFT: 2, MIDDLE: 50, RIGHT: 1}} />
 </T.OrthographicCamera>
 
 <!-- <T.DirectionalLight args={['#ff8888', 50.0]} position.x={-10} position.y={0} position.z={0} />
