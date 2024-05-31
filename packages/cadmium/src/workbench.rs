@@ -13,6 +13,8 @@ use crate::solid::SolidLike;
 use crate::step::{Step, StepData};
 use crate::IDType;
 
+use crate::message::prelude::*;
+
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
@@ -357,5 +359,37 @@ impl Workbench {
         }
 
         Ok(step_id)
+    }
+}
+
+impl<H: MessageHandler<crate::workbench::Workbench>> ProjectMessageHandler for IDWrap<H> {
+    fn handle_project_message(&self, p: &mut crate::project::Project) -> anyhow::Result<Option<IDType>> {
+        let child = p.into_child(self.0)?;
+        self.1.handle_message(child)
+    }
+}
+
+impl IntoChildID<crate::workbench::Workbench> for crate::project::Project {
+    fn into_child(&mut self, id: IDType) -> anyhow::Result<&mut crate::workbench::Workbench> {
+        Ok(self.get_workbench_by_id_mut(id)?)
+    }
+}
+
+impl FromParentID for crate::workbench::Workbench {
+    type Child = crate::project::Project;
+    fn from_parent(parent: &mut crate::project::Project, id: IDType) -> anyhow::Result<&mut Self> {
+        Ok(parent.get_workbench_by_id_mut(id)?)
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WorkbenchRename {
+    new_name: String,
+}
+
+impl MessageHandler<crate::workbench::Workbench> for WorkbenchRename {
+    fn handle_message(&self, workbench: &mut crate::workbench::Workbench) -> anyhow::Result<Option<IDType>> {
+        workbench.name = self.new_name.clone();
+        Ok(None)
     }
 }

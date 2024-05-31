@@ -1,5 +1,6 @@
 use std::ops::{Add, Sub};
 
+use cadmium_macros::MessageSubType;
 use serde::{Deserialize, Serialize};
 use truck_polymesh::Point3 as PolyTruckPoint3;
 use isotope::primitives::point2::Point2 as ISOPoint2;
@@ -7,7 +8,7 @@ use tsify::Tsify;
 
 use crate::archetypes::{Plane, Vector3};
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, MessageSubType, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Point3 {
     pub x: f64,
@@ -99,4 +100,34 @@ impl PartialEq for Point3 {
 		fn eq(&self, other: &Self) -> bool {
 				self.x == other.x && self.y == other.y && self.z == other.z
 		}
+}
+
+use crate::message::prelude::*;
+#[derive(Debug, Serialize, Deserialize)]
+pub struct WorkbenchPointUpdate {
+    x: f64,
+    y: f64,
+    z: f64,
+}
+
+impl MessageHandler<crate::solid::point::Point3> for WorkbenchPointUpdate {
+    fn handle_message(&self, point: &mut crate::solid::point::Point3) -> anyhow::Result<Option<crate::IDType>> {
+        point.x = self.x;
+        point.y = self.y;
+        point.z = self.z;
+        Ok(None)
+    }
+}
+
+impl IntoChildID<crate::solid::point::Point3> for crate::workbench::Workbench {
+    fn into_child(&mut self, id: crate::IDType) -> anyhow::Result<&mut crate::solid::point::Point3> {
+        Ok(self.points.get_mut(&id).ok_or(anyhow::anyhow!(""))?)
+    }
+}
+
+impl FromParentID for crate::solid::point::Point3 {
+    type Child = crate::workbench::Workbench;
+    fn from_parent(parent: &mut crate::workbench::Workbench, id: crate::IDType) -> anyhow::Result<&mut Self> {
+        Ok(parent.points.get_mut(&id).ok_or(anyhow::anyhow!(""))?)
+    }
 }

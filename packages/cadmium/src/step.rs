@@ -1,4 +1,3 @@
-
 use std::fmt::Display;
 
 use cadmium_macros::StepDataActions;
