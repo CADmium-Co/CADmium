@@ -8,6 +8,54 @@ use syn::punctuated::Punctuated;
 use syn::{parse_macro_input, Attribute, DeriveInput, Fields, Ident, MetaNameValue, Token};
 use syn::spanned::Spanned;
 
+#[proc_macro_derive(MessageSubType)]
+pub fn message_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+
+    println!("Message sub-type: {:?}", name);
+
+    quote! {
+        use crate::message::prelude::*;
+        impl<H: MessageHandler<#name>> ProjectMessageHandler for IDWrap<IDWrap<H>> {
+            fn handle_project_message(&self, p: &mut crate::project::Project) -> anyhow::Result<Option<crate::IDType>> {
+                let parent = p.into_child(self.0)?;
+                let child = parent.into_child(self.1.0)?;
+                self.1.1.handle_message(child)
+            }
+        }
+    }.into()
+}
+
+#[proc_macro_derive(MessageEnum)]
+pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+    let data = match input.data {
+        syn::Data::Enum(data) => data,
+        _ => panic!("StepData can only be derived for enums"),
+    };
+
+    let variants = data.variants.iter().map(|variant| {
+        println!("Variant: {:?}", variant.ident);
+        let variant_name = &variant.ident;
+
+        quote! {
+            #name::#variant_name(msg) => msg.handle_project_message(project),
+        }
+    });
+
+    quote! {
+        impl #name {
+            pub fn handle(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<crate::IDType>> {
+                match self {
+                    #( #variants )*
+                }
+            }
+        }
+    }.into()
+}
+
 const ATTR_NAME: &str = "step_data";
 
 #[proc_macro_derive(StepDataActions, attributes(step_data))]
