@@ -122,7 +122,6 @@
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={5} up={[0, 0, 1]}>
-  <!-- <TrackballControls rotateSpeed={1.8} panSpeed={0.5} on:create={({ref}) => {}} mouseButtons={{LEFT: 2, MIDDLE: 50, RIGHT: 1}} /> -->
   <CadControls rotateSpeed={1.8} panSpeed={0.5} on:create={({ref}) => {}} mouseButtons={{LEFT: 2, MIDDLE: 50, RIGHT: 1}} />
 </T.OrthographicCamera>
 
