@@ -6,8 +6,8 @@
 
   import {onDestroy} from "svelte"
 
-  import {useControlsContext} from "./useControlsContext"
-  import type {TrackballControlsEvents, TrackballControlsProps, TrackballControlsSlots} from "./TrackballControls.svelte"
+  import {useControlsContext} from "./useControlsContext.js"
+  import type {TrackballControlsEvents, TrackballControlsProps, TrackballControlsSlots} from "./TrackballControls.svelte.js"
 
   type $$Props = TrackballControlsProps
   type $$Events = TrackballControlsEvents

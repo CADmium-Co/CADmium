@@ -9,9 +9,9 @@
   import Plane from "./Plane.svelte"
   import Solid from "./Solid.svelte"
   import Sketch from "./Sketch.svelte"
-  import CubeGizmo from "./CubeGizmo/CubeGizmo.svelte"
+  import CubeGizmo from "./controls/CubeGizmo/CubeGizmo.svelte"
   import {base} from "../base"
-  import CadControls from "./CadControls.svelte"
+  import CadControls from "./controls/CadControls/CadControls.svelte"
 
   const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 

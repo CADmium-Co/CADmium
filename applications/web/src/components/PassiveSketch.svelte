@@ -10,10 +10,10 @@
   import Face from "./Face.svelte"
   import {LineMaterial} from "three/addons/lines/LineMaterial.js"
   import {LineGeometry} from "three/addons/lines/LineGeometry.js"
-  import NewLineTool from "./NewLineTool.svelte"
-  import NewCircleTool from "./NewCircleTool.svelte"
-  import NewRectangleTool from "./NewRectangleTool.svelte"
-  import SelectTool from "./SelectTool.svelte"
+  import NewLineTool from "./tools/NewLine.svelte"
+  import NewCircleTool from "./tools/NewCircle.svelte"
+  import NewRectangleTool from "./tools/NewRectangle.svelte"
+  import SelectTool from "./tools/Select.svelte"
   import type {ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PlaneData, PreviewGeometry, SketchPoint, PointById, SketchRealized} from "shared/types"
 
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore

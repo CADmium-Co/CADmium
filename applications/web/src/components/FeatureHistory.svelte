@@ -1,9 +1,9 @@
 <script lang="ts">
   import {workbench, realization} from "shared/stores"
-  import PointFeature from "./PointFeature.svelte"
-  import PlaneFeature from "./PlaneFeature.svelte"
-  import SketchFeature from "./SketchFeature.svelte"
-  import ExtrusionFeature from "./ExtrusionFeature.svelte"
+  import PointFeature from "./features/Point.svelte"
+  import PlaneFeature from "./features/Plane.svelte"
+  import SketchFeature from "./features/Sketch.svelte"
+  import ExtrusionFeature from "./features/Extrusion.svelte"
   import SolidItem from "./SolidItem.svelte"
   import {isPoint, isPlane, isExtrusion, isSketch} from "shared/projectUtils"
   import type {SetCameraFocus} from "shared/types"
