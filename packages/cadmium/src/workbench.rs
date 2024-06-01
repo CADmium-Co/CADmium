@@ -293,12 +293,6 @@ impl Workbench {
 
 // Step operations
 impl Workbench {
-    pub(super) fn do_workbench_rename(&mut self, new_name: String) -> Result<IDType, anyhow::Error> {
-        self.name = new_name;
-        // TODO: What ID should be returned here?
-        Ok(0)
-    }
-
     pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
         self.points.insert(self.points_next_id, point);
         self.points_next_id += 1;
@@ -376,7 +370,7 @@ impl IntoChildID<crate::workbench::Workbench> for crate::project::Project {
 }
 
 impl FromParentID for crate::workbench::Workbench {
-    type Child = crate::project::Project;
+    type Parent = crate::project::Project;
     fn from_parent(parent: &mut crate::project::Project, id: IDType) -> anyhow::Result<&mut Self> {
         Ok(parent.get_workbench_by_id_mut(id)?)
     }

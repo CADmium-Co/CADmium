@@ -2,13 +2,11 @@ use cadmium_macros::MessageEnum;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::IDType;
-
 pub mod prelude {
     use serde::de::DeserializeOwned;
     use serde::{Deserialize, Serialize};
 
-    use crate::IDType;
+    pub use crate::IDType;
 
     #[derive(Debug, Serialize, Deserialize)]
     pub struct IDWrap<H>(pub IDType, pub H);
@@ -25,15 +23,40 @@ pub mod prelude {
     }
 
     pub trait FromParentID: Serialize + DeserializeOwned {
-        type Child;
-        fn from_parent(parent: &mut Self::Child, id: IDType) -> anyhow::Result<&mut Self>;
+        type Parent;
+        fn from_parent(parent: &mut Self::Parent, id: IDType) -> anyhow::Result<&mut Self>;
     }
+
+    // impl<T, C> FromParentID for T
+    // where
+    //     T: Serialize + DeserializeOwned + IntoChildID<C>,
+    //     C: Serialize + DeserializeOwned,
+    // {
+    //     type Child = C;
+
+    //     fn from_parent(parent: &mut C, id: IDType) -> anyhow::Result<&mut Self> {
+    //         parent.into_child(id).map(|child| child as &mut Self)
+    //     }
+    // }
+
+    // Blanket implementation for `IntoChildID` where `FromParentID` is implemented
+    // impl<T, P> IntoChildID<P> for T
+    // where
+    //     T: Serialize + DeserializeOwned,
+    //     P: Serialize + DeserializeOwned + FromParentID<Child = T>,
+    // {
+    //     fn into_child(&mut self, id: IDType) -> anyhow::Result<&mut P> {
+    //         <P as FromParentID>::from_parent(self, id)
+    //     }
+    // }
 }
 
 use prelude::*;
+
 #[derive(MessageEnum, Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum Message {
+    ProjectRename(crate::project::ProjectRename),
     WorkbenchRename(IDWrap<crate::workbench::WorkbenchRename>),
     WorkbenchPointUpdate(IDWrap<IDWrap<crate::solid::point::WorkbenchPointUpdate>>),
 }

@@ -103,6 +103,8 @@ impl PartialEq for Point3 {
 }
 
 use crate::message::prelude::*;
+use crate::workbench::Workbench;
+
 #[derive(Debug, Serialize, Deserialize)]
 pub struct WorkbenchPointUpdate {
     x: f64,
@@ -110,8 +112,8 @@ pub struct WorkbenchPointUpdate {
     z: f64,
 }
 
-impl MessageHandler<crate::solid::point::Point3> for WorkbenchPointUpdate {
-    fn handle_message(&self, point: &mut crate::solid::point::Point3) -> anyhow::Result<Option<crate::IDType>> {
+impl MessageHandler<Point3> for WorkbenchPointUpdate {
+    fn handle_message(&self, point: &mut Point3) -> anyhow::Result<Option<IDType>> {
         point.x = self.x;
         point.y = self.y;
         point.z = self.z;
@@ -119,15 +121,15 @@ impl MessageHandler<crate::solid::point::Point3> for WorkbenchPointUpdate {
     }
 }
 
-impl IntoChildID<crate::solid::point::Point3> for crate::workbench::Workbench {
-    fn into_child(&mut self, id: crate::IDType) -> anyhow::Result<&mut crate::solid::point::Point3> {
+impl IntoChildID<Point3> for Workbench {
+    fn into_child(&mut self, id: IDType) -> anyhow::Result<&mut Point3> {
         Ok(self.points.get_mut(&id).ok_or(anyhow::anyhow!(""))?)
     }
 }
 
-impl FromParentID for crate::solid::point::Point3 {
-    type Child = crate::workbench::Workbench;
-    fn from_parent(parent: &mut crate::workbench::Workbench, id: crate::IDType) -> anyhow::Result<&mut Self> {
+impl FromParentID for Point3 {
+    type Parent = Workbench;
+    fn from_parent(parent: &mut Workbench, id: IDType) -> anyhow::Result<&mut Self> {
         Ok(parent.points.get_mut(&id).ok_or(anyhow::anyhow!(""))?)
     }
 }
