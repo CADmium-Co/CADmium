@@ -16,7 +16,7 @@ use crate::archetypes::{Point3, Vector3};
 use crate::project::{RealPlane, RealSketch};
 use crate::sketch::{arc_to_points, Face, Sketch};
 
-use truck_modeling::{Point3 as TruckPoint3, Surface, Plane};
+use truck_modeling::{Plane, Point3 as TruckPoint3, Surface};
 
 use truck_topology::Solid as TruckSolid;
 
@@ -384,21 +384,22 @@ fn are_coplanar(p0: Plane, p1: Plane) -> bool {
 
 #[cfg(test)]
 mod tests {
-    use crate::project::Project;
     use crate::project::tests::create_test_project;
+    use crate::project::Project;
 
     #[allow(unused_imports)]
     use super::*;
 
     #[test]
     fn create_project_solid() {
-        let mut p = Project::new("Test Extrusion");
+        // Demonstrate creating a project and then realizing one solid
+        let p = create_test_project();
 
         // now get solids? save as obj or stl or step?
-        let workbench = p.workbenches.get_mut(0).unwrap();
+        let workbench = p.workbenches.get(0).unwrap();
         let realization = workbench.realize(100);
         let solids = realization.solids;
-        println!("solids: {:?}", solids);
+        assert!(solids.len() == 1);
     }
 
     #[test]
@@ -443,5 +444,4 @@ mod tests {
         realization.save_solid_as_step_file(keys[0], "pkg/test.step");
         realization.save_solid_as_obj_file(keys[0], "pkg/test.obj", 0.001);
     }
-
 }
