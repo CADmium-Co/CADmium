@@ -22,10 +22,14 @@ pub fn linestring_to_wire(line: &LineString, sketch: Rc<RefCell<ISketch>>) -> Re
     }
 
     let mut edges: Vec<Edge> = Vec::new();
-    for i in 0..vertices.len() - 1 {
+    for i in 0..vertices.len() - 2 {
         let edge = builder::line(&vertices[i], &vertices[i + 1]);
         edges.push(edge);
     }
+
+    // Close the loop by connecting the last vertex to the first
+    let last_edge = builder::line(&vertices[vertices.len() - 2], &vertices[0]);
+    edges.push(last_edge);
 
     Ok(Wire::from_iter(edges.into_iter()))
 }
