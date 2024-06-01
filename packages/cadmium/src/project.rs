@@ -3,6 +3,7 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::error::CADmiumError;
+use crate::message::prelude::ProjectMessageHandler;
 use crate::realization::Realization;
 use crate::workbench::Workbench;
 
@@ -85,12 +86,18 @@ impl Project {
     }
 }
 
-// impl Project {
-//     pub(crate) fn project_rename(&mut self, new_name: String) -> Result<String, CADmiumError> {
-//         self.name = new_name.clone();
-//         Ok(format!("\"name\": \"{}\"", new_name))
-//     }
-// }
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ProjectRename {
+    new_name: String,
+}
+
+impl ProjectMessageHandler for ProjectRename {
+    fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<crate::IDType>> {
+        project.name = self.new_name.clone();
+        Ok(None)
+    }
+}
+
 
 #[cfg(test)]
 pub mod tests {

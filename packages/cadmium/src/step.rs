@@ -48,19 +48,6 @@ impl Step {
 #[derive(StepDataActions, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum StepData {
-    // Project operations
-    // TODO: Steps in project::Project are not yet supported as the function just recurses forever
-    // #[step_data(skip_all = true)]
-    // ProjectRename {
-    //     new_name: String,
-    // },
-
-    // Workbench operations
-    #[step_data(skip_all = true)]
-    WorkbenchRename {
-        workbench_id: u64,
-        new_name: String,
-    },
     #[step_data(skip_update = true, skip_delete = true)]
     WorkbenchPoint {
         workbench_id: IDType,
