@@ -9,7 +9,7 @@ use syn::{parse_macro_input, Attribute, DeriveInput, Fields, Ident, MetaNameValu
 use syn::spanned::Spanned;
 
 #[proc_macro_derive(MessageSubType)]
-pub fn message_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn message_type_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
 
