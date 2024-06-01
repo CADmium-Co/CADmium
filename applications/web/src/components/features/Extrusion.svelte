@@ -37,32 +37,31 @@
     workbenchIsStale.set(true)
   }
 
-  function sendUpdate() {
-    const faceIdsFromSelection = $currentlySelected
-      .filter(e => e.type === "face")
-      .map(e => e.id)
-      .sort()
-    updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
+  function sendUpdate(specificFaceIds?: string[]) {
+    if (specificFaceIds) {
+      updateExtrusion(id, data.sketch_id, length, specificFaceIds)
+    } else {
+      const faceIdsFromSelection = $currentlySelected
+        .filter(e => e.type === "face")
+        .map(e => e.id)
+        .sort()
+      updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
+    }
   }
 
-  currentlySelected.subscribe(e => {
+  currentlySelected.subscribe(store => {
     if ($featureIndex !== index) return
 
-    // log("[$currentlySelected]", $currentlySelected)
-    // log("[$featureIndex]", typeof $featureIndex, $featureIndex)
-
-    const faceIdsFromSelection = $currentlySelected
+    const faceIdsFromSelection = store
       .filter(e => e.type === "face")
       .map(e => e.id)
       .sort()
-
-    // log("[closeAndRefresh] ids from inputs and from selection:", faceIdsFromInputs, faceIdsFromSelection)
 
     if (arraysEqual(faceIdsFromInputs, faceIdsFromSelection)) {
       // log("[closeAndRefresh] face ids are the same, no update")
     } else {
       // log("[closeAndRefresh] triggering update to new face Ids:", faceIdsFromSelection)
-      sendUpdate()
+      sendUpdate(faceIdsFromSelection)
     }
   })
 
