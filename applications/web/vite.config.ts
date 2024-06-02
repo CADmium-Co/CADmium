@@ -17,6 +17,7 @@ export default defineConfig({
   },
   server: {
     strictPort: true,
+    host: "127.0.0.1",
     port: 5173,
     fs: {
       // Allow serving files from one level up to the project root
