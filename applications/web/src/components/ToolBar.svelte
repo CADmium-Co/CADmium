@@ -5,7 +5,6 @@
 
   const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  let solving = false
   // todo ask Matt why is this a no-op?
   const createNewExtrusion = () => {
     newExtrusion()
