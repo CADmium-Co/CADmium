@@ -8,46 +8,43 @@
 
   export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
 
-  // $: pointsById, log("[props]", pointsById, sketchIndex, active, projectToPlane)
+  let previousPoint: PointLikeById | null = null
 
-  let previousPoint: PointLikeById | null
+  let stack: PointLikeById[] = []
 
-  $: if ($sketchTool !== "line") previousPoint = null
+  $: if ($sketchTool !== "line") clearStack()
 
-  function processPoint(point: PointLikeById | null) {
-    if (!previousPoint && point) {
-      // if there is no anchor point, set one
-      if (point.id) {
-        // nothing to do, the point exists!
-        log("[processPoint] nothing to do the point exists!")
-      } else {
-        log("[processPoint] oh cool, creating point!")
-        point.id = null
-      }
-    } else {
-      // there WAS an anchor point, so we should create a line
+  function pushToStack(point: PointLikeById) {
+    if (!point) return
+    if (!point.id) point.id = addPointToSketch(sketchIndex, point.twoD, false)
+    stack.push(point)
+  }
 
-      // if the center point doesn't exist, then we should create a point
-      if (previousPoint?.id === null) previousPoint.id = addPointToSketch(sketchIndex, previousPoint?.twoD!, false)
+  function processPoint(point: PointLikeById) {
+    pushToStack(point)
 
-      if (point?.id) {
-        // if the point exists, then we should create a line
-        if (previousPoint?.id && point.id) addLineToSketch(sketchIndex, +previousPoint.id, +point.id)
-        previousPoint = null
-        return
-      } else {
-        // if the point doesn't exist, then we should create a point and a line
-        point!.id = addPointToSketch(sketchIndex, point!.twoD!, false)
-        addLineToSketch(sketchIndex, +previousPoint!.id!, +point!.id!)
-      }
+    switch (stack.length) {
+      case 0: // nothing to do, the stack is empty
+        break
+      case 1: // can't create a line with only one point!
+        break
+      default:
+        const previousPoint = stack[stack.length - 2]
+        addLineToSketch(sketchIndex, +previousPoint.id!, +point!.id!)
+        popFromStack()
+        popFromStack()
+        // leave the last point on the stack in case we want to create another line from that point
+        pushToStack(point)
+        break
     }
-    // @ts-ignore  todo rework points
     previousPoint = point
   }
 
   export function click(_event: Event, projected: Point) {
-    if ($snapPoints.length > 0) processPoint($snapPoints[0])
-    else processPoint({twoD: projected.twoD, threeD: projected.threeD, id: null})
+    if ($snapPoints.length > 0) {
+      log("[click] [snapPoints]", $snapPoints)
+      processPoint($snapPoints[0])
+    } else processPoint({twoD: projected.twoD, threeD: projected.threeD, id: null})
   }
 
   export function mouseMove(_event: Event, projected: {x: number; y: number}) {
@@ -57,7 +54,6 @@
     let snappedTo: PointLikeById | null = null
 
     for (const geom of $currentlyMousedOver) {
-      // log("[geom of $currentlyMousedOver]", geom)
       if (geom.type === "point3D") {
         if (geom.x && geom.y && geom.z) {
           const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
@@ -66,19 +62,16 @@
             threeD: {x: geom.x, y: geom.y, z: geom.z},
             id: null,
           } satisfies PointLikeById
-          // log("[point:PointLikeById]", point)
           snappedTo = point
         }
       }
       if (geom.type === "point") {
         const point = pointsById[geom.id]
-        // log("[pointsById]", pointsById)
         snappedTo = {
           twoD: point.twoD,
           threeD: point.threeD,
           id: geom.id,
         } satisfies PointLikeById
-        // log("[snappedTo]", snappedTo)
         break // If there is a 2D point, prefer to use it rather than the 3D point
       }
     }
@@ -92,11 +85,10 @@
 
       if (snappedTo) end = snappedTo
 
-      // prettier-ignore
       const previewGeoms = [
-				{ type: "line", start: previousPoint, end: end, uuid: `line-${end.twoD!.x}-${end.twoD!.y}` },
-				{ type: "point", x: end.twoD!.x, y: end.twoD!.y, uuid: `point-${end.twoD!.x}-${end.twoD!.y}` }
-			] satisfies PreviewGeometry[]
+        {type: "line", start: previousPoint, end: end, uuid: `line-${end.twoD!.x}-${end.twoD!.y}`},
+        {type: "point", x: end.twoD!.x, y: end.twoD!.y, uuid: `point-${end.twoD!.x}-${end.twoD!.y}`},
+      ] satisfies PreviewGeometry[]
 
       if (previousPoint.id === null) {
         const p = {
@@ -115,10 +107,20 @@
   export function onKeyDown(event: KeyboardEvent) {
     if (!active) return
     if (event.key === "Escape") {
-      previewGeometry.set([])
-      previousPoint = null
+      clearStack()
       $sketchTool = "select"
     }
+  }
+
+  function clearStack() {
+    previousPoint = null
+    previewGeometry.set([])
+    snapPoints.set([])
+    stack = []
+  }
+
+  function popFromStack(): PointLikeById | undefined {
+    return stack.pop()
   }
 </script>
 
