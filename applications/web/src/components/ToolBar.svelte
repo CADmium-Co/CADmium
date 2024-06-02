@@ -5,6 +5,7 @@
 
   const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
+  let solving = false
   // todo ask Matt why is this a no-op?
   const createNewExtrusion = () => {
     newExtrusion()
@@ -45,7 +46,7 @@
     {/each}
   {:else}
     {#each actions as action}
-      <button class="inline-flex items-center {action.text === 'Solve' && solving ? 'bg-gray-400' : ''} hover:bg-gray-200 p-1" on:click={action.handler}>
+      <button class="inline-flex items-center hover:bg-gray-200 p-1" on:click={action.handler}>
         <img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ""}
       </button>
     {/each}
