@@ -114,7 +114,6 @@
       <div>
         <a href="https://github.com/mattferraro/cadmium"><img class="h-6 w-6" src="{base}/github-mark.svg" alt="github logo" /></a>
       </div>
-      <div>{userName}</div>
     </div>
   </div>
 </div>
