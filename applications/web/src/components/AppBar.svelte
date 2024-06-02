@@ -113,10 +113,10 @@
 
     <div class="flex-grow flex flex-row-reverse gap-4 mr-4">
       <div>
-        <a href="https://discord.com/invite/qJCsKJeyZv"><DiscordLogo class="h-6 w-6"/></a>
+        <a href="https://discord.com/invite/qJCsKJeyZv" target="_blank"><DiscordLogo class="h-6 w-6"/></a>
       </div>
       <div>
-        <a href="https://github.com/mattferraro/cadmium"><GithubLogo class="h-6 w-6"/></a>
+        <a href="https://github.com/mattferraro/cadmium" target="_blank"><GithubLogo class="h-6 w-6"/></a>
       </div>
     </div>
   </div>
