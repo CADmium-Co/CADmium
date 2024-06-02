@@ -5,6 +5,8 @@
   import Download from "phosphor-svelte/lib/Download"
   import Upload from "phosphor-svelte/lib/Upload"
   import Bug from "phosphor-svelte/lib/Bug"
+  import DiscordLogo from "phosphor-svelte/lib/DiscordLogo"
+  import GithubLogo from "phosphor-svelte/lib/GithubLogo"
   import type {WithTarget} from "shared/types"
   import {isProject} from "shared/typeGuards"
   import {base} from "../base"
@@ -112,7 +114,10 @@
 
     <div class="flex-grow flex flex-row-reverse gap-4 mr-4">
       <div>
-        <a href="https://github.com/mattferraro/cadmium"><img class="h-6 w-6" src="{base}/github-mark.svg" alt="github logo" /></a>
+        <a href="https://discord.com/invite/qJCsKJeyZv"><DiscordLogo class="h-6 w-6"/></a>
+      </div>
+      <div>
+        <a href="https://github.com/mattferraro/cadmium"><GithubLogo class="h-6 w-6"/></a>
       </div>
     </div>
   </div>
