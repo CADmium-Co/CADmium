@@ -85,8 +85,8 @@ importers:
         specifier: ^2.39.0
         version: 2.39.0(eslint@9.4.0)(svelte@5.0.0-next.141)
       phosphor-svelte:
-        specifier: ^1.4.2
-        version: 1.4.2(svelte@5.0.0-next.141)
+        specifier: ^2.0.1
+        version: 2.0.1(svelte@5.0.0-next.141)
       postcss:
         specifier: ^8.4.38
         version: 8.4.38
@@ -1513,8 +1513,8 @@ packages:
   periscopic@3.1.0:
     resolution: {integrity: sha512-vKiQ8RRtkl9P+r/+oefh25C3fhybptkHKCZSPlcXiJux2tJF55GnEj3BVn4A5gKfq9NWWXXrxkHBwVPUfH0opw==}
 
-  phosphor-svelte@1.4.2:
-    resolution: {integrity: sha512-wdHKlZbE5D3ad1dd4K9bqWxpOb6gIwe+/ZeXGI9YpdKqECxqd+g3/NsLYE1+/hjlXixTWhQ7VMVIxTtBRXegCg==}
+  phosphor-svelte@2.0.1:
+    resolution: {integrity: sha512-2Ryvaf1sfCNOF0zTQVghtxOs/6JKn9MV+e9uluNAT9wAosgNYnaBD210WcFGRrva1sF8cddv7EWSS//ITNN4mg==}
     peerDependencies:
       svelte: '>=3'
 
@@ -3442,7 +3442,7 @@ snapshots:
       estree-walker: 3.0.3
       is-reference: 3.0.2
 
-  phosphor-svelte@1.4.2(svelte@5.0.0-next.141):
+  phosphor-svelte@2.0.1(svelte@5.0.0-next.141):
     dependencies:
       svelte: 5.0.0-next.141
 
