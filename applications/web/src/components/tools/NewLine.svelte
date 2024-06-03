@@ -49,10 +49,8 @@
   }
 
   export function click(_event: Event, projected: Point) {
-    if ($snapPoints.length > 0) {
-      log("[click] [snapPoints]", $snapPoints)
-      processPoint($snapPoints[0])
-    } else processPoint({twoD: projected.twoD, threeD: projected.threeD, id: null})
+    if ($snapPoints.length > 0) processPoint($snapPoints[0])
+    else processPoint({twoD: projected.twoD, threeD: projected.threeD, id: null})
   }
 
   export function mouseMove(_event: Event, projected: {x: number; y: number}) {
