@@ -2,6 +2,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+use cadmium_macros::NoRealize;
 use isotope::decompose::face::Face;
 use isotope::primitives::line::Line;
 use isotope::primitives::point2::Point2 as ISOPoint2;
@@ -57,13 +58,13 @@ impl ISketch {
         real_sketch
     }
 
-    pub fn from_plane_description(wb: &Workbench, plane_description: PlaneDescription) -> Self {
+    pub fn try_from_plane_description(wb: &Workbench, plane_description: &PlaneDescription) -> anyhow::Result<Self> {
         let plane = match plane_description {
             PlaneDescription::PlaneId(plane_id) =>
                 wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
             PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
         }.clone();
-        Self::new(plane)
+        Ok(Self::new(plane))
     }
 
     /// Helper function to go from an isotope point2D to a point_3D, as calculated during new
@@ -122,7 +123,7 @@ impl Identifiable for Rc<RefCell<ISketch>> {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
     x: f64,
@@ -140,7 +141,7 @@ impl MessageHandler for AddPoint {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddArc {
     center: IDType,
@@ -169,7 +170,7 @@ impl MessageHandler for AddArc {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddCircle {
     center: IDType,
@@ -195,7 +196,7 @@ impl MessageHandler for AddCircle {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddLine {
     start: IDType,
@@ -226,7 +227,7 @@ impl MessageHandler for AddLine {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct DeletePrimitive {
     id: IDType,

@@ -90,7 +90,7 @@ impl Project {
         let workbench_ref = self.get_workbench_by_id(workbench_id)?;
         let workbench = workbench_ref.borrow();
 
-        let mut realization = Realization::new();
+        let mut realization = Realization::new(&workbench);
         for i in 0..max_steps {
             realization = workbench.history.get(i as usize).unwrap().realize(realization)?;
         }
