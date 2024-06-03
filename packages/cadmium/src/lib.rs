@@ -1,4 +1,6 @@
+use message::prelude::ProjectMessageHandler;
 use message::{Message, MessageResult};
+// use message::{Message, MessageResult};
 use tsify::declare;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
@@ -80,11 +82,15 @@ impl Project {
     #[wasm_bindgen]
     pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
         // TODO: Use get() and return a Result
-        self.native.workbenches.get(workbench_index as usize).unwrap().clone()
+        self.native.workbenches
+            .get(workbench_index as usize)
+            .unwrap()
+            .borrow()
+            .clone()
     }
 
     #[wasm_bindgen]
-    pub fn send_message(&mut self, message: Message) -> MessageResult {
+    pub fn send_message(&mut self, message: &Message) -> MessageResult {
         message.handle(&mut self.native).into()
     }
 

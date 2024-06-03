@@ -8,7 +8,7 @@ use crate::solid::Solid;
 use crate::IDType;
 use std::collections::BTreeMap;
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Realization {
     // a Realization is what you get if you apply the steps in a Workbench's

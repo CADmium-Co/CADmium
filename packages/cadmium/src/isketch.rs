@@ -101,6 +101,36 @@ impl ISketch {
     }
 }
 
+use crate::message::prelude::*;
+use crate::workbench::Workbench;
+
+impl Identifiable for Rc<RefCell<ISketch>> {
+    type Parent = Rc<RefCell<Workbench>>;
+    const ID_NAME: &'static str = "sketch_id";
+
+    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
+        Ok(parent.borrow().sketches.get(&id).ok_or(anyhow::anyhow!(""))?.clone())
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AddPoint {
+    x: f64,
+    y: f64,
+}
+
+impl MessageHandler for AddPoint {
+    type Parent = Rc<RefCell<ISketch>>;
+    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+        let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(ISOPoint2::new(self.x, self.y))));
+
+        let point_id = sketch_ref.borrow().sketch().borrow_mut().add_primitive(iso_point)?;
+        // self.points_3d.insert(point_id, Point3::from_plane_point(&self.plane.borrow(), &point.into()));
+        Ok(Some(point_id))
+    }
+}
+
+
 impl ISketch {
     pub(super) fn add_sketch_point(&mut self, point: Point2) -> Result<IDType, anyhow::Error> {
         let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(point.clone().into())));

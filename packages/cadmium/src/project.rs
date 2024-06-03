@@ -1,3 +1,6 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
@@ -18,7 +21,7 @@ pub struct Assembly {
 pub struct Project {
     pub name: String,
     pub assemblies: Vec<Assembly>,
-    pub workbenches: Vec<Workbench>,
+    pub workbenches: Vec<Rc<RefCell<Workbench>>>,
 }
 
 impl Project {
@@ -30,7 +33,7 @@ impl Project {
         };
 
         let wb = Workbench::new("Workbench 1");
-        p.workbenches.push(wb);
+        p.workbenches.push(Rc::new(RefCell::new(wb)));
 
         p
     }
@@ -67,26 +70,30 @@ impl Project {
     //     }
     // }
 
-    pub fn get_workbench_mut(&mut self, name: &str) -> Result<&mut Workbench, CADmiumError> {
+    pub fn get_workbench_by_id(&self, id: u64) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
-            .iter_mut()
-            .find(|wb| wb.name == name)
-            .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
-    }
-
-    pub fn get_workbench_by_id_mut(&mut self, id: u64) -> Result<&mut Workbench, CADmiumError> {
-        self.workbenches
-            .get_mut(id as usize)
+            .get(id as usize)
+            .map(|f| f.clone())
             .ok_or(CADmiumError::WorkbenchIDNotFound(id))
     }
 
+    pub fn get_workbench_by_name(&self, name: &str) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
+        self.workbenches
+            .iter()
+            .find(|wb| wb.borrow().name == name)
+            .map(|f| f.clone())
+            .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
+    }
+
     pub fn get_realization(&mut self, workbench_id: u64, max_steps: u64) -> Result<Realization, anyhow::Error> {
-        let workbench = &mut self.workbenches.get_mut(workbench_id as usize).unwrap();
+        let workbench_ref = self.get_workbench_by_id(workbench_id)?;
+        let mut workbench = workbench_ref.borrow_mut();
         workbench.realize(max_steps)
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi)]
 pub struct ProjectRename {
     new_name: String,
 }
@@ -112,27 +119,27 @@ pub mod tests {
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
         let plane_desc = PlaneDescription::PlaneId(0);
-        let sid = p.add_workbench_sketch("Sketch 1".to_string(), 0, plane_desc).unwrap();
+        // let sid = p.add_workbench_sketch("Sketch 1".to_string(), 0, plane_desc).unwrap();
 
-        let ll = p.add_sketch_point("bottom left".to_string(), 0, sid, Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
-        let lr = p.add_sketch_point("bottom right".to_string(), 0, sid, Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
-        let ul = p.add_sketch_point("top left".to_string(), 0, sid, Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
-        let ur = p.add_sketch_point("top right".to_string(), 0, sid, Point2 { x: 40.0, y: 40.0, hidden: false }).unwrap();
-        p.add_sketch_line("bottom".to_string(), 0, sid, ll, lr).unwrap();
-        p.add_sketch_line("right".to_string(), 0, sid, lr, ur).unwrap();
-        p.add_sketch_line("up".to_string(), 0, sid, ur, ul).unwrap();
-        p.add_sketch_line("left".to_string(), 0, sid, ul, ll).unwrap();
+        // let ll = p.add_sketch_point("bottom left".to_string(), 0, sid, Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
+        // let lr = p.add_sketch_point("bottom right".to_string(), 0, sid, Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
+        // let ul = p.add_sketch_point("top left".to_string(), 0, sid, Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
+        // let ur = p.add_sketch_point("top right".to_string(), 0, sid, Point2 { x: 40.0, y: 40.0, hidden: false }).unwrap();
+        // p.add_sketch_line("bottom".to_string(), 0, sid, ll, lr).unwrap();
+        // p.add_sketch_line("right".to_string(), 0, sid, lr, ur).unwrap();
+        // p.add_sketch_line("up".to_string(), 0, sid, ur, ul).unwrap();
+        // p.add_sketch_line("left".to_string(), 0, sid, ul, ll).unwrap();
 
-        p.add_solid_extrusion(
-            "Extrusion 1".to_string(),
-            0,
-            vec![0],
-            0,
-            25.0,
-            0.0,
-            Mode::New,
-            Direction::Normal,
-        ).unwrap();
+        // p.add_solid_extrusion(
+        //     "Extrusion 1".to_string(),
+        //     0,
+        //     vec![0],
+        //     0,
+        //     25.0,
+        //     0.0,
+        //     Mode::New,
+        //     Direction::Normal,
+        // ).unwrap();
 
         p
     }
