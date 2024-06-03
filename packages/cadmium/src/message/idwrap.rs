@@ -3,7 +3,7 @@ use std::fmt;
 use serde::de::{self, MapAccess, Visitor};
 use serde::ser::SerializeMap;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use tsify::Tsify;
+use tsify_next::Tsify;
 
 use crate::IDType;
 

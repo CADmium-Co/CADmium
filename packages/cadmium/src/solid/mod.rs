@@ -5,7 +5,7 @@ use std::fmt::Debug;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
-use tsify::Tsify;
+use tsify_next::Tsify;
 
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;

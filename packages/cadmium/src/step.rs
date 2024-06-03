@@ -1,7 +1,7 @@
 use std::fmt::Display;
 
 use serde::{Deserialize, Serialize};
-use tsify::Tsify;
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::message::Message;

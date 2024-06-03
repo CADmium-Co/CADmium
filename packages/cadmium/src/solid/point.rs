@@ -6,7 +6,7 @@ use cadmium_macros::NoRealize;
 use serde::{Deserialize, Serialize};
 use truck_polymesh::Point3 as PolyTruckPoint3;
 use isotope::primitives::point2::Point2 as ISOPoint2;
-use tsify::Tsify;
+use tsify_next::Tsify;
 
 use crate::archetypes::{Plane, Vector3};
 
