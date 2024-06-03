@@ -2,7 +2,7 @@
 
 use std::ops::{Sub, SubAssign};
 
-use cadmium::solid::extrusion::fuse;
+use cadmium::solid::helpers::fuse;
 use truck_meshalgo::filters::OptimizingFilter;
 use truck_meshalgo::tessellation::{MeshableShape, MeshedShape};
 use truck_modeling::builder::{translated, tsweep, vertex};
