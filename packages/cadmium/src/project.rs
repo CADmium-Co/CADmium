@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use cadmium_macros::NoRealize;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
@@ -87,7 +88,7 @@ impl Project {
 
     pub fn get_realization(&mut self, workbench_id: u64, max_steps: u32) -> Result<Realization, anyhow::Error> {
         let workbench_ref = self.get_workbench_by_id(workbench_id)?;
-        let mut workbench = workbench_ref.borrow_mut();
+        let workbench = workbench_ref.borrow();
 
         let mut realization = Realization::new();
         for i in 0..max_steps {
@@ -98,7 +99,7 @@ impl Project {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct ProjectRename {
     new_name: String,

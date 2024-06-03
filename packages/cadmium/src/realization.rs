@@ -3,6 +3,7 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::Plane;
+use crate::message::idwrap::IDWrap;
 use crate::solid::point::Point3;
 use crate::isketch::ISketch;
 use crate::solid::Solid;
@@ -10,8 +11,13 @@ use crate::IDType;
 use std::collections::BTreeMap;
 
 pub trait Realizable {
-    // type Parent: Realizable;
     fn realize(&self, realization: Realization) -> anyhow::Result<Realization>;
+}
+
+impl<T: Realizable + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> Realizable for IDWrap<T> {
+    fn realize(&self, realization: Realization) -> anyhow::Result<Realization> {
+        self.inner.realize(realization)
+    }
 }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]

@@ -1,12 +1,5 @@
-use std::collections::HashMap;
-
-use convert_case::{Case, Casing};
-use proc_macro2::TokenStream;
-// use proc_macro::TokenStream;
 use quote::quote;
-use syn::punctuated::Punctuated;
-use syn::{parse_macro_input, Attribute, DeriveInput, Fields, Ident, MetaNameValue, Token};
-use syn::spanned::Spanned;
+use syn::{parse_macro_input, DeriveInput};
 
 #[proc_macro_derive(MessageEnum)]
 pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -14,7 +7,7 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
     let name = input.ident;
     let data = match input.data {
         syn::Data::Enum(data) => data,
-        _ => panic!("StepData can only be derived for enums"),
+        _ => panic!("MessageEnum can only be derived for enums"),
     };
 
     let variants = data.variants.iter().map(|variant| {
@@ -36,9 +29,27 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
             }
 
             pub fn realize(&self, realization: crate::realization::Realization) -> anyhow::Result<crate::realization::Realization> {
-                // match self {
-                //     #( #variants => msg.realize(realization), )*
-                // }
+                match self {
+                    #( #variants => msg.realize(realization), )*
+                }
+            }
+        }
+    }.into()
+}
+
+#[proc_macro_derive(NoRealize)]
+pub fn no_realize_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident;
+    match input.data {
+        syn::Data::Enum(_) => {},
+        syn::Data::Struct(_) => {},
+        _ => panic!("NoRealize can only be derived for enums or structs"),
+    };
+
+    quote! {
+        impl crate::realization::Realizable for #name {
+            fn realize(&self, realization: crate::realization::Realization) -> anyhow::Result<crate::realization::Realization> {
                 Ok(realization)
             }
         }
