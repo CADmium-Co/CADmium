@@ -18,7 +18,9 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
             #name::#variant_name(msg)
         }
     });
+    let variant_names = data.variants.iter().map(|variant| &variant.ident);
     let variants_clone = variants.clone();
+    let variants_clone2 = variants.clone();
 
     quote! {
         impl #name {
@@ -30,7 +32,15 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
 
             pub fn realize(&self, realization: crate::realization::Realization) -> anyhow::Result<crate::realization::Realization> {
                 match self {
-                    #( #variants => msg.realize(realization), )*
+                    #( #variants_clone2 => msg.realize(realization), )*
+                }
+            }
+        }
+
+        impl std::fmt::Display for #name {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                match self {
+                    #( #variants => write!(f, stringify!(#variant_names)), )*
                 }
             }
         }
