@@ -17,7 +17,7 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-#[derive(Debug, Clone, Tsify, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
     pub(crate) name: String,
@@ -274,7 +274,7 @@ impl Workbench {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
     x: f64,
@@ -294,7 +294,7 @@ impl MessageHandler for AddPoint {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPlane {
     plane: Plane,
@@ -314,7 +314,7 @@ impl MessageHandler for AddPlane {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddSketch {
     plane_description: PlaneDescription,
@@ -358,7 +358,7 @@ pub struct WorkbenchRename {
 
 impl MessageHandler for WorkbenchRename {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Rc<RefCell<Workbench>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let mut workbench = workbench_ref.borrow_mut();
         workbench.name = self.new_name.clone();
         Ok(None)

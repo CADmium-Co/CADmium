@@ -113,7 +113,7 @@ impl Identifiable for Rc<RefCell<ISketch>> {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
     x: f64,
@@ -131,7 +131,7 @@ impl MessageHandler for AddPoint {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddArc {
     center: IDType,
@@ -160,7 +160,7 @@ impl MessageHandler for AddArc {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddCircle {
     center: IDType,
@@ -186,7 +186,7 @@ impl MessageHandler for AddCircle {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddLine {
     start: IDType,
@@ -217,7 +217,7 @@ impl MessageHandler for AddLine {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct DeletePrimitive {
     id: IDType,

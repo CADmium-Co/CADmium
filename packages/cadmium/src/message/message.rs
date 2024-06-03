@@ -7,7 +7,7 @@ use crate::IDType;
 use super::ProjectMessageHandler;
 use super::idwrap::IDWrap;
 
-#[derive(MessageEnum, Tsify, Debug, Serialize, Deserialize)]
+#[derive(MessageEnum, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub enum Message {
     ProjectRename(crate::project::ProjectRename),
