@@ -1,4 +1,3 @@
-use cadmium_macros::NoRealize;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
@@ -111,7 +110,7 @@ impl Identifiable for Rc<RefCell<Workbench>> {
 
 // }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
     x: f64,
@@ -132,7 +131,7 @@ impl MessageHandler for AddPoint {
 }
 
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPlane {
     plane: Plane,
@@ -152,7 +151,7 @@ impl MessageHandler for AddPlane {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddSketch {
     plane_description: PlaneDescription,
@@ -173,7 +172,7 @@ impl MessageHandler for AddSketch {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WorkbenchRename {
     new_name: String,

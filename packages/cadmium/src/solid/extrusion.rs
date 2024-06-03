@@ -295,11 +295,12 @@ mod tests {
     #[test]
     #[ignore = "test failing on CI"]
     fn create_project_solid() {
-        let mut p = Project::new("Test Extrusion");
+        let p = Project::new("Test Extrusion");
 
         // now get solids? save as obj or stl or step?
-        let realization = p.get_realization(0, 100).unwrap();
-        let solids = realization.solids;
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let workbench = workbench_ref.borrow();
+        let solids = &workbench.solids;
         println!("solids: {:?}", solids);
     }
 
@@ -324,11 +325,12 @@ mod tests {
             let contents = std::fs::read_to_string(file).unwrap();
 
             // deserialize the contents into a Project
-            let mut p: Project = serde_json::from_str(&contents).unwrap();
+            let p: Project = serde_json::from_str(&contents).unwrap();
 
             // get a realization
-            let realization = p.get_realization(0, 100).unwrap();
-            let solids = realization.solids;
+            let workbench_ref = p.get_workbench_by_id(0).unwrap();
+            let workbench = workbench_ref.borrow();
+            let solids = &workbench.solids;
             println!("[{}] solids: {:?}", file, solids.len());
 
             assert_eq!(solids.len(), *expected_solids); // doesn't work yet!
@@ -338,12 +340,13 @@ mod tests {
     #[test]
     #[ignore = "test failing on CI"]
     fn step_export() {
-        let mut p = create_test_project();
-        let realization = p.get_realization(0, 100).unwrap();
-        let keys = Vec::from_iter(realization.solids.keys());
+        let p = create_test_project();
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let workbench = workbench_ref.borrow();
+        let solid = workbench.solids.get(&0).unwrap().borrow();
 
-        realization.save_solid_as_step_file(*keys[0], "pkg/test.step");
-        realization.save_solid_as_obj_file(*keys[0], "pkg/test.obj", 0.001);
+        solid.save_as_step("pkg/test.step");
+        solid.save_as_obj("pkg/test.obj", 0.001);
     }
 
 }
