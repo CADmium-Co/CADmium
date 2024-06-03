@@ -5,7 +5,6 @@ use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::message::Message;
-use crate::realization::Realizable;
 use crate::IDType;
 
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
@@ -35,11 +34,5 @@ impl Step {
 impl Display for Step {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}:{}-{}", self.name, self.data, self.id)
-    }
-}
-
-impl Realizable for Step {
-    fn realize(&self, realization: crate::realization::Realization) -> anyhow::Result<crate::realization::Realization> {
-        self.data.realize(realization)
     }
 }
