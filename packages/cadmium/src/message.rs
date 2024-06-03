@@ -1,12 +1,9 @@
-use std::rc::Rc;
-
 use cadmium_macros::MessageEnum;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 pub mod prelude {
     use std::fmt;
-    use std::rc::Rc;
 
     use serde::de::{self, MapAccess, Visitor};
     use serde::{Deserialize, Deserializer};
@@ -161,6 +158,12 @@ pub enum Message {
     ProjectRename(crate::project::ProjectRename),
     WorkbenchRename(IDWrap<crate::workbench::WorkbenchRename>),
     WorkbenchPointUpdate(IDWrap<IDWrap<crate::solid::point::WorkbenchPointUpdate>>),
+
+    SketchAddPoint(IDWrap<IDWrap<crate::isketch::AddPoint>>),
+    SketchAddArc(IDWrap<IDWrap<crate::isketch::AddArc>>),
+    SketchAddCircle(IDWrap<IDWrap<crate::isketch::AddCircle>>),
+    SketchAddLine(IDWrap<IDWrap<crate::isketch::AddLine>>),
+    SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::DeletePrimitive>>),
 }
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]

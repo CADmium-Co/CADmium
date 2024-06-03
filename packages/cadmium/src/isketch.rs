@@ -10,7 +10,7 @@ use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::archetypes::{Plane, Point2};
+use crate::archetypes::Plane;
 use crate::error::CADmiumError;
 use crate::solid::point::Point3;
 use crate::IDType;
@@ -113,7 +113,8 @@ impl Identifiable for Rc<RefCell<ISketch>> {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
     x: f64,
     y: f64,
@@ -130,56 +131,80 @@ impl MessageHandler for AddPoint {
     }
 }
 
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct AddArc {
+    center: IDType,
+    radius: f64,
+    clockwise: bool,
+    start_angle: f64,
+    end_angle: f64
+}
 
-impl ISketch {
-    pub(super) fn add_sketch_point(&mut self, point: Point2) -> Result<IDType, anyhow::Error> {
-        let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(point.clone().into())));
+impl MessageHandler for AddArc {
+    type Parent = Rc<RefCell<ISketch>>;
+    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+        let isketch = sketch_ref.borrow();
+        let mut sketch = isketch.sketch.borrow_mut();
 
-        let mut sketch = self.sketch.borrow_mut();
-        let point_id = sketch.add_primitive(iso_point)?;
-        self.points_3d.insert(point_id, Point3::from_plane_point(&self.plane.borrow(), &point.into()));
-        Ok(point_id)
-    }
-
-    pub(super) fn add_sketch_arc(&mut self, center: IDType, radius: f64, clockwise: bool, start_angle: f64, end_angle: f64) -> Result<IDType, anyhow::Error> {
-        let mut sketch = self.sketch.borrow_mut();
-
-        let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center).unwrap() {
+        let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.center).unwrap() {
             point
         } else {
             return Err(anyhow::anyhow!("Center point is not a point"));
         };
 
-        let arc = PrimitiveCell::Arc(Rc::new(RefCell::new(isotope::primitives::arc::Arc::new(center_point.clone(), radius, clockwise, start_angle, end_angle))));
+        let arc = PrimitiveCell::Arc(Rc::new(RefCell::new(isotope::primitives::arc::Arc::new(center_point.clone(), self.radius, self.clockwise, self.start_angle, self.end_angle))));
 
         let point_id = sketch.add_primitive(arc)?;
-        Ok(point_id)
+        Ok(Some(point_id))
     }
+}
 
-    pub(super) fn add_sketch_circle(&mut self, center: IDType, radius: f64) -> Result<IDType, anyhow::Error> {
-        let mut sketch = self.sketch.borrow_mut();
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct AddCircle {
+    center: IDType,
+    radius: f64,
+}
 
-        let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center).unwrap() {
+impl MessageHandler for AddCircle {
+    type Parent = Rc<RefCell<ISketch>>;
+    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+        let isketch = sketch_ref.borrow();
+        let mut sketch = isketch.sketch.borrow_mut();
+
+        let center_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.center).unwrap() {
             point
         } else {
             return Err(anyhow::anyhow!("Center point is not a point"));
         };
 
-        let circle = PrimitiveCell::Circle(Rc::new(RefCell::new(isotope::primitives::circle::Circle::new(center_point.clone(), radius))));
+        let circle = PrimitiveCell::Circle(Rc::new(RefCell::new(isotope::primitives::circle::Circle::new(center_point.clone(), self.radius))));
 
         let point_id = sketch.add_primitive(circle)?;
-        Ok(point_id)
+        Ok(Some(point_id))
     }
+}
 
-    pub(super) fn add_sketch_line(&mut self, start: IDType, end: IDType) -> Result<IDType, anyhow::Error> {
-        let mut sketch = self.sketch.borrow_mut();
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct AddLine {
+    start: IDType,
+    end: IDType,
+}
 
-        let start_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(start).unwrap() {
+impl MessageHandler for AddLine {
+    type Parent = Rc<RefCell<ISketch>>;
+    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+        let isketch = sketch_ref.borrow();
+        let mut sketch = isketch.sketch.borrow_mut();
+
+        let start_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.start).unwrap() {
             point
         } else {
             return Err(anyhow::anyhow!("Start point is not a point"));
         };
-        let end_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(end).unwrap() {
+        let end_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.end).unwrap() {
             point
         } else {
             return Err(anyhow::anyhow!("End point is not a point"));
@@ -188,11 +213,23 @@ impl ISketch {
         let line = PrimitiveCell::Line(Rc::new(RefCell::new(Line::new(start_point.clone(), end_point.clone()))));
 
         let point_id = sketch.add_primitive(line)?;
-        Ok(point_id)
+        Ok(Some(point_id))
     }
+}
 
-    pub(super) fn delete_primitive_id(&mut self, id: IDType) -> Result<IDType, anyhow::Error> {
-        self.sketch.borrow_mut().delete_primitive(id)?;
-        Ok(id)
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct DeletePrimitive {
+    id: IDType,
+}
+
+impl MessageHandler for DeletePrimitive {
+    type Parent = Rc<RefCell<ISketch>>;
+    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+        let isketch = sketch_ref.borrow();
+        let mut sketch = isketch.sketch.borrow_mut();
+
+        sketch.delete_primitive(self.id)?;
+        Ok(None)
     }
 }

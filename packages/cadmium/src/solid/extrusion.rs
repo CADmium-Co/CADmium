@@ -295,7 +295,7 @@ mod tests {
     #[test]
     #[ignore = "test failing on CI"]
     fn create_project_solid() {
-        let mut p = Project::new("Test Extrusion");
+        let p = Project::new("Test Extrusion");
 
         // now get solids? save as obj or stl or step?
         let workbench = p.workbenches.get(0).unwrap();
@@ -325,7 +325,7 @@ mod tests {
             let contents = std::fs::read_to_string(file).unwrap();
 
             // deserialize the contents into a Project
-            let mut p: Project = serde_json::from_str(&contents).unwrap();
+            let p: Project = serde_json::from_str(&contents).unwrap();
 
             // get a realization
             let workbench = p.workbenches.get(0).unwrap();
@@ -340,7 +340,7 @@ mod tests {
     #[test]
     #[ignore = "test failing on CI"]
     fn step_export() {
-        let mut p = create_test_project();
+        let p = create_test_project();
         let workbench = p.get_workbench_by_id(0).unwrap();
         let realization = workbench.borrow_mut().realize(1000).unwrap();
         let keys = Vec::from_iter(realization.solids.keys());

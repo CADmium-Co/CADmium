@@ -93,7 +93,7 @@ impl Project {
 }
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
-#[tsify(from_wasm_abi)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct ProjectRename {
     new_name: String,
 }
