@@ -4,7 +4,7 @@ use std::rc::Rc;
 use isotope::decompose::face::Face;
 use serde::{Deserialize, Serialize};
 use truck_modeling::builder;
-use tsify::Tsify;
+use tsify_next::Tsify;
 
 use truck_polymesh::InnerSpace;
 use truck_polymesh::Invertible;
