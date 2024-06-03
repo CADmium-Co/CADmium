@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
-use cadmium_macros::NoRealize;
 use isotope::decompose::face::Face;
 use isotope::primitives::line::Line;
 use isotope::primitives::point2::Point2 as ISOPoint2;
@@ -123,7 +122,7 @@ impl Identifiable for Rc<RefCell<ISketch>> {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
     x: f64,
@@ -141,7 +140,7 @@ impl MessageHandler for AddPoint {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddArc {
     center: IDType,
@@ -170,7 +169,7 @@ impl MessageHandler for AddArc {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddCircle {
     center: IDType,
@@ -196,7 +195,7 @@ impl MessageHandler for AddCircle {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddLine {
     start: IDType,
@@ -227,7 +226,7 @@ impl MessageHandler for AddLine {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct DeletePrimitive {
     id: IDType,

@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::ops::{Add, Sub};
 use std::rc::Rc;
 
-use cadmium_macros::NoRealize;
 use serde::{Deserialize, Serialize};
 use truck_polymesh::Point3 as PolyTruckPoint3;
 use isotope::primitives::point2::Point2 as ISOPoint2;
@@ -117,7 +116,7 @@ impl Identifiable for Rc<RefCell<Point3>> {
     }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WorkbenchPointUpdate {
     x: f64,

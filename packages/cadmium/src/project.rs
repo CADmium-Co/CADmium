@@ -1,14 +1,12 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use cadmium_macros::NoRealize;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::error::CADmiumError;
 use crate::message::ProjectMessageHandler;
-use crate::realization::{Realization, Realizable};
 use crate::workbench::Workbench;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -85,21 +83,9 @@ impl Project {
             .map(|f| f.clone())
             .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
     }
-
-    pub fn get_realization(&mut self, workbench_id: u64, max_steps: u32) -> Result<Realization, anyhow::Error> {
-        let workbench_ref = self.get_workbench_by_id(workbench_id)?;
-        let workbench = workbench_ref.borrow();
-
-        let mut realization = Realization::new(&workbench);
-        for i in 0..max_steps {
-            realization = workbench.history.get(i as usize).unwrap().realize(realization)?;
-        }
-
-        Ok(realization)
-    }
 }
 
-#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct ProjectRename {
     new_name: String,
@@ -154,10 +140,11 @@ pub mod tests {
     #[test]
     #[ignore = "test failing due to new architecture"]
     fn one_extrusion() {
-        let mut p = create_test_project();
+        let p = create_test_project();
 
-        let realization = p.get_realization(0, 1000).unwrap();
-        let solids = realization.solids;
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let workbench = workbench_ref.borrow();
+        let solids = &workbench.solids;
 
         assert_eq!(solids.len(), 1);
     }
@@ -220,10 +207,11 @@ pub mod tests {
         let file_contents =
             std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
-        let mut p2 = Project::from_json(&file_contents);
+        let p = Project::from_json(&file_contents);
 
-        let realization = p2.get_realization(0, 1000);
-        println!("{:?}", realization);
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let workbench = workbench_ref.borrow();
+        println!("{:?}", workbench);
     }
 
     // #[test]
