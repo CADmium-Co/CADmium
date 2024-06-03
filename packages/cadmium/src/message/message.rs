@@ -22,6 +22,8 @@ pub enum Message {
     SketchAddCircle(IDWrap<IDWrap<crate::isketch::AddCircle>>),
     SketchAddLine(IDWrap<IDWrap<crate::isketch::AddLine>>),
     SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::DeletePrimitive>>),
+
+    SolidExtrusionAdd(IDWrap<crate::solid::extrusion::Add>),
 }
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
