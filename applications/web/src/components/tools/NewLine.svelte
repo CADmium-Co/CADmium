@@ -15,8 +15,13 @@
   $: if ($sketchTool !== "line") clearStack()
 
   function pushToStack(point: PointLikeById) {
+    // point should have the following properties:
+    // - twoD: an object with x and y properties representing the point in 2D space
+    // - threeD: an object with x, y, and z properties representing the point in 3D space
+    // - id: a string representing the id of the point in the sketch
+    // If the id is nullish we call addPointToSketch to create a new point in the sketch.
     if (!point) return
-    if (!point.id) point.id = addPointToSketch(sketchIndex, point.twoD, false)
+    point.id = point.id ?? addPointToSketch(sketchIndex, point.twoD, false)
     stack.push(point)
   }
 
@@ -29,11 +34,11 @@
       case 1: // can't create a line with only one point!
         break
       default:
-        const previousPoint = stack[stack.length - 2]
-        addLineToSketch(sketchIndex, +previousPoint.id!, +point!.id!)
-        popFromStack()
-        popFromStack()
-        // leave the last point on the stack in case we want to create another line from that point
+        const endPoint = popFromStack()
+        const startPoint = popFromStack()
+        addLineToSketch(sketchIndex, +startPoint.id, +endPoint.id)
+
+        // leave the current point on the stack in case we want to create another line from here
         pushToStack(point)
         break
     }
