@@ -15,6 +15,7 @@
   import NewRectangleTool from "./tools/NewRectangle.svelte"
   import SelectTool from "./tools/Select.svelte"
   import type {ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PlaneData, PreviewGeometry, SketchPoint, PointById, SketchRealized} from "shared/types"
+  import debounce from "just-debounce-it"
 
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
@@ -178,7 +179,7 @@
           }
         }
       }}
-      on:pointermove={e => {
+      on:pointermove={debounce(e => {
         if (editing) {
           if ($sketchTool === "line") {
             newLineTool.mouseMove(e, projectToPlane(e.point))
@@ -188,7 +189,7 @@
             newRectangleTool.mouseMove(e, projectToPlane(e.point))
           }
         }
-      }}
+      }, 10)}
     >
       <T.PlaneGeometry args={[width * 100, height * 100]} />
     </T.Mesh>
