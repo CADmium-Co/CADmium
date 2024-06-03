@@ -299,8 +299,7 @@ mod tests {
         let p = create_test_project();
 
         // now get solids? save as obj or stl or step?
-        let workbench = p.workbenches.get(0).unwrap();
-        let realization = workbench.borrow_mut().realize(100).unwrap();
+        let realization = p.get_realization(0, 100).unwrap();
         let solids = realization.solids;
         assert!(solids.len() == 1);
     }
@@ -326,11 +325,10 @@ mod tests {
             let contents = std::fs::read_to_string(file).unwrap();
 
             // deserialize the contents into a Project
-            let p: Project = serde_json::from_str(&contents).unwrap();
+            let mut p: Project = serde_json::from_str(&contents).unwrap();
 
             // get a realization
-            let workbench = p.workbenches.get(0).unwrap();
-            let realization = workbench.borrow_mut().realize(100).unwrap();
+            let realization = p.get_realization(0, 100).unwrap();
             let solids = realization.solids;
             println!("[{}] solids: {:?}", file, solids.len());
 
@@ -341,9 +339,8 @@ mod tests {
     #[test]
     #[ignore = "test failing on CI"]
     fn step_export() {
-        let p = create_test_project();
-        let workbench = p.get_workbench_by_id(0).unwrap();
-        let realization = workbench.borrow_mut().realize(1000).unwrap();
+        let mut p = create_test_project();
+        let realization = p.get_realization(0, 100).unwrap();
         let keys = Vec::from_iter(realization.solids.keys());
 
         realization.save_solid_as_step_file(*keys[0], "pkg/test.step");
