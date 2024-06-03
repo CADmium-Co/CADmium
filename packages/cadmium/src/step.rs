@@ -4,12 +4,9 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
-use crate::message::{Message, MessageHandler};
+use crate::message::Message;
+use crate::realization::Realizable;
 use crate::IDType;
-
-pub trait Realizable: MessageHandler {
-    fn realize(&self, parent: <Self as MessageHandler>::Parent) -> anyhow::Result<()>;
-}
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -43,5 +40,11 @@ impl Step {
     pub fn unique_id(&self) -> String {
         // TODO: Should use the type of StepData instead of name
         format!("{}:{}-{}", self.operation, self.name, self.id)
+    }
+}
+
+impl Realizable for Step {
+    fn realize(&self, realization: crate::realization::Realization) -> anyhow::Result<crate::realization::Realization> {
+        self.data.realize(realization)
     }
 }
