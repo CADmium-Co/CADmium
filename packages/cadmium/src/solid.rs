@@ -26,8 +26,6 @@ use truck_polymesh::Point3 as TruckPoint3;
 use truck_polymesh::Vector3 as TruckVector3;
 use truck_topology::Solid as TruckSolid;
 
-const MESH_TOLERANCE: f64 = 0.1;
-
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Solid {
@@ -64,8 +62,7 @@ impl Solid {
             indices: vec![],
             truck_solid,
         };
-        let mut mesh = solid.truck_solid.triangulation(MESH_TOLERANCE).to_polygon();
-        mesh.put_together_same_attrs(0.1);
+        let mesh = solid.truck_solid.triangulation(0.01).to_polygon();
 
         // the mesh is prepared for obj export, but we need to convert it
         // to a format compatible for rendering
@@ -295,8 +292,7 @@ impl Solid {
     }
 
     pub fn to_obj_string(&self, tolerance: f64) -> String {
-        let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
-        mesh.put_together_same_attrs(0.1);
+        let mesh = self.truck_solid.triangulation(tolerance).to_polygon();
         let mut buf = Vec::new();
         obj::write(&mesh, &mut buf).unwrap();
         let string = String::from_utf8(buf).unwrap();
@@ -304,8 +300,7 @@ impl Solid {
     }
 
     pub fn save_as_obj(&self, filename: &str, tolerance: f64) {
-        let mut mesh = self.truck_solid.triangulation(tolerance).to_polygon();
-        mesh.put_together_same_attrs(0.1);
+        let mesh = self.truck_solid.triangulation(tolerance).to_polygon();
         let file = std::fs::File::create(filename).unwrap();
         obj::write(&mesh, file).unwrap();
     }
