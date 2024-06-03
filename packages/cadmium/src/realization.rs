@@ -20,6 +20,11 @@ impl<T: Realizable + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::conve
     }
 }
 
+pub fn btreemap_append<T: Clone>(map: &mut BTreeMap<IDType, T>, item: T) {
+    let size = map.len();
+    map.insert(size as IDType, item).unwrap();
+}
+
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Realization {

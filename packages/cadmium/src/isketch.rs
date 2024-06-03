@@ -10,7 +10,7 @@ use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
-use crate::archetypes::Plane;
+use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::solid::point::Point3;
 use crate::IDType;
@@ -55,6 +55,15 @@ impl ISketch {
         }
 
         real_sketch
+    }
+
+    pub fn from_plane_description(wb: &Workbench, plane_description: PlaneDescription) -> Self {
+        let plane = match plane_description {
+            PlaneDescription::PlaneId(plane_id) =>
+                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
+        }.clone();
+        Self::new(plane)
     }
 
     /// Helper function to go from an isotope point2D to a point_3D, as calculated during new
