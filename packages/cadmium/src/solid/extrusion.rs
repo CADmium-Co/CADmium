@@ -10,6 +10,8 @@ use super::prelude::*;
 
 use crate::archetypes::Vector3;
 use crate::isketch::ISketch;
+use crate::message::MessageHandler;
+use crate::workbench::Workbench;
 use crate::IDType;
 
 use super::get_isoface_wires;
@@ -100,6 +102,45 @@ impl SolidLike for Extrusion {
 
                 translated
             }).collect())
+    }
+}
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct Add {
+    sketch_id: IDType,
+    faces: Vec<Face>, // TODO: This should be a list of face IDs
+    length: f64,
+    offset: f64,
+    direction: Direction,
+    mode: Mode,
+}
+
+impl MessageHandler for Add {
+    // Parent to workbench to add to solids and be able to reference the sketch
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let mut workbench = workbench_ref.borrow_mut();
+        let sketch = workbench.get_sketch_by_id(self.sketch_id)?;
+
+        let extrusion = Extrusion::new(
+            self.faces.clone(),
+            sketch.clone(),
+            self.length,
+            self.offset,
+            self.direction.clone(),
+            self.mode.clone(),
+        );
+
+        // TODO: This is incorrect. We should adding Features to the workbench, not solids
+        // Until then we can't update or remove as we don't know which solids are associated with this extrusion
+        extrusion.to_solids()?.iter().for_each(|solid| {
+            let id = workbench.solids_next_id;
+            workbench.solids.insert(id, Rc::new(RefCell::new(solid.clone())));
+            workbench.solids_next_id += 1;
+        });
+
+        Ok(None)
     }
 }
 

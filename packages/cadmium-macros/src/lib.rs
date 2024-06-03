@@ -20,7 +20,6 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
     });
     let variant_names = data.variants.iter().map(|variant| &variant.ident);
     let variants_clone = variants.clone();
-    let variants_clone2 = variants.clone();
 
     quote! {
         impl #name {
