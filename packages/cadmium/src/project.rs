@@ -6,7 +6,7 @@ use tsify::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::error::CADmiumError;
-use crate::message::prelude::ProjectMessageHandler;
+use crate::message::ProjectMessageHandler;
 use crate::realization::Realization;
 use crate::workbench::Workbench;
 

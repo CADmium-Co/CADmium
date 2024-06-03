@@ -101,7 +101,7 @@ impl ISketch {
     }
 }
 
-use crate::message::prelude::*;
+use crate::message::{Identifiable, MessageHandler};
 use crate::workbench::Workbench;
 
 impl Identifiable for Rc<RefCell<ISketch>> {
@@ -122,7 +122,7 @@ pub struct AddPoint {
 
 impl MessageHandler for AddPoint {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(ISOPoint2::new(self.x, self.y))));
 
         let point_id = sketch_ref.borrow().sketch().borrow_mut().add_primitive(iso_point)?;
@@ -143,7 +143,7 @@ pub struct AddArc {
 
 impl MessageHandler for AddArc {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -169,7 +169,7 @@ pub struct AddCircle {
 
 impl MessageHandler for AddCircle {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -195,7 +195,7 @@ pub struct AddLine {
 
 impl MessageHandler for AddLine {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
