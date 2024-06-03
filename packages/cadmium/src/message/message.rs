@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 
 use crate::IDType;
+use crate::realization::Realizable;
 
 use super::ProjectMessageHandler;
 use super::idwrap::IDWrap;

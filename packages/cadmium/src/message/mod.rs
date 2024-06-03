@@ -1,3 +1,4 @@
+use crate::realization::Realizable;
 use crate::IDType;
 
 pub mod idwrap;
@@ -16,7 +17,7 @@ pub trait ProjectMessageHandler: wasm_bindgen::convert::RefFromWasmAbi {
     fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<IDType>>;
 }
 
-pub trait MessageHandler: Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi {
+pub trait MessageHandler: Realizable + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi {
     type Parent: Identifiable;
     fn handle_message(&self, item: Self::Parent) -> anyhow::Result<Option<IDType>>;
 }
