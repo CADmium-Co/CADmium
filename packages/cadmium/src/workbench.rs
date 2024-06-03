@@ -22,14 +22,14 @@ use std::rc::Rc;
 // use truck_base::math::Vector3 as truck_vector3;
 use truck_shapeops::and as solid_and;
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Tsify, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
     pub(crate) name: String,
     pub(crate) history: Vec<Step>,
 
     // These are free-standing points in 3D space, not part of sketches
-    pub(crate) points: BTreeMap<IDType, Point3>,
+    pub(crate) points: BTreeMap<IDType, Rc<RefCell<Point3>>>,
     pub(crate) points_next_id: IDType,
 
     pub(crate) planes: BTreeMap<IDType, Rc<RefCell<Plane>>>,
@@ -117,172 +117,172 @@ impl Workbench {
             let step_data = &step.data;
             // println!("{:?}", step_data);
             match step_data {
-                StepData::WorkbenchPoint { point, .. } => {
-                    realized
-                        .points
-                        .insert(step.id, point.clone());
-                }
-                StepData::WorkbenchPlane {
-                    plane,
-                    width,
-                    height,
-                    ..
-                } => {
-                    // Do we need to store the IPlane or just the Plane?
-                    let rp = IPlane {
-                        plane: plane.clone(),
-                        width: *width,
-                        height: *height,
-                        name: step.name.clone(),
-                    };
-                    realized.planes.insert(step.id, rp);
-                }
-                StepData::WorkbenchSketch {
-                    plane_description,
-                    // sketch_id,
-                    // width: _,
-                    // height: _,
-                    ..
-                } => match plane_description {
-                    PlaneDescription::PlaneId(plane_id) => {
-                        let plane = self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
-                        let plane_ref = plane.clone();
-                        let sketch = ISketch::new(plane_ref);
+                // StepData::WorkbenchPoint { point, .. } => {
+                //     realized
+                //         .points
+                //         .insert(step.id, point.clone());
+                // }
+                // StepData::WorkbenchPlane {
+                //     plane,
+                //     width,
+                //     height,
+                //     ..
+                // } => {
+                //     // Do we need to store the IPlane or just the Plane?
+                //     let rp = IPlane {
+                //         plane: plane.clone(),
+                //         width: *width,
+                //         height: *height,
+                //         name: step.name.clone(),
+                //     };
+                //     realized.planes.insert(step.id, rp);
+                // }
+                // StepData::WorkbenchSketch {
+                //     plane_description,
+                //     // sketch_id,
+                //     // width: _,
+                //     // height: _,
+                //     ..
+                // } => match plane_description {
+                //     PlaneDescription::PlaneId(plane_id) => {
+                //         let plane = self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?;
+                //         let plane_ref = plane.clone();
+                //         let sketch = ISketch::new(plane_ref);
 
-                        realized.sketches.insert(
-                            step.id,
-                            (
-                                sketch.clone(),
-                                sketch.clone(),
-                                step.name.clone(),
-                            ),
-                        );
-                    }
-                    PlaneDescription::SolidFace { solid_id: _, normal: _ } => {
-                        // let solid = &realized.solids[&solid_id];
-                        // let face = solid.get_face_by_normal(&normal).unwrap();
-                        // let oriented_surface = face.oriented_surface();
+                //         realized.sketches.insert(
+                //             step.id,
+                //             (
+                //                 sketch.clone(),
+                //                 sketch.clone(),
+                //                 step.name.clone(),
+                //             ),
+                //         );
+                //     }
+                //     PlaneDescription::SolidFace { solid_id: _, normal: _ } => {
+                //         // let solid = &realized.solids[&solid_id];
+                //         // let face = solid.get_face_by_normal(&normal).unwrap();
+                //         // let oriented_surface = face.oriented_surface();
 
-                        // println!("Surface: {:?}", oriented_surface);
-                        // let sketch_plane;
-                        // match oriented_surface {
-                        //     truck_modeling::geometry::Surface::Plane(p) => {
-                        //         let plane = Plane::from_truck(p);
-                        //         println!("Plane: {:?}", plane);
-                        //         sketch_plane = plane;
-                        //     }
-                        //     _ => {
-                        //         panic!("I only know how to put sketches on planes");
-                        //     }
-                        // }
+                //         // println!("Surface: {:?}", oriented_surface);
+                //         // let sketch_plane;
+                //         // match oriented_surface {
+                //         //     truck_modeling::geometry::Surface::Plane(p) => {
+                //         //         let plane = Plane::from_truck(p);
+                //         //         println!("Plane: {:?}", plane);
+                //         //         sketch_plane = plane;
+                //         //     }
+                //         //     _ => {
+                //         //         panic!("I only know how to put sketches on planes");
+                //         //     }
+                //         // }
 
-                        // let new_plane_id = format!("derived_plane_for:{}", step.name);
+                //         // let new_plane_id = format!("derived_plane_for:{}", step.name);
 
-                        // let rp = IPlane {
-                        //     plane: sketch_plane.clone(),
-                        //     width: 90.0,
-                        //     height: 60.0,
-                        //     name: new_plane_id.clone(),
-                        // };
-                        // realized.planes.insert(new_plane_id.clone(), rp);
-                        // let rp = &realized.planes[&new_plane_id];
-                        // let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
+                //         // let rp = IPlane {
+                //         //     plane: sketch_plane.clone(),
+                //         //     width: 90.0,
+                //         //     height: 60.0,
+                //         //     name: new_plane_id.clone(),
+                //         // };
+                //         // realized.planes.insert(new_plane_id.clone(), rp);
+                //         // let rp = &realized.planes[&new_plane_id];
+                //         // let sketch_ref = Rc::new(RefCell::new(sketch.clone()));
 
-                        // // TODO: There's no way this is correct. Also a lot of prelude is the same fo Plane case
-                        // realized.sketches.insert(
-                        //     step.unique_id.to_owned(),
-                        //     (
-                        //         ISketch::new(&new_plane_id, &rp, sketch_ref.clone()),
-                        //         ISketch::new(
-                        //             &new_plane_id,
-                        //             &rp,
-                        //             // TODO: &sketch.split_intersections(false),
-                        //             sketch_ref,
-                        //         ),
-                        //         step.name.clone(),
-                        //     ),
-                        // );
-                    }
-                },
-                StepData::SolidExtrusion {
-                    face_ids,
-                    sketch_id,
-                    length,
-                    offset,
-                    mode,
-                    direction,
-                    ..
-                } => {
-                    // TODO: Make realization a trait and implement it for Extrusion
-                    let sketch_ref = self.sketches.get(sketch_id).unwrap();
-                    let sketch = sketch_ref.borrow();
-                    let faces = face_ids.iter().map(|id| sketch.faces().get(*id as usize).unwrap().clone()).collect();
+                //         // // TODO: There's no way this is correct. Also a lot of prelude is the same fo Plane case
+                //         // realized.sketches.insert(
+                //         //     step.unique_id.to_owned(),
+                //         //     (
+                //         //         ISketch::new(&new_plane_id, &rp, sketch_ref.clone()),
+                //         //         ISketch::new(
+                //         //             &new_plane_id,
+                //         //             &rp,
+                //         //             // TODO: &sketch.split_intersections(false),
+                //         //             sketch_ref,
+                //         //         ),
+                //         //         step.name.clone(),
+                //         //     ),
+                //         // );
+                //     }
+                // },
+                // StepData::SolidExtrusion {
+                //     face_ids,
+                //     sketch_id,
+                //     length,
+                //     offset,
+                //     mode,
+                //     direction,
+                //     ..
+                // } => {
+                //     // TODO: Make realization a trait and implement it for Extrusion
+                //     let sketch_ref = self.sketches.get(sketch_id).unwrap();
+                //     let sketch = sketch_ref.borrow();
+                //     let faces = face_ids.iter().map(|id| sketch.faces().get(*id as usize).unwrap().clone()).collect();
 
-                    let new_extrusion = Extrusion::new(faces, sketch_ref.clone(), *length, *offset, direction.clone(), mode.clone());
-                    let feature = new_extrusion.to_feature();
-                    let solid_like = feature.as_solid_like();
-                    let new_solids = solid_like.to_solids()?;
+                //     let new_extrusion = Extrusion::new(faces, sketch_ref.clone(), *length, *offset, direction.clone(), mode.clone());
+                //     let feature = new_extrusion.to_feature();
+                //     let solid_like = feature.as_solid_like();
+                //     let new_solids = solid_like.to_solids()?;
 
-                    match &new_extrusion.mode {
-                        extrusion::Mode::New => {
-                            new_solids.iter().for_each(|s| {
-                                realized.solids.insert(self.solids_next_id, s.clone());
-                                self.solids_next_id += 1;
-                            });
-                        }
-                        extrusion::Mode::Add(merge_scope) => {
-                            for existing_solid_id in merge_scope {
-                                let existing_solid = realized.solids.get(&existing_solid_id).unwrap().clone();
-                                let mut existing_solid_to_merge_with =
-                                    realized.solids.remove(&existing_solid_id).unwrap();
+                //     match &new_extrusion.mode {
+                //         extrusion::Mode::New => {
+                //             new_solids.iter().for_each(|s| {
+                //                 realized.solids.insert(self.solids_next_id, s.clone());
+                //                 self.solids_next_id += 1;
+                //             });
+                //         }
+                //         extrusion::Mode::Add(merge_scope) => {
+                //             for existing_solid_id in merge_scope {
+                //                 let existing_solid = realized.solids.get(&existing_solid_id).unwrap().clone();
+                //                 let mut existing_solid_to_merge_with =
+                //                     realized.solids.remove(&existing_solid_id).unwrap();
 
-                                // merge this existing solid with as many of the new solids as possible
-                                for new_solid in new_solids.iter() {
-                                    let fused = fuse(
-                                        &existing_solid_to_merge_with.truck_solid,
-                                        &new_solid.truck_solid,
-                                    ).unwrap();
+                //                 // merge this existing solid with as many of the new solids as possible
+                //                 for new_solid in new_solids.iter() {
+                //                     let fused = fuse(
+                //                         &existing_solid_to_merge_with.truck_solid,
+                //                         &new_solid.truck_solid,
+                //                     ).unwrap();
 
-                                    let new_merged_sold = Solid::from_truck_solid(existing_solid.name.clone(), fused);
-                                    existing_solid_to_merge_with = new_merged_sold;
-                                }
+                //                     let new_merged_sold = Solid::from_truck_solid(existing_solid.name.clone(), fused);
+                //                     existing_solid_to_merge_with = new_merged_sold;
+                //                 }
 
-                                realized.solids.insert(
-                                    existing_solid_id.to_owned(),
-                                    existing_solid_to_merge_with,
-                                );
-                            }
-                        }
-                        extrusion::Mode::Remove(merge_scope) => {
-                            // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
-                            // with each of the solids listed in the merge scope
-                            for existing_solid_id in merge_scope {
-                                let existing_solid = realized.solids.get(&existing_solid_id).unwrap().clone();
-                                let mut existing_solid_to_merge_with =
-                                    realized.solids.remove(&existing_solid_id).unwrap();
+                //                 realized.solids.insert(
+                //                     existing_solid_id.to_owned(),
+                //                     existing_solid_to_merge_with,
+                //                 );
+                //             }
+                //         }
+                //         extrusion::Mode::Remove(merge_scope) => {
+                //             // If this extrusion is in mode "Remove" then we need to subtract the resulting solid
+                //             // with each of the solids listed in the merge scope
+                //             for existing_solid_id in merge_scope {
+                //                 let existing_solid = realized.solids.get(&existing_solid_id).unwrap().clone();
+                //                 let mut existing_solid_to_merge_with =
+                //                     realized.solids.remove(&existing_solid_id).unwrap();
 
-                                // merge this existing solid with as many of the new solids as possible
-                                for new_solid in new_solids.iter() {
-                                    let punch = new_solid.truck_solid.clone();
+                //                 // merge this existing solid with as many of the new solids as possible
+                //                 for new_solid in new_solids.iter() {
+                //                     let punch = new_solid.truck_solid.clone();
 
-                                    let cleared = solid_and(
-                                        &existing_solid_to_merge_with.truck_solid,
-                                        &punch,
-                                        0.1,
-                                    ).unwrap();
+                //                     let cleared = solid_and(
+                //                         &existing_solid_to_merge_with.truck_solid,
+                //                         &punch,
+                //                         0.1,
+                //                     ).unwrap();
 
-                                    let new_merged_sold = Solid::from_truck_solid(existing_solid.name.clone(), cleared);
-                                    existing_solid_to_merge_with = new_merged_sold;
-                                }
+                //                     let new_merged_sold = Solid::from_truck_solid(existing_solid.name.clone(), cleared);
+                //                     existing_solid_to_merge_with = new_merged_sold;
+                //                 }
 
-                                realized.solids.insert(
-                                    existing_solid_id.to_owned(),
-                                    existing_solid_to_merge_with,
-                                );
-                            }
-                        }
-                    }
-                }
+                //                 realized.solids.insert(
+                //                     existing_solid_id.to_owned(),
+                //                     existing_solid_to_merge_with,
+                //                 );
+                //             }
+                //         }
+                //     }
+                // }
                 _ => {}
             }
         }
@@ -294,7 +294,7 @@ impl Workbench {
 // Step operations
 impl Workbench {
     pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
-        self.points.insert(self.points_next_id, point);
+        self.points.insert(self.points_next_id, Rc::new(RefCell::new(point)));
         self.points_next_id += 1;
         Ok(self.points_next_id - 1)
     }
@@ -356,33 +356,25 @@ impl Workbench {
     }
 }
 
-impl<H: MessageHandler<crate::workbench::Workbench>> ProjectMessageHandler for IDWrap<H> {
-    fn handle_project_message(&self, p: &mut crate::project::Project) -> anyhow::Result<Option<IDType>> {
-        let child = p.into_child(self.0)?;
-        self.1.handle_message(child)
-    }
-}
-
-impl IntoChildID<crate::workbench::Workbench> for crate::project::Project {
-    fn into_child(&mut self, id: IDType) -> anyhow::Result<&mut crate::workbench::Workbench> {
-        Ok(self.get_workbench_by_id_mut(id)?)
-    }
-}
-
-impl FromParentID for crate::workbench::Workbench {
+impl Identifiable for Rc<RefCell<Workbench>> {
     type Parent = crate::project::Project;
-    fn from_parent(parent: &mut crate::project::Project, id: IDType) -> anyhow::Result<&mut Self> {
-        Ok(parent.get_workbench_by_id_mut(id)?)
+    const ID_NAME: &'static str = "workbench_id";
+
+    fn from_parent_id(parent: &crate::project::Project, id: IDType) -> anyhow::Result<Self> {
+        Ok(parent.get_workbench_by_id(id)?)
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WorkbenchRename {
     new_name: String,
 }
 
-impl MessageHandler<crate::workbench::Workbench> for WorkbenchRename {
-    fn handle_message(&self, workbench: &mut crate::workbench::Workbench) -> anyhow::Result<Option<IDType>> {
+impl MessageHandler for WorkbenchRename {
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, workbench_ref: Rc<RefCell<Workbench>>) -> anyhow::Result<Option<IDType>> {
+        let mut workbench = workbench_ref.borrow_mut();
         workbench.name = self.new_name.clone();
         Ok(None)
     }
