@@ -45,7 +45,8 @@
       // }
       log("setting rectangle", anchorPoint, point)
       addRectangleBetweenPoints(sketchIndex, +anchorPoint.id!, +point.id!)
-      // anchorPoint = null
+      // Clear the anchor point and start the next rectangular drawing
+      anchorPoint = null
     }
   }
 
