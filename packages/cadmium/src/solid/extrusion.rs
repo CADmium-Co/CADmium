@@ -300,7 +300,7 @@ mod tests {
 
         // now get solids? save as obj or stl or step?
         let workbench = p.workbenches.get(0).unwrap();
-        let realization = workbench.realize(100);
+        let realization = workbench.borrow_mut().realize(100).unwrap();
         let solids = realization.solids;
         assert!(solids.len() == 1);
     }
@@ -329,8 +329,8 @@ mod tests {
             let mut p: Project = serde_json::from_str(&contents).unwrap();
 
             // get a realization
-            let workbench = p.workbenches.get_mut(0).unwrap();
-            let realization = workbench.realize(100).unwrap();
+            let workbench = p.workbenches.get(0).unwrap();
+            let realization = workbench.borrow_mut().realize(100).unwrap();
             let solids = realization.solids;
             println!("[{}] solids: {:?}", file, solids.len());
 
@@ -342,8 +342,8 @@ mod tests {
     #[ignore = "test failing on CI"]
     fn step_export() {
         let mut p = create_test_project();
-        let workbench = p.get_workbench_by_id_mut(0).unwrap();
-        let realization = workbench.realize(1000).unwrap();
+        let workbench = p.get_workbench_by_id(0).unwrap();
+        let realization = workbench.borrow_mut().realize(1000).unwrap();
         let keys = Vec::from_iter(realization.solids.keys());
 
         realization.save_solid_as_step_file(*keys[0], "pkg/test.step");

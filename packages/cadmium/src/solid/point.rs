@@ -1,6 +1,7 @@
+use std::cell::RefCell;
 use std::ops::{Add, Sub};
+use std::rc::Rc;
 
-use cadmium_macros::MessageSubType;
 use serde::{Deserialize, Serialize};
 use truck_polymesh::Point3 as PolyTruckPoint3;
 use isotope::primitives::point2::Point2 as ISOPoint2;
@@ -8,7 +9,7 @@ use tsify::Tsify;
 
 use crate::archetypes::{Plane, Vector3};
 
-#[derive(Tsify, MessageSubType, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Point3 {
     pub x: f64,
@@ -105,31 +106,30 @@ impl PartialEq for Point3 {
 use crate::message::prelude::*;
 use crate::workbench::Workbench;
 
-#[derive(Debug, Serialize, Deserialize)]
+impl Identifiable for Rc<RefCell<Point3>> {
+    type Parent = Rc<RefCell<Workbench>>;
+    const ID_NAME: &'static str = "point_id";
+
+    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
+        Ok(parent.borrow().points.get(&id).ok_or(anyhow::anyhow!(""))?.clone())
+    }
+}
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WorkbenchPointUpdate {
     x: f64,
     y: f64,
     z: f64,
 }
 
-impl MessageHandler<Point3> for WorkbenchPointUpdate {
-    fn handle_message(&self, point: &mut Point3) -> anyhow::Result<Option<IDType>> {
+impl MessageHandler for WorkbenchPointUpdate {
+    type Parent = Rc<RefCell<Point3>>;
+    fn handle_message(&self, point_ref: Rc<RefCell<Point3>>) -> anyhow::Result<Option<IDType>> {
+        let mut point = point_ref.borrow_mut();
         point.x = self.x;
         point.y = self.y;
         point.z = self.z;
         Ok(None)
-    }
-}
-
-impl IntoChildID<Point3> for Workbench {
-    fn into_child(&mut self, id: IDType) -> anyhow::Result<&mut Point3> {
-        Ok(self.points.get_mut(&id).ok_or(anyhow::anyhow!(""))?)
-    }
-}
-
-impl FromParentID for Point3 {
-    type Parent = Workbench;
-    fn from_parent(parent: &mut Workbench, id: IDType) -> anyhow::Result<&mut Self> {
-        Ok(parent.points.get_mut(&id).ok_or(anyhow::anyhow!(""))?)
     }
 }

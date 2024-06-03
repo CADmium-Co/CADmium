@@ -12,16 +12,35 @@ use syn::spanned::Spanned;
 pub fn message_type_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
     let name = input.ident;
+    let marker_name = Ident::new(&format!("{}Message", name), name.span());
 
-    println!("Message sub-type: {:?}", name);
+    println!("Message sub-type: {}", name);
 
     quote! {
         use crate::message::prelude::*;
-        impl<H: MessageHandler<#name>> ProjectMessageHandler for IDWrap<IDWrap<H>> {
+
+        // This is essentially an Rc, so Clone is fine
+        #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+        pub struct #marker_name<H, P>(pub IDWrap<IDWrap<H>>, std::marker::PhantomData<P>)
+        where
+            H: MessageHandler<Rc<RefCell<#name>>> + Clone,
+            P: FromParentID<Parent = crate::project::Project> + Clone,
+        ;
+
+        // H is a MessageHandler, e.g. WorkbenchPointUpdate
+        impl<H, P> ProjectMessageHandler for #marker_name<H, P>
+        where
+            H: MessageHandler<Rc<RefCell<#name>>> + Clone,
+            P: FromParentID<Parent = crate::project::Project> + Clone,
+        {
             fn handle_project_message(&self, p: &mut crate::project::Project) -> anyhow::Result<Option<crate::IDType>> {
-                let parent = p.into_child(self.0)?;
-                let child = parent.into_child(self.1.0)?;
-                self.1.1.handle_message(child)
+                // parent is for example a Workbench (Rc<RefCell<Workbench>> which we borrow)
+                // let parent = (*p).into_child(self.0.id())?.clone();
+                let parent = P::from_parent(*p, self.0.id())?.clone();
+                // Child is the generic defined by the MessageHandler, e.g. Rc<RefCell<ISketch>>
+                let child: Rc<RefCell<#name>> = parent.into_child(self.0.inner().id())?.borrow();
+                // Call the MessageHandler
+                child.handle_message(child)
             }
         }
     }.into()
@@ -37,7 +56,7 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
     };
 
     let variants = data.variants.iter().map(|variant| {
-        println!("Variant: {:?}", variant.ident);
+        println!("Message Handler: {}", variant.ident);
         let variant_name = &variant.ident;
 
         quote! {
