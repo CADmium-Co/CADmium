@@ -47,6 +47,9 @@ importers:
       js-file-download:
         specifier: ^0.4.12
         version: 0.4.12
+      just-debounce-it:
+        specifier: ^3.2.0
+        version: 3.2.0
       nurbs:
         specifier: ^1.1.1
         version: 1.1.1
@@ -95,10 +98,10 @@ importers:
         version: 5.1.0(jiti@1.21.0)(postcss@8.4.38)
       prettier:
         specifier: ^3.2.5
-        version: 3.2.5
+        version: 3.3.0
       prettier-plugin-svelte:
         specifier: ^3.2.3
-        version: 3.2.3(prettier@3.2.5)(svelte@5.0.0-next.141)
+        version: 3.2.3(prettier@3.3.0)(svelte@5.0.0-next.141)
       svelte:
         specifier: 5.0.0-next.141
         version: 5.0.0-next.141
@@ -837,8 +840,8 @@ packages:
     peerDependencies:
       three: '>=0.126.1'
 
-  caniuse-lite@1.0.30001625:
-    resolution: {integrity: sha512-4KE9N2gcRH+HQhpeiRZXd+1niLB/XNLAhSy4z7fI8EzcbcPoAqjNInxVHTiTwWfTIV4w096XG8OtCOCQQKPv3w==}
+  caniuse-lite@1.0.30001626:
+    resolution: {integrity: sha512-JRW7kAH8PFJzoPCJhLSHgDgKg5348hsQ68aqb+slnzuB5QFERv846oA/mRChmlLAOdEDeOkRn3ynb1gSFnjt3w==}
 
   chai@4.4.1:
     resolution: {integrity: sha512-13sOfMv2+DWduEU+/xbun3LScLoqN17nBeTLUsmDfKdoiC1fr0n9PU4guu4AhRcOVFk/sW8LyZWHuhWtQZiF+g==}
@@ -1283,6 +1286,9 @@ packages:
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
+  just-debounce-it@3.2.0:
+    resolution: {integrity: sha512-WXzwLL0745uNuedrCsCs3rpmfD6DBaf7uuVwaq98/8dafURfgQaBsSpjiPp5+CW6Vjltwy9cOGI6qE71b3T8iQ==}
+
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -1636,8 +1642,8 @@ packages:
       prettier: ^3.0.0
       svelte: ^3.2.0 || ^4.0.0-next.0 || ^5.0.0-next.0
 
-  prettier@3.2.5:
-    resolution: {integrity: sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==}
+  prettier@3.3.0:
+    resolution: {integrity: sha512-J9odKxERhCQ10OC2yb93583f6UnYutOeiV5i0zEDS7UGTdUt0u+y8erxl3lBKvwo/JHyyoEdXjwp4dke9oyZ/g==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -1891,8 +1897,8 @@ packages:
     peerDependencies:
       three: '>=0.125.0'
 
-  three-mesh-bvh@0.7.4:
-    resolution: {integrity: sha512-flxe0A4uflTPR6elgq/Y8VrLoljDNS899i422SxQcU3EtMj6o8z4kZRyqZqGWzR0qMf1InTZzY1/0xZl/rnvVw==}
+  three-mesh-bvh@0.7.5:
+    resolution: {integrity: sha512-WDd77RklE52pZSKZx8sDXzrd2JCF/gL/hugFvsIBylpMRlJxxwesKn2rW7TcQZ809NocDVkQx1UJo9pJtVAPYg==}
     peerDependencies:
       three: '>= 0.151.0'
 
@@ -2160,8 +2166,8 @@ packages:
     resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
     engines: {node: '>= 6'}
 
-  yaml@2.4.2:
-    resolution: {integrity: sha512-B3VqDZ+JAg1nZpaEmWtTXUlBneoGx6CPM9b0TENK6aoSu5t73dItudwdgmi6tHlIZZId4dZ9skcAQ2UbcyAeVA==}
+  yaml@2.4.3:
+    resolution: {integrity: sha512-sntgmxj8o7DE7g/Qi60cqpLBA3HG3STcDA0kO+WfB05jEKhZMbY7umNm2rBpQvsmZ16/lPXCJGW2672dgOUkrg==}
     engines: {node: '>= 14'}
     hasBin: true
 
@@ -2497,7 +2503,7 @@ snapshots:
       '@threejs-kit/instanced-sprite-mesh': 2.4.7(@types/three@0.164.1)(three@0.164.1)
       svelte: 5.0.0-next.141
       three: 0.164.1
-      three-mesh-bvh: 0.7.4(three@0.164.1)
+      three-mesh-bvh: 0.7.5(three@0.164.1)
       three-perf: 1.0.10(three@0.164.1)
       troika-three-text: 0.49.1(three@0.164.1)
     transitivePeerDependencies:
@@ -2707,7 +2713,7 @@ snapshots:
   autoprefixer@10.4.19(postcss@8.4.38):
     dependencies:
       browserslist: 4.23.0
-      caniuse-lite: 1.0.30001625
+      caniuse-lite: 1.0.30001626
       fraction.js: 4.3.7
       normalize-range: 0.1.2
       picocolors: 1.0.1
@@ -2741,7 +2747,7 @@ snapshots:
 
   browserslist@4.23.0:
     dependencies:
-      caniuse-lite: 1.0.30001625
+      caniuse-lite: 1.0.30001626
       electron-to-chromium: 1.4.788
       node-releases: 2.0.14
       update-browserslist-db: 1.0.16(browserslist@4.23.0)
@@ -2758,7 +2764,7 @@ snapshots:
     dependencies:
       three: 0.164.1
 
-  caniuse-lite@1.0.30001625: {}
+  caniuse-lite@1.0.30001626: {}
 
   chai@4.4.1:
     dependencies:
@@ -3243,6 +3249,8 @@ snapshots:
 
   json-stable-stringify-without-jsonify@1.0.1: {}
 
+  just-debounce-it@3.2.0: {}
+
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -3490,14 +3498,14 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.4.38):
     dependencies:
       lilconfig: 3.1.1
-      yaml: 2.4.2
+      yaml: 2.4.3
     optionalDependencies:
       postcss: 8.4.38
 
   postcss-load-config@5.1.0(jiti@1.21.0)(postcss@8.4.38):
     dependencies:
       lilconfig: 3.1.1
-      yaml: 2.4.2
+      yaml: 2.4.3
     optionalDependencies:
       jiti: 1.21.0
       postcss: 8.4.38
@@ -3530,12 +3538,12 @@ snapshots:
 
   prelude-ls@1.2.1: {}
 
-  prettier-plugin-svelte@3.2.3(prettier@3.2.5)(svelte@5.0.0-next.141):
+  prettier-plugin-svelte@3.2.3(prettier@3.3.0)(svelte@5.0.0-next.141):
     dependencies:
-      prettier: 3.2.5
+      prettier: 3.3.0
       svelte: 5.0.0-next.141
 
-  prettier@3.2.5: {}
+  prettier@3.3.0: {}
 
   pretty-format@29.7.0:
     dependencies:
@@ -3830,7 +3838,7 @@ snapshots:
       three: 0.164.1
       troika-three-utils: 0.49.0(three@0.164.1)
 
-  three-mesh-bvh@0.7.4(three@0.164.1):
+  three-mesh-bvh@0.7.5(three@0.164.1):
     dependencies:
       three: 0.164.1
 
@@ -4074,7 +4082,7 @@ snapshots:
 
   yaml@1.10.2: {}
 
-  yaml@2.4.2: {}
+  yaml@2.4.3: {}
 
   yocto-queue@0.1.0: {}
 
