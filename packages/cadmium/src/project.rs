@@ -7,7 +7,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::error::CADmiumError;
 use crate::message::ProjectMessageHandler;
-use crate::realization::Realization;
+use crate::realization::{Realization, Realizable};
 use crate::workbench::Workbench;
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -85,10 +85,16 @@ impl Project {
             .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
     }
 
-    pub fn get_realization(&mut self, workbench_id: u64, max_steps: u64) -> Result<Realization, anyhow::Error> {
+    pub fn get_realization(&mut self, workbench_id: u64, max_steps: u32) -> Result<Realization, anyhow::Error> {
         let workbench_ref = self.get_workbench_by_id(workbench_id)?;
         let mut workbench = workbench_ref.borrow_mut();
-        workbench.realize(max_steps)
+
+        let mut realization = Realization::new();
+        for i in 0..max_steps {
+            realization = workbench.history.get(i as usize).unwrap().realize(realization)?;
+        }
+
+        Ok(realization)
     }
 }
 

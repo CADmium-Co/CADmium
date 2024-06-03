@@ -72,7 +72,7 @@ impl Project {
     pub fn get_realization(&mut self, workbench_id: u32, max_steps: u32) -> Result<Realization, String> {
         let realized = self
             .native
-            .get_realization(workbench_id as IDType, max_steps as u64)
+            .get_realization(workbench_id as IDType, max_steps)
             .map_err(|e| format!("Realization Error: {}", e))?;
 
         Ok(Realization { native: realized })
