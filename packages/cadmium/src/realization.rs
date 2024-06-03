@@ -7,6 +7,7 @@ use crate::message::idwrap::IDWrap;
 use crate::solid::point::Point3;
 use crate::isketch::ISketch;
 use crate::solid::Solid;
+use crate::workbench::Workbench;
 use crate::IDType;
 use std::collections::BTreeMap;
 
@@ -38,7 +39,7 @@ pub struct Realization {
 }
 
 impl Realization {
-    pub fn new() -> Self {
+    pub fn new(workbench: &Workbench) -> Self {
         let mut r = Realization {
             planes: BTreeMap::new(),
             points: BTreeMap::new(),
@@ -46,10 +47,12 @@ impl Realization {
             solids: BTreeMap::new(),
         };
 
-        r.planes.insert(0, Plane::front()).unwrap();
-        r.planes.insert(1, Plane::right()).unwrap();
-        r.planes.insert(2, Plane::top()).unwrap();
-        r.points.insert(0, Point3::new(0.0, 0.0, 0.0)).unwrap();
+        r.planes = workbench.planes.iter().map(|(id, plane)| (*id, plane.borrow().clone())).collect();
+        r.points = workbench.points.iter().map(|(id, point)| (*id, point.borrow().clone())).collect();
+        r.sketches = workbench.sketches.iter().map(|(id, sketch)| {
+            let sketch = sketch.borrow();
+            (*id, (sketch.clone(), sketch.clone(), "TODO".to_string()))
+        }).collect();
 
         r
     }
