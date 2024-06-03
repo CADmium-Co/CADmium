@@ -4,12 +4,11 @@ use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
-use crate::solid::extrusion::{self, fuse, Extrusion};
+use crate::solid::extrusion;
 use crate::isketch::{IPlane, ISketch};
 use crate::realization::Realization;
 use crate::solid::point::Point3;
 use crate::solid::Solid;
-use crate::solid::SolidLike;
 use crate::step::{Step, StepData};
 use crate::IDType;
 
@@ -18,9 +17,6 @@ use crate::message::prelude::*;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
-
-// use truck_base::math::Vector3 as truck_vector3;
-use truck_shapeops::and as solid_and;
 
 #[derive(Debug, Clone, Tsify, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

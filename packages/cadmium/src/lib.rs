@@ -1,4 +1,3 @@
-use message::prelude::ProjectMessageHandler;
 use message::{Message, MessageResult};
 // use message::{Message, MessageResult};
 use tsify::declare;
