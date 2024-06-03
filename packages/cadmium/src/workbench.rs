@@ -1,3 +1,4 @@
+use cadmium_macros::NoRealize;
 use serde::{Deserialize, Serialize};
 use tsify::Tsify;
 use wasm_bindgen::prelude::*;
@@ -5,7 +6,7 @@ use wasm_bindgen::prelude::*;
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::isketch::{IPlane, ISketch};
-use crate::realization::{Realizable, Realization};
+use crate::realization::{btreemap_append, Realizable, Realization};
 use crate::solid::point::Point3;
 use crate::solid::Solid;
 use crate::step::Step;
@@ -104,6 +105,15 @@ impl MessageHandler for AddPoint {
     }
 }
 
+impl Realizable for AddPoint {
+    fn realize(&self, realization: Realization) -> anyhow::Result<Realization> {
+        let point = Point3::new(self.x, self.y, self.z);
+        btreemap_append(&mut realization.points, point);
+
+        Ok(realization)
+    }
+}
+
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPlane {
@@ -124,6 +134,14 @@ impl MessageHandler for AddPlane {
     }
 }
 
+impl Realizable for AddPlane {
+    fn realize(&self, realization: Realization) -> anyhow::Result<Realization> {
+        btreemap_append(&mut realization.planes, self.plane.clone());
+
+        Ok(realization)
+    }
+}
+
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddSketch {
@@ -136,18 +154,27 @@ impl MessageHandler for AddSketch {
         let mut wb = sketch_ref.borrow_mut();
 
         println!("Adding sketch with plane description: {:?}", self.plane_description);
-        let plane = match self.plane_description {
-            PlaneDescription::PlaneId(plane_id) =>
-                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
-            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
-        }.clone();
-
-        let sketch = ISketch::new(plane);
+        let sketch = ISketch::from_plane_description(wb, self.plane_description);
         let new_id = wb.sketches_next_id;
         wb.sketches.insert(new_id, Rc::new(RefCell::new(sketch)));
         println!("Added sketch with id: {:?}", wb.sketches);
         wb.sketches_next_id += 1;
         Ok(Some(new_id))
+    }
+}
+
+impl Realizable for AddSketch {
+    fn realize(&self, realization: Realization) -> anyhow::Result<Realization> {
+        let plane = match self.plane_description {
+            PlaneDescription::PlaneId(plane_id) =>
+                realization.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
+        }.clone();
+
+        let sketch = ISketch::new(Rc::new(RefCell::new(plane)));
+        btreemap_append(&mut realization.sketches, sketch);
+
+        Ok(realization)
     }
 }
 
@@ -160,7 +187,7 @@ impl Identifiable for Rc<RefCell<Workbench>> {
     }
 }
 
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WorkbenchRename {
     new_name: String,
