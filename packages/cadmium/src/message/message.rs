@@ -1,6 +1,6 @@
 use cadmium_macros::MessageEnum;
 use serde::{Deserialize, Serialize};
-use tsify::Tsify;
+use tsify_next::Tsify;
 
 use crate::IDType;
 use crate::realization::Realizable;

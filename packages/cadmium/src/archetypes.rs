@@ -1,5 +1,5 @@
 use isotope::primitives::point2::Point2 as ISOPoint2;
-use tsify::Tsify;
+use tsify_next::Tsify;
 use serde::{Deserialize, Serialize};
 use truck_modeling::Plane as TruckPlane;
 use truck_modeling::InnerSpace;

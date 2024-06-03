@@ -1,6 +1,6 @@
 use message::{Message, MessageResult};
 // use message::{Message, MessageResult};
-use tsify::declare;
+use tsify_next::declare;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 

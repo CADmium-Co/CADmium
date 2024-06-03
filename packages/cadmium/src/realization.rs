@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tsify::Tsify;
+use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::Plane;
