@@ -27,6 +27,7 @@
 
   function processPoint(point: PointLikeById) {
     pushToStack(point)
+    previousPoint = point
 
     switch (stack.length) {
       case 0: // nothing to do, the stack is empty
@@ -40,9 +41,11 @@
 
         // leave the current point on the stack in case we want to create another line from here
         pushToStack(point)
+        // unless it's an earlier point, which means we're finished making lines, so we clear the stack
+        const isEarlierPoint = !!pointsById[point.id!]
+        if (isEarlierPoint) clearStack()
         break
     }
-    previousPoint = point
   }
 
   export function click(_event: Event, projected: Point) {
