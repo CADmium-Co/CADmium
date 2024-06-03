@@ -4,15 +4,14 @@ use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
-use crate::solid::extrusion;
 use crate::isketch::{IPlane, ISketch};
 use crate::realization::Realization;
 use crate::solid::point::Point3;
 use crate::solid::Solid;
-use crate::step::{Step, StepData};
+use crate::step::Step;
 use crate::IDType;
 
-use crate::message::prelude::*;
+use crate::message::*;
 
 use std::cell::RefCell;
 use std::collections::BTreeMap;
@@ -45,9 +44,9 @@ impl Workbench {
             history: vec![],
 
             points: BTreeMap::new(),
-            points_next_id: 0,
+            points_next_id: 1,
             planes: BTreeMap::new(),
-            planes_next_id: 0,
+            planes_next_id: 3,
 
             sketches: BTreeMap::new(),
             sketches_next_id: 0,
@@ -55,10 +54,10 @@ impl Workbench {
             solids_next_id: 0,
         };
 
-        wb.add_workbench_point(Point3::new(0.0, 0.0, 0.0)).unwrap();
-        wb.add_workbench_plane(Plane::front(), 100.0, 100.0).unwrap();
-        wb.add_workbench_plane(Plane::right(), 100.0, 100.0).unwrap();
-        wb.add_workbench_plane(Plane::top(), 100.0, 100.0).unwrap();
+        wb.points.insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0)))).unwrap();
+        wb.planes.insert(0, Rc::new(RefCell::new(Plane::front()))).unwrap();
+        wb.planes.insert(1, Rc::new(RefCell::new(Plane::front()))).unwrap();
+        wb.planes.insert(2, Rc::new(RefCell::new(Plane::front()))).unwrap();
 
         wb
     }
@@ -82,18 +81,6 @@ impl Workbench {
     pub fn get_sketch_by_id(&self, id: IDType) -> Result<Rc<RefCell<ISketch>>, CADmiumError> {
         println!("Getting sketch by id: {:?} {:?}", id, self.sketches);
         self.sketches.get(&id).ok_or(CADmiumError::SketchIDNotFound(id)).cloned()
-    }
-
-    pub fn update_step_data(&mut self, step_id: &str, new_step_data: StepData) {
-        let mut index = 0;
-        for step in self.history.iter() {
-            if step.unique_id() == step_id {
-                break;
-            }
-            index += 1;
-        }
-
-        self.history[index].data = new_step_data;
     }
 
     pub fn realize(&mut self, max_steps: u64) -> Result<Realization, anyhow::Error> {
@@ -287,68 +274,70 @@ impl Workbench {
     }
 }
 
-// Step operations
-impl Workbench {
-    pub(super) fn add_workbench_point(&mut self, point: Point3) -> Result<IDType, anyhow::Error> {
-        self.points.insert(self.points_next_id, Rc::new(RefCell::new(point)));
-        self.points_next_id += 1;
-        Ok(self.points_next_id - 1)
-    }
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct AddPoint {
+    x: f64,
+    y: f64,
+    z: f64,
+}
 
-    pub(super) fn add_workbench_plane(&mut self, plane: Plane, _width: f64, _height: f64) -> Result<IDType, anyhow::Error> {
-        let plane_cell = Rc::new(RefCell::new(plane));
-        self.planes.insert(self.planes_next_id, plane_cell);
-        self.planes_next_id += 1;
-        Ok(self.planes_next_id - 1)
-    }
+impl MessageHandler for AddPoint {
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let mut wb = sketch_ref.borrow_mut();
 
-    pub(super) fn add_workbench_sketch(
-        &mut self,
-        plane_description: PlaneDescription,
-    ) -> Result<IDType, anyhow::Error> {
-        println!("Adding sketch with plane description: {:?}", plane_description);
-        let plane = match plane_description {
+        let new_id = wb.points_next_id;
+        wb.points.insert(new_id, Rc::new(RefCell::new(Point3::new(self.x, self.y, self.z))));
+        wb.points_next_id += 1;
+        Ok(Some(new_id))
+    }
+}
+
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct AddPlane {
+    plane: Plane,
+    width: f64,
+    height: f64,
+}
+
+impl MessageHandler for AddPlane {
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let mut wb = sketch_ref.borrow_mut();
+
+        let new_id = wb.planes_next_id;
+        wb.planes.insert(new_id, Rc::new(RefCell::new(self.plane.clone())));
+        wb.planes_next_id += 1;
+        Ok(Some(new_id))
+    }
+}
+
+#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct AddSketch {
+    plane_description: PlaneDescription,
+}
+
+impl MessageHandler for AddSketch {
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let mut wb = sketch_ref.borrow_mut();
+
+        println!("Adding sketch with plane description: {:?}", self.plane_description);
+        let plane = match self.plane_description {
             PlaneDescription::PlaneId(plane_id) =>
-                self.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
             PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
         }.clone();
 
         let sketch = ISketch::new(plane);
-        self.sketches.insert(self.sketches_next_id, Rc::new(RefCell::new(sketch)));
-        println!("Added sketch with id: {:?}", self.sketches);
-        self.sketches_next_id += 1;
-        Ok(self.sketches_next_id - 1)
-    }
-
-    pub(crate) fn add_solid_extrusion(
-        &mut self,
-        _face_ids: Vec<IDType>,
-        _sketch_id: IDType,
-        _length: f64,
-        _offset: f64,
-        _mode: extrusion::Mode,
-        _direction: extrusion::Direction,
-    ) -> Result<IDType, anyhow::Error> {
-        // I guess nothing to do? only realization?
-        // TODO: What ID should be returned here?
-        Ok(0)
-    }
-
-    pub(super) fn do_workbench_step_rename(&mut self, step_id: IDType, new_name: String) -> Result<IDType, anyhow::Error> {
-        let step = self.history.iter_mut().find(|s| s.id == step_id).ok_or(anyhow::anyhow!("Failed to find step with id {}", step_id))?;
-        step.name = new_name;
-        Ok(step.id)
-    }
-
-    pub(super) fn do_workbench_step_delete(&mut self, step_id: IDType) -> Result<IDType, anyhow::Error> {
-        let old_len = self.history.len();
-        self.history.retain(|s| s.id != step_id);
-
-        if self.history.len() == old_len {
-            return Err(anyhow::anyhow!("Failed to find step with id {}", step_id));
-        }
-
-        Ok(step_id)
+        let new_id = wb.sketches_next_id;
+        wb.sketches.insert(new_id, Rc::new(RefCell::new(sketch)));
+        println!("Added sketch with id: {:?}", wb.sketches);
+        wb.sketches_next_id += 1;
+        Ok(Some(new_id))
     }
 }
 

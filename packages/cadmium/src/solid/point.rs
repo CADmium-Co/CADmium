@@ -103,8 +103,9 @@ impl PartialEq for Point3 {
 		}
 }
 
-use crate::message::prelude::*;
+use crate::message::{Identifiable, MessageHandler};
 use crate::workbench::Workbench;
+use crate::IDType;
 
 impl Identifiable for Rc<RefCell<Point3>> {
     type Parent = Rc<RefCell<Workbench>>;
