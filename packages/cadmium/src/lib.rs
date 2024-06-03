@@ -90,6 +90,9 @@ impl Project {
 
     #[wasm_bindgen]
     pub fn send_message(&mut self, message: &Message) -> MessageResult {
+        // TODO: Move this to a MessageHandler trait during first stage indirection
+        self.get_workbench(0).add_message_step(message);
+
         message.handle(&mut self.native).into()
     }
 

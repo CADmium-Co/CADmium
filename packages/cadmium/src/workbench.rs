@@ -82,6 +82,10 @@ impl Workbench {
         println!("Getting sketch by id: {:?} {:?}", id, self.sketches);
         self.sketches.get(&id).ok_or(CADmiumError::SketchIDNotFound(id)).cloned()
     }
+
+    pub fn add_message_step(&mut self, message: &Message) {
+        self.history.push(Step::new(self.history.len() as IDType, message.clone()));
+    }
 }
 
 impl Identifiable for Rc<RefCell<Workbench>> {
@@ -92,6 +96,20 @@ impl Identifiable for Rc<RefCell<Workbench>> {
         Ok(parent.get_workbench_by_id(id)?)
     }
 }
+
+// Add to history any messages that have Workbench as the parent
+// impl<T> MessageHandler for IDWrap<T>
+// where
+//     T: MessageHandler<Parent = Rc<RefCell<Workbench>>> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi
+// {
+//     type Parent = Rc<RefCell<Workbench>>;
+//     fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+//         let mut workbench = workbench_ref.borrow_mut();
+//         workbench.add_message_step(&self);
+//         self.handle_message(workbench_ref)
+//     }
+
+// }
 
 #[derive(Tsify, NoRealize, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
