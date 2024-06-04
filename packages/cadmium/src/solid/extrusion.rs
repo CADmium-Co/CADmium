@@ -198,7 +198,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "test failing on CI"]
     fn step_export() {
         let p = create_test_project();
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
