@@ -98,9 +98,9 @@ impl SolidLike for Extrusion {
 
                 // Can we calculate ALL the wires at once and not iter-sweep?
                 let sweep = builder::tsweep(&face, extrusion_tvector);
-                let translated = builder::translated(&sweep, offset_tvector);
+                
 
-                translated
+                builder::translated(&sweep, offset_tvector)
             }).collect())
     }
 }

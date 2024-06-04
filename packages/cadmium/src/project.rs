@@ -71,16 +71,14 @@ impl Project {
 
     pub fn get_workbench_by_id(&self, id: u64) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
-            .get(id as usize)
-            .map(|f| f.clone())
+            .get(id as usize).cloned()
             .ok_or(CADmiumError::WorkbenchIDNotFound(id))
     }
 
     pub fn get_workbench_by_name(&self, name: &str) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
             .iter()
-            .find(|wb| wb.borrow().name == name)
-            .map(|f| f.clone())
+            .find(|wb| wb.borrow().name == name).cloned()
             .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
     }
 }
@@ -103,7 +101,7 @@ impl ProjectMessageHandler for ProjectRename {
 pub mod tests {
 
     use crate::archetypes::PlaneDescription;
-    use crate::archetypes::Point2;
+    
     use crate::isketch::AddLine;
     use crate::isketch::AddPoint;
     use crate::message::MessageHandler;
@@ -116,7 +114,7 @@ pub mod tests {
 
     pub fn create_test_project() -> Project {
         let p = Project::new("Test Project");
-        let wb = p.workbenches.get(0).unwrap();
+        let wb = p.workbenches.first().unwrap();
         let plane_description = PlaneDescription::PlaneId(0);
         let sketch_id = AddSketch { plane_description }.handle_message(wb.clone()).unwrap().unwrap();
         let sketch = wb.borrow().get_sketch_by_id(sketch_id).unwrap();

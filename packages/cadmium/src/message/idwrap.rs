@@ -150,12 +150,10 @@ where
             .map_err(serde::ser::Error::custom)?
             .as_object()
             .ok_or_else(|| serde::ser::Error::custom("Expected object"))?
-            .iter()
-            .map(|(k, v)| {
+            .iter().try_for_each(|(k, v)| {
                 map.serialize_entry(k, v)?;
                 Ok(())
-            })
-            .collect::<Result<(), S::Error>>()?;
+            })?;
         map.end()
     }
 }
