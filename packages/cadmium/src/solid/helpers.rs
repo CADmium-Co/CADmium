@@ -38,7 +38,7 @@ pub fn linestring_to_wire(line: &LineString, sketch: Rc<RefCell<ISketch>>) -> Re
     let last_edge = builder::line(&vertices[vertices.len() - 2], &vertices[0]);
     edges.push(last_edge);
 
-    Ok(Wire::from_iter(edges.into_iter()))
+    Ok(Wire::from_iter(edges))
 }
 
 // It assumes that the feature will start from the same plane as the sketch
@@ -77,13 +77,13 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
         }
     }
 
-    return retval;
+    retval
 }
 
 pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
     for (a, face_a) in faces.iter().enumerate() {
         for (b, face_b) in faces.iter().enumerate() {
-            if a == b || a > b {
+            if a >= b {
                 continue;
             }
 

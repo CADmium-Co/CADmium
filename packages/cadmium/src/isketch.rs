@@ -60,7 +60,7 @@ impl ISketch {
     pub fn try_from_plane_description(wb: &Workbench, plane_description: &PlaneDescription) -> anyhow::Result<Self> {
         let plane = match plane_description {
             PlaneDescription::PlaneId(plane_id) =>
-                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+                wb.planes.get(plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
             PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
         }.clone();
         Ok(Self::new(plane))
