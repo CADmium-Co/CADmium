@@ -60,7 +60,7 @@ pub fn get_isoface_wires(
     Ok(interiors)
 }
 
-pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
+pub fn find_enveloped_shapes(faces: &[Face]) -> Vec<(usize, usize)> {
     let mut retval = vec![];
     for (a, face_a) in faces.iter().enumerate() {
         for (b, face_b) in faces.iter().enumerate() {
@@ -69,7 +69,7 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
             }
 
             // check if b's exterior is equal to any of a's holes
-            for (_hole_index, hole) in face_a.holes.iter().enumerate() {
+            for hole in face_a.holes.iter() {
                 if hole == face_b {
                     retval.push((b, a)); // (small, big)
                 }
@@ -80,7 +80,7 @@ pub fn find_enveloped_shapes(faces: &Vec<Face>) -> Vec<(usize, usize)> {
     retval
 }
 
-pub fn find_adjacent_shapes(faces: &Vec<Face>) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
+pub fn find_adjacent_shapes(faces: &[Face]) -> Option<(usize, usize, Vec<usize>, Vec<usize>)> {
     for (a, face_a) in faces.iter().enumerate() {
         for (b, face_b) in faces.iter().enumerate() {
             if a >= b {
@@ -174,26 +174,20 @@ fn find_coplanar_face_pairs<C: ShapeOpsCurve<S>, S: ShapeOpsSurface>(
     for (face_0_idx, face_0) in boundary0.face_iter().enumerate() {
         let surface_0 = face_0.oriented_surface();
 
-        match surface_0 {
-            TruckSurface::Plane(p0) => {
-                for (face_1_idx, face_1) in boundary1.face_iter().enumerate() {
-                    let mut surface_1 = face_1.oriented_surface();
+        if let TruckSurface::Plane(p0) = surface_0 {
+            for (face_1_idx, face_1) in boundary1.face_iter().enumerate() {
+                let mut surface_1 = face_1.oriented_surface();
 
-                    if flip_second {
-                        surface_1 = surface_1.inverse();
-                    }
+                if flip_second {
+                    surface_1 = surface_1.inverse();
+                }
 
-                    match surface_1 {
-                        TruckSurface::Plane(p1) => {
-                            if are_coplanar(p0, p1) {
-                                coplanar_faces.push((face_0_idx, face_1_idx));
-                            }
-                        }
-                        _ => {}
+                if let TruckSurface::Plane(p1) = surface_1 {
+                    if are_coplanar(p0, p1) {
+                        coplanar_faces.push((face_0_idx, face_1_idx));
                     }
                 }
             }
-            _ => {}
         }
     }
 
