@@ -24,7 +24,7 @@ import type {
 	WithTarget,
 	WorkBench
 } from "./types"
-import type { Realization as WasmRealization, Message, Primitive, StepData, Workbench } from "cadmium"
+import type { Realization as WasmRealization, Message, Primitive, StepData, Workbench, MessageResult } from "cadmium"
 import { isMessage } from "./typeGuards"
 // import { isDevelopment } from "../+layout"
 
@@ -54,7 +54,7 @@ export function arraysEqual(a: any[], b: any[]) {
 	return true
 }
 
-function sendWasmMessage(message: Message) {
+export function sendWasmMessage(message: Message): MessageResult {
 	let wp = get(wasmProject)
 	log("[sendWasmMessage] sending message:", message)
 	let result = wp.send_message(message)
