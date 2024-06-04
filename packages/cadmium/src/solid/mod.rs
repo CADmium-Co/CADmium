@@ -120,7 +120,7 @@ impl Solid {
         // to a format compatible for rendering
         // We have to brute force this. Go through every single triangle
         // and emit three positions, three normals, and three uvs.
-        let mut index = 0 as usize;
+        let mut index = 0_usize;
         for face in mesh.tri_faces() {
             for v in face.iter() {
                 let vertex_index = v.pos;
@@ -190,8 +190,8 @@ impl Solid {
         mesh.put_together_same_attrs(MESH_TOLERANCE);
         let mut buf = Vec::new();
         obj::write(&mesh, &mut buf).unwrap();
-        let string = String::from_utf8(buf).unwrap();
-        string
+        
+        String::from_utf8(buf).unwrap()
     }
 
     pub fn save_as_obj(&self, filename: &str, tolerance: f64) {
@@ -203,15 +203,15 @@ impl Solid {
 
     pub fn to_step_string(&self) -> String {
         let compressed = self.truck_solid.compress();
-        let step_string = out::CompleteStepDisplay::new(
+        
+        out::CompleteStepDisplay::new(
             out::StepModel::from(&compressed),
             out::StepHeaderDescriptor {
                 organization_system: "cadmium-shape-to-step".to_owned(),
                 ..Default::default()
             },
         )
-        .to_string();
-        step_string
+        .to_string()
     }
 
     pub fn save_as_step(&self, filename: &str) {

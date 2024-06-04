@@ -163,9 +163,9 @@ pub struct Point2 {
     pub hidden: bool,
 }
 
-impl Into<ISOPoint2> for Point2 {
-    fn into(self) -> ISOPoint2 {
-        ISOPoint2::new(self.x, self.y)
+impl From<Point2> for ISOPoint2 {
+    fn from(val: Point2) -> Self {
+        ISOPoint2::new(val.x, val.y)
     }
 }
 

@@ -61,12 +61,12 @@ impl Point3 {
     }
 }
 
-impl Into<PolyTruckPoint3> for Point3 {
-		fn into(self) -> PolyTruckPoint3 {
+impl From<Point3> for PolyTruckPoint3 {
+		fn from(val: Point3) -> Self {
 				PolyTruckPoint3 {
-						x: self.x,
-						y: self.y,
-						z: self.z,
+						x: val.x,
+						y: val.y,
+						z: val.z,
 				}
 		}
 }

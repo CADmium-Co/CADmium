@@ -62,7 +62,7 @@ impl Workbench {
     }
 
     pub fn get_first_plane_id(&self) -> Option<IDType> {
-        if self.planes.len() > 0 {
+        if !self.planes.is_empty() {
             Some(self.planes.keys().next().unwrap().to_owned())
         } else {
             None
@@ -70,7 +70,7 @@ impl Workbench {
     }
 
     pub fn get_last_plane_id(&self) -> Option<IDType> {
-        if self.planes.len() > 0 {
+        if !self.planes.is_empty() {
             Some(self.planes.keys().last().unwrap().to_owned())
         } else {
             None
