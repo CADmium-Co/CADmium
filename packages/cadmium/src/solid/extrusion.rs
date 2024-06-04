@@ -149,21 +149,6 @@ mod tests {
     use crate::project::Project;
     use crate::project::tests::create_test_project;
 
-    #[allow(unused_imports)]
-    use super::*;
-
-    #[test]
-    #[ignore = "test failing on CI"]
-    fn create_project_solid() {
-        let p = Project::new("Test Extrusion");
-
-        // now get solids? save as obj or stl or step?
-        let workbench_ref = p.get_workbench_by_id(0).unwrap();
-        let workbench = workbench_ref.borrow();
-        let solids = &workbench.solids;
-        println!("solids: {:?}", solids);
-    }
-
     #[test]
     #[ignore = "test failing on CI"]
     fn project_from_files() {
@@ -198,7 +183,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "test failing on CI"]
     fn step_export() {
         let p = create_test_project();
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
