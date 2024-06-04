@@ -189,30 +189,18 @@ pub mod tests {
     //     // let realization = p.get_realization(0, 1000);
     // }
 
-    // Removed because this seems pretty redundant with all the other tests that read .cadmium files
-    // #[test]
-    // fn to_and_from_json() {
-    //     // let mut p = Project::new("Test Project");
+    #[test]
+    #[ignore = "uses old filetype"]
+    fn circle_crashing() {
+        let file_contents =
+            std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
-    //     let file_contents =
-    //         std::fs::read_to_string("/Users/matthewferraro/Downloads/first_project.cadmium")
-    //             .unwrap();
+        let p = Project::from_json(&file_contents);
 
-    //     let p2 = Project::from_json(&file_contents);
-    //     println!("{:?}", p2);
-    // }
-
-    // #[test]
-    // fn circle_crashing() {
-    //     let file_contents =
-    //         std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
-
-    //     let p = Project::from_json(&file_contents);
-
-    //     let workbench_ref = p.get_workbench_by_id(0).unwrap();
-    //     let workbench = workbench_ref.borrow();
-    //     println!("{:?}", workbench);
-    // }
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let workbench = workbench_ref.borrow();
+        println!("{:?}", workbench);
+    }
 
     // #[test]
     // fn bruno() {

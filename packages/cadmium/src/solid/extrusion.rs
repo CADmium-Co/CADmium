@@ -150,7 +150,7 @@ mod tests {
     use crate::project::tests::create_test_project;
 
     #[test]
-    #[ignore = "test failing on CI"]
+    #[ignore = "uses old filetype"]
     fn project_from_files() {
         let file_list = [
             // this file contains three shapes which are adjacent to each other and
