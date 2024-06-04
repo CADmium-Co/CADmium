@@ -108,12 +108,12 @@ impl SolidLike for Extrusion {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct Add {
-    sketch_id: IDType,
-    faces: Vec<Face>, // TODO: This should be a list of face IDs
-    length: f64,
-    offset: f64,
-    direction: Direction,
-    mode: Mode,
+    pub sketch_id: IDType,
+    pub faces: Vec<Face>, // TODO: This should be a list of face IDs
+    pub length: f64,
+    pub offset: f64,
+    pub direction: Direction,
+    pub mode: Mode,
 }
 
 impl MessageHandler for Add {
