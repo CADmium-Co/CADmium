@@ -163,18 +163,15 @@ impl Solid {
         boundaries.face_iter().for_each(|face| {
             let oriented_surface = face.oriented_surface();
 
-            match oriented_surface {
-                truck_modeling::geometry::Surface::Plane(p) => {
-                    let this_face_normal = p.normal();
+            if let truck_modeling::geometry::Surface::Plane(p) = oriented_surface {
+                let this_face_normal = p.normal();
 
-                    if (normal.x - this_face_normal.x).abs() < 0.0001
-                        && (normal.y - this_face_normal.y).abs() < 0.0001
-                        && (normal.z - this_face_normal.z).abs() < 0.0001
-                    {
-                        candidate_faces.push(face.clone());
-                    }
+                if (normal.x - this_face_normal.x).abs() < 0.0001
+                    && (normal.y - this_face_normal.y).abs() < 0.0001
+                    && (normal.z - this_face_normal.z).abs() < 0.0001
+                {
+                    candidate_faces.push(face.clone());
                 }
-                _ => {}
             }
         });
 
@@ -190,7 +187,7 @@ impl Solid {
         mesh.put_together_same_attrs(MESH_TOLERANCE);
         let mut buf = Vec::new();
         obj::write(&mesh, &mut buf).unwrap();
-        
+
         String::from_utf8(buf).unwrap()
     }
 
@@ -203,7 +200,7 @@ impl Solid {
 
     pub fn to_step_string(&self) -> String {
         let compressed = self.truck_solid.compress();
-        
+
         out::CompleteStepDisplay::new(
             out::StepModel::from(&compressed),
             out::StepHeaderDescriptor {
