@@ -17,8 +17,9 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         quote! {
             #name::#variant_name(msg)
         }
-    });
-    let variant_names = data.variants.iter().map(|variant| &variant.ident);
+    }).collect::<Vec<_>>();
+
+    let variant_names = data.variants.iter().map(|variant| &variant.ident).collect::<Vec<_>>();
     let variants_clone = variants.clone();
 
     quote! {
