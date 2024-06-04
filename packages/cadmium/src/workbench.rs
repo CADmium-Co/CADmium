@@ -53,10 +53,10 @@ impl Workbench {
             solids_next_id: 0,
         };
 
-        wb.points.insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0)))).unwrap();
-        wb.planes.insert(0, Rc::new(RefCell::new(Plane::front()))).unwrap();
-        wb.planes.insert(1, Rc::new(RefCell::new(Plane::front()))).unwrap();
-        wb.planes.insert(2, Rc::new(RefCell::new(Plane::front()))).unwrap();
+        wb.points.insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0))));
+        wb.planes.insert(0, Rc::new(RefCell::new(Plane::front())));
+        wb.planes.insert(1, Rc::new(RefCell::new(Plane::front())));
+        wb.planes.insert(2, Rc::new(RefCell::new(Plane::front())));
 
         wb
     }
@@ -154,13 +154,13 @@ impl MessageHandler for AddPlane {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddSketch {
-    plane_description: PlaneDescription,
+    pub plane_description: PlaneDescription,
 }
 
 impl MessageHandler for AddSketch {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
-        let mut wb = sketch_ref.borrow_mut();
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let mut wb = workbench_ref.borrow_mut();
 
         println!("Adding sketch with plane description: {:?}", self.plane_description);
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
@@ -175,7 +175,7 @@ impl MessageHandler for AddSketch {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct WorkbenchRename {
-    new_name: String,
+    pub new_name: String,
 }
 
 impl MessageHandler for WorkbenchRename {

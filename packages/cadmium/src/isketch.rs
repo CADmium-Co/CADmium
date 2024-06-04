@@ -125,17 +125,21 @@ impl Identifiable for Rc<RefCell<ISketch>> {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
-    x: f64,
-    y: f64,
+    pub x: f64,
+    pub y: f64,
 }
 
 impl MessageHandler for AddPoint {
     type Parent = Rc<RefCell<ISketch>>;
     fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
-        let iso_point = PrimitiveCell::Point2(Rc::new(RefCell::new(ISOPoint2::new(self.x, self.y))));
+        let iso_point = ISOPoint2::new(self.x, self.y);
+        let iso_point_cell = PrimitiveCell::Point2(Rc::new(RefCell::new(iso_point.clone())));
 
-        let point_id = sketch_ref.borrow().sketch().borrow_mut().add_primitive(iso_point)?;
-        // self.points_3d.insert(point_id, Point3::from_plane_point(&self.plane.borrow(), &point.into()));
+        let mut sketch = sketch_ref.borrow_mut();
+        // TODO: On plane change the 3D points have to be recalculated
+        let plane = sketch.plane.borrow().clone();
+        let point_id = sketch.sketch().borrow_mut().add_primitive(iso_point_cell)?;
+        sketch.points_3d.insert(point_id, Point3::from_plane_point(&plane, &iso_point));
         Ok(Some(point_id))
     }
 }
@@ -143,11 +147,11 @@ impl MessageHandler for AddPoint {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddArc {
-    center: IDType,
-    radius: f64,
-    clockwise: bool,
-    start_angle: f64,
-    end_angle: f64
+    pub center: IDType,
+    pub radius: f64,
+    pub clockwise: bool,
+    pub start_angle: f64,
+    pub end_angle: f64
 }
 
 impl MessageHandler for AddArc {
@@ -172,8 +176,8 @@ impl MessageHandler for AddArc {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddCircle {
-    center: IDType,
-    radius: f64,
+    pub center: IDType,
+    pub radius: f64,
 }
 
 impl MessageHandler for AddCircle {
@@ -198,8 +202,8 @@ impl MessageHandler for AddCircle {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddLine {
-    start: IDType,
-    end: IDType,
+    pub start: IDType,
+    pub end: IDType,
 }
 
 impl MessageHandler for AddLine {

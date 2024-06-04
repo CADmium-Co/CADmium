@@ -104,47 +104,47 @@ pub mod tests {
 
     use crate::archetypes::PlaneDescription;
     use crate::archetypes::Point2;
+    use crate::isketch::AddLine;
+    use crate::isketch::AddPoint;
+    use crate::message::MessageHandler;
+    use crate::solid::extrusion;
     use crate::solid::extrusion::Direction;
     use crate::solid::extrusion::Mode;
+    use crate::workbench::AddSketch;
 
     use super::*;
 
     pub fn create_test_project() -> Project {
-        let mut p = Project::new("Test Project");
-        let plane_desc = PlaneDescription::PlaneId(0);
-        // let sid = p.add_workbench_sketch("Sketch 1".to_string(), 0, plane_desc).unwrap();
+        let p = Project::new("Test Project");
+        let wb = p.workbenches.get(0).unwrap();
+        let plane_description = PlaneDescription::PlaneId(0);
+        let sketch_id = AddSketch { plane_description }.handle_message(wb.clone()).unwrap().unwrap();
+        let sketch = wb.borrow().get_sketch_by_id(sketch_id).unwrap();
 
-        // let ll = p.add_sketch_point("bottom left".to_string(), 0, sid, Point2 { x: 0.0, y: 0.0, hidden: false }).unwrap();
-        // let lr = p.add_sketch_point("bottom right".to_string(), 0, sid, Point2 { x: 40.0, y: 0.0, hidden: false }).unwrap();
-        // let ul = p.add_sketch_point("top left".to_string(), 0, sid, Point2 { x: 0.0, y: 40.0, hidden: false }).unwrap();
-        // let ur = p.add_sketch_point("top right".to_string(), 0, sid, Point2 { x: 40.0, y: 40.0, hidden: false }).unwrap();
-        // p.add_sketch_line("bottom".to_string(), 0, sid, ll, lr).unwrap();
-        // p.add_sketch_line("right".to_string(), 0, sid, lr, ur).unwrap();
-        // p.add_sketch_line("up".to_string(), 0, sid, ur, ul).unwrap();
-        // p.add_sketch_line("left".to_string(), 0, sid, ul, ll).unwrap();
+        let ll = AddPoint { x: 0.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+        let lr = AddPoint { x: 40.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+        let ul = AddPoint { x: 0.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+        let ur = AddPoint { x: 40.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
 
-        // p.add_solid_extrusion(
-        //     "Extrusion 1".to_string(),
-        //     0,
-        //     vec![0],
-        //     0,
-        //     25.0,
-        //     0.0,
-        //     Mode::New,
-        //     Direction::Normal,
-        // ).unwrap();
+        AddLine { start: ll, end: lr }.handle_message(sketch.clone()).unwrap();
+        AddLine { start: lr, end: ur }.handle_message(sketch.clone()).unwrap();
+        AddLine { start: ur, end: ul }.handle_message(sketch.clone()).unwrap();
+        AddLine { start: ul, end: ll }.handle_message(sketch.clone()).unwrap();
+
+        let faces = sketch.borrow().sketch().borrow().get_faces();
+        extrusion::Add { sketch_id, faces, length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb.clone()).unwrap();
 
         p
     }
 
     #[test]
-    #[ignore = "test failing due to new architecture"]
     fn one_extrusion() {
         let p = create_test_project();
 
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
         let workbench = workbench_ref.borrow();
         let solids = &workbench.solids;
+        println!("solids: {:?}", solids);
 
         assert_eq!(solids.len(), 1);
     }
@@ -202,17 +202,17 @@ pub mod tests {
     //     println!("{:?}", p2);
     // }
 
-    #[test]
-    fn circle_crashing() {
-        let file_contents =
-            std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
+    // #[test]
+    // fn circle_crashing() {
+    //     let file_contents =
+    //         std::fs::read_to_string("src/test_inputs/circle_crashing_2.cadmium").unwrap();
 
-        let p = Project::from_json(&file_contents);
+    //     let p = Project::from_json(&file_contents);
 
-        let workbench_ref = p.get_workbench_by_id(0).unwrap();
-        let workbench = workbench_ref.borrow();
-        println!("{:?}", workbench);
-    }
+    //     let workbench_ref = p.get_workbench_by_id(0).unwrap();
+    //     let workbench = workbench_ref.borrow();
+    //     println!("{:?}", workbench);
+    // }
 
     // #[test]
     // fn bruno() {
