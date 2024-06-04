@@ -34,7 +34,7 @@ impl<T: Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWa
 }
 
 // First level message handler
-impl<'p, T, U> ProjectMessageHandler for IDWrap<T>
+impl<T, U> ProjectMessageHandler for IDWrap<T>
 where
     T: MessageHandler<Parent = U> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
     U: Identifiable<Parent = crate::project::Project>,
@@ -46,7 +46,7 @@ where
 }
 
 // Second level message handler
-impl<'p, T, C, P> MessageHandler for IDWrap<T>
+impl<T, C, P> MessageHandler for IDWrap<T>
 where
     T: MessageHandler<Parent = C> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable<Parent = P>,
@@ -104,7 +104,7 @@ where
                 while let Some(key) = map.next_key::<String>()? {
                     println!("Key: {:?}", key);
 
-                    if &key == C::ID_NAME {
+                    if key == C::ID_NAME {
                         if parent_id.is_some() {
                             return Err(de::Error::duplicate_field("parent_id"));
                         }
