@@ -20,7 +20,7 @@ use std::rc::Rc;
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
     pub name: String,
-    pub history: Vec<Step>,
+    pub history: Vec<Rc<RefCell<Step>>>,
 
     // These are free-standing points in 3D space, not part of sketches
     pub points: BTreeMap<IDType, Rc<RefCell<Point3>>>,
@@ -83,7 +83,10 @@ impl Workbench {
     }
 
     pub fn add_message_step(&mut self, message: &Message) {
-        self.history.push(Step::new(self.history.len() as IDType, message.clone()));
+        self.history.push(
+            Rc::new(
+                RefCell::new(
+                    Step::new(self.history.len() as IDType, message.clone()))));
     }
 }
 
