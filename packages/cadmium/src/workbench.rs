@@ -19,20 +19,20 @@ use std::rc::Rc;
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Workbench {
-    pub(crate) name: String,
-    pub(crate) history: Vec<Step>,
+    pub name: String,
+    pub history: Vec<Step>,
 
     // These are free-standing points in 3D space, not part of sketches
-    pub(crate) points: BTreeMap<IDType, Rc<RefCell<Point3>>>,
-    pub(crate) points_next_id: IDType,
+    pub points: BTreeMap<IDType, Rc<RefCell<Point3>>>,
+    pub points_next_id: IDType,
 
-    pub(crate) planes: BTreeMap<IDType, Rc<RefCell<Plane>>>,
-    pub(crate) planes_next_id: IDType,
+    pub planes: BTreeMap<IDType, Rc<RefCell<Plane>>>,
+    pub planes_next_id: IDType,
 
-    pub(crate) sketches: BTreeMap<IDType, Rc<RefCell<ISketch>>>,
-    pub(crate) sketches_next_id: IDType,
-    pub(crate) solids: BTreeMap<IDType, Rc<RefCell<Solid>>>,
-    pub(crate) solids_next_id: IDType,
+    pub sketches: BTreeMap<IDType, Rc<RefCell<ISketch>>>,
+    pub sketches_next_id: IDType,
+    pub solids: BTreeMap<IDType, Rc<RefCell<Solid>>>,
+    pub solids_next_id: IDType,
 }
 
 impl Workbench {

@@ -1,35 +1,33 @@
-use cadmium::{
-    extrusion::{Direction, Extrusion, ExtrusionMode},
-    project::Project,
-};
+use cadmium::workbench::AddSketch;
+use cadmium::solid::extrusion::{self, Direction, Mode};
+use cadmium::project::Project;
+use cadmium::message::MessageHandler as _;
+use cadmium::isketch::{AddLine, AddPoint};
+use cadmium::archetypes::PlaneDescription;
 
 fn main() {
-    let mut p = Project::new("Example Project");
-    let wb = p.workbenches.get_mut(0).unwrap();
-    wb.add_sketch_to_plane("Sketch 1", "Plane-0");
-    let s = wb.get_sketch_mut("Sketch 1").unwrap();
-    let ll = s.add_point(0.0, 0.0);
-    let lr = s.add_point(40.0, 0.0);
-    let ul = s.add_point(0.0, 40.0);
-    let ur = s.add_point(40.0, 40.0);
-    s.add_segment(ll, lr);
-    s.add_segment(lr, ur);
-    s.add_segment(ur, ul);
-    s.add_segment(ul, ll);
+    let p = Project::new("Test Project");
+    let wb_ref = p.workbenches.first().unwrap();
+    let plane_description = PlaneDescription::PlaneId(0);
+    let sketch_id = AddSketch { plane_description }.handle_message(wb_ref.clone()).unwrap().unwrap();
+    let sketch = wb_ref.borrow().get_sketch_by_id(sketch_id).unwrap();
 
-    let extrusion = Extrusion::new(
-        "Sketch-0".to_owned(),
-        vec![0],
-        25.0,
-        0.0,
-        Direction::Normal,
-        ExtrusionMode::New,
-    );
-    wb.add_extrusion("Ext1", extrusion);
+    let ll = AddPoint { x: 0.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let lr = AddPoint { x: 40.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let ul = AddPoint { x: 0.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let ur = AddPoint { x: 40.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
 
-    let realization = p.get_realization(0, 1000);
-    let solids = realization.solids;
-    let solid = &solids["Ext1:0"];
+    AddLine { start: ll, end: lr }.handle_message(sketch.clone()).unwrap();
+    AddLine { start: lr, end: ur }.handle_message(sketch.clone()).unwrap();
+    AddLine { start: ur, end: ul }.handle_message(sketch.clone()).unwrap();
+    AddLine { start: ul, end: ll }.handle_message(sketch.clone()).unwrap();
+
+    let faces = sketch.borrow().sketch().borrow().get_faces();
+    extrusion::Add { sketch_id, faces, length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb_ref.clone()).unwrap();
+
+    let wb = wb_ref.borrow();
+    let solid_ref = wb.solids.first_key_value().unwrap().1;
+    let solid = solid_ref.borrow();
 
     println!("{:?}", solid);
 
