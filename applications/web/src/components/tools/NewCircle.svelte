@@ -11,39 +11,32 @@
   export let active: boolean
   export let projectToPlane: ProjectToPlane
 
-  // log("[props]", "pointsById:", pointsById, "sketchIndex:", sketchIndex, "active:", active)
+  let centerPoint: PointLikeById | null = null
+  let stack: PointLikeById[] = []
 
-  let centerPoint: PointLikeById | null
+  $: if ($sketchTool !== "circle") clearStack()
 
-  $: if ($sketchTool !== "circle") centerPoint = null
-  // $: centerPoint, log("[centerPoint]", centerPoint)
+  function pushToStack(point: PointLikeById) {
+    if (!point) return
+    point.id = point.id ?? addPointToSketch(sketchIndex, point.twoD, false)
+    stack.push(point)
+  }
 
   function processPoint(point: PointLikeById) {
-    if (!centerPoint) {
-      // if there is no center point, set one
-      if (point.id) {
-        // nothing to do, the point exists!
-        // log('nothing to do the point exists!')
-      } else {
-        // again, don't actually DO anything yet to the sketch
-        point.id = null
-      }
-      centerPoint = point
-    } else {
-      // there WAS an center point, so we should create a circle!
+    pushToStack(point)
+    centerPoint = point
 
-      // if the center point doesn't exist, then we should create a point
-      if (centerPoint.id === null) centerPoint.id = addPointToSketch(sketchIndex, centerPoint.twoD!, false)
-
-      if (point.id && centerPoint.id) {
-        // if the point exists, then we should create a circle between the two existing points
-        addCircleBetweenPoints(sketchIndex, centerPoint.id, point.id)
-      } else {
-        // if the point doesn't exist, then we should create a point and a circle
-        point.id = addPointToSketch(sketchIndex, point.twoD!, true)
-      }
-      if (point.id && centerPoint.id) addCircleBetweenPoints(sketchIndex, centerPoint.id, point.id)
-      centerPoint = null
+    switch (stack.length) {
+      case 0: // nothing to do, the stack is empty
+        break
+      case 1: // can't create a circle with only one point!
+        break
+      default:
+        const circumference = popFromStack()
+        const center = popFromStack()
+        addCircleBetweenPoints(sketchIndex, center.id, circumference.id)
+        clearStack()
+        break
     }
   }
 
@@ -55,8 +48,6 @@
     }
   }
 
-  // $: $snapPoints, log("[$snapPoints]", $snapPoints)
-
   export function mouseMove(_event: Event, projected: {x: number; y: number}) {
     // search through the existing points to see if we're close to one
     // if we are, then we should snap to it
@@ -66,48 +57,24 @@
     // so these snap points do not necessarily correspond to actual points in the sketch
     let snappedTo = null
     for (const geom of $currentlyMousedOver) {
-      // log("[currentlyMousedOver geom]", geom)
       if (geom.type === "point3D") {
         const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
-        // log("[projectToPlane twoD]", twoD)
-        const point = {
+        snappedTo = {
           twoD: {x: twoD.x, y: twoD.y},
           threeD: {x: geom.x, y: geom.y, z: geom.z},
           id: null,
         }
-        snappedTo = point
       }
       if (geom.type === "point") {
-        // log("[currentlyMousedOver geom is type point]", geom)
         const point = pointsById[geom.id]
-        // oops! point.twoD etc does not exist here, we have:
-        // const example = {
-        // 	type: "point",
-        // 	id: "1"
-        // }
-        function querySnapPoint(id: string | null) {
-          const points = $snapPoints.filter(point => id && point.id === id)
-          return points.length > 0 ? points[0] : false
-        }
-        // see if we can retrieve it? unlikely
-        // log("[querySnapPoint found point:]", querySnapPoint(point?.id!))
-        // have not seen a successful query yet! sort it out with an if:
         if (point.twoD && point.threeD && geom.id) snappedTo = {twoD: point.twoD, threeD: point.threeD, id: geom.id}
         break // If there is a 2D point, prefer to use it rather than the 3D point
       }
     }
 
-    // if (snappedTo) log("[snappedTo]", snappedTo)
-
-    // only reset $snapPoints if something has changed
-    if (snappedTo) {
-      // @ts-ignore todo rework snapping
-      $snapPoints = [snappedTo] // todo all these different point representations need work!
-    } else {
-      if ($snapPoints.length > 0) {
-        $snapPoints = []
-      }
-    }
+    // @ts-ignore todo rework snapping
+    if (snappedTo) $snapPoints = [snappedTo]
+    else if ($snapPoints.length > 0) $snapPoints = []
 
     if (centerPoint) {
       function calcDeltas(a: Vector2Like | Point2D | {x: number; y: number}, b: Vector2Like | undefined) {
@@ -139,10 +106,20 @@
   export function onKeyDown(event: KeyboardEvent) {
     if (!active) return
     if (event.key === "Escape") {
-      previewGeometry.set([])
-      centerPoint = null
+      clearStack()
       $sketchTool = "select"
     }
+  }
+
+  function clearStack() {
+    centerPoint = null
+    previewGeometry.set([])
+    snapPoints.set([])
+    stack = []
+  }
+
+  function popFromStack(): PointLikeById | undefined {
+    return stack.pop()
   }
 </script>
 
