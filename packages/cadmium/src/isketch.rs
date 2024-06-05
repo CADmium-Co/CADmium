@@ -17,17 +17,6 @@ use crate::IDType;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub struct IPlane {
-    // TODO: Should hold its own ID
-    // pub id: String,
-    pub plane: Plane,
-    pub name: String,
-    pub width: f64,
-    pub height: f64,
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct ISketch {
     // TODO: Make it private with a setter
     pub plane: Rc<RefCell<Plane>>,
