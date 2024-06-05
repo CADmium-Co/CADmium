@@ -186,3 +186,28 @@ impl MessageHandler for WorkbenchRename {
         Ok(None)
     }
 }
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct SetSketchPlane {
+    pub sketch_id: IDType,
+    pub plane_description: PlaneDescription,
+}
+
+impl MessageHandler for SetSketchPlane {
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let wb = workbench_ref.borrow();
+
+        let plane = match self.plane_description {
+            PlaneDescription::PlaneId(plane_id) =>
+                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
+        }.clone();
+
+        let sketch = wb.sketches.get(&self.sketch_id).ok_or(anyhow::anyhow!("Failed to find sketch with id {}", self.sketch_id))?;
+        sketch.borrow_mut().plane = plane;
+
+        Ok(None)
+    }
+}
