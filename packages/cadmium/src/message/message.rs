@@ -15,6 +15,7 @@ pub enum Message {
     WorkbenchPointAdd(IDWrap<crate::workbench::AddPoint>),
     WorkbenchPlaneAdd(IDWrap<crate::workbench::AddPlane>),
     WorkbenchSketchAdd(IDWrap<crate::workbench::AddSketch>),
+    WorkbenchSketchSetPlane(IDWrap<crate::workbench::SetSketchPlane>),
     WorkbenchPointUpdate(IDWrap<IDWrap<crate::solid::point::WorkbenchPointUpdate>>),
 
     SketchAddPoint(IDWrap<IDWrap<crate::isketch::AddPoint>>),
@@ -24,6 +25,9 @@ pub enum Message {
     SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::DeletePrimitive>>),
 
     SolidExtrusionAdd(IDWrap<crate::solid::extrusion::Add>),
+
+    StepRename(IDWrap<IDWrap<crate::step::Rename>>),
+    StepDelete(IDWrap<crate::step::Delete>),
 }
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
