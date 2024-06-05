@@ -3,59 +3,44 @@
   import {addRectangleBetweenPoints, addPointToSketch} from "shared/projectUtils"
   import {Vector3} from "three"
   import type {IDictionary, PointLikeById, ProjectToPlane, SketchPoint} from "shared/types"
-  // import Sketch from "./Sketch.svelte"
 
   const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
 
-  // log("[props]", pointsById, sketchIndex, active /** , projectToPlane */)
+  let anchorPoint: PointLikeById | null = null
 
-  let anchorPoint: PointLikeById | null
+  let stack: PointLikeById[] = []
 
-  $: if ($sketchTool !== "rectangle") anchorPoint = null
+  $: if ($sketchTool !== "rectangle") clearStack()
+
+  function pushToStack(point: PointLikeById) {
+    if (!point) return
+    point.id = point.id ?? addPointToSketch(sketchIndex, point.twoD, false)
+    stack.push(point)
+  }
 
   function processPoint(point: PointLikeById) {
-    if (!anchorPoint) {
-      if (point) {
-        // if there is no anchor point, set one
-        if (point.id) {
-          // nothing to do, the point exists!
-          // log('nothing to do the point exists!')
-        }
-        // log('oh cool, creating point!')
-        else point.id = null // todo ask matt why do we set the id to null?
+    pushToStack(point)
+    anchorPoint = point
 
-        // log("set anchor point", point)
-        anchorPoint = point
-      }
-    } else {
-      // there WAS an anchor point, so we should create a rectangle!
-
-      // if the anchor point doesn't exist, then we should create a point
-      if (anchorPoint.id === null || anchorPoint.id === undefined) anchorPoint.id = addPointToSketch(sketchIndex, anchorPoint.twoD!, false)
-
-      // if (point?.id && anchorPoint.id) {
-      // 	// if the point exists, then we should create a circle between the two existing points
-      // 	// addRectangleBetweenPoints(sketchIndex, anchorPoint.id, point.id)
-      // } else {
-      // if the point doesn't exist, then we should create a point and a circle
-      if (point) point.id = addPointToSketch(sketchIndex, point.twoD!, false)
-
-      // }
-      log("setting rectangle", anchorPoint, point)
-      addRectangleBetweenPoints(sketchIndex, +anchorPoint.id!, +point.id!)
-      // Clear the anchor point and start the next rectangular drawing
-      anchorPoint = null
+    switch (stack.length) {
+      case 0: // nothing to do, the stack is empty
+        break
+      case 1: // can't create a rectangle with only one point!
+        break
+      default:
+        const endPoint = popFromStack()
+        const anchor = popFromStack()
+        addRectangleBetweenPoints(sketchIndex, +anchor.id, +endPoint.id)
+        clearStack()
+        break
     }
   }
 
   export function click(_event: Event, projected: PointLikeById) {
     if ($snapPoints.length > 0) processPoint($snapPoints[0])
-    else {
-      let pt = {twoD: projected.twoD, threeD: projected.threeD, id: null}
-      processPoint(pt)
-    }
+    else processPoint({twoD: projected.twoD, threeD: projected.threeD, id: null})
   }
 
   export function mouseMove(_event: Event, projected: PointLikeById) {
@@ -69,12 +54,11 @@
     for (const geom of $currentlyMousedOver) {
       if (geom.type === "point3D") {
         const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
-        const point = {
+        snappedTo = {
           twoD: {x: twoD.x, y: twoD.y},
           threeD: {x: geom.x, y: geom.y, z: geom.z},
           id: null,
         }
-        snappedTo = point
       }
       if (geom.type === "point") {
         const point = pointsById[geom.id]
@@ -156,10 +140,20 @@
   export function onKeyDown(event: KeyboardEvent) {
     if (!active) return
     if (event.key === "Escape") {
-      previewGeometry.set([])
-      anchorPoint = null
+      clearStack()
       $sketchTool = "select"
     }
+  }
+
+  function clearStack() {
+    anchorPoint = null
+    previewGeometry.set([])
+    snapPoints.set([])
+    stack = []
+  }
+
+  function popFromStack(): PointLikeById | undefined {
+    return stack.pop()
   }
 </script>
 
