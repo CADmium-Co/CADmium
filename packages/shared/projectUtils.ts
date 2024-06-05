@@ -1,3 +1,6 @@
+import * as cadFunctions from "./cadmium-api"
+(window as any).cad = cadFunctions
+
 import {
 	workbenchIsStale,
 	workbenchIndex,
