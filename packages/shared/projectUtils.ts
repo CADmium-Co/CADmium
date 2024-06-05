@@ -27,7 +27,8 @@ import type {
 	WithTarget,
 	WorkBench
 } from "./types"
-import type { Realization as WasmRealization, Message, Primitive, StepData, Workbench, MessageResult } from "cadmium"
+import type { Realization as WasmRealization, Primitive, StepData, Workbench, MessageResult } from "cadmium"
+import type { Message } from "./cadmium-api"
 import { isMessage } from "./typeGuards"
 // import { isDevelopment } from "../+layout"
 
