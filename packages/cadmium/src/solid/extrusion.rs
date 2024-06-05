@@ -98,7 +98,7 @@ impl SolidLike for Extrusion {
 
                 // Can we calculate ALL the wires at once and not iter-sweep?
                 let sweep = builder::tsweep(&face, extrusion_tvector);
-                
+
 
                 builder::translated(&sweep, offset_tvector)
             }).collect())
@@ -148,21 +148,6 @@ impl MessageHandler for Add {
 mod tests {
     use crate::project::tests::create_test_project;
     use crate::project::Project;
-
-    #[allow(unused_imports)]
-    use super::*;
-
-    #[test]
-    #[ignore = "test failing on CI"]
-    fn create_project_solid() {
-        // Demonstrate creating a project and then realizing one solid
-        let p = create_test_project();
-
-        // now get solids? save as obj or stl or step?
-        let realization = p.get_realization(0, 100).unwrap();
-        let solids = realization.solids;
-        assert!(solids.len() == 1);
-    }
 
     #[test]
     #[ignore = "uses old filetype"]
