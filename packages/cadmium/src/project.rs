@@ -101,7 +101,7 @@ impl ProjectMessageHandler for ProjectRename {
 pub mod tests {
 
     use crate::archetypes::PlaneDescription;
-    
+
     use crate::isketch::AddLine;
     use crate::isketch::AddPoint;
     use crate::message::MessageHandler;
@@ -109,6 +109,7 @@ pub mod tests {
     use crate::solid::extrusion::Direction;
     use crate::solid::extrusion::Mode;
     use crate::workbench::AddSketch;
+    use crate::workbench::SetSketchPlane;
 
     use super::*;
 
@@ -147,27 +148,17 @@ pub mod tests {
         assert_eq!(solids.len(), 1);
     }
 
-    // #[test]
-    // fn move_sketch() {
-    //     let mut p = Project::new("Test Project");
+    #[test]
+    fn move_sketch() {
+        let p = create_test_project();
 
-    //     let right_plane_id = p.workbenches[0].plane_name_to_id("Right").unwrap();
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
 
-    //     let message = &Message::SetSketchPlane {
-    //         workbench_id: 0,
-    //         sketch_id: "Sketch-0".to_owned(),
-    //         plane_id: right_plane_id,
-    //     };
-
-    //     let result = p.handle_message(message);
-    //     match result {
-    //         Ok(res) => println!("{}", res),
-    //         Err(e) => println!("{}", e),
-    //     }
-    //     // println!("{:?}", result);
-
-    //     let realization = p.get_realization(0, 1000);
-    // }
+        SetSketchPlane {
+            sketch_id: 0,
+            plane_description: PlaneDescription::PlaneId(1),
+        }.handle_message(workbench_ref.clone()).unwrap();
+    }
 
     // #[test]
     // fn rename_plane() {
