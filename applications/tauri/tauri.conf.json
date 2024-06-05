@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "identifier": "com.cadmium.dev",
   "build": {
-    "frontendDist": "../web",
+    "frontendDist": "../web/dist",
     "devUrl": "http://localhost:5173",
     "beforeDevCommand": "pnpm run dev",
     "beforeBuildCommand": "pnpm run build"
