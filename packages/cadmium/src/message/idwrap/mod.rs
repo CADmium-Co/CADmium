@@ -1,6 +1,10 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
+use crate::workbench::Workbench;
 use crate::IDType;
 
 mod de;
@@ -10,12 +14,12 @@ use super::{Identifiable, MessageHandler, ProjectMessageHandler};
 
 #[derive(Tsify, Debug, Clone)]
 #[tsify(from_wasm_abi)]
-pub struct IDWrap<T: Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> {
+pub struct IDWrap<T: Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> {
     pub id: u64,
     pub inner: T,
 }
 
-impl<T: Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> IDWrap<T> {
+impl<T: Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> IDWrap<T> {
     pub fn new(id: IDType, h: T) -> Self {
         Self {
             id,
@@ -33,23 +37,27 @@ impl<T: Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWa
 }
 
 // First level message handler
-impl<T, U> ProjectMessageHandler for IDWrap<T>
+impl<'a, T> ProjectMessageHandler for IDWrap<T>
 where
-    T: MessageHandler<Parent = U> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
-    U: Identifiable<Parent = crate::project::Project>,
+    T: MessageHandler<Parent = Rc<RefCell<Workbench>>> + Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
+    crate::message::message::Message: From<Self>
 {
     fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<IDType>> {
-        let prnt = U::from_parent_id(project, self.id)?;
-        self.inner.handle_message(prnt)
+        let wb = T::Parent::from_parent_id(project, self.id)?;
+        let result = self.inner.handle_message(wb.clone())?;
+
+        wb.borrow_mut().add_message_step(&self.clone().into());
+
+        Ok(result)
     }
 }
 
 // Second level message handler
 impl<T, C, P> MessageHandler for IDWrap<T>
 where
-    T: MessageHandler<Parent = C> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = C> + Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable<Parent = P>,
-    P: Identifiable<Parent = crate::project::Project>,
+    P: Identifiable,
 {
     type Parent = C::Parent;
     fn handle_message(&self, parent: Self::Parent) -> anyhow::Result<Option<IDType>> {

@@ -9,7 +9,7 @@ use super::IDWrap;
 
 impl<'de, T, C> Deserialize<'de> for IDWrap<T>
 where
-    T: MessageHandler<Parent = C> + Serialize + for<'dh> Deserialize<'dh> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = C> + Clone + Serialize + for<'dh> Deserialize<'dh> + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -31,7 +31,7 @@ where
         // Implementation of Visitor trait for IDWrapVisitor
         impl<'de, T, C> Visitor<'de> for IDWrapVisitor<IDWrap<T>>
         where
-            T: MessageHandler<Parent = C> + Serialize + for<'dh> Deserialize<'dh> + wasm_bindgen::convert::RefFromWasmAbi,
+            T: MessageHandler<Parent = C> + Clone + Serialize + for<'dh> Deserialize<'dh> + wasm_bindgen::convert::RefFromWasmAbi,
             C: Identifiable,
         {
             type Value = IDWrap<T>;
