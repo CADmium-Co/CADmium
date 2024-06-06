@@ -102,16 +102,13 @@ pub mod tests {
 
     use crate::archetypes::PlaneDescription;
 
-    use crate::isketch::AddLine;
-    use crate::isketch::AddPoint;
+    use crate::isketch::primitive::{AddLine, AddPoint};
     use crate::message::idwrap::IDWrap;
     use crate::message::MessageHandler;
     use crate::feature::extrusion;
-    use crate::feature::extrusion::Direction;
-    use crate::feature::extrusion::Mode;
+    use crate::feature::extrusion::{Direction, Mode};
     use crate::step;
-    use crate::workbench::AddSketch;
-    use crate::workbench::SetSketchPlane;
+    use crate::workbench::{AddSketch, SetSketchPlane};
     use crate::IDType;
 
     use super::*;
