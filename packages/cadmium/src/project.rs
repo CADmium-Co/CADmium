@@ -104,6 +104,7 @@ pub mod tests {
 
     use crate::isketch::AddLine;
     use crate::isketch::AddPoint;
+    use crate::message::idwrap::IDWrap;
     use crate::message::MessageHandler;
     use crate::solid::extrusion;
     use crate::solid::extrusion::Direction;
@@ -115,23 +116,31 @@ pub mod tests {
     use super::*;
 
     pub fn create_test_project() -> Project {
-        let p = Project::new("Test Project");
-        let wb = p.workbenches.first().unwrap();
+        let mut p = Project::new("Test Project");
         let plane_description = PlaneDescription::PlaneId(0);
-        let sketch_id = AddSketch { plane_description }.handle_message(wb.clone()).unwrap().unwrap();
-        let sketch = wb.borrow().get_sketch_by_id(sketch_id).unwrap();
+        IDWrap { id: 0, inner: AddSketch { plane_description } }.handle_project_message(&mut p).unwrap().unwrap();
 
-        let ll = AddPoint { x: 0.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
-        let lr = AddPoint { x: 40.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
-        let ul = AddPoint { x: 0.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
-        let ur = AddPoint { x: 40.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+        let ll = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 0.0,   y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
+        let lr = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 40.0,  y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
+        let ul = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 0.0,  y: 40.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
+        let ur = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 40.0, y: 40.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
 
-        AddLine { start: ll, end: lr }.handle_message(sketch.clone()).unwrap();
-        AddLine { start: lr, end: ur }.handle_message(sketch.clone()).unwrap();
-        AddLine { start: ur, end: ul }.handle_message(sketch.clone()).unwrap();
-        AddLine { start: ul, end: ll }.handle_message(sketch.clone()).unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: ll, end: lr } } }.handle_project_message(&mut p).unwrap().unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: lr, end: ur } } }.handle_project_message(&mut p).unwrap().unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: ur, end: ul } } }.handle_project_message(&mut p).unwrap().unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: ul, end: ll } } }.handle_project_message(&mut p).unwrap().unwrap();
 
-        extrusion::Add { sketch_id, faces: vec![0], length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb.clone()).unwrap();
+        IDWrap {
+            id: 0,
+            inner: extrusion::Add {
+                sketch_id: 0,
+                faces: vec![0],
+                length: 25.0,
+                offset: 0.0,
+                direction: Direction::Normal,
+                mode: Mode::New
+            }
+        }.handle_project_message(&mut p).unwrap().unwrap();
 
         p
     }

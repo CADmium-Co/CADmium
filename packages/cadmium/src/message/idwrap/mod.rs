@@ -61,7 +61,7 @@ where
 {
     type Parent = C::Parent;
     fn handle_message(&self, parent: Self::Parent) -> anyhow::Result<Option<IDType>> {
-        let prnt = C::from_parent_id(&parent, self.id)?;
-        self.inner.handle_message(prnt)
+        let msg_parent = C::from_parent_id(&parent, self.id)?;
+        self.inner.handle_message(msg_parent)
     }
 }
