@@ -10,7 +10,7 @@
     "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,json,svelte,md}\""
   },
   "devDependencies": {
-    "@playwright/test": "1.x",
+    "@playwright/test": "~1.44.1",
     "@tauri-apps/cli": "2.0.0-beta.20",
     "cross-env": "^7.0.3",
     "rimraf": "^5.0.7",
