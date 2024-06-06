@@ -130,8 +130,7 @@ pub mod tests {
         AddLine { start: ur, end: ul }.handle_message(sketch.clone()).unwrap();
         AddLine { start: ul, end: ll }.handle_message(sketch.clone()).unwrap();
 
-        let faces = sketch.borrow().sketch().borrow().get_faces();
-        extrusion::Add { sketch_id, faces, length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb.clone()).unwrap();
+        extrusion::Add { sketch_id, faces: vec![0], length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb.clone()).unwrap();
 
         p
     }
@@ -142,7 +141,7 @@ pub mod tests {
 
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
         let workbench = workbench_ref.borrow();
-        let solids = &workbench.solids;
+        let solids = &workbench.features;
         println!("solids: {:?}", solids);
 
         assert_eq!(solids.len(), 1);

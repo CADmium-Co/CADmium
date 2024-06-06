@@ -1,6 +1,4 @@
-use std::cell::Ref;
 use std::cell::RefCell;
-use std::cell::RefMut;
 use std::fmt::Debug;
 use std::rc::Rc;
 
@@ -8,10 +6,14 @@ use serde::Deserialize;
 use serde::Serialize;
 use tsify_next::Tsify;
 
+use crate::message::Identifiable;
+use crate::workbench::Workbench;
+use crate::IDType;
+
 use super::*;
 
 pub trait SolidLike: Debug {
-    fn references(&self) -> Vec<FeatureCell>;
+    fn references(&self) -> Vec<Rc<RefCell<Feature>>>;
     fn get_truck_solids(&self) -> anyhow::Result<Vec<TruckClosedSolid>>;
     fn to_feature(&self) -> Feature;
 
@@ -26,6 +28,7 @@ pub trait SolidLike: Debug {
 
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+#[non_exhaustive]
 pub enum Feature {
     Extrusion(extrusion::Extrusion),
 }
@@ -38,34 +41,11 @@ impl Feature {
     }
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum FeatureCell {
-    Extrusion(Rc<RefCell<extrusion::Extrusion>>),
-}
+impl Identifiable for Rc<RefCell<Feature>> {
+    type Parent = Rc<RefCell<Workbench>>;
+    const ID_NAME: &'static str = "feature_id";
 
-impl FeatureCell {
-    pub fn borrow(&self) -> Ref<dyn SolidLike> {
-        match self {
-            FeatureCell::Extrusion(e) => e.borrow(),
-        }
-    }
-
-    pub fn borrow_mut(&self) -> RefMut<dyn SolidLike > {
-        match self {
-            FeatureCell::Extrusion(e) => e.borrow_mut(),
-        }
-    }
-
-    pub fn as_ptr(&self) -> *const dyn SolidLike {
-        match self {
-            FeatureCell::Extrusion(e) => e.as_ptr(),
-        }
-    }
-}
-
-impl PartialEq for FeatureCell {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(self.as_ptr(), other.as_ptr())
+    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
+        Ok(parent.borrow().features.get(&id).ok_or(anyhow::anyhow!("No feature with ID {} was found", id))?.clone())
     }
 }
