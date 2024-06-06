@@ -1,0 +1,11 @@
+{
+	"recommendations": [
+		"rust-lang.rust-analyzer",
+		"svelte.svelte-vscode",
+		"bradlc.vscode-tailwindcss",
+		"esbenp.prettier-vscode",
+		"ms-playwright.playwright",
+		"vadimcn.vscode-lldb",
+		"dbaeumer.vscode-eslint"
+	]
+}

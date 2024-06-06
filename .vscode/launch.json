@@ -1,0 +1,71 @@
+{
+	// Use IntelliSense to learn about possible attributes.
+	// Hover to view descriptions of existing attributes.
+	// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "[Chrome] Run & Debug",
+			"request": "launch",
+			"runtimeExecutable": "pnpm",
+			"runtimeArgs": [
+				"dev",
+			],
+			"type": "node",
+			"cwd": "${workspaceFolder}/applications/web",
+			"serverReadyAction": {
+				"action": "debugWithChrome",
+				"pattern": "Local: +http://127.0.0.1:([0-9]+)/",
+				"uriFormat": "http://127.0.0.1:%s",
+				"webRoot": "${workspaceFolder}/applications/web/src",
+			}
+		},
+		{
+			"name": "[Rust] Debug WASM binary",
+			"type": "lldb",
+			"request": "launch",
+			"program": "${workspaceFolder}/packages/cadmium/pkg/cadmium_bg.wasm",
+			"cwd": "${workspaceFolder}/packages/cadmium",
+			"stopOnEntry": false,
+			"preLaunchTask": "cargo:build",
+			"sourceLanguages": ["rust"]
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "[Rust] Debug unit tests",
+			"cargo": {
+				"args": [
+					"test",
+					"--no-run",
+					"--lib",
+					"--package=cadmium"
+				],
+				"filter": {
+					"name": "cadmium",
+					"kind": "lib"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+		{
+			"type": "lldb",
+			"request": "launch",
+			"name": "[Rust] Debug example 'project_simple_extrusion'",
+			"cargo": {
+				"args": [
+					"build",
+					"--example=project_simple_extrusion",
+					"--package=cadmium"
+				],
+				"filter": {
+					"name": "project_simple_extrusion",
+					"kind": "example"
+				}
+			},
+			"args": [],
+			"cwd": "${workspaceFolder}"
+		},
+	],
+}

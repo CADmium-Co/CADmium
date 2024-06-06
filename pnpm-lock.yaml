@@ -9,7 +9,7 @@ importers:
   .:
     devDependencies:
       '@playwright/test':
-        specifier: ^1.44.1
+        specifier: ~1.44.1
         version: 1.44.1
       '@tauri-apps/cli':
         specifier: 2.0.0-beta.20

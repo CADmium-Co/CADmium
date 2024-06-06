@@ -1,0 +1,7 @@
+{
+	"npm.packageManager": "pnpm",
+	"vite.autoStart": false,
+	"vite.buildCommand": "pnpm run build",
+	"vite.devCommand": "pnpm run dev",
+	"vite.showTerminal": true
+}
