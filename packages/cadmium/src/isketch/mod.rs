@@ -31,7 +31,6 @@ pub struct ISketch {
 }
 
 impl ISketch {
-    // TODO: Maybe pass the plane as refcell?
     pub fn new(plane: Rc<RefCell<Plane>>) -> Self {
         // The key difference between Sketch and RealSketch is that Sketch lives
         // in 2D and RealSketch lives in 3D. So we need to convert the points
