@@ -33,6 +33,8 @@ strum = { version = "0.26.2", features = ["derive"] }
 isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*", features = ["tsify"] }
 paste = "1.0.15"
 cadmium-macros = { path = "../cadmium-macros", version = "*" }
+log = "0.4.21"
+wasm-logger = "0.2.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

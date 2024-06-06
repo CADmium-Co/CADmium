@@ -50,8 +50,6 @@ where
 
                 // Loop through the map and extract fields
                 while let Some(key) = map.next_key::<String>()? {
-                    println!("Key: {:?}", key);
-
                     if key == C::ID_NAME {
                         if parent_id.is_some() {
                             return Err(de::Error::duplicate_field("parent_id"));
