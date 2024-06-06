@@ -165,8 +165,8 @@ importers:
         specifier: ^4.2.12
         version: 4.2.17
       three:
-        specifier: ^0.162.0
-        version: 0.162.0
+        specifier: ^0.164.1
+        version: 0.164.1
 
 packages:
 
@@ -1974,9 +1974,6 @@ packages:
     resolution: {integrity: sha512-lCur/i8U6m0ysWYhQ1yFGWOZB0QA2oVsDsfynYd65HhXxLxJfiAt8OsXmpv9PnTLacfaZclBcZHUOB9QKk3eaw==}
     peerDependencies:
       three: '>=0.151'
-
-  three@0.162.0:
-    resolution: {integrity: sha512-xfCYj4RnlozReCmUd+XQzj6/5OjDNHBy5nT6rVwrOKGENAvpXe2z1jL+DZYaMu4/9pNsjH/4Os/VvS9IrH7IOQ==}
 
   three@0.164.1:
     resolution: {integrity: sha512-iC/hUBbl1vzFny7f5GtqzVXYjMJKaTPxiCxXfrvVdBi1Sf+jhd1CAkitiFwC7mIBFCo3MrDLJG97yisoaWig0w==}
@@ -3958,8 +3955,6 @@ snapshots:
       three: 0.164.1
       troika-three-text: 0.47.2(three@0.164.1)
       tweakpane: 3.1.10
-
-  three@0.162.0: {}
 
   three@0.164.1: {}
 
