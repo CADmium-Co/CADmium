@@ -19,7 +19,8 @@
         "svelte.svelte-vscode",
         "bradlc.vscode-tailwindcss",
         "esbenp.prettier-vscode",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "vadimcn.vscode-lldb"
       ]
     }
   }
