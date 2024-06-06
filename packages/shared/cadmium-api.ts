@@ -61,9 +61,14 @@ export function sketchDeletePrimitive(workbench_id: IDType, sketch_id: IDType, p
 	const message: Message = { SketchDeletePrimitive: { workbench_id, sketch_id, primitive_id } }
 	return sendWasmMessage(message)
 }
-interface SolidExtrusionAdd { workbench_id: IDType, sketch_id: IDType, faces: Face[], length: number, offset: number, direction: Direction, mode: Mode };
-export function solidExtrusionAdd(workbench_id: IDType, sketch_id: IDType, faces: Face[], length: number, offset: number, direction: Direction, mode: Mode): MessageResult {
+interface SolidExtrusionAdd { workbench_id: IDType, sketch_id: IDType, faces: IDType[], length: number, offset: number, direction: Direction, mode: Mode };
+export function solidExtrusionAdd(workbench_id: IDType, sketch_id: IDType, faces: IDType[], length: number, offset: number, direction: Direction, mode: Mode): MessageResult {
 	const message: Message = { SolidExtrusionAdd: { workbench_id, sketch_id, faces, length, offset, direction, mode } }
+	return sendWasmMessage(message)
+}
+interface SolidExtrusionUpdateFaces { workbench_id: IDType, extrusion_id: IDType, sketch_id: IDType, faces: IDType[] };
+export function solidExtrusionUpdateFaces(workbench_id: IDType, extrusion_id: IDType, sketch_id: IDType, faces: IDType[]): MessageResult {
+	const message: Message = { SolidExtrusionUpdateFaces: { workbench_id, extrusion_id, sketch_id, faces } }
 	return sendWasmMessage(message)
 }
 interface StepRename { workbench_id: IDType, step_id: IDType, new_name: string };
@@ -91,5 +96,6 @@ export type Message =
 	{ SketchAddLine: SketchAddLine } |
 	{ SketchDeletePrimitive: SketchDeletePrimitive } |
 	{ SolidExtrusionAdd: SolidExtrusionAdd } |
+	{ SolidExtrusionUpdateFaces: SolidExtrusionUpdateFaces } |
 	{ StepRename: StepRename } |
 	{ StepDelete: StepDelete }

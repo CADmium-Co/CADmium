@@ -5,8 +5,8 @@ use wasm_bindgen::prelude::*;
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::isketch::ISketch;
+use crate::solid::feature::Feature;
 use crate::solid::point::Point3;
-use crate::solid::Solid;
 use crate::step::Step;
 use crate::IDType;
 
@@ -31,8 +31,8 @@ pub struct Workbench {
 
     pub sketches: BTreeMap<IDType, Rc<RefCell<ISketch>>>,
     pub sketches_next_id: IDType,
-    pub solids: BTreeMap<IDType, Rc<RefCell<Solid>>>,
-    pub solids_next_id: IDType,
+    pub features: BTreeMap<IDType, Rc<RefCell<Feature>>>,
+    pub features_next_id: IDType,
 }
 
 impl Workbench {
@@ -49,8 +49,8 @@ impl Workbench {
 
             sketches: BTreeMap::new(),
             sketches_next_id: 0,
-            solids: BTreeMap::new(),
-            solids_next_id: 0,
+            features: BTreeMap::new(),
+            features_next_id: 0,
         };
 
         wb.points.insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0))));
