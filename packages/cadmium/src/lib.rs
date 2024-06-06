@@ -1,5 +1,4 @@
 use message::{Message, MessageResult};
-// use message::{Message, MessageResult};
 use tsify_next::declare;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
@@ -14,9 +13,6 @@ pub mod feature;
 pub mod step;
 pub mod workbench;
 
-// pub use isotope::primitives::ParametricCell;
-// pub use isotope::constraints::ConstraintCell;
-
 #[declare]
 pub type IDType = u64;
 
@@ -30,6 +26,7 @@ impl Project {
     #[wasm_bindgen(constructor)]
     pub fn new(name: &str) -> Project {
         console_error_panic_hook::set_once();
+        wasm_logger::init(wasm_logger::Config::default());
 
         Project {
             native: project::Project::new(name),

@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use log::error;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
@@ -50,7 +51,7 @@ impl Project {
         match result {
             Ok(p) => p,
             Err(e) => {
-                println!("Error: {}", e);
+                error!("Error: {}", e);
                 Project::new("Error")
             }
         }
