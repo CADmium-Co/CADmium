@@ -1,5 +1,5 @@
 use cadmium::workbench::AddSketch;
-use cadmium::solid::extrusion::{self, Direction, Mode};
+use cadmium::feature::extrusion::{self, Direction, Mode};
 use cadmium::project::Project;
 use cadmium::message::MessageHandler as _;
 use cadmium::isketch::{AddLine, AddPoint};

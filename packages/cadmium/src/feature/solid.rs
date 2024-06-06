@@ -12,13 +12,7 @@ use truck_stepio::out;
 use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
 
-pub mod extrusion;
-pub mod feature;
-pub mod helpers;
-pub mod point;
-pub mod prelude;
-
-use prelude::*;
+use super::prelude::*;
 
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

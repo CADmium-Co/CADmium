@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use truck_modeling::Plane as TruckPlane;
 use truck_modeling::InnerSpace;
 
-use crate::solid::point::Point3;
+use crate::feature::point::Point3;
 use crate::IDType;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]

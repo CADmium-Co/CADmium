@@ -1,4 +1,5 @@
 pub use super::helpers::*;
+pub use super::solid::Solid;
 
 pub const MESH_TOLERANCE: f64 = 0.1;
 
