@@ -18,11 +18,11 @@ pub enum Message {
     WorkbenchSketchSetPlane(IDWrap<crate::workbench::SetSketchPlane>),
     WorkbenchPointUpdate(IDWrap<IDWrap<crate::feature::point::WorkbenchPointUpdate>>),
 
-    SketchAddPoint(IDWrap<IDWrap<crate::isketch::AddPoint>>),
-    SketchAddArc(IDWrap<IDWrap<crate::isketch::AddArc>>),
-    SketchAddCircle(IDWrap<IDWrap<crate::isketch::AddCircle>>),
-    SketchAddLine(IDWrap<IDWrap<crate::isketch::AddLine>>),
-    SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::DeletePrimitive>>),
+    SketchAddPoint(IDWrap<IDWrap<crate::isketch::primitive::AddPoint>>),
+    SketchAddArc(IDWrap<IDWrap<crate::isketch::primitive::AddArc>>),
+    SketchAddCircle(IDWrap<IDWrap<crate::isketch::primitive::AddCircle>>),
+    SketchAddLine(IDWrap<IDWrap<crate::isketch::primitive::AddLine>>),
+    SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::primitive::DeletePrimitive>>),
 
     FeatureExtrusionAdd(IDWrap<crate::feature::extrusion::Add>),
     FeatureExtrusionUpdateFaces(IDWrap<crate::feature::extrusion::UpdateFaces>),
