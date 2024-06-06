@@ -1,3 +1,4 @@
+use log::info;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
@@ -37,7 +38,7 @@ pub struct Workbench {
 
 impl Workbench {
     pub fn new(name: &str) -> Self {
-        println!("Creating new workbench: {:?}", name);
+        info!("Creating new workbench: {:?}", name);
         let mut wb = Workbench {
             name: name.to_owned(),
             history: vec![],
@@ -78,7 +79,6 @@ impl Workbench {
     }
 
     pub fn get_sketch_by_id(&self, id: IDType) -> Result<Rc<RefCell<ISketch>>, CADmiumError> {
-        println!("Getting sketch by id: {:?} {:?}", id, self.sketches);
         self.sketches.get(&id).ok_or(CADmiumError::SketchIDNotFound(id)).cloned()
     }
 
@@ -164,12 +164,10 @@ impl MessageHandler for AddSketch {
     type Parent = Rc<RefCell<Workbench>>;
     fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let mut wb = workbench_ref.borrow_mut();
-
-        println!("Adding sketch with plane description: {:?}", self.plane_description);
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
+
         let new_id = wb.sketches_next_id;
         wb.sketches.insert(new_id, Rc::new(RefCell::new(sketch)));
-        println!("Added sketch with id: {:?}", wb.sketches);
         wb.sketches_next_id += 1;
         Ok(Some(new_id))
     }
