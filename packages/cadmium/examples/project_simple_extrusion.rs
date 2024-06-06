@@ -2,7 +2,7 @@ use cadmium::workbench::AddSketch;
 use cadmium::feature::extrusion::{self, Direction, Mode};
 use cadmium::project::Project;
 use cadmium::message::MessageHandler as _;
-use cadmium::isketch::{AddLine, AddPoint};
+use cadmium::isketch::primitive::{AddLine, AddPoint};
 use cadmium::archetypes::PlaneDescription;
 
 fn main() {
