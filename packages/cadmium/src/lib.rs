@@ -9,7 +9,7 @@ pub mod error;
 pub mod isketch;
 pub mod message;
 pub mod project;
-pub mod solid;
+pub mod feature;
 #[macro_use]
 pub mod step;
 pub mod workbench;

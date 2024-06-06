@@ -106,29 +106,22 @@ pub mod tests {
     use crate::isketch::AddPoint;
     use crate::message::idwrap::IDWrap;
     use crate::message::MessageHandler;
-    use crate::solid::extrusion;
-    use crate::solid::extrusion::Direction;
-    use crate::solid::extrusion::Mode;
+    use crate::feature::extrusion;
+    use crate::feature::extrusion::Direction;
+    use crate::feature::extrusion::Mode;
     use crate::step;
     use crate::workbench::AddSketch;
     use crate::workbench::SetSketchPlane;
+    use crate::IDType;
 
     use super::*;
 
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
         let plane_description = PlaneDescription::PlaneId(0);
-        IDWrap { id: 0, inner: AddSketch { plane_description } }.handle_project_message(&mut p).unwrap().unwrap();
+        let sketch_id = IDWrap { id: 0, inner: AddSketch { plane_description } }.handle_project_message(&mut p).unwrap().unwrap();
 
-        let ll = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 0.0,   y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
-        let lr = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 40.0,  y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
-        let ul = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 0.0,  y: 40.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
-        let ur = IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddPoint { x: 40.0, y: 40.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
-
-        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: ll, end: lr } } }.handle_project_message(&mut p).unwrap().unwrap();
-        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: lr, end: ur } } }.handle_project_message(&mut p).unwrap().unwrap();
-        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: ur, end: ul } } }.handle_project_message(&mut p).unwrap().unwrap();
-        IDWrap { id: 0, inner: IDWrap { id: 0, inner: AddLine { start: ul, end: ll } } }.handle_project_message(&mut p).unwrap().unwrap();
+        add_test_rectangle(&mut p, sketch_id, 0.0, 0.0, 40.0, 40.0);
 
         IDWrap {
             id: 0,
@@ -143,6 +136,18 @@ pub mod tests {
         }.handle_project_message(&mut p).unwrap().unwrap();
 
         p
+    }
+
+    pub fn add_test_rectangle(p: &mut Project, sketch_id: IDType, x_start: f64, y_start: f64, x_end: f64, y_end: f64) {
+        let ll = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_start, y: y_start } } }.handle_project_message(p).unwrap().unwrap();
+        let lr = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_end,  y: y_start } } }.handle_project_message(p).unwrap().unwrap();
+        let ul = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_start,  y: y_end } } }.handle_project_message(p).unwrap().unwrap();
+        let ur = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_end, y: y_end } } }.handle_project_message(p).unwrap().unwrap();
+
+        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ll, end: lr } } }.handle_project_message(p).unwrap().unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: lr, end: ur } } }.handle_project_message(p).unwrap().unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ur, end: ul } } }.handle_project_message(p).unwrap().unwrap();
+        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ul, end: ll } } }.handle_project_message(p).unwrap().unwrap();
     }
 
     #[test]

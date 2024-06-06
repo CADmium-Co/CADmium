@@ -10,7 +10,13 @@ use crate::message::Identifiable;
 use crate::workbench::Workbench;
 use crate::IDType;
 
-use super::*;
+pub mod extrusion;
+pub mod helpers;
+pub mod point;
+pub mod prelude;
+pub mod solid;
+
+use prelude::*;
 
 pub trait SolidLike: Debug {
     fn references(&self) -> Vec<Rc<RefCell<Feature>>>;
