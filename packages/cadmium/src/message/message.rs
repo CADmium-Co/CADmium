@@ -22,6 +22,8 @@ pub enum Message {
     SketchAddArc(IDWrap<IDWrap<crate::isketch::primitive::AddArc>>),
     SketchAddCircle(IDWrap<IDWrap<crate::isketch::primitive::AddCircle>>),
     SketchAddLine(IDWrap<IDWrap<crate::isketch::primitive::AddLine>>),
+    SketchAddRectangle(IDWrap<IDWrap<crate::isketch::compound_rectangle::Add>>),
+    SketchDeleteCompound(IDWrap<IDWrap<crate::isketch::compound::DeleteCompound>>),
     SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::primitive::DeletePrimitive>>),
 
     FeatureExtrusionAdd(IDWrap<crate::feature::extrusion::Add>),
