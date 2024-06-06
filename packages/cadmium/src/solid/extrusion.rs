@@ -15,9 +15,7 @@ use crate::workbench::Workbench;
 use crate::IDType;
 
 use super::get_isoface_wires;
-use super::Feature;
-use super::FeatureCell;
-use super::SolidLike;
+use super::feature::{Feature, FeatureCell, SolidLike};
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
