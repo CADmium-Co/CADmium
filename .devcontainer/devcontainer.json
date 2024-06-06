@@ -20,7 +20,8 @@
         "bradlc.vscode-tailwindcss",
         "esbenp.prettier-vscode",
         "ms-playwright.playwright",
-        "vadimcn.vscode-lldb"
+        "vadimcn.vscode-lldb",
+        "dbaeumer.vscode-eslint"
       ]
     }
   }
