@@ -8,7 +8,7 @@ use super::IDWrap;
 
 impl<T, C> Serialize for IDWrap<T>
 where
-    T: MessageHandler<Parent = C> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = C> + Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
