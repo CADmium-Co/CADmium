@@ -24,8 +24,9 @@ pub enum Message {
     SketchAddLine(IDWrap<IDWrap<crate::isketch::AddLine>>),
     SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::DeletePrimitive>>),
 
-    SolidExtrusionAdd(IDWrap<crate::solid::extrusion::Add>),
-    SolidExtrusionUpdateFaces(IDWrap<crate::solid::extrusion::UpdateFaces>),
+    FeatureExtrusionAdd(IDWrap<crate::solid::extrusion::Add>),
+    FeatureExtrusionUpdateFaces(IDWrap<crate::solid::extrusion::UpdateFaces>),
+    FeatureExtrusionUpdateForm(IDWrap<IDWrap<crate::solid::extrusion::UpdateForm>>),
 
     StepRename(IDWrap<IDWrap<crate::step::Rename>>),
     StepDelete(IDWrap<crate::step::Delete>),
