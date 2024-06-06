@@ -5,8 +5,8 @@ use wasm_bindgen::prelude::*;
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::isketch::ISketch;
-use crate::solid::feature::Feature;
-use crate::solid::point::Point3;
+use crate::feature::Feature;
+use crate::feature::point::Point3;
 use crate::step::Step;
 use crate::IDType;
 

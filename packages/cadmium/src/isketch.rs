@@ -12,7 +12,7 @@ use tsify_next::Tsify;
 
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
-use crate::solid::point::Point3;
+use crate::feature::point::Point3;
 use crate::IDType;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]

@@ -16,7 +16,7 @@ pub enum Message {
     WorkbenchPlaneAdd(IDWrap<crate::workbench::AddPlane>),
     WorkbenchSketchAdd(IDWrap<crate::workbench::AddSketch>),
     WorkbenchSketchSetPlane(IDWrap<crate::workbench::SetSketchPlane>),
-    WorkbenchPointUpdate(IDWrap<IDWrap<crate::solid::point::WorkbenchPointUpdate>>),
+    WorkbenchPointUpdate(IDWrap<IDWrap<crate::feature::point::WorkbenchPointUpdate>>),
 
     SketchAddPoint(IDWrap<IDWrap<crate::isketch::AddPoint>>),
     SketchAddArc(IDWrap<IDWrap<crate::isketch::AddArc>>),
@@ -24,9 +24,9 @@ pub enum Message {
     SketchAddLine(IDWrap<IDWrap<crate::isketch::AddLine>>),
     SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::DeletePrimitive>>),
 
-    FeatureExtrusionAdd(IDWrap<crate::solid::extrusion::Add>),
-    FeatureExtrusionUpdateFaces(IDWrap<crate::solid::extrusion::UpdateFaces>),
-    FeatureExtrusionUpdateForm(IDWrap<IDWrap<crate::solid::extrusion::UpdateForm>>),
+    FeatureExtrusionAdd(IDWrap<crate::feature::extrusion::Add>),
+    FeatureExtrusionUpdateFaces(IDWrap<crate::feature::extrusion::UpdateFaces>),
+    FeatureExtrusionUpdateForm(IDWrap<IDWrap<crate::feature::extrusion::UpdateForm>>),
 
     StepRename(IDWrap<IDWrap<crate::step::Rename>>),
     StepDelete(IDWrap<crate::step::Delete>),
