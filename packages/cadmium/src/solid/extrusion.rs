@@ -198,6 +198,30 @@ impl MessageHandler for UpdateFaces {
     }
 }
 
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct UpdateForm {
+    pub length: f64,
+    pub offset: f64,
+    pub direction: Direction,
+    pub mode: Mode,
+}
+
+impl MessageHandler for UpdateForm {
+    // Parent to workbench to add to solids and be able to reference the sketch
+    type Parent = Rc<RefCell<Feature>>;
+    fn handle_message(&self, feature_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let mut extrusion: RefMut<'_, Extrusion> = RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
+
+        extrusion.length = self.length;
+        extrusion.offset = self.offset;
+        extrusion.direction = self.direction.clone();
+        extrusion.mode = self.mode.clone();
+
+        Ok(None)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::project::tests::create_test_project;
