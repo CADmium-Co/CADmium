@@ -56,6 +56,16 @@ export function sketchAddLine(workbench_id: IDType, sketch_id: IDType, start: ID
 	const message: Message = { SketchAddLine: { workbench_id, sketch_id, start, end } }
 	return sendWasmMessage(message)
 }
+interface SketchAddRectangle { workbench_id: IDType, sketch_id: IDType, start: IDType, end: IDType };
+export function sketchAddRectangle( workbench_id: IDType, sketch_id: IDType, start: IDType, end: IDType ): MessageResult {
+	const message: Message = { SketchAddRectangle: { workbench_id, sketch_id, start, end } }
+	return sendWasmMessage(message)
+}
+interface SketchDeleteCompound { workbench_id: IDType, sketch_id: IDType, compound_id: IDType };
+export function sketchDeleteCompound(workbench_id: IDType, sketch_id: IDType, compound_id: IDType): MessageResult {
+	const message: Message = { SketchDeleteCompound: { workbench_id, sketch_id, compound_id } }
+	return sendWasmMessage(message)
+}
 interface SketchDeletePrimitive { workbench_id: IDType, sketch_id: IDType, primitive_id: IDType };
 export function sketchDeletePrimitive(workbench_id: IDType, sketch_id: IDType, primitive_id: IDType): MessageResult {
 	const message: Message = { SketchDeletePrimitive: { workbench_id, sketch_id, primitive_id } }
@@ -99,6 +109,8 @@ export type Message =
 	{ SketchAddArc: SketchAddArc } |
 	{ SketchAddCircle: SketchAddCircle } |
 	{ SketchAddLine: SketchAddLine } |
+	{ SketchAddRectangle: SketchAddRectangle } |
+	{ SketchDeleteCompound: SketchDeleteCompound } |
 	{ SketchDeletePrimitive: SketchDeletePrimitive } |
 	{ FeatureExtrusionAdd: FeatureExtrusionAdd } |
 	{ FeatureExtrusionUpdateFaces: FeatureExtrusionUpdateFaces } |

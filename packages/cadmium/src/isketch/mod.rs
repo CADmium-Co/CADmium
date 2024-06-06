@@ -18,6 +18,7 @@ use crate::message::Identifiable;
 use crate::workbench::Workbench;
 
 pub mod compound;
+pub mod compound_rectangle;
 pub mod primitive;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
@@ -27,6 +28,8 @@ pub struct ISketch {
     pub plane: Rc<RefCell<Plane>>,
 
     sketch: Rc<RefCell<Sketch>>,
+    compounds: BTreeMap<u64, Rc<RefCell<compound::Compound>>>,
+    compounds_next_id: u64,
     points_3d: BTreeMap<u64, Point3>,
 }
 
@@ -38,8 +41,8 @@ impl ISketch {
         let mut real_sketch = Self {
             plane: plane.clone(),
             points_3d: BTreeMap::new(),
-            // primitives: sketch.borrow().primitives().iter().map(|(id, prim)| (*id, prim.borrow().to_primitive())).collect(),
-            // constraints: sketch.borrow().constraints().iter().map(|c| c.borrow().get_type()).collect(),
+            compounds: BTreeMap::new(),
+            compounds_next_id: 0,
             sketch: Rc::new(RefCell::new(Sketch::new())),
         };
 
