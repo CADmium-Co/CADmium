@@ -108,6 +108,7 @@ pub mod tests {
     use crate::solid::extrusion;
     use crate::solid::extrusion::Direction;
     use crate::solid::extrusion::Mode;
+    use crate::step;
     use crate::workbench::AddSketch;
     use crate::workbench::SetSketchPlane;
 
@@ -150,7 +151,6 @@ pub mod tests {
     #[test]
     fn move_sketch() {
         let p = create_test_project();
-
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
 
         SetSketchPlane {
@@ -159,23 +159,18 @@ pub mod tests {
         }.handle_message(workbench_ref.clone()).unwrap();
     }
 
-    // #[test]
-    // fn rename_plane() {
-    //     let mut p = create_test_project();
+    #[test]
+    fn rename_step() {
+        let p = create_test_project();
+        let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let workbench = workbench_ref.borrow();
+        let new_name = "New Extrusion Name".to_string();
+        let target = workbench.history.last().unwrap();
 
-    //     let message = &Message::RenameStep {
-    //         workbench_id: 0,
-    //         step_id: 1,
-    //         new_name: "Top-2".to_owned(),
-    //     };
+        step::Rename { new_name: new_name.clone() }.handle_message(target.clone()).unwrap();
 
-    //     let result = message.handle(&mut p);
-    //     match result {
-    //         Ok(res) => println!("{}", res),
-    //         Err(e) => println!("{}", e),
-    //     }
-    //     // let realization = p.get_realization(0, 1000);
-    // }
+        assert_eq!(target.borrow().name, new_name);
+    }
 
     #[test]
     #[ignore = "uses old filetype"]
