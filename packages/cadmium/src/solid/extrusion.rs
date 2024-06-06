@@ -1,7 +1,8 @@
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
 use isotope::decompose::face::Face;
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use truck_modeling::builder;
 use tsify_next::Tsify;
@@ -15,7 +16,7 @@ use crate::workbench::Workbench;
 use crate::IDType;
 
 use super::get_isoface_wires;
-use super::feature::{Feature, FeatureCell, SolidLike};
+use super::feature::{Feature, SolidLike};
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -65,7 +66,7 @@ impl Extrusion {
 }
 
 impl SolidLike for Extrusion {
-    fn references(&self) -> Vec<FeatureCell> {
+    fn references(&self) -> Vec<Rc<RefCell<Feature>>> {
         // self.faces.iter().map(|f| FeatureCell::Face(f.clone())).collect()
         todo!("Extrusion::references")
     }
@@ -91,7 +92,7 @@ impl SolidLike for Extrusion {
         Ok(self.faces
             .iter()
             .map(|f| {
-                let wires = get_isoface_wires(self.sketch.clone(), f).unwrap();
+                let wires = get_isoface_wires(self.sketch.clone(), &f).unwrap();
                 let face = builder::try_attach_plane(&wires).unwrap();
 
                 // Can we calculate ALL the wires at once and not iter-sweep?
@@ -103,11 +104,25 @@ impl SolidLike for Extrusion {
     }
 }
 
+impl<'a> TryFrom<&'a mut Feature> for &'a mut Extrusion {
+    type Error = anyhow::Error;
+
+    // The Feature enum has only 1 variant for now but that will change soon
+    #[allow(irrefutable_let_patterns)]
+    fn try_from(value: &'a mut Feature) -> Result<Self, Self::Error> {
+        let Feature::Extrusion(ref mut extrusion) = value else {
+            return Err(anyhow::anyhow!("Failed to convert Feature to Extrusion"))
+        };
+
+        Ok(extrusion)
+    }
+}
+
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct Add {
     pub sketch_id: IDType,
-    pub faces: Vec<Face>, // TODO: This should be a list of face IDs
+    pub faces: Vec<IDType>,
     pub length: f64,
     pub offset: f64,
     pub direction: Direction,
@@ -122,7 +137,7 @@ impl MessageHandler for Add {
         let sketch = workbench.get_sketch_by_id(self.sketch_id)?;
 
         let extrusion = Extrusion::new(
-            self.faces.clone(),
+            vec![],
             sketch.clone(),
             self.length,
             self.offset,
@@ -130,13 +145,54 @@ impl MessageHandler for Add {
             self.mode.clone(),
         );
 
-        // TODO: This is incorrect. We should adding Features to the workbench, not solids
-        // Until then we can't update or remove as we don't know which solids are associated with this extrusion
-        extrusion.to_solids()?.iter().for_each(|solid| {
-            let id = workbench.solids_next_id;
-            workbench.solids.insert(id, Rc::new(RefCell::new(solid.clone())));
-            workbench.solids_next_id += 1;
-        });
+        let id = workbench.features_next_id;
+        workbench.features.insert(id, Rc::new(RefCell::new(extrusion.to_feature())));
+        workbench.features_next_id += 1;
+        let id = workbench.features_next_id - 1;
+        drop(workbench);
+
+        // We can't keep the workbench borrow during the UpdateFaces
+        // as it also needs a mutable borrow of the workbench
+        UpdateFaces {
+            extrusion_id: id,
+            sketch_id: self.sketch_id,
+            faces: self.faces.clone(),
+        }.handle_message(workbench_ref.clone())?;
+
+        Ok(Some(id))
+    }
+}
+
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
+#[tsify(from_wasm_abi, into_wasm_abi)]
+pub struct UpdateFaces {
+    pub extrusion_id: IDType,
+    pub sketch_id: IDType,
+    pub faces: Vec<IDType>,
+}
+
+impl MessageHandler for UpdateFaces {
+    // Parent to workbench to add to solids and be able to reference the sketch
+    type Parent = Rc<RefCell<Workbench>>;
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+        let workbench = workbench_ref.borrow_mut();
+        let sketch = workbench.get_sketch_by_id(self.sketch_id)?;
+        let feature_ref = workbench.features.get(&self.extrusion_id).ok_or(anyhow::anyhow!("No feature with ID {} was found", self.extrusion_id))?;
+        let mut extrusion: RefMut<'_, Extrusion> = RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
+
+        let faces = sketch.borrow()
+            .sketch().borrow()
+            .get_faces()
+            .iter()
+            .enumerate()
+            .filter_map(|(id, f)| if self.faces.contains(&(id as IDType)) {
+                Some(f.clone())
+            } else {
+                None
+            })
+            .collect_vec();
+
+        extrusion.faces = faces;
 
         Ok(None)
     }
@@ -173,7 +229,7 @@ mod tests {
             // get a realization
             let workbench_ref = p.get_workbench_by_id(0).unwrap();
             let workbench = workbench_ref.borrow();
-            let solids = &workbench.solids;
+            let solids = &workbench.features;
             println!("[{}] solids: {:?}", file, solids.len());
 
             assert_eq!(solids.len(), *expected_solids); // doesn't work yet!
@@ -185,7 +241,8 @@ mod tests {
         let p = create_test_project();
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
         let workbench = workbench_ref.borrow();
-        let solid = workbench.solids.get(&0).unwrap().borrow();
+        let feature = workbench.features.get(&0).unwrap().borrow();
+        let solid = &feature.as_solid_like().to_solids().unwrap()[0];
 
         solid.save_as_step("pkg/test.step");
         solid.save_as_obj("pkg/test.obj", 0.001);

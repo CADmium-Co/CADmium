@@ -22,12 +22,12 @@ fn main() {
     AddLine { start: ur, end: ul }.handle_message(sketch.clone()).unwrap();
     AddLine { start: ul, end: ll }.handle_message(sketch.clone()).unwrap();
 
-    let faces = sketch.borrow().sketch().borrow().get_faces();
-    extrusion::Add { sketch_id, faces, length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb_ref.clone()).unwrap();
+    extrusion::Add { sketch_id, faces: vec![0], length: 25.0, offset: 0.0, direction: Direction::Normal, mode: Mode::New }.handle_message(wb_ref.clone()).unwrap();
 
     let wb = wb_ref.borrow();
-    let solid_ref = wb.solids.first_key_value().unwrap().1;
-    let solid = solid_ref.borrow();
+    let feature_ref = wb.features.first_key_value().unwrap().1;
+    let solid_like = feature_ref.borrow().as_solid_like().to_solids().unwrap();
+    let solid = solid_like.get(0).unwrap();
 
     println!("{:?}", solid);
 
