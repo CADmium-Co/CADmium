@@ -1,3 +1,7 @@
+pub use super::helpers::*;
+
+pub const MESH_TOLERANCE: f64 = 0.1;
+
 pub use isotope::decompose::face::Face as ISOFace;
 
 pub use truck_modeling::Face as TruckFace;
@@ -20,5 +24,3 @@ pub type TruckClosedSolid = TruckTopoSolid<
             truck_modeling::Curve,
             truck_modeling::Surface,
         >;
-
-pub use super::helpers::*;
