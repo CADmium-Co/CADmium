@@ -16,6 +16,9 @@ pub mod workbench;
 #[declare]
 pub type IDType = u64;
 
+pub const DB_NAME: &str = "cadmium";
+pub const DB_VERSION: u32 = 1;
+
 #[wasm_bindgen]
 pub struct Project {
     native: project::Project,
@@ -80,5 +83,33 @@ impl Project {
         self.get_workbench(0).add_message_step(message);
 
         message.handle(&mut self.native).into()
+    }
+
+    #[wasm_bindgen]
+    pub fn save_to_indexed_db(&self) {
+        let idb = web_sys::window().unwrap().indexed_db().unwrap().unwrap();
+        let db = idb.open_with_u32(DB_NAME, DB_VERSION).unwrap();
+        let tx = db.transaction().unwrap().db().transaction_with_str(&self.native.name).unwrap();
+        let store = tx.object_store(&self.native.name).unwrap();
+
+        let compressed = self.native.compressed();
+        let compressed_str = String::from_utf8(compressed).unwrap();
+
+        store.add_with_key(&compressed_str.into(), &self.native.name.clone().into()).unwrap();
+    }
+
+    #[wasm_bindgen]
+    pub fn load_from_indexed_db(name: &str) -> Project {
+        let idb = web_sys::window().unwrap().indexed_db().unwrap().unwrap();
+        let db = idb.open_with_u32(DB_NAME, DB_VERSION).unwrap();
+        let tx = db.transaction().unwrap().db().transaction_with_str(name).unwrap();
+        let store = tx.object_store(name).unwrap();
+
+        let request = store.get_key(&name.into());
+        let result = request.unwrap().result().unwrap().as_string().unwrap();
+        let data = result.as_bytes();
+        let p = project::Project::from_compressed(&data);
+
+        Project { native: p }
     }
 }

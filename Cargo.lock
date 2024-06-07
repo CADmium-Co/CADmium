@@ -136,6 +136,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "72b3254f16251a8381aa12e40e3c4d2f0199f8c6508fbecb9d91f575e0fbb8c6"
 
 [[package]]
+name = "bincode"
+version = "1.3.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f45e9417d87227c7a56d22e471c6206462cba514c7590c09aff4cf6d1ddcad"
+dependencies = [
+ "serde",
+]
+
+[[package]]
 name = "bitflags"
 version = "2.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -184,6 +193,7 @@ name = "cadmium"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "bincode",
  "cadmium-macros",
  "console_error_panic_hook",
  "crc32fast",
@@ -192,6 +202,7 @@ dependencies = [
  "isotope",
  "itertools 0.13.0",
  "log",
+ "miniz_oxide",
  "paste",
  "serde",
  "serde_json",
@@ -208,6 +219,7 @@ dependencies = [
  "tsify-next",
  "wasm-bindgen",
  "wasm-logger",
+ "web-sys",
 ]
 
 [[package]]

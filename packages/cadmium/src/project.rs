@@ -57,19 +57,6 @@ impl Project {
         }
     }
 
-    // pub fn compute_constraint_errors(&mut self) {
-    //     for workbench in self.workbenches.iter_mut() {
-    //         for step in workbench.history.iter_mut() {
-    //             match &mut step.data {
-    //                 StepData::Sketch { sketch, .. } => {
-    //                     sketch.compute_constraint_errors();
-    //                 }
-    //                 _ => {}
-    //             }
-    //         }
-    //     }
-    // }
-
     pub fn get_workbench_by_id(&self, id: u64) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
             .get(id as usize).cloned()
@@ -81,6 +68,24 @@ impl Project {
             .iter()
             .find(|wb| wb.borrow().name == name).cloned()
             .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
+    }
+
+    pub fn bincode(&self) -> Vec<u8> {
+        bincode::serialize(self).unwrap()
+    }
+
+    pub fn from_bincode(bytes: &[u8]) -> Self {
+        bincode::deserialize(bytes).unwrap()
+    }
+
+    pub fn compressed(&self) -> Vec<u8> {
+        let data = self.bincode();
+        miniz_oxide::deflate::compress_to_vec(&data, 6)
+    }
+
+    pub fn from_compressed(bytes: &[u8]) -> Self {
+        let data = miniz_oxide::inflate::decompress_to_vec(&bytes).unwrap();
+        Project::from_bincode(&data)
     }
 }
 
