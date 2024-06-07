@@ -86,30 +86,44 @@ impl Project {
     }
 
     #[wasm_bindgen]
-    pub fn save_to_indexed_db(&self) {
-        let idb = web_sys::window().unwrap().indexed_db().unwrap().unwrap();
-        let db = idb.open_with_u32(DB_NAME, DB_VERSION).unwrap();
-        let tx = db.transaction().unwrap().db().transaction_with_str(&self.native.name).unwrap();
-        let store = tx.object_store(&self.native.name).unwrap();
+    pub fn save_to_indexed_db(&self) -> Result<(), JsValue> {
+        let idb = web_sys::window()
+            .ok_or("No window object - is this running in a browser?")?
+            .indexed_db()?
+            .ok_or("No indexedDB object - is this running in a browser?")?;
+        let db = idb.open_with_u32(DB_NAME, DB_VERSION)?;
+
+        let tx = db.transaction()
+            .ok_or("Could not open an indexed DB transaction")?
+            .db()
+            .transaction_with_str(&self.native.name)?;
+        let store = tx.object_store(&self.native.name)?;
 
         let compressed = self.native.compressed();
         let compressed_str = String::from_utf8(compressed).unwrap();
 
-        store.add_with_key(&compressed_str.into(), &self.native.name.clone().into()).unwrap();
+        store.add_with_key(&compressed_str.into(), &self.native.name.clone().into())?;
+        Ok(())
     }
 
     #[wasm_bindgen]
-    pub fn load_from_indexed_db(name: &str) -> Project {
-        let idb = web_sys::window().unwrap().indexed_db().unwrap().unwrap();
-        let db = idb.open_with_u32(DB_NAME, DB_VERSION).unwrap();
-        let tx = db.transaction().unwrap().db().transaction_with_str(name).unwrap();
-        let store = tx.object_store(name).unwrap();
+    pub fn load_from_indexed_db(name: &str) -> Result<Project, JsValue> {
+        let idb = web_sys::window()
+            .ok_or("No window object - is this running in a browser?")?
+            .indexed_db()?
+            .ok_or("No indexedDB object - is this running in a browser?")?;
+        let db = idb.open_with_u32(DB_NAME, DB_VERSION)?;
+        let tx = db.transaction()
+            .ok_or("Could not open an indexed DB transaction")?
+            .db()
+            .transaction_with_str(&name)?;
+        let store = tx.object_store(&name)?;
 
-        let request = store.get_key(&name.into());
-        let result = request.unwrap().result().unwrap().as_string().unwrap();
+        let request = store.get_key(&name.into())?;
+        let result = request.result()?.as_string().ok_or("Could not convert result to string")?;
         let data = result.as_bytes();
         let p = project::Project::from_compressed(&data);
 
-        Project { native: p }
+        Ok(Project { native: p })
     }
 }
