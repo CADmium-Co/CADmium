@@ -19,6 +19,7 @@ use crate::workbench::Workbench;
 
 pub mod compound;
 pub mod compound_rectangle;
+pub mod face;
 pub mod primitive;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]

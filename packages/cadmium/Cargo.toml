@@ -38,3 +38,14 @@ wasm-logger = "0.2.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+bench-faceselector-report = []
+
+[[bench]]
+name = "faceselector-report"
+harness = false
+
+[dev-dependencies]
+svg = "0.17.0"
