@@ -65,9 +65,11 @@ fn main() {
 
         for (id, selector) in selectors.iter().enumerate() {
             let name = results[id].2.clone();
+            println!("Name: {}", name);
             draw_sketch_faces(&mut p, selector, *index, format!("{}_after", name));
         }
     }
 
+    println!("results: {:?}", results);
     save_report_html(results);
 }
