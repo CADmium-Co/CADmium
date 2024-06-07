@@ -1,8 +1,6 @@
 use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 
-use isotope::decompose::face::Face;
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 use truck_modeling::builder;
 use tsify_next::Tsify;
@@ -10,6 +8,7 @@ use tsify_next::Tsify;
 use super::prelude::*;
 
 use crate::archetypes::Vector3;
+use crate::isketch::face::{FaceSelector, Selector};
 use crate::isketch::ISketch;
 use crate::message::MessageHandler;
 use crate::workbench::Workbench;
@@ -37,7 +36,7 @@ pub enum Direction {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Extrusion {
-    pub faces: Vec<Face>,
+    pub faces: Selector,
     pub sketch: Rc<RefCell<ISketch>>,
     pub length: f64,
     pub offset: f64,
@@ -47,7 +46,7 @@ pub struct Extrusion {
 
 impl Extrusion {
     pub fn new(
-        faces: Vec<Face>,
+        faces: Vec<IDType>,
         sketch: Rc<RefCell<ISketch>>,
         length: f64,
         offset: f64,
@@ -55,7 +54,7 @@ impl Extrusion {
         mode: Mode,
     ) -> Self {
         Extrusion {
-            faces,
+            faces: Selector::from_face_ids(faces),
             sketch,
             length,
             offset,
@@ -76,7 +75,8 @@ impl SolidLike for Extrusion {
     }
 
     fn get_truck_solids(&self) -> anyhow::Result<Vec<TruckClosedSolid>> {
-        let plane = self.sketch.borrow().plane.borrow().clone();
+        let sketch = self.sketch.borrow();
+        let plane = sketch.plane.borrow().clone();
 
         let extrusion_direction = match &self.direction {
             Direction::Normal => plane.tertiary.clone(),
@@ -90,6 +90,7 @@ impl SolidLike for Extrusion {
         let offset_tvector = TruckVector3::new(offset_vector.x, offset_vector.y, offset_vector.z);
 
         Ok(self.faces
+            .get_selected_faces(&sketch)
             .iter()
             .map(|f| {
                 let wires = get_isoface_wires(self.sketch.clone(), &f).unwrap();
@@ -176,23 +177,10 @@ impl MessageHandler for UpdateFaces {
     type Parent = Rc<RefCell<Workbench>>;
     fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let workbench = workbench_ref.borrow_mut();
-        let sketch = workbench.get_sketch_by_id(self.sketch_id)?;
         let feature_ref = workbench.features.get(&self.extrusion_id).ok_or(anyhow::anyhow!("No feature with ID {} was found", self.extrusion_id))?;
         let mut extrusion: RefMut<'_, Extrusion> = RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
 
-        let faces = sketch.borrow()
-            .sketch().borrow()
-            .get_faces()
-            .iter()
-            .enumerate()
-            .filter_map(|(id, f)| if self.faces.contains(&(id as IDType)) {
-                Some(f.clone())
-            } else {
-                None
-            })
-            .collect_vec();
-
-        extrusion.faces = faces;
+        extrusion.faces = Selector::from_face_ids(self.faces.clone());
 
         Ok(None)
     }
