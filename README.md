@@ -130,7 +130,8 @@ cargo test
 Simple exaples using the rust code can be found in `packages/cadmium/examples`
 
 Run simple rust example with:
-```
+
+```shell
 cargo run --example project_simple_extrusion
 ```
 
