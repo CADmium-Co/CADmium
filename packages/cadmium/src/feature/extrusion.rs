@@ -54,7 +54,7 @@ impl Extrusion {
         mode: Mode,
     ) -> Self {
         Extrusion {
-            faces: Selector::from_face_ids(faces),
+            faces: Selector::from_face_ids(&sketch.clone().borrow(), faces),
             sketch,
             length,
             offset,
@@ -178,9 +178,10 @@ impl MessageHandler for UpdateFaces {
     fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
         let workbench = workbench_ref.borrow_mut();
         let feature_ref = workbench.features.get(&self.extrusion_id).ok_or(anyhow::anyhow!("No feature with ID {} was found", self.extrusion_id))?;
+        let sketch_ref = workbench.get_sketch_by_id(self.sketch_id)?;
         let mut extrusion: RefMut<'_, Extrusion> = RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
 
-        extrusion.faces = Selector::from_face_ids(self.faces.clone());
+        extrusion.faces = Selector::from_face_ids(&sketch_ref.borrow(), self.faces.clone());
 
         Ok(None)
     }

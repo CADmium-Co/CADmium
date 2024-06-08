@@ -91,6 +91,16 @@ impl ISketch {
         self.sketch.borrow().get_merged_faces()
     }
 
+    pub fn get_face_ids(&self, ids: Vec<IDType>) -> Vec<Face> {
+        self.sketch.borrow().get_merged_faces().iter().enumerate().filter_map(|(id, f)| {
+            if ids.contains(&(id as IDType)) {
+                Some(f.clone())
+            } else {
+                None
+            }
+        }).collect()
+    }
+
     pub fn find_point_ref(&self, x: f64, y: f64) -> Option<Rc<RefCell<ISOPoint2>>> {
         self.sketch.borrow().primitives().iter().find_map(|(_, prim)| {
             if let PrimitiveCell::Point2(point_ref) = prim {

@@ -31,6 +31,25 @@ fn create_project() -> (Project, IDType) {
     (p, sketch_id)
 }
 
+#[derive(Debug)]
+pub enum FaceSelectorType {
+    ID(cadmium::isketch::face::IDSelector),
+    Centroid(cadmium::isketch::face::CentroidSelector),
+}
+
+impl FaceSelector for FaceSelectorType {
+    fn get_selected_faces(&self, isketch: &cadmium::isketch::ISketch) -> Vec<cadmium::isketch::face::Face> {
+        match self {
+            FaceSelectorType::ID(selector) => selector.get_selected_faces(isketch),
+            FaceSelectorType::Centroid(selector) => selector.get_selected_faces(isketch),
+        }
+    }
+
+    fn from_face_ids(_sketch: &cadmium::isketch::ISketch, _ids: Vec<IDType>) -> Self {
+        unimplemented!()
+    }
+}
+
 fn main() {
     // Create report dir
     fs::create_dir_all("bench-faceselector-report").unwrap();
@@ -45,16 +64,19 @@ fn main() {
         let (mut p, sketch_id) = create_project();
 
         case_struct.pre_selection(&mut p, sketch_id);
+        let sketch_ref = p.get_workbench_by_id(0).unwrap().borrow().get_sketch_by_id(sketch_id).unwrap();
 
         let selectors = vec![
-            Box::new(cadmium::isketch::face::IDSelector::from_face_ids(vec![*index])),
+            FaceSelectorType::ID(cadmium::isketch::face::IDSelector::from_face_ids(&sketch_ref.borrow(), vec![*index])),
+            FaceSelectorType::Centroid(cadmium::isketch::face::CentroidSelector::from_face_ids(&sketch_ref.borrow(), vec![*index])),
         ];
 
         for selector in selectors.iter() {
             println!("Drawing faces for selector: {:?}", selector);
             let case_name = format!("{:?}", case_struct);
             let selector_name_full = format!("{:?}", selector);
-            let selector_name = selector_name_full.split_once(" ").unwrap().0;
+            let selector_name_variant = selector_name_full.split_once(" ").unwrap().0;
+            let selector_name = selector_name_variant.split_once("(").unwrap().1;
             let name = format!("{}_{}", selector_name, case_name);
             results.push((selector_name.to_string(), case_name.to_string(), name.clone()));
 
