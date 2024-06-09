@@ -2,7 +2,7 @@ use cadmium::workbench::AddSketch;
 use cadmium::feature::extrusion::{self, Direction, Mode};
 use cadmium::project::Project;
 use cadmium::message::MessageHandler as _;
-use cadmium::isketch::primitive::{AddLine, AddPoint};
+use cadmium::isketch::primitive::{AddLine, SketchAddPointMessage};
 use cadmium::archetypes::PlaneDescription;
 
 fn main() {
@@ -12,10 +12,10 @@ fn main() {
     let sketch_id = AddSketch { plane_description }.handle_message(wb_ref.clone()).unwrap().unwrap();
     let sketch = wb_ref.borrow().get_sketch_by_id(sketch_id).unwrap();
 
-    let ll = AddPoint { x: 0.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
-    let lr = AddPoint { x: 40.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
-    let ul = AddPoint { x: 0.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
-    let ur = AddPoint { x: 40.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let ll = SketchAddPointMessage { x: 0.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let lr = SketchAddPointMessage { x: 40.0, y: 0.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let ul = SketchAddPointMessage { x: 0.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
+    let ur = SketchAddPointMessage { x: 40.0, y: 40.0 }.handle_message(sketch.clone()).unwrap().unwrap();
 
     AddLine { start: ll, end: lr }.handle_message(sketch.clone()).unwrap();
     AddLine { start: lr, end: ur }.handle_message(sketch.clone()).unwrap();

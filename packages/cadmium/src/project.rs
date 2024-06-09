@@ -103,7 +103,7 @@ pub mod tests {
 
     use crate::archetypes::PlaneDescription;
 
-    use crate::isketch::primitive::{AddLine, AddPoint};
+    use crate::isketch::primitive::{AddLine, SketchAddPointMessage};
     use crate::message::idwrap::IDWrap;
     use crate::message::MessageHandler;
     use crate::feature::extrusion;
@@ -137,10 +137,10 @@ pub mod tests {
     }
 
     pub fn add_test_rectangle(p: &mut Project, sketch_id: IDType, x_start: f64, y_start: f64, x_end: f64, y_end: f64) {
-        let ll = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_start, y: y_start } } }.handle_project_message(p).unwrap().unwrap();
-        let lr = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_end,  y: y_start } } }.handle_project_message(p).unwrap().unwrap();
-        let ul = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_start,  y: y_end } } }.handle_project_message(p).unwrap().unwrap();
-        let ur = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: x_end, y: y_end } } }.handle_project_message(p).unwrap().unwrap();
+        let ll = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_start, y: y_start } } }.handle_project_message(p).unwrap().unwrap();
+        let lr = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_end,  y: y_start } } }.handle_project_message(p).unwrap().unwrap();
+        let ul = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_start,  y: y_end } } }.handle_project_message(p).unwrap().unwrap();
+        let ur = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_end, y: y_end } } }.handle_project_message(p).unwrap().unwrap();
 
         IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ll, end: lr } } }.handle_project_message(p).unwrap().unwrap();
         IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: lr, end: ur } } }.handle_project_message(p).unwrap().unwrap();

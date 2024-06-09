@@ -2,7 +2,7 @@ use std::fs;
 
 use cadmium::archetypes::PlaneDescription;
 use cadmium::isketch::face::FaceSelector;
-use cadmium::isketch::primitive::AddPoint;
+use cadmium::isketch::primitive::SketchAddPointMessage;
 use cadmium::message::idwrap::IDWrap;
 use cadmium::message::ProjectMessageHandler;
 use cadmium::project::Project;
@@ -26,7 +26,7 @@ fn create_project() -> (Project, IDType) {
     let mut p = Project::new("Test Project");
     let plane_description = PlaneDescription::PlaneId(0);
     let sketch_id = IDWrap { id: 0, inner: AddSketch { plane_description } }.handle_project_message(&mut p).unwrap().unwrap();
-    IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddPoint { x: 0.0, y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
+    IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: 0.0, y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
 
     (p, sketch_id)
 }

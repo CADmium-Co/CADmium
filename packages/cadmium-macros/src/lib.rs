@@ -1,6 +1,6 @@
 use convert_case::{Case, Casing};
 use quote::{format_ident, quote};
-use syn::{parse_macro_input, DeriveInput, ItemFn, Meta, NestedMeta};
+use syn::{parse_macro_input, DeriveInput, Ident, ItemFn, Meta, NestedMeta};
 
 #[proc_macro_derive(MessageEnum)]
 pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -95,6 +95,7 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
     } else {
         format_ident!("{}{}Message", parent, fn_name.to_string().to_case(Case::Pascal))
     };
+    let fn_message_name = Ident::new(struct_name.to_string().to_case(Case::Snake).as_str(), struct_name.span());
 
     // Generate struct fields from function arguments
     let fields = fn_args.iter().map(|arg| {
@@ -128,7 +129,7 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
             #(#fields)*
         }
 
-        impl MessageHandler for #struct_name {
+        impl crate::message::MessageHandler for #struct_name {
             type Parent = Rc<RefCell<#parent>>;
             fn handle_message(&self, parent_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
                 parent_ref.borrow_mut().#fn_name( #(self.#parameters.clone()),* )

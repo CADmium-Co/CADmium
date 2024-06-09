@@ -18,7 +18,7 @@ pub enum Message {
     WorkbenchSketchSetPlane(IDWrap<crate::workbench::SetSketchPlane>),
     WorkbenchPointUpdate(IDWrap<IDWrap<crate::feature::point::WorkbenchPointUpdate>>),
 
-    SketchAddPoint(IDWrap<IDWrap<crate::isketch::primitive::AddPoint>>),
+    SketchAddPoint(IDWrap<IDWrap<crate::isketch::primitive::SketchAddPointMessage>>),
     SketchAddArc(IDWrap<IDWrap<crate::isketch::primitive::AddArc>>),
     SketchAddCircle(IDWrap<IDWrap<crate::isketch::primitive::AddCircle>>),
     SketchAddLine(IDWrap<IDWrap<crate::isketch::primitive::AddLine>>),
