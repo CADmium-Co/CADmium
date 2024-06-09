@@ -12,6 +12,8 @@ use truck_shapeops::{and, or, ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::{Shell, Solid};
 
 fn main() {
+    cadmium::Project::gen_typescript_defs();
+
     let point_a = vertex(Point3::new(0.0, 0.0, 0.0));
     let line_a = tsweep(&point_a, Vector3::new(1.0, 0.0, 0.0));
     let square_a = tsweep(&line_a, Vector3::new(0.0, 1.0, 0.0));

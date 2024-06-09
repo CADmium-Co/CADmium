@@ -1,7 +1,8 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use serde::{Deserialize, Serialize};
+use serde::de::DeserializeOwned;
+use serde::Serialize;
 use tsify_next::Tsify;
 
 use crate::workbench::Workbench;
@@ -14,12 +15,12 @@ use super::{Identifiable, MessageHandler, ProjectMessageHandler};
 
 #[derive(Tsify, Debug, Clone)]
 #[tsify(from_wasm_abi)]
-pub struct IDWrap<T: Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> {
+pub struct IDWrap<T: Clone + Serialize + DeserializeOwned + wasm_bindgen::convert::RefFromWasmAbi> {
     pub id: u64,
     pub inner: T,
 }
 
-impl<T: Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi> IDWrap<T> {
+impl<T: Clone + Serialize + DeserializeOwned + wasm_bindgen::convert::RefFromWasmAbi> IDWrap<T> {
     pub fn new(id: IDType, h: T) -> Self {
         Self {
             id,
@@ -39,7 +40,7 @@ impl<T: Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::R
 // First level message handler
 impl<'a, T> ProjectMessageHandler for IDWrap<T>
 where
-    T: MessageHandler<Parent = Rc<RefCell<Workbench>>> + Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = Rc<RefCell<Workbench>>> + Clone + Serialize + DeserializeOwned + wasm_bindgen::convert::RefFromWasmAbi,
     crate::message::message::Message: From<Self>
 {
     fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<IDType>> {
@@ -55,7 +56,7 @@ where
 // Second level message handler
 impl<T, C, P> MessageHandler for IDWrap<T>
 where
-    T: MessageHandler<Parent = C> + Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = C> + Clone + Serialize + DeserializeOwned + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable<Parent = P>,
     P: Identifiable,
 {

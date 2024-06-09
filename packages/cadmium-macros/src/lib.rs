@@ -1,6 +1,6 @@
 use convert_case::{Case, Casing};
-use quote::{format_ident, quote};
-use syn::{parse_macro_input, DeriveInput, Ident, ItemFn, Meta, NestedMeta};
+use quote::{format_ident, quote, ToTokens};
+use syn::{parse_macro_input, DeriveInput, ItemFn, Meta, NestedMeta, Type};
 
 #[proc_macro_derive(MessageEnum)]
 pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -10,6 +10,60 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         syn::Data::Enum(data) => data,
         _ => panic!("MessageEnum can only be derived for enums"),
     };
+
+    fn get_idwrap_type(field_type: Type) -> Type {
+        let Type::Path(inner_path) = field_type else {
+            panic!("IDWrap type argument must be a path type");
+        };
+        let inner_type_args = &inner_path.path.segments.first().unwrap().arguments;
+        let syn::PathArguments::AngleBracketed(idwrap_generic) = inner_type_args else {
+            panic!("IDWrap type argument must be a generic type");
+        };
+        let syn::GenericArgument::Type(idwrap_generic_type) = idwrap_generic.args.first().unwrap() else {
+            panic!("IDWrap type argument must be a path type");
+        };
+        idwrap_generic_type.clone()
+    }
+
+    fn variant_to_typescript(field_type: Type) -> proc_macro2::TokenStream {
+        let mut inner_type = field_type.clone();
+        let mut type_str = field_type.clone().to_token_stream().to_string();
+        let mut idwrap_types = vec![];
+
+        while type_str.starts_with("IDWrap") {
+            let idwrap_type = get_idwrap_type(inner_type);
+            inner_type = idwrap_type.clone();
+            idwrap_types.push(idwrap_type.clone());
+            type_str = idwrap_type.to_token_stream().to_string();
+        }
+
+        let additional_types = idwrap_types.iter().map(|idwrap_type| {
+            quote! {<#idwrap_type as crate::message::MessageHandler>::Parent::ID_NAME }
+        }).collect::<Vec<proc_macro2::TokenStream>>();
+        let additional_types_len = additional_types.len();
+
+        quote! {
+            let inner_decl: &'static str = #inner_type::DECL;
+            let id_fields: [&'static str; #additional_types_len] = [#(#additional_types,)*];
+            let id_fields_idtype = id_fields
+                .iter()
+                .map(|field| format!("{}: IDType;", field))
+                .collect::<Vec<String>>();
+
+            let new_decl = inner_decl.replace("{", format!("{{\n    {}", id_fields_idtype.join("\n    ")).as_str());
+            println!("{}", new_decl);
+        }
+    }
+
+    let variants_typescript = data.variants.iter().map(|variant| {
+        let syn::Fields::Unnamed(field) = &variant.fields else {
+            panic!("MessageEnum can only be derived for enums with unnamed fields");
+        };
+
+        let field_type = &field.unnamed[0].ty;
+
+        variant_to_typescript(field_type.clone())
+    }).collect::<Vec<_>>();
 
     let variants_type = data.variants.iter().map(|variant| {
         let syn::Fields::Unnamed(field) = &variant.fields else {
@@ -57,6 +111,13 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
                 }
             }
         }
+
+        use crate::message::Identifiable;
+        impl crate::Project {
+            pub fn gen_typescript_defs() {
+                #( #variants_typescript )*
+            }
+        }
     }.into()
 }
 
@@ -95,7 +156,6 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
     } else {
         format_ident!("{}{}Message", parent, fn_name.to_string().to_case(Case::Pascal))
     };
-    let fn_message_name = Ident::new(struct_name.to_string().to_case(Case::Snake).as_str(), struct_name.span());
 
     // Generate struct fields from function arguments
     let fields = fn_args.iter().map(|arg| {
