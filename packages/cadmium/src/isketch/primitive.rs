@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
+use cadmium_macros::message;
 use isotope::primitives::line::Line;
 use isotope::primitives::point2::Point2 as ISOPoint2;
 use isotope::primitives::PrimitiveCell;
@@ -12,6 +13,18 @@ use crate::IDType;
 use crate::feature::point::Point3;
 
 use super::ISketch;
+
+#[message(ISketch, rename_parent = "Sketch")]
+pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<IDType>> {
+    let iso_point = ISOPoint2::new(x, y);
+    let iso_point_cell = PrimitiveCell::Point2(Rc::new(RefCell::new(iso_point.clone())));
+
+    // TODO: On plane change the 3D points have to be recalculated
+    let plane = self.plane.borrow().clone();
+    let point_id = self.sketch().borrow_mut().add_primitive(iso_point_cell)?;
+    self.points_3d.insert(point_id, Point3::from_plane_point(&plane, &iso_point));
+    Ok(Some(point_id))
+}
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
