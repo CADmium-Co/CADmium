@@ -2,13 +2,12 @@
   import type {LineMaterial} from "three/examples/jsm/lines/LineMaterial.js"
   import PassiveSketch from "./PassiveSketch.svelte"
   import {currentlySelected, previewGeometry, sketchTool} from "shared/stores"
-  import type {PlaneRealized, SketchTuple} from "shared/types"
+  import type {ISketch} from "cadmium"
 
+  // @ts-ignore
   const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let uniqueId: string, name: string, sketchTuple: SketchTuple, editing: boolean, plane: PlaneRealized
-
-  // log("[props]", "uniqueId:", uniqueId, "name:", name, "sketchTuple", sketchTuple, "editing", editing, "plane", plane)
+  export let uniqueId: string, name: string, sketch: ISketch, editing: boolean
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
@@ -48,8 +47,7 @@
   <PassiveSketch
     {name}
     {uniqueId}
-    sketch={sketchTuple[0]}
-    plane={plane.plane}
+    {sketch}
     editing
     {solidLineMaterial}
     {solidHoveredMaterial}
@@ -62,8 +60,7 @@
   <PassiveSketch
     {name}
     {uniqueId}
-    sketch={sketchTuple[1]}
-    plane={plane.plane}
+    sketch={sketch}
     {solidLineMaterial}
     {solidHoveredMaterial}
     {solidSelectedMaterial}

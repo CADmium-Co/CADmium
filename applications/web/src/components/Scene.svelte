@@ -13,6 +13,7 @@
   import {base} from "../base"
   import CadControls from "./controls/CadControls/CadControls.svelte"
 
+  // @ts-ignore
   const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   interactivity()
@@ -111,7 +112,7 @@
 </script>
 
 <T.OrthographicCamera makeDefault position={[160.8, -250.8, 200.55]} zoom={5} up={[0, 0, 1]}>
-  <CadControls rotateSpeed={1.8} panSpeed={0.5} on:create={({ref}) => {}} mouseButtons={{LEFT: 2, MIDDLE: 50, RIGHT: 1}} />
+  <CadControls rotateSpeed={1.8} panSpeed={0.5} mouseButtons={{LEFT: 2, MIDDLE: 50, RIGHT: 1}} />
 </T.OrthographicCamera>
 
 <!-- <T.DirectionalLight args={['#ff8888', 50.0]} position.x={-10} position.y={0} position.z={0} />
@@ -133,25 +134,28 @@
 {/each}
 
 {#each planes as [planeName, plane] (`${$workbench.name}-${planeName}`)}
+  <!-- TODO: Plane names -->
+  <!-- TODO: Plane size -->
   <Plane
-    name={plane.name}
+    name="PLANE"
     id={planeName}
-    height={plane.height}
-    width={plane.width}
-    origin={plane.plane.origin}
-    primary={plane.plane.primary}
-    secondary={plane.plane.secondary}
-    tertiary={plane.plane.tertiary}
+    height={100}
+    width={100}
+    origin={plane.origin}
+    primary={plane.primary}
+    secondary={plane.secondary}
+    tertiary={plane.tertiary}
   />
 {/each}
 
-{#each sketches as [sketchId, sketchTuple] (`${$workbench.name}-${sketchId}`)}
+{#each sketches as [sketchId, sketch] (`${$workbench.name}-${sketchId}`)}
+  <!-- TODO: Sketch names -->
+  <!-- TODO: Sketch size -->
   <Sketch
     uniqueId={sketchId}
-    name={sketchTuple[2]}
-    {sketchTuple}
+    name={`SKETCH-${sketchId}`}
+    {sketch}
     editing={$sketchBeingEdited === sketchId}
-    plane={planesById[sketchTuple[0].plane_id]}
     {solidLineMaterial}
     {solidHoveredMaterial}
     {solidSelectedMaterial}

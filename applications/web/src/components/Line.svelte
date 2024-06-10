@@ -8,10 +8,10 @@
   import type {EntityType, PointById} from "shared/types"
   import {isEntity} from "shared/typeGuards"
 
+  // @ts-ignore
   const log = (function () { const context = "[Line.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let id: string, start: PointById, end: PointById
-  // log("[props]", "id:", id, "start:", start, "end:", end)
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,

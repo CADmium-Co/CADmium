@@ -14,18 +14,17 @@
   import NewCircleTool from "./tools/NewCircle.svelte"
   import NewRectangleTool from "./tools/NewRectangle.svelte"
   import SelectTool from "./tools/Select.svelte"
-  import type {ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PlaneData, PreviewGeometry, SketchPoint, PointById, SketchRealized} from "shared/types"
+  import type { ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PreviewGeometry, SketchPoint, PointById } from "shared/types"
   import debounce from "just-debounce-it"
+  import type { ISketch } from "cadmium"
 
+  // @ts-ignore
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let name: string,
-    sketch: SketchRealized,
-    plane: PlaneData["data"]["plane"],
+    sketch: ISketch,
     uniqueId: string,
     editing = false
-
-  // log("[props]", "name:", name, "sketch:", sketch, "plane:", plane, "uniqueId:", uniqueId, "editing:", editing )
 
   const {size, dpr} = useThrelte()
 
@@ -96,10 +95,10 @@
   }
 
   // Build some Three.js vectors from the props
-  const origin_point = new Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
-  const primary = new Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
-  const secondary = new Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
-  const tertiary = new Vector3(plane.tertiary.x, plane.tertiary.y, plane.tertiary.z)
+  const origin_point = new Vector3(sketch.plane.origin.x, sketch.plane.origin.y, sketch.plane.origin.z)
+  const primary = new Vector3(sketch.plane.primary.x, sketch.plane.primary.y, sketch.plane.primary.z)
+  const secondary = new Vector3(sketch.plane.secondary.x, sketch.plane.secondary.y, sketch.plane.secondary.z)
+  const tertiary = new Vector3(sketch.plane.tertiary.x, sketch.plane.tertiary.y, sketch.plane.tertiary.z)
 
   // Use those to make the rotation matrix and euler angles
   const rotationMatrix = new Matrix4()
@@ -144,8 +143,8 @@
   $: if (editing) $sketchTool = "select"
 
   function projectToPlane(point3D: Vector3): Vector2 {
-    const xComponent = point3D.clone().sub(plane.origin).dot(primary)
-    const yComponent = point3D.clone().sub(plane.origin).dot(secondary)
+    const xComponent = point3D.clone().sub(sketch.plane.origin).dot(primary)
+    const yComponent = point3D.clone().sub(sketch.plane.origin).dot(secondary)
     return new Vector2(xComponent, yComponent)
   }
 
@@ -179,7 +178,7 @@
           }
         }
       }}
-      on:pointermove={debounce(e => {
+      on:pointermove={debounce((e: any) => {
         if (editing) {
           if ($sketchTool === "line") {
             newLineTool.mouseMove(e, projectToPlane(e.point))
