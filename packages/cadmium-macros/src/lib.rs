@@ -11,50 +11,6 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         _ => panic!("MessageEnum can only be derived for enums"),
     };
 
-    fn get_idwrap_type(field_type: Type) -> Type {
-        let Type::Path(inner_path) = field_type else {
-            panic!("IDWrap type argument must be a path type");
-        };
-        let inner_type_args = &inner_path.path.segments.first().unwrap().arguments;
-        let syn::PathArguments::AngleBracketed(idwrap_generic) = inner_type_args else {
-            panic!("IDWrap type argument must be a generic type");
-        };
-        let syn::GenericArgument::Type(idwrap_generic_type) = idwrap_generic.args.first().unwrap() else {
-            panic!("IDWrap type argument must be a path type");
-        };
-        idwrap_generic_type.clone()
-    }
-
-    fn variant_to_typescript(field_type: Type) -> proc_macro2::TokenStream {
-        let mut inner_type = field_type.clone();
-        let mut type_str = field_type.clone().to_token_stream().to_string();
-        let mut idwrap_types = vec![];
-
-        while type_str.starts_with("IDWrap") {
-            let idwrap_type = get_idwrap_type(inner_type);
-            inner_type = idwrap_type.clone();
-            idwrap_types.push(idwrap_type.clone());
-            type_str = idwrap_type.to_token_stream().to_string();
-        }
-
-        let additional_types = idwrap_types.iter().map(|idwrap_type| {
-            quote! {<#idwrap_type as crate::message::MessageHandler>::Parent::ID_NAME }
-        }).collect::<Vec<proc_macro2::TokenStream>>();
-        let additional_types_len = additional_types.len();
-
-        quote! {
-            let inner_decl: &'static str = #inner_type::DECL;
-            let id_fields: [&'static str; #additional_types_len] = [#(#additional_types,)*];
-            let id_fields_idtype = id_fields
-                .iter()
-                .map(|field| format!("{}: IDType;", field))
-                .collect::<Vec<String>>();
-
-            let new_decl = inner_decl.replace("{", format!("{{\n    {}", id_fields_idtype.join("\n    ")).as_str());
-            println!("{}", new_decl);
-        }
-    }
-
     let variants_typescript = data.variants.iter().map(|variant| {
         let syn::Fields::Unnamed(field) = &variant.fields else {
             panic!("MessageEnum can only be derived for enums with unnamed fields");
@@ -63,7 +19,9 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         let field_type = &field.unnamed[0].ty;
 
         variant_to_typescript(field_type.clone())
-    }).collect::<Vec<_>>();
+    }).collect::<Vec<(_, Vec<_>)>>();
+    let variants_typescript_type = variants_typescript.clone().iter().map(|v| v.0.clone()).collect::<Vec<_>>();
+    let variants_typescript_additional = variants_typescript.clone().iter().map(|v| v.1.clone()).collect::<Vec<_>>();
 
     let variants_type = data.variants.iter().map(|variant| {
         let syn::Fields::Unnamed(field) = &variant.fields else {
@@ -114,8 +72,23 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
 
         use crate::message::Identifiable;
         impl crate::Project {
-            pub fn gen_typescript_defs() {
-                #( #variants_typescript )*
+            pub fn gen_typescript_defs() -> Vec<(&'static str, Vec<String>)> {
+                let mut result = vec![];
+
+                #(
+                let inner_decl = #variants_typescript_type::DECL;
+                let interface_right_iter = inner_decl.split("{").collect::<Vec<_>>();
+                let interface_right = interface_right_iter.get(1).unwrap();
+                let only_interface_iter = interface_right.split("}").collect::<Vec<_>>();
+                let only_interface = only_interface_iter.get(0).unwrap();
+                let inner_fields = only_interface.split(";").map(|f| f.trim().to_string()).collect::<Vec<_>>();
+                let mut additional = vec![ #( format!("{}: IDType", #variants_typescript_additional) ),* ];
+                additional.extend(inner_fields.clone());
+
+                result.push((stringify!(#variant_names), additional));
+                )*
+
+                result
             }
         }
     }.into()
@@ -196,4 +169,51 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
             }
         }
     }.into()
+}
+
+fn variant_to_typescript(field_type: Type) -> (Type, Vec<proc_macro2::TokenStream>) {
+    let mut inner_type = field_type.clone();
+    let mut type_str = field_type.clone().to_token_stream().to_string();
+    let mut idwrap_types = vec![];
+
+    while type_str.starts_with("IDWrap") {
+        let idwrap_type = get_idwrap_type(inner_type);
+        inner_type = idwrap_type.clone();
+        idwrap_types.push(idwrap_type.clone());
+        type_str = idwrap_type.to_token_stream().to_string();
+    }
+
+    let additional_types = idwrap_types.iter().map(|idwrap_type| {
+        quote! {<#idwrap_type as crate::message::MessageHandler>::Parent::ID_NAME }
+    }).collect::<Vec<proc_macro2::TokenStream>>();
+
+    (inner_type, additional_types)
+
+    // let additional_types_len = additional_types.len();
+
+    // quote! {
+    //     let inner_decl: &'static str = #inner_type::DECL;
+    //     let id_fields: [&'static str; #additional_types_len] = [#(#additional_types,)*];
+    //     let id_fields_idtype = id_fields
+    //         .iter()
+    //         .map(|field| format!("{}: IDType;", field))
+    //         .collect::<Vec<String>>();
+
+    //     let new_decl = inner_decl.replace("{", format!("{{\n    {}", id_fields_idtype.join("\n    ")).as_str());
+    //     println!("{}", new_decl);
+    // }
+}
+
+fn get_idwrap_type(field_type: Type) -> Type {
+    let Type::Path(inner_path) = field_type else {
+        panic!("IDWrap type argument must be a path type");
+    };
+    let inner_type_args = &inner_path.path.segments.first().unwrap().arguments;
+    let syn::PathArguments::AngleBracketed(idwrap_generic) = inner_type_args else {
+        panic!("IDWrap type argument must be a generic type");
+    };
+    let syn::GenericArgument::Type(idwrap_generic_type) = idwrap_generic.args.first().unwrap() else {
+        panic!("IDWrap type argument must be a path type");
+    };
+    idwrap_generic_type.clone()
 }
