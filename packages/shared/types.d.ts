@@ -1,4 +1,5 @@
-import { Message, MessageResult, Workbench } from "cadmium"
+import { MessageResult, Workbench } from "cadmium"
+import { Message } from "./cadmium-api"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
 interface IDictionary<TValue> {
@@ -127,19 +128,6 @@ interface SketchData {
       highest_constraint_id: number
     }
   }
-}
-
-export interface Sketch_GeneratedFromRust {
-  points: Record<number, Point2>;
-  highest_point_id: number;
-  line_segments: Record<number, Line2>;
-  highest_line_segment_id: number;
-  circles: Record<number, Circle2>;
-  highest_circle_id: number;
-  arcs: Record<number, Arc2>;
-  highest_arc_id: number;
-  constraints: Record<number, Constraint>;
-  highest_constraint_id: number;
 }
 
 interface ExtrusionData {

@@ -1,5 +1,6 @@
-import * as cadFunctions from "./cadmium-api"
-;(window as any).cad = cadFunctions
+import * as cad from "./cadmium-api"
+(window as any).cad = cad
+import type {Message} from "./cadmium-api"
 
 import {
   workbenchIsStale,
@@ -27,10 +28,8 @@ import type {
   WithTarget,
   WorkBench,
 } from "./types"
-import type {Realization as WasmRealization, Primitive, StepData, Workbench, MessageResult} from "cadmium"
-import type {Message} from "./cadmium-api"
+import type {Realization as WasmRealization, Primitive, StepData, Workbench, MessageResult, IDType} from "cadmium"
 import {isMessage} from "./typeGuards"
-// import { isDevelopment } from "../+layout"
 
 // prettier-ignore
 const log = (function () { const context = "[projectUtils.ts]"; const color = "aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
@@ -102,29 +101,12 @@ export function updateExtrusion(extrusionId: number, sketchId: number, length: n
 }
 
 export function setSketchPlane(sketchId: number, planeId: number) {
-  const message: Message = {
-    SetSketchPlane: {
-      workbench_id: get(workbenchIndex),
-      sketch_id: sketchId,
-      plane_id: planeId,
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  return cad.workbenchSketchSetPlane(get(workbenchIndex), sketchId, { PlaneId: planeId })
 }
 
 export function newSketchOnPlane() {
-  const message: Message = {
-    StepAction: {
-      name: "",
-      data: {
-        workbench_id: get(workbenchIndex),
-        plane_id: "", // leave it floating at first
-      },
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  // TODO: Why are we defaulting to plane 0?
+  cad.workbenchSketchAdd(get(workbenchIndex), { PlaneId: 0 })
 }
 
 export function newExtrusion() {
@@ -132,186 +114,54 @@ export function newExtrusion() {
   // log("[newExtrusion] workbench:", workbench)
   // log("[newExtrusion] bench:", bench)
 
-  let sketchId = ""
+  let sketchId: IDType = 0
   for (let step of bench.history) {
+    console.warn("[newExtrusion] step:", step)
     if (step.data.type === "Sketch") {
-      sketchId = step.unique_id
+      // TODO: This doesn't work, we should retrieve the sketch id
+      sketchId = step.id;
     }
   }
-  if (sketchId === "") {
-    log("No sketch found in history")
-    return
-  }
 
-  const message: Message = {
-    StepAction: {
-      data: {
-        workbench_id: get(workbenchIndex),
-        sketch_id: sketchId,
-        face_ids: [],
-        length: 25,
-        offset: 0.0,
-        extrusion_name: "",
-        direction: "Normal",
-      },
-    },
-  }
-
-  // we check for face_ids: [] to contain numbers but we send an empty array
-  // todo: maybe change isNewExtrusion? although with the rust api it is possible to send an array of faceids so we ought to check them...
-  // probably best to alter isNewExtrusion to allow an empty array or a number[]
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  return cad.featureExtrusionAdd(get(workbenchIndex), sketchId, [], 25, 0.0, "Normal", "New")
 }
 
 export function deleteEntities(sketchIdx: string, selection: Entity[]) {
   const workbenchIdx = get(workbenchIndex)
 
-  // log("[deleteEntities]", "sketchIdx:", sketchIdx, "selection:", selection, "workbenchIdx:", workbenchIdx, "sketchIdx:", sketchIdx, "selection:", selection)
-  const lines = selection.filter(e => e.type === "line")
-  const arcs = selection.filter(e => e.type === "arc")
-  const circles = selection.filter(e => e.type === "circle")
-  // const points = selection.filter((e) => e.type === 'point')
-
-  const lineIds = reduceToInts(
-    lines.map(e => e.id),
-    (id: any) => console.error(`[deleteEntities] line id is not an int: ${id}`),
-  )
-  const arcIds = reduceToInts(
-    arcs.map(e => e.id),
-    (id: any) => console.error(`[deleteEntities] arc id is not an int: ${id}`),
-  )
-  const circleIds = reduceToInts(
-    circles.map(e => e.id),
-    (id: any) => console.error(`[deleteEntities] circle id is not an int: ${id}`),
-  )
-
-  if (notEmpty(lineIds)) deleteLines(workbenchIdx, sketchIdx, lineIds)
-  if (notEmpty(arcIds)) deleteArcs(workbenchIdx, sketchIdx, arcIds)
-  if (notEmpty(circleIds)) deleteCircles(workbenchIdx, sketchIdx, circleIds)
-
-  // only refresh the workbench once, after all deletions are done
-  workbenchIsStale.set(true)
+  // TODO: Handle compounds as well
+  for (const entity of selection) {
+    cad.sketchDeletePrimitive(workbenchIdx, parseInt(sketchIdx), parseInt(entity.id))
+  }
 }
 
 export function addRectangleBetweenPoints(sketchIdx: string, point1: number, point2: number) {
-  log("[addRectangleBetweenPoints] sketchIdx, point1, point2", sketchIdx, point1, point2)
-  const message: Message = {
-    NewRectangleBetweenPoints: {
-      workbench_id: get(workbenchIndex),
-      sketch_id: sketchIdx,
-      start_id: point1,
-      end_id: point2,
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  return cad.sketchAddRectangle(get(workbenchIndex), parseInt(sketchIdx), point1, point2)
 }
 
-export function addCircleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
-  log("[addCircleBetweenPoints]", "sketchIdx:", sketchIdx, "point1:", point1, "point2", point2)
-
-  const p1Valid = isStringInt(point1, id => console.error("[projectUtils.ts] [addCircleBetweenPoints]", "id is not an int:", id))
-  const p2Valid = isStringInt(point2, id => console.error("[projectUtils.ts] [addCircleBetweenPoints]", "id is not an int:", id))
-
-  if (!p1Valid || !p2Valid) return
-
-  const message: Message = {
-    NewCircleBetweenPoints: {
-      workbench_id: get(workbenchIndex),
-      sketch_id: sketchIdx,
-      center_id: parseInt(point1, 10),
-      edge_id: parseInt(point2, 10),
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+export function addCircleBetweenPoints(sketchIdx: number, point1: string, point2: string) {
+  return cad.sketchAddCircle(get(workbenchIndex), sketchIdx, parseInt(point1), parseInt(point2))
 }
 
 export function addLineToSketch(sketchIdx: string, point1: number, point2: number) {
-  const message: Message = {
-    NewLineOnSketch: {
-      workbench_id: get(workbenchIndex),
-      sketch_id: sketchIdx,
-      start_point_id: point1,
-      end_point_id: point2,
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  return cad.sketchAddLine(get(workbenchIndex), parseInt(sketchIdx), point1, point2)
 }
 
 export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: boolean) {
-  log("[addPointToSketch] sketchIdx, point, hidden", sketchIdx, point, hidden)
-  const message: Message = {
-    NewPointOnSketch2: {
-      workbench_id: get(workbenchIndex),
-      sketch_id: sketchIdx,
-      x: point.x,
-      y: point.y,
-      hidden: hidden,
-    },
-  }
-  checkWasmMessage(message)
-  const reply = sendWasmMessage(message)
-  // log("[addPointToSketch sendWasmMessage]", "message:", message, "reply:", reply)
-
-  if (!reply.success) console.error("ERROR [projectUtils.ts addPointToSketch sendWasmMessage]", "message:", message, "reply:", reply)
-
-  workbenchIsStale.set(true)
-  return JSON.parse(reply.data).id
-}
-
-export function addPrimitiveToSketch(sketchIdx: string, primitive: Primitive): number {
-  const message: Message = {
-    AddSketchPrimitive: {
-      workbench_id: get(workbenchIndex),
-      sketch_id: sketchIdx,
-      primitive,
-    },
-  }
-  checkWasmMessage(message)
-  const reply = sendWasmMessage(message)
-
-  if (!reply.success) console.error("ERROR [projectUtils.ts addPrimitiveToSketch sendWasmMessage]", "message:", message, "reply:", reply)
-
+  const reply = cad.sketchAddPoint(get(workbenchIndex), parseInt(sketchIdx), point.x, point.y)
   return JSON.parse(reply.data).id
 }
 
 export function renameStep(stepIdx: number, newName: string): void {
-  log("[renameStep] stepIdx, newName", stepIdx, newName)
-  const message: Message = {
-    RenameStep: {
-      workbench_id: get(workbenchIndex),
-      step_id: stepIdx,
-      new_name: newName,
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  cad.stepRename(get(workbenchIndex), stepIdx, newName)
 }
 
 export function renameWorkbench(newName: string): void {
-  log("[renameWorkbench] newName", newName)
-  const message: Message = {
-    RenameWorkbench: {
-      workbench_id: get(workbenchIndex),
-      new_name: newName,
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  cad.workbenchRename(get(workbenchIndex), newName)
 }
 
 export function renameProject(newName: string): void {
-  log("[renameProject] newName", newName)
-  const message: Message = {
-    RenameProject: {
-      new_name: newName,
-    },
-  }
-  checkWasmMessage(message)
-  sendWasmMessage(message)
+  cad.projectRename(newName)
 }
 
 // If the project ever becomes stale, refresh it. This should be pretty rare.
@@ -353,9 +203,9 @@ realizationIsStale.subscribe(value => {
 
     const wasmProj = get(wasmProject)
     const workbenchIdx = get(workbenchIndex)
-    const wasmReal: WasmRealization = wasmProj.get_realization(workbenchIdx, get(featureIndex) + 1)
-    wasmRealization.set(wasmReal)
-    realization.set(JSON.parse(wasmReal.to_json()))
+    // const wasmReal: WasmRealization = wasmProj.get_realization(workbenchIdx, get(featureIndex) + 1)
+    // wasmRealization.set(wasmReal)
+    // realization.set(JSON.parse(wasmReal.to_json()))
     // log("[realizationIsStale] New realization:", get(realization))
     // log("[wasmProj]", wasmProj)
 
