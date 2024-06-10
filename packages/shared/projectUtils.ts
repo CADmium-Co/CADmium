@@ -10,10 +10,8 @@ import {
   featureIndex,
   wasmProject,
   projectIsStale,
-  realizationIsStale,
-  wasmRealization,
-  realization,
   messageHistory,
+  workbenchSolids,
 } from "./stores"
 import {get} from "svelte/store"
 import {Vector2, Vector3, type Vector2Like} from "three"
@@ -26,15 +24,36 @@ import type {
   PointHistoryStep,
   SketchHistoryStep,
   WithTarget,
-  WorkBench,
 } from "./types"
-import type {Realization as WasmRealization, Primitive, StepData, Workbench, MessageResult, IDType} from "cadmium"
+import type {Primitive, Workbench, MessageResult, IDType, Solid} from "cadmium"
 import {isMessage} from "./typeGuards"
 
 // prettier-ignore
 const log = (function () { const context = "[projectUtils.ts]"; const color = "aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
 
 export const CIRCLE_TOLERANCE = 0.05
+
+function createWrapperFunctions(originalNamespace: any, newNamespace: any) {
+  Object.keys(originalNamespace).forEach((funcName) => {
+    const originalFunction = originalNamespace[funcName];
+    if (typeof originalFunction === 'function') {
+      newNamespace[funcName] = (...args: any[]) => {
+        const workbench_id = get(workbenchIndex);
+        return originalFunction(workbench_id, ...args);
+      };
+    }
+  });
+}
+
+export namespace bench {
+    createWrapperFunctions(cad, bench);
+}
+(window as any).bench = bench
+
+export function getWorkbenchSolids(): Solid[] {
+  let wp = get(wasmProject)
+  return wp.get_workbench_solids(get(workbenchIndex))
+}
 
 export function isPoint(feature: HistoryStep): feature is PointHistoryStep {
   return feature.data.type === "Point"
@@ -60,7 +79,8 @@ export function arraysEqual(a: any[], b: any[]) {
 export function sendWasmMessage(message: Message): MessageResult {
   let wp = get(wasmProject)
   log("[sendWasmMessage] sending message:", message)
-  let result = wp.send_message(message)
+  // TODO: send_message should accept the generated Message type (cadmium-api.ts), not the cadmium Message type
+  let result = wp.send_message(message as any)
   log("[sendWasmMessage] reply:", result)
 
   messageHistory.update((history: MessageHistory[]) => {
@@ -186,37 +206,16 @@ workbenchIsStale.subscribe(value => {
     const workbenchIdx = get(workbenchIndex)
     const wasmProj = get(wasmProject)
     const workbenchJson = wasmProj.get_workbench(workbenchIdx)
-    // TODO: reach inside of project and set its representation
-    // of the workbench to the new one that we just got
     workbench.set(workbenchJson)
     workbenchIsStale.set(false)
-    // log("Workbench:", get(workbench))
-    realizationIsStale.set(true)
-  }
-})
-
-// If the realization ever becomes stale, refresh it. This should be very common.
-// Every time you edit any part of the feature history, for example
-realizationIsStale.subscribe(value => {
-  if (value) {
-    // log("[realizationIsStale] Refreshing realization")
-
-    const wasmProj = get(wasmProject)
-    const workbenchIdx = get(workbenchIndex)
-    // const wasmReal: WasmRealization = wasmProj.get_realization(workbenchIdx, get(featureIndex) + 1)
-    // wasmRealization.set(wasmReal)
-    // realization.set(JSON.parse(wasmReal.to_json()))
-    // log("[realizationIsStale] New realization:", get(realization))
-    // log("[wasmProj]", wasmProj)
-
-    realizationIsStale.set(false)
+    workbenchSolids.set(getWorkbenchSolids())
   }
 })
 
 export function getObjectString(solidId: string): string {
-  // log("[getObjectString] solidId:", solidId)
-  const wasmReal = get(wasmRealization)
-  const objString = wasmReal.solid_to_obj(solidId, 0.1)
+  const solids = get(workbenchSolids)
+  // TODO: Does this work?
+  const objString = solids[solidId].solid_to_obj(solidId, 0.1)
   return objString
 }
 
@@ -304,9 +303,9 @@ export function flatten(points: Vector3[]): number[] {
 
 function isStringInt(s: string, errorCallback: {(id: any): void; (arg0: string): void}): boolean {
   if (typeof s !== "string") console.error("[proectUtils.ts] [isStringInt]", s, "is not a string:", typeof s)
-  const isInt = !Number.isNaN(parseInt(s, 10))
+    const isInt = !Number.isNaN(parseInt(s, 10))
   if (!isInt) errorCallback(s)
-  return isInt
+    return isInt
 }
 
 function reduceToInts(data: string[], errorCallback: (id: any) => void): number[] {
@@ -332,7 +331,7 @@ export function checkWasmMessage(message: Message, abort = true, logError = true
   function logOrAbort() {
     const error = `[${key}] message failed typecheck:`
     if (logError) console.error("[projectUtils.ts]", error, message)
-    // if (abort && isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
+      // if (abort && isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
     return false
   }
 

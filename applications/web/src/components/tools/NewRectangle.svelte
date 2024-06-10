@@ -4,6 +4,7 @@
   import {Vector3} from "three"
   import type {IDictionary, PointLikeById, ProjectToPlane, SketchPoint} from "shared/types"
 
+  // @ts-ignore
   const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
@@ -32,7 +33,7 @@
       default:
         const endPoint = popFromStack()
         const anchor = popFromStack()
-        addRectangleBetweenPoints(sketchIndex, +anchor.id, +endPoint.id)
+        addRectangleBetweenPoints(sketchIndex, +anchor!.id!, +endPoint!.id!)
         clearStack()
         break
     }

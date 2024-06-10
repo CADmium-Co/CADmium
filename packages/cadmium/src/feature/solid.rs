@@ -2,6 +2,7 @@ use std::fmt::Debug;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
+use wasm_bindgen::prelude::*;
 
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
@@ -13,6 +14,11 @@ use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
 
 use super::prelude::*;
+
+#[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[repr(transparent)]
+pub struct SolidArray(pub Vec<Solid>);
 
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]

@@ -5,6 +5,7 @@ use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
+use crate::feature::solid::Solid;
 use crate::isketch::ISketch;
 use crate::feature::Feature;
 use crate::feature::point::Point3;
@@ -87,6 +88,12 @@ impl Workbench {
             Rc::new(
                 RefCell::new(
                     Step::new(self.history.len() as IDType, message.clone()))));
+    }
+
+    pub fn get_solids(&self) -> Vec<Solid> {
+        self.features.values().map(|feature| {
+            feature.borrow().as_solid_like().to_solids().unwrap()
+        }).flatten().collect()
     }
 }
 

@@ -4,7 +4,7 @@
   import {Vector2, Vector3, type Vector3Like} from "three"
   import {interactivity} from "@threlte/extras"
   import {LineMaterial} from "three/addons/lines/LineMaterial.js"
-  import {realization, workbench, sketchBeingEdited} from "shared/stores"
+  import { workbench, workbenchSolids, sketchBeingEdited } from "shared/stores"
   import Point3D from "./Point3D.svelte"
   import Plane from "./Plane.svelte"
   import Solid from "./Solid.svelte"
@@ -19,22 +19,11 @@
 
   const {size, dpr, camera} = useThrelte()
 
-  $: points = $realization.points ? Object.entries($realization.points) : []
-  $: planes = $realization.planes ? Object.entries($realization.planes) : []
+  $: points = $workbench.points ? Object.entries($workbench.points) : []
+  $: planes = $workbench.planes ? Object.entries($workbench.planes) : []
   $: planesById = planes ? Object.fromEntries(planes) : {}
-  $: solids = $realization.solids ? Object.entries($realization.solids) : []
-  $: sketches = $realization.sketches ? Object.entries($realization.sketches) : []
-
-  // $: $workbench, log("[$workbench]", $workbench)
-  // $: points, log("[realization.points]", points)
-  // $: planes, log("[realization.planes]", planes)
-  // $: planesById, log("[planesById]", planesById)
-  // $: solids, log("[realization.solids]", solids)
-  // $: sketches, log("[realization.sketches]", sketches)
-
-  // put it on window for debugging. todo remove
-  if (!(globalThis as any).realization) (globalThis as any).realization = []
-  $: $realization, (() => ((globalThis as any).realization = [...(globalThis as any).realization, $realization]))()
+  $: solids = $workbenchSolids ? Object.entries($workbenchSolids) : []
+  $: sketches = $workbench.sketches ? Object.entries($workbench.sketches) : []
 
   export function setCameraFocus(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like): void {
     // TODO: make this tween nicely

@@ -1,3 +1,4 @@
+use feature::solid::SolidArray;
 use message::{Message, MessageResult};
 use tsify_next::declare;
 use wasm_bindgen::prelude::*;
@@ -80,5 +81,14 @@ impl Project {
         self.get_workbench(0).add_message_step(message);
 
         message.handle(&mut self.native).into()
+    }
+
+    #[wasm_bindgen]
+    pub fn get_workbench_solids(&self, workbench_index: u32) -> SolidArray {
+        SolidArray(self.native.workbenches
+            .get(workbench_index as usize)
+            .unwrap()
+            .borrow()
+            .get_solids())
     }
 }
