@@ -8,6 +8,7 @@
   import type {EntityType, SketchPoint} from "shared/types"
   import {isEntity} from "shared/typeGuards"
 
+  // @ts-ignore
   const log = (function () { const context = "[Arc.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   const type: EntityType = "arc"

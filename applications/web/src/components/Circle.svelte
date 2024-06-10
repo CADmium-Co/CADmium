@@ -6,6 +6,7 @@
   import {currentlySelected, currentlyMousedOver, sketchTool} from "shared/stores"
   import type {CircleTuple, EntityType} from "shared/types"
 
+  // @ts-ignore
   const log = (function () { const context = "[Circle.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   const type: EntityType = "circle"

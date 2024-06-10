@@ -4,6 +4,7 @@
   import {Vector3} from "three"
   import type {IDictionary, Point, PointLikeById, PreviewGeometry, ProjectToPlane, SketchPoint} from "shared/types"
 
+  // @ts-ignore
   const log = (function () { const context = "[NewLineTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
@@ -37,7 +38,7 @@
       default:
         const endPoint = popFromStack()
         const startPoint = popFromStack()
-        addLineToSketch(sketchIndex, +startPoint.id, +endPoint.id)
+        addLineToSketch(sketchIndex, +startPoint!.id!, +endPoint!.id!)
 
         // leave the current point on the stack in case we want to create another line from here
         pushToStack(point)

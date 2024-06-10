@@ -22,7 +22,6 @@
 
   $: points = $workbench.points ? Object.entries($workbench.points) : []
   $: planes = $workbench.planes ? Object.entries($workbench.planes) : []
-  $: planesById = planes ? Object.fromEntries(planes) : {}
   $: solids = $workbenchSolids ? Object.entries($workbenchSolids) : []
   $: sketches = $workbench.sketches ? Object.entries($workbench.sketches) : []
 

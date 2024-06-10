@@ -47,7 +47,7 @@
   <PassiveSketch
     {name}
     {uniqueId}
-    {sketch}
+    sketch={sketch.sketch}
     editing
     {solidLineMaterial}
     {solidHoveredMaterial}
@@ -60,7 +60,7 @@
   <PassiveSketch
     {name}
     {uniqueId}
-    sketch={sketch}
+    sketch={sketch.sketch}
     {solidLineMaterial}
     {solidHoveredMaterial}
     {solidSelectedMaterial}

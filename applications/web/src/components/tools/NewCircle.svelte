@@ -4,6 +4,7 @@
   import {Vector3, type Vector2Like, type Vector3Like} from "three"
   import type {PointLikeById, Point2D, PointsLikeById, ProjectToPlane} from "shared/types"
 
+  // @ts-ignore
   const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let pointsById: PointsLikeById
@@ -34,7 +35,7 @@
       default:
         const circumference = popFromStack()
         const center = popFromStack()
-        addCircleBetweenPoints(sketchIndex, center.id, circumference.id)
+        addCircleBetweenPoints(sketchIndex, center!.id!, circumference!.id!)
         clearStack()
         break
     }

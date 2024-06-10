@@ -16,13 +16,13 @@
   import SelectTool from "./tools/Select.svelte"
   import type { ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PreviewGeometry, SketchPoint, PointById } from "shared/types"
   import debounce from "just-debounce-it"
-  import type { ISketch } from "cadmium"
+  import type { Sketch } from "shared/isotope"
 
   // @ts-ignore
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let name: string,
-    sketch: ISketch,
+    sketch: Sketch,
     uniqueId: string,
     editing = false
 

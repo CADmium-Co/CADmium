@@ -6,6 +6,7 @@
   import type {EntityType, IDictionary, SketchPoint} from "shared/types"
   // import Sketch from './Sketch.svelte'
 
+  // @ts-ignore
   const log = (function () { const context = "[Face.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   // todo see docs below

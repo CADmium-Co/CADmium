@@ -10,7 +10,6 @@
   import Moon from "phosphor-svelte/lib/Moon"
   import Sun from "phosphor-svelte/lib/Sun"
   import type {WithTarget} from "shared/types"
-  import {isProject} from "shared/typeGuards"
   import {base} from "../base"
   import {renameProject} from "shared/projectUtils"
 

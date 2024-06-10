@@ -159,8 +159,8 @@ export function addRectangleBetweenPoints(sketchIdx: string, point1: number, poi
   return cad.sketchAddRectangle(get(workbenchIndex), parseInt(sketchIdx), point1, point2)
 }
 
-export function addCircleBetweenPoints(sketchIdx: number, point1: string, point2: string) {
-  return cad.sketchAddCircle(get(workbenchIndex), sketchIdx, parseInt(point1), parseInt(point2))
+export function addCircleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
+  return cad.sketchAddCircle(get(workbenchIndex), parseInt(sketchIdx), parseInt(point1), parseInt(point2))
 }
 
 export function addLineToSketch(sketchIdx: string, point1: number, point2: number) {
