@@ -17,12 +17,14 @@
   import type { ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PreviewGeometry, SketchPoint, PointById } from "shared/types"
   import debounce from "just-debounce-it"
   import type { Sketch } from "shared/isotope"
+  import type { Plane } from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let name: string,
     sketch: Sketch,
+    plane: Plane,
     uniqueId: string,
     editing = false
 
@@ -44,61 +46,58 @@
   let faceTuples: FaceTuple[] = []
   let pointsById: IDictionary<SketchPoint> = {}
 
-  // $: pointTuples, log("[pointTuples]", pointTuples)
-  // $: lineTuples, log("[lineTuples]", lineTuples)
-  // $: circleTuples, log("[circleTuples]", circleTuples)
-  // $: arcTuples, log("[arcTuples]", arcTuples)
-  // $: faceTuples, log("[faceTuples]", faceTuples)
-  // $: pointsById, log("[pointsById]", pointsById)
-
   $: {
-    const pointIds = Object.keys(sketch.points)
-    pointTuples = []
-    pointsById = {}
-    for (const id of pointIds) {
-      const point3D = sketch.points[id]
-      const point2D = sketch.points_2d[id]
-      pointTuples.push({id, twoD: point2D, threeD: point3D})
-      pointsById[id] = {twoD: point2D, threeD: point3D}
+    for (const id of Object.keys(sketch.primitives)) {
+      const primitive = sketch.primitives[parseInt(id)]
+      console.log("[primitive]", primitive, typeof primitive)
     }
+    // const pointIds = Object.keys(sketch.points)
+    // pointTuples = []
+    // pointsById = {}
+    // for (const id of pointIds) {
+    //   const point3D = sketch.points[id]
+    //   const point2D = sketch.points_2d[id]
+    //   pointTuples.push({id, twoD: point2D, threeD: point3D})
+    //   pointsById[id] = {twoD: point2D, threeD: point3D}
+    // }
 
-    lineTuples = []
-    for (const id of Object.keys(sketch.line_segments)) {
-      const line = sketch.line_segments[id]
-      const start = pointsById[line.start]
-      const end = pointsById[line.end]
-      lineTuples.push({id, start, end})
-    }
+    // lineTuples = []
+    // for (const id of Object.keys(sketch.line_segments)) {
+    //   const line = sketch.line_segments[id]
+    //   const start = pointsById[line.start]
+    //   const end = pointsById[line.end]
+    //   lineTuples.push({id, start, end})
+    // }
 
-    circleTuples = []
-    for (const id of Object.keys(sketch.circles)) {
-      const circle = sketch.circles[id]
-      const center = pointsById[circle.center]
-      const radius = circle.radius
-      circleTuples.push({id, center, radius})
-    }
+    // circleTuples = []
+    // for (const id of Object.keys(sketch.circles)) {
+    //   const circle = sketch.circles[id]
+    //   const center = pointsById[circle.center]
+    //   const radius = circle.radius
+    //   circleTuples.push({id, center, radius})
+    // }
 
-    arcTuples = []
-    for (const id of Object.keys(sketch.arcs)) {
-      const arc = sketch.arcs[id]
-      const center = pointsById[arc.center]
-      const start = pointsById[arc.start]
-      const end = pointsById[arc.end]
-      arcTuples.push({id, center, start, end})
-    }
+    // arcTuples = []
+    // for (const id of Object.keys(sketch.arcs)) {
+    //   const arc = sketch.arcs[id]
+    //   const center = pointsById[arc.center]
+    //   const start = pointsById[arc.start]
+    //   const end = pointsById[arc.end]
+    //   arcTuples.push({id, center, start, end})
+    // }
 
-    faceTuples = []
-    for (const id of Object.keys(sketch.faces)) {
-      const face = sketch.faces[id]
-      faceTuples.push({id, face})
-    }
+    // faceTuples = []
+    // for (const id of Object.keys(sketch.faces)) {
+    //   const face = sketch.faces[id]
+    //   faceTuples.push({id, face})
+    // }
   }
 
   // Build some Three.js vectors from the props
-  const origin_point = new Vector3(sketch.plane.origin.x, sketch.plane.origin.y, sketch.plane.origin.z)
-  const primary = new Vector3(sketch.plane.primary.x, sketch.plane.primary.y, sketch.plane.primary.z)
-  const secondary = new Vector3(sketch.plane.secondary.x, sketch.plane.secondary.y, sketch.plane.secondary.z)
-  const tertiary = new Vector3(sketch.plane.tertiary.x, sketch.plane.tertiary.y, sketch.plane.tertiary.z)
+  const origin_point = new Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
+  const primary = new Vector3(plane.primary.x, plane.primary.y, plane.primary.z)
+  const secondary = new Vector3(plane.secondary.x, plane.secondary.y, plane.secondary.z)
+  const tertiary = new Vector3(plane.tertiary.x, plane.tertiary.y, plane.tertiary.z)
 
   // Use those to make the rotation matrix and euler angles
   const rotationMatrix = new Matrix4()
@@ -143,13 +142,12 @@
   $: if (editing) $sketchTool = "select"
 
   function projectToPlane(point3D: Vector3): Vector2 {
-    const xComponent = point3D.clone().sub(sketch.plane.origin).dot(primary)
-    const yComponent = point3D.clone().sub(sketch.plane.origin).dot(secondary)
+    const xComponent = point3D.clone().sub(plane.origin).dot(primary)
+    const yComponent = point3D.clone().sub(plane.origin).dot(secondary)
     return new Vector2(xComponent, yComponent)
   }
 
   function isGeomType(geom: PreviewGeometry, type: string) {
-    // log("[isGeomType]", type, geom)
     return geom.type === type
   }
 </script>
@@ -241,7 +239,7 @@
       />
     {/each}
 
-    {#each lineTuples as line (line.id)}
+    <!-- {#each lineTuples as line (line.id)}
       <Line
         start={line.start}
         end={line.end}
@@ -283,7 +281,7 @@
       {:else if isGeomType(geom, "point")}
         <Point2D x={geom.x} y={geom.y} hidden={false} id={geom.uuid} isPreview {collisionLineMaterial} />
       {/if}
-    {/each}
+    {/each} -->
 
     {#each pointTuples as { id, twoD, threeD } (id)}
       <Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} {id} {collisionLineMaterial} />

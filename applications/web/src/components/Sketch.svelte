@@ -48,6 +48,7 @@
     {name}
     {uniqueId}
     sketch={sketch.sketch}
+    plane={sketch.plane}
     editing
     {solidLineMaterial}
     {solidHoveredMaterial}
@@ -61,6 +62,7 @@
     {name}
     {uniqueId}
     sketch={sketch.sketch}
+    plane={sketch.plane}
     {solidLineMaterial}
     {solidHoveredMaterial}
     {solidSelectedMaterial}
