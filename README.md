@@ -33,6 +33,8 @@ Leveraging truck, we wrote a small rust library called [cadmium](https://github.
 
 The UI is built with [SvelteKit](https://kit.svelte.dev/) and [Tailwind](https://tailwindcss.com/). It is hosted with Github Pages. We use [three.js](https://threejs.org/) for rendering, which in this case uses WebGL under the hood. We use [Threlte](https://github.com/threlte/threlte) to manage the scene graph declaratively.
 
+Native builds use [Tauri](https://tauri.app/), which is a Rust-based wrapper around OS-specific native webviews that allows us to build a native app from the same codebase.
+
 ## License
 
 This software is offered under the [Elastic License 2.0](https://www.elastic.co/licensing/elastic-license). In summary, you can do whatever you like with this software except offer it as a service to third parties.
@@ -48,6 +50,22 @@ git clone https://github.com/Cadmium-Co/CADmium.git
 cd CADmium
 pnpm install
 pnpm dev
+```
+
+### Native Builds
+
+```shell
+# Development
+pnpm tauri dev
+
+# Generate binaries and installers
+pnpm tauri build
+```
+
+Tauri can [generate icons](https://tauri.app/v1/guides/features/icons/) for the native build with the following command:
+
+```shell
+pnpm tauri icon applications/web/public/cadmium_logo_min.svg
 ```
 
 ## Tooling setup

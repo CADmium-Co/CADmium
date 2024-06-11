@@ -1,1 +1,1 @@
-export const base = "/CADmium"
+export const base = "./"

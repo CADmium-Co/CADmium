@@ -9,6 +9,6 @@
   "dependencies": {
     "cadmium": "workspace:*",
     "svelte": "^4.2.12",
-    "three": "^0.162.0"
+    "three": "^0.164.1"
   }
 }

@@ -1,0 +1,20 @@
+{
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"name": "[Svelte] Run & Debug",
+			"request": "launch",
+			"runtimeExecutable": "pnpm",
+			"runtimeArgs": ["dev"],
+			"type": "node",
+			"killBehavior": "polite",
+			"serverReadyAction": {
+				"action": "debugWithChrome",
+				"pattern": "Local: +http://127.0.0.1:([0-9]+)/",
+				"uriFormat": "http://127.0.0.1:%s",
+				"webRoot": "${workspaceFolder}/applications/web/src",
+				"killOnServerStop": true
+			}
+		},
+	],
+}

@@ -1,3 +1,3 @@
 [workspace]
-members = [ "packages/cadmium", "packages/cadmium-macros"]
+members = [ "packages/cadmium", "packages/cadmium-macros", "applications/tauri" ]
 resolver = "2"

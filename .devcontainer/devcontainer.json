@@ -1,6 +1,6 @@
 {
   "name": "Debian",
-  "image": "mcr.microsoft.com/devcontainers/base:bullseye",
+  "image": "mcr.microsoft.com/devcontainers/base:bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts",
@@ -19,7 +19,9 @@
         "svelte.svelte-vscode",
         "bradlc.vscode-tailwindcss",
         "esbenp.prettier-vscode",
-        "ms-playwright.playwright"
+        "ms-playwright.playwright",
+        "vadimcn.vscode-lldb",
+        "dbaeumer.vscode-eslint"
       ]
     }
   }
