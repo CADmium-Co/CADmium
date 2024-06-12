@@ -5,7 +5,7 @@
   import SketchFeature from "./features/Sketch.svelte"
   import ExtrusionFeature from "./features/Extrusion.svelte"
   import SolidItem from "./SolidItem.svelte"
-  import {isPoint, isPlane, isExtrusion, isSketch} from "shared/projectUtils"
+  import {isPoint, isPlane, isSolid, isSketchStep} from "shared/projectUtils"
   import type {SetCameraFocus} from "shared/types"
 
   const log = (function () { const context = "[FeatureHistory.svelte]"; const color="pink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -55,18 +55,18 @@
 <div class="flex flex-col select-none dark:text-gray-300">
   <div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
     <div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
-    {#each history as feature, featureIdx (feature.data.type + ":" + feature.unique_id)}
+    {#each history as feature, featureIdx}
       <div>
-        {#if isPoint(feature)}
+        {#if isPoint(feature.interop_node!)}
           <PointFeature name={feature.name} index={featureIdx} />
-        {:else if isPlane(feature)}
-          <PlaneFeature name={feature.name} index={featureIdx} plane={feature.data.plane} {setCameraFocus} />
-        {:else if isSketch(feature)}
-          <SketchFeature name={feature.name} index={featureIdx} id={feature.unique_id} plane_id={feature.data.plane_description.PlaneId} />
-        {:else if isExtrusion(feature)}
-          <ExtrusionFeature name={feature.name} index={featureIdx} data={feature.data.extrusion} id={feature.unique_id} />
+        {:else if isPlane(feature.interop_node!)}
+          <PlaneFeature name={feature.name} index={featureIdx} plane={feature.interop_node} {setCameraFocus} />
+        {:else if isSketchStep(feature)}
+          <SketchFeature name={feature.name} index={featureIdx} id={`${feature.id}`} plane_id={feature.data.plane_description.PlaneId} />
+          <!-- {:else if isSolid(feature.interop_node!)} -->
+          <!-- <ExtrusionFeature name={feature.name} index={featureIdx} data={feature.data.extrusion} id={feature.unique_id} /> -->
         {:else}
-          TODO: {feature.name} {feature.data.type}
+          TODO: {feature.name} {feature.interop_node}
         {/if}
       </div>
     {/each}

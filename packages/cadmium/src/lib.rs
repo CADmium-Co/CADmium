@@ -75,7 +75,7 @@ impl Project {
             .get(workbench_index as usize)
             .unwrap()
             .borrow()
-            .clone() // This single call polutes Clone derives for all MessageHandlers
+            .clone() // This single call pollutes Clone derives for all MessageHandlers
     }
 
     #[wasm_bindgen]

@@ -6,7 +6,7 @@ import {workbenchIsStale, workbenchIndex, workbench, project, featureIndex, wasm
 import {get} from "svelte/store"
 import {Vector2, Vector3, type Vector2Like} from "three"
 import type {Entity, ExtrusionHistoryStep, HistoryStep, MessageHistory, PlaneHistoryStep, PointHistoryStep, SketchHistoryStep, WithTarget} from "./types"
-import type {Primitive, Workbench, MessageResult, IDType, Solid} from "cadmium"
+import type {Primitive, Workbench, MessageResult, IDType, Solid, Step, Node, Point3, Plane, ISketch, SolidArray} from "cadmium"
 import {isMessage} from "./typeGuards"
 
 // prettier-ignore
@@ -36,17 +36,20 @@ export function getWorkbenchSolids(): Solid[] {
   return wp.get_workbench_solids(get(workbenchIndex))
 }
 
-export function isPoint(feature: HistoryStep): feature is PointHistoryStep {
-  return feature.data.type === "Point"
+export function isPoint(node: Node): node is Node & Point3 {
+  // const typedObj = node as Point3
+  // return typedObj.x !== undefined && typedObj.y !== undefined && typedObj.z !== undefined
+  return "Point" in node
 }
-export function isPlane(feature: HistoryStep): feature is PlaneHistoryStep {
-  return feature.data.type === "Plane"
+export function isPlane(node: Node): node is Node & Plane {
+  return "Plane" in node
 }
-export function isExtrusion(feature: HistoryStep): feature is ExtrusionHistoryStep {
-  return feature.data.type === "Extrusion"
+export type SketchStep = Step & {interop_node: ISketch, data: cad.WorkbenchSketchAdd }
+export function isSketchStep(step: Step): step is SketchStep {
+  return "WorkbenchSketchAdd" in step.data && "Sketch" in step.interop_node!
 }
-export function isSketch(feature: HistoryStep): feature is SketchHistoryStep {
-  return feature.data.type === "Sketch"
+export function isSolid(node: Node): node is Node & Solid[] {
+  return "Solid" in node
 }
 
 export function arraysEqual(a: any[], b: any[]) {

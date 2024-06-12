@@ -1,8 +1,8 @@
 <script lang="ts">
-  import {Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3, type Vector3Like} from "three"
+  import {Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3} from "three"
   import {T, useThrelte} from "@threlte/core"
   import {Text, Suspense} from "@threlte/extras"
-  import {hiddenSketches, previewGeometry, sketchTool} from "shared/stores"
+  import {hiddenSketches, sketchTool} from "shared/stores"
   import Point2D from "./Point2D.svelte"
   import Line from "./Line.svelte"
   import Circle from "./Circle.svelte"
@@ -51,46 +51,46 @@
       const primitive = sketch.primitives[parseInt(id)]
       console.log("[primitive]", primitive, typeof primitive)
     }
-    // const pointIds = Object.keys(sketch.points)
-    // pointTuples = []
-    // pointsById = {}
-    // for (const id of pointIds) {
-    //   const point3D = sketch.points[id]
-    //   const point2D = sketch.points_2d[id]
-    //   pointTuples.push({id, twoD: point2D, threeD: point3D})
-    //   pointsById[id] = {twoD: point2D, threeD: point3D}
-    // }
+    const pointIds = Object.keys(sketch.points)
+    pointTuples = []
+    pointsById = {}
+    for (const id of pointIds) {
+      const point3D = sketch.points[id]
+      const point2D = sketch.points_2d[id]
+      pointTuples.push({id, twoD: point2D, threeD: point3D})
+      pointsById[id] = {twoD: point2D, threeD: point3D}
+    }
 
-    // lineTuples = []
-    // for (const id of Object.keys(sketch.line_segments)) {
-    //   const line = sketch.line_segments[id]
-    //   const start = pointsById[line.start]
-    //   const end = pointsById[line.end]
-    //   lineTuples.push({id, start, end})
-    // }
+    lineTuples = []
+    for (const id of Object.keys(sketch.line_segments)) {
+      const line = sketch.line_segments[id]
+      const start = pointsById[line.start]
+      const end = pointsById[line.end]
+      lineTuples.push({id, start, end})
+    }
 
-    // circleTuples = []
-    // for (const id of Object.keys(sketch.circles)) {
-    //   const circle = sketch.circles[id]
-    //   const center = pointsById[circle.center]
-    //   const radius = circle.radius
-    //   circleTuples.push({id, center, radius})
-    // }
+    circleTuples = []
+    for (const id of Object.keys(sketch.circles)) {
+      const circle = sketch.circles[id]
+      const center = pointsById[circle.center]
+      const radius = circle.radius
+      circleTuples.push({id, center, radius})
+    }
 
-    // arcTuples = []
-    // for (const id of Object.keys(sketch.arcs)) {
-    //   const arc = sketch.arcs[id]
-    //   const center = pointsById[arc.center]
-    //   const start = pointsById[arc.start]
-    //   const end = pointsById[arc.end]
-    //   arcTuples.push({id, center, start, end})
-    // }
+    arcTuples = []
+    for (const id of Object.keys(sketch.arcs)) {
+      const arc = sketch.arcs[id]
+      const center = pointsById[arc.center]
+      const start = pointsById[arc.start]
+      const end = pointsById[arc.end]
+      arcTuples.push({id, center, start, end})
+    }
 
-    // faceTuples = []
-    // for (const id of Object.keys(sketch.faces)) {
-    //   const face = sketch.faces[id]
-    //   faceTuples.push({id, face})
-    // }
+    faceTuples = []
+    for (const id of Object.keys(sketch.faces)) {
+      const face = sketch.faces[id]
+      faceTuples.push({id, face})
+    }
   }
 
   // Build some Three.js vectors from the props

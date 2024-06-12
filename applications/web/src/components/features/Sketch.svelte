@@ -91,7 +91,7 @@
 
     let thingSelected = $currentlySelected[0]
     if (thingSelected.type === "plane") {
-      setSketchPlane(id, thingSelected.id)
+      setSketchPlane(parseInt(id), parseInt(thingSelected.id))
     } else if (thingSelected.type === "meshFace") {
       log("HOW DO I HANDLE THIS?")
       log(thingSelected)
