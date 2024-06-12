@@ -1,51 +1,51 @@
-import { Arc2, Circle2, Compound, IDType, ISketch, Line2, Node, Plane, Point2, Point3, Primitive, Solid, Step } from "cadmium"
+import { Arc2, Circle2, Compound, IDType, ISketch, Line2, Node, Plane, Point2, Point3, Primitive, Solid, Step, WrappedPrimitive } from "cadmium"
 import { FeatureExtrusionAdd, SketchAddArc, SketchAddCircle, SketchAddLine, SketchAddPoint, SketchAddRectangle, WorkbenchPlaneAdd, WorkbenchPointAdd, WorkbenchSketchAdd } from "./cadmium-api"
 
 // --- Workbench operations ---
-export type PointStep = Step & {interop_node: { Point: Point3 }, data: WorkbenchPointAdd}
+export type PointStep = Step & {interop_node: { Point: Point3 }, data: {WorkbenchPointAdd: WorkbenchPointAdd}}
 export function isPointStep(step: Step): step is PointStep {
   return "WorkbenchPointAdd" in step.data && "Point" in step.interop_node!
 }
 
-export type PlaneStep = Step & {interop_node: { Plane: Plane }, data: WorkbenchPlaneAdd }
+export type PlaneStep = Step & {interop_node: { Plane: Plane }, data: {WorkbenchPlaneAdd: WorkbenchPlaneAdd} }
 export function isPlaneStep(step: Step): step is PlaneStep {
   return "WorkbenchPlaneAdd" in step.data && "Plane" in step.interop_node!
 }
 
-export type SketchStep = Step & {interop_node: { Sketch: ISketch }, data: WorkbenchSketchAdd }
+export type SketchStep = Step & {interop_node: { Sketch: ISketch }, data: {WorkbenchSketchAdd: WorkbenchSketchAdd} }
 export function isSketchStep(step: Step): step is SketchStep {
   return "WorkbenchSketchAdd" in step.data && "Sketch" in step.interop_node!
 }
 
 // --- Sketch primitive operations ---
 // Any primitive operation
-export type SketchPrimitiveStep = Step & {interop_node: Primitive}
+export type SketchPrimitiveStep = Step & {interop_node: {Primitive: WrappedPrimitive}}
 export function isSketchPrimitiveStep(step: Step): step is SketchPrimitiveStep {
   return "Primitive" in step.interop_node!
 }
 
-export type SketchPointStep = SketchPrimitiveStep & {interop_node: Point2, data: SketchAddPoint}
+export type SketchPointStep = SketchPrimitiveStep & {interop_node: {Point2: Point2}, data: {SketchAddPoint: SketchAddPoint}}
 export function isSketchPointStep(step: Step): step is SketchPointStep {
   return isSketchPrimitiveStep(step) && "SketchAddPoint" in step.data && "Point2" in step.interop_node!
 }
 
-export type SketchLineStep = SketchPrimitiveStep & {interop_node: Line2, data: SketchAddLine}
+export type SketchLineStep = SketchPrimitiveStep & {interop_node: {Line2: Line2}, data: {SketchAddLine: SketchAddLine}}
 export function isSketchLineStep(step: Step): step is SketchLineStep {
   return isSketchPrimitiveStep(step) && "SketchAddLine" in step.data && "Line2" in step.interop_node!
 }
 
-export type SketchCircleStep = SketchPrimitiveStep & {interop_node: Circle2, data: SketchAddCircle}
+export type SketchCircleStep = SketchPrimitiveStep & {interop_node: {Circle2: Circle2}, data: {SketchAddCircle: SketchAddCircle}}
 export function isSketchCircleStep(step: Step): step is SketchCircleStep {
   return isSketchPrimitiveStep(step) && "SketchAddCircle" in step.data && "Circle2" in step.interop_node!
 }
 
-export type SketchArcStep = SketchPrimitiveStep & {interop_node: Arc2, data: SketchAddArc}
+export type SketchArcStep = SketchPrimitiveStep & {interop_node: {Arc2: Arc2}, data: {SketchAddArc: SketchAddArc}}
 export function isSketchArcStep(step: Step): step is SketchArcStep {
   return isSketchPrimitiveStep(step) && "SketchAddArc" in step.data && "Arc2" in step.interop_node!
 }
 
 // --- Sketch compound operations ---
-export type SketchCompoundStep = Step & {interop_node: Compound}
+export type SketchCompoundStep = Step & {interop_node: {Compound: Compound}}
 export function isSketchCompoundStep(step: Step): step is SketchCompoundStep {
   return "Compound" in step.interop_node!
 }

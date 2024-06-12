@@ -2,7 +2,7 @@
   import {Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3} from "three"
   import {T, useThrelte} from "@threlte/core"
   import {Text, Suspense} from "@threlte/extras"
-  import {hiddenSketches, sketchTool} from "shared/stores"
+  import {hiddenSketches, previewGeometry, sketchTool, workbench} from "shared/stores"
   import Point2D from "./Point2D.svelte"
   import Line from "./Line.svelte"
   import Circle from "./Circle.svelte"
@@ -14,9 +14,10 @@
   import NewCircleTool from "./tools/NewCircle.svelte"
   import NewRectangleTool from "./tools/NewRectangle.svelte"
   import SelectTool from "./tools/Select.svelte"
-  import type {ArcTuple, CircleTuple, FaceTuple, IDictionary, LineTuple, PreviewGeometry, SketchPoint, PointById} from "shared/types"
+  import type {FaceTuple, IDictionary, PreviewGeometry, SketchPoint} from "shared/types"
   import debounce from "just-debounce-it"
   import type {ISketch, Plane} from "cadmium"
+  import {isSketchArcStep, isSketchCircleStep, isSketchLineStep, isSketchPointStep} from "shared/stepTypeGuards"
 
   // @ts-ignore
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -29,6 +30,8 @@
 
   const {size, dpr} = useThrelte()
 
+  $: history = $workbench.history ?? []
+
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
     solidLineMaterial: LineMaterial,
@@ -38,59 +41,8 @@
 
   let newLineTool: NewLineTool, newCircleTool: NewCircleTool, newRectangleTool: NewRectangleTool, selectTool: SelectTool
 
-  let pointTuples: PointById[] = []
-  let lineTuples: LineTuple[] = []
-  let circleTuples: CircleTuple[] = []
-  let arcTuples: ArcTuple[] = []
   let faceTuples: FaceTuple[] = []
   let pointsById: IDictionary<SketchPoint> = {}
-
-  $: {
-    for (const id of Object.keys(sketch.primitives)) {
-      const primitive = sketch.primitives[parseInt(id)]
-      console.log("[primitive]", primitive, typeof primitive)
-    }
-    const pointIds = Object.keys(sketch.points)
-    pointTuples = []
-    pointsById = {}
-    for (const id of pointIds) {
-      const point3D = sketch.points[id]
-      const point2D = sketch.points_2d[id]
-      pointTuples.push({id, twoD: point2D, threeD: point3D})
-      pointsById[id] = {twoD: point2D, threeD: point3D}
-    }
-
-    lineTuples = []
-    for (const id of Object.keys(sketch.line_segments)) {
-      const line = sketch.line_segments[id]
-      const start = pointsById[line.start]
-      const end = pointsById[line.end]
-      lineTuples.push({id, start, end})
-    }
-
-    circleTuples = []
-    for (const id of Object.keys(sketch.circles)) {
-      const circle = sketch.circles[id]
-      const center = pointsById[circle.center]
-      const radius = circle.radius
-      circleTuples.push({id, center, radius})
-    }
-
-    arcTuples = []
-    for (const id of Object.keys(sketch.arcs)) {
-      const arc = sketch.arcs[id]
-      const center = pointsById[arc.center]
-      const start = pointsById[arc.start]
-      const end = pointsById[arc.end]
-      arcTuples.push({id, center, start, end})
-    }
-
-    faceTuples = []
-    for (const id of Object.keys(sketch.faces)) {
-      const face = sketch.faces[id]
-      faceTuples.push({id, face})
-    }
-  }
 
   // Build some Three.js vectors from the props
   const origin_point = new Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
@@ -209,47 +161,54 @@
       </Suspense>
     </T.Group>
 
-    {#each circleTuples as circle (circle.id)}
-      <Circle
-        center={circle.center}
-        radius={circle.radius}
-        id={circle.id}
-        {solidLineMaterial}
-        {solidHoveredMaterial}
-        {solidSelectedMaterial}
-        {dashedHoveredMaterial}
-        {dashedLineMaterial}
-        {collisionLineMaterial}
-      />
-    {/each}
-
-    {#each arcTuples as arc (arc.id)}
-      <Arc
-        center={arc.center}
-        start={arc.start}
-        end={arc.end}
-        id={arc.id}
-        {solidLineMaterial}
-        {solidHoveredMaterial}
-        {solidSelectedMaterial}
-        {dashedHoveredMaterial}
-        {dashedLineMaterial}
-        {collisionLineMaterial}
-      />
-    {/each}
-
-    <!-- {#each lineTuples as line (line.id)}
-      <Line
-        start={line.start}
-        end={line.end}
-        id={line.id}
-        {solidLineMaterial}
-        {solidHoveredMaterial}
-        {solidSelectedMaterial}
-        {dashedHoveredMaterial}
-        {dashedLineMaterial}
-        {collisionLineMaterial}
-      />
+    {#each history as step}
+      {#if isSketchPointStep(step)}
+        <Point2D
+          x={step.interop_node.Point2.x}
+          y={step.interop_node.Point2.y}
+          hidden={step.interop_node.Point2.hidden}
+          id={`${step.id}`}
+          {collisionLineMaterial}
+        />
+      {:else if isSketchCircleStep(step)}
+        <Circle
+          center={pointsById[step.interop_node.Circle2.center]}
+          radius={step.interop_node.Circle2.radius}
+          id={`${step.id}`}
+          {solidLineMaterial}
+          {solidHoveredMaterial}
+          {solidSelectedMaterial}
+          {dashedHoveredMaterial}
+          {dashedLineMaterial}
+          {collisionLineMaterial}
+        />
+      {:else if isSketchArcStep(step)}
+        <!-- TODO: Use start & end angle instead of points -->
+        <Arc
+          center={pointsById[step.interop_node.Arc2.center]}
+          start={pointsById[0]}
+          end={pointsById[1]}
+          id={`${step.id}`}
+          {solidLineMaterial}
+          {solidHoveredMaterial}
+          {solidSelectedMaterial}
+          {dashedHoveredMaterial}
+          {dashedLineMaterial}
+          {collisionLineMaterial}
+        />
+      {:else if isSketchLineStep(step)}
+        <Line
+          start={pointsById[step.interop_node.Line2.start]}
+          end={pointsById[step.interop_node.Line2.end]}
+          id={`${step.id}`}
+          {solidLineMaterial}
+          {solidHoveredMaterial}
+          {solidSelectedMaterial}
+          {dashedHoveredMaterial}
+          {dashedLineMaterial}
+          {collisionLineMaterial}
+        />
+      {/if}
     {/each}
 
     {#each $previewGeometry as geom (geom.uuid)}
@@ -280,10 +239,6 @@
       {:else if isGeomType(geom, "point")}
         <Point2D x={geom.x} y={geom.y} hidden={false} id={geom.uuid} isPreview {collisionLineMaterial} />
       {/if}
-    {/each} -->
-
-    {#each pointTuples as { id, twoD, threeD } (id)}
-      <Point2D x={twoD.x} y={twoD.y} hidden={threeD.hidden} {id} {collisionLineMaterial} />
     {/each}
 
     {#each faceTuples as face (`${faceTuples.length}-${face.id}`)}

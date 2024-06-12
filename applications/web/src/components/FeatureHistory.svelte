@@ -55,16 +55,16 @@
 <div class="flex flex-col select-none dark:text-gray-300">
   <div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
     <div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
-    {#each history as step, stepIdx}
+    {#each history as step}
       <div>
         {#if isPointStep(step)}
-          <PointFeature name={step.name} index={stepIdx} />
+          <PointFeature name={step.name} index={step.id} />
         {:else if isPlaneStep(step)}
-          <PlaneFeature name={step.name} index={stepIdx} plane={step.interop_node} {setCameraFocus} />
+          <PlaneFeature name={step.name} index={step.id} plane={step.interop_node.Plane} {setCameraFocus} />
         {:else if isSketchStep(step)}
-          <SketchFeature name={step.name} index={stepIdx} plane_desc={step.data.plane_description} />
+          <SketchFeature name={step.name} index={step.id} id={`${step.id}`} plane_desc={step.data.WorkbenchSketchAdd.plane_description} />
         {:else if isExtrusionStep(step)}
-          <ExtrusionFeature name={step.name} index={stepIdx} data={step.data} id={`${step.id}`} />
+          <ExtrusionFeature name={step.name} index={step.id} data={step.data} id={`${step.id}`} />
         {:else}
           TODO: {step.name} {step.interop_node}
         {/if}
@@ -77,7 +77,7 @@
     <div class="font-bold text-sm px-2 py-2">
       Solids ({solids ? Object.keys(solids).length : 0})
     </div>
-    {#each history as step, stepIdx}
+    {#each history as step}
       {#if isSolidStep(step)}
         <SolidItem name={step.name} />
       {/if}

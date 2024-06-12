@@ -70,10 +70,16 @@ impl Project {
             .unwrap();
         }
 
-        wb_cell.borrow().history.get(0).unwrap().borrow_mut().name = "Origin".to_string();
-        wb_cell.borrow().history.get(1).unwrap().borrow_mut().name = "Top Plane".to_string();
-        wb_cell.borrow().history.get(2).unwrap().borrow_mut().name = "Front Plane".to_string();
-        wb_cell.borrow().history.get(3).unwrap().borrow_mut().name = "Right Plane".to_string();
+        let wb_ref = wb_cell.borrow();
+        wb_ref.history.get(0).unwrap().borrow_mut().name = "Origin".to_string();
+        wb_ref.history.get(1).unwrap().borrow_mut().name = "Top Plane".to_string();
+        wb_ref.history.get(2).unwrap().borrow_mut().name = "Front Plane".to_string();
+        wb_ref.history.get(3).unwrap().borrow_mut().name = "Right Plane".to_string();
+        assert_eq!(wb_ref.history.len(), 4);
+        assert_eq!(wb_ref.points.len(), 1);
+        assert_eq!(wb_ref.planes.len(), 3);
+        assert_eq!(wb_ref.points_next_id, 1);
+        assert_eq!(wb_ref.planes_next_id, 3);
     }
 
     pub fn json(&self) -> String {
