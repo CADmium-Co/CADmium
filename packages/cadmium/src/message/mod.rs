@@ -1,4 +1,5 @@
-use crate::{interop, IDType};
+use crate::step::StepResult;
+use crate::IDType;
 
 pub mod idwrap;
 pub mod message;
@@ -22,6 +23,5 @@ pub trait ProjectMessageHandler: RefFromWasmAbi {
 
 pub trait MessageHandler: Serialize + for<'de> Deserialize<'de> + RefFromWasmAbi {
     type Parent: Identifiable;
-    fn handle_message(&self, item: Self::Parent)
-        -> anyhow::Result<Option<(IDType, interop::Node)>>;
+    fn handle_message(&self, item: Self::Parent) -> anyhow::Result<Option<(IDType, StepResult)>>;
 }

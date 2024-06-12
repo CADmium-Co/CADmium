@@ -6,8 +6,9 @@ use serde::Serialize;
 use tsify_next::Tsify;
 use wasm_bindgen::convert::RefFromWasmAbi;
 
+use crate::step::StepResult;
 use crate::workbench::Workbench;
-use crate::{interop, IDType};
+use crate::IDType;
 
 mod de;
 mod ser;
@@ -51,10 +52,10 @@ where
     ) -> anyhow::Result<Option<IDType>> {
         let wb_cell = T::Parent::from_parent_id(project, self.id)?;
         let result = self.inner.handle_message(wb_cell.clone())?;
-        let (_id, node) = if let Some((id, node)) = result {
-            (Some(id), Some(node))
+        let node = if let Some((_id, node)) = result {
+            node
         } else {
-            (None, None)
+            StepResult::Empty
         };
 
         let mut wb = wb_cell.borrow_mut();
@@ -73,10 +74,7 @@ where
     P: Identifiable,
 {
     type Parent = C::Parent;
-    fn handle_message(
-        &self,
-        parent: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(&self, parent: Self::Parent) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let msg_parent = C::from_parent_id(&parent, self.id)?;
         self.inner.handle_message(msg_parent)
     }

@@ -164,7 +164,7 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
 
         impl crate::message::MessageHandler for #struct_name {
             type Parent = Rc<RefCell<#parent>>;
-            fn handle_message(&self, parent_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+            fn handle_message(&self, parent_ref: Self::Parent) -> anyhow::Result<Option<(IDType, StepResult)>> {
                 parent_ref.borrow_mut().#fn_name( #(self.#parameters.clone()),* )
             }
         }

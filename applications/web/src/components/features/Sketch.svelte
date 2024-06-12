@@ -24,7 +24,8 @@
   // @ts-ignore
   const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, id: string, plane_desc: PlaneDescription | undefined
+  export let name: string, index: number, hash: number, plane_desc: PlaneDescription | undefined
+  log("[props]", "name:", name, "index:", index, "hash:", hash, "plane_desc:", plane_desc)
 
   const source = `${base}/actions/sketch_min.svg`
 
@@ -53,7 +54,7 @@
   const closeAndRefresh = () => {
     log("closing, refreshing")
     $featureIndex = 1000
-    $sketchBeingEdited = ""
+    $sketchBeingEdited = -1
     $sketchTool = ""
     $selectingFor = []
     $selectionMax = 1000
@@ -61,10 +62,7 @@
     $currentlySelected = []
   }
 
-  $: if ($featureIndex === index) $sketchBeingEdited = id
-
-  // $: $sketchBeingEdited,
-  // 	log("[$sketchBeingEdited]", `${$sketchBeingEdited === "" ? "empty" : ""}`, $sketchBeingEdited)
+  $: if ($featureIndex === index) $sketchBeingEdited = hash
 
   const engageSearchForPlane = () => {
     // log("engage search!")
@@ -94,13 +92,13 @@
 
   currentlySelected.subscribe(() => {
     if (!selectingForSketchPlane) return
-    if (!id) return
+    if (!hash) return
     if (!$currentlySelected.length) return
     // log("CS changed when selecting for Sketch Plane:", $currentlySelected)
 
     let thingSelected = $currentlySelected[0]
     if (thingSelected.type === "plane") {
-      setSketchPlane(parseInt(id), parseInt(thingSelected.id))
+      setSketchPlane(hash, parseInt(thingSelected.id))
     } else if (thingSelected.type === "meshFace") {
       log("HOW DO I HANDLE THIS?")
       log(thingSelected)
@@ -137,20 +135,20 @@
   <div
     class="ml-auto mr-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-500 px-1 py-1 rounded"
     on:click={() => {
-      if ($hiddenSketches.includes(id)) {
+      if ($hiddenSketches.includes(hash)) {
         // cool, unhide
         hiddenSketches.update(sketches => {
-          return sketches.filter(sketch => sketch !== id)
+          return sketches.filter(sketch => sketch !== hash)
         })
       } else {
         // cool, hide
         hiddenSketches.update(sketches => {
-          return [...sketches, id]
+          return [...sketches, hash]
         })
       }
     }}
   >
-    {#if $hiddenSketches.includes(id)}
+    {#if $hiddenSketches.includes(hash)}
       <EyeSlash weight="light" size="18px" />
     {:else}
       <Eye weight="light" size="18px" />
@@ -203,7 +201,7 @@
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
             // This is a form button so remember that it triggers the form's on:submit
-            renameStep(index, name)
+            renameStep(hash, name)
           }}>Done</button
         >
 

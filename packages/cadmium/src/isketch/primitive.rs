@@ -10,12 +10,13 @@ use tsify_next::Tsify;
 
 use crate::feature::point::Point3;
 use crate::message::MessageHandler;
-use crate::{archetypes, interop, IDType};
+use crate::step::StepResult;
+use crate::{archetypes, IDType};
 
 use super::ISketch;
 
 #[message(ISketch, rename_parent = "Sketch")]
-pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<(IDType, StepResult)>> {
     let point = archetypes::Point2 {
         x,
         y,
@@ -35,7 +36,7 @@ pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<(IDType, in
     self.points_3d
         .insert(point_id, Point3::from_plane_point(&plane, &iso_point));
 
-    Ok(Some((point_id, interop::Node::Primitive(point_wrapped))))
+    Ok(Some((point_id, StepResult::Primitive(point_wrapped))))
 }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
@@ -53,7 +54,7 @@ impl MessageHandler for AddArc {
     fn handle_message(
         &self,
         sketch_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -79,7 +80,7 @@ impl MessageHandler for AddArc {
             start_angle: self.start_angle,
             end_angle: self.end_angle,
         };
-        let arc_wrapped = interop::Node::Primitive(Rc::new(RefCell::new(
+        let arc_wrapped = StepResult::Primitive(Rc::new(RefCell::new(
             archetypes::WrappedPrimitive::Arc2(arc),
         )));
         // TODO: link
@@ -101,7 +102,7 @@ impl MessageHandler for AddCircle {
     fn handle_message(
         &self,
         sketch_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -120,7 +121,7 @@ impl MessageHandler for AddCircle {
             center: self.center,
             radius: self.radius,
         };
-        let circle_wrapped = interop::Node::Primitive(Rc::new(RefCell::new(
+        let circle_wrapped = StepResult::Primitive(Rc::new(RefCell::new(
             archetypes::WrappedPrimitive::Circle2(circle),
         )));
         // TODO: link
@@ -142,7 +143,7 @@ impl MessageHandler for AddLine {
     fn handle_message(
         &self,
         sketch_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -168,7 +169,7 @@ impl MessageHandler for AddLine {
             start: self.start,
             end: self.end,
         };
-        let line_wrapped = interop::Node::Primitive(Rc::new(RefCell::new(
+        let line_wrapped = StepResult::Primitive(Rc::new(RefCell::new(
             archetypes::WrappedPrimitive::Line2(line),
         )));
         // TODO: link
@@ -189,7 +190,7 @@ impl MessageHandler for DeletePrimitive {
     fn handle_message(
         &self,
         sketch_ref: Rc<RefCell<ISketch>>,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 

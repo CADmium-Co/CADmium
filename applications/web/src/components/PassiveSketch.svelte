@@ -163,17 +163,11 @@
 
     {#each history as step}
       {#if isSketchPointStep(step)}
-        <Point2D
-          x={step.interop_node.Point2.x}
-          y={step.interop_node.Point2.y}
-          hidden={step.interop_node.Point2.hidden}
-          id={`${step.id}`}
-          {collisionLineMaterial}
-        />
+        <Point2D x={step.result.Point2.x} y={step.result.Point2.y} hidden={step.result.Point2.hidden} id={`${step.id}`} {collisionLineMaterial} />
       {:else if isSketchCircleStep(step)}
         <Circle
-          center={pointsById[step.interop_node.Circle2.center]}
-          radius={step.interop_node.Circle2.radius}
+          center={pointsById[step.result.Circle2.center]}
+          radius={step.result.Circle2.radius}
           id={`${step.id}`}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -185,7 +179,7 @@
       {:else if isSketchArcStep(step)}
         <!-- TODO: Use start & end angle instead of points -->
         <Arc
-          center={pointsById[step.interop_node.Arc2.center]}
+          center={pointsById[step.result.Arc2.center]}
           start={pointsById[0]}
           end={pointsById[1]}
           id={`${step.id}`}
@@ -198,8 +192,8 @@
         />
       {:else if isSketchLineStep(step)}
         <Line
-          start={pointsById[step.interop_node.Line2.start]}
-          end={pointsById[step.interop_node.Line2.end]}
+          start={pointsById[step.result.Line2.start]}
+          end={pointsById[step.result.Line2.end]}
           id={`${step.id}`}
           {solidLineMaterial}
           {solidHoveredMaterial}

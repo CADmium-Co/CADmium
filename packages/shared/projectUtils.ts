@@ -44,9 +44,9 @@ export function isPoint(node: Node): node is Node & Point3 {
 export function isPlane(node: Node): node is Node & Plane {
   return "Plane" in node
 }
-export type SketchStep = Step & {interop_node: ISketch, data: cad.WorkbenchSketchAdd }
+export type SketchStep = Step & {result: ISketch, data: cad.WorkbenchSketchAdd }
 export function isSketchStep(step: Step): step is SketchStep {
-  return "WorkbenchSketchAdd" in step.data && "Sketch" in step.interop_node!
+  return "WorkbenchSketchAdd" in step.data && "Sketch" in step.result
 }
 export function isSolid(node: Node): node is Node & Solid[] {
   return "Solid" in node

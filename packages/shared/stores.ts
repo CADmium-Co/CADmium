@@ -18,8 +18,8 @@ export const workbenchIsStale = writable(false)
 export const featureIndex = writable<number>(1000)
 export const extrusionFeatures = writable<Entity[]>([])
 
-export const hiddenSketches = writable<string[]>([])
-export const sketchBeingEdited = writable("")
+export const hiddenSketches = writable<number[]>([])
+export const sketchBeingEdited = writable(-1)
 export const sketchTool = writable("")
 
 // could be looking for 'face' or 'plane' or other things

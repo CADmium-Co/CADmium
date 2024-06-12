@@ -11,8 +11,9 @@ use crate::archetypes::Vector3;
 use crate::isketch::face::{FaceSelector, Selector};
 use crate::isketch::ISketch;
 use crate::message::{Identifiable, MessageHandler};
+use crate::step::StepResult;
 use crate::workbench::Workbench;
-use crate::{interop, IDType};
+use crate::IDType;
 
 use super::get_isoface_wires;
 use super::{Feature, SolidLike};
@@ -138,7 +139,7 @@ impl MessageHandler for Add {
     fn handle_message(
         &self,
         workbench_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let sketch = <Rc<RefCell<ISketch>>>::from_parent_id(&workbench_ref, self.sketch_id)?;
         let mut workbench = workbench_ref.borrow_mut();
 
@@ -157,7 +158,7 @@ impl MessageHandler for Add {
         workbench.features_next_id += 1;
         let id = workbench.features_next_id - 1;
 
-        Ok(Some((id, interop::Node::Solid(extrusion.to_solids()?))))
+        Ok(Some((id, StepResult::Solid(extrusion.to_solids()?))))
     }
 }
 

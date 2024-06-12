@@ -125,33 +125,33 @@
 <!-- <T.AmbientLight intensity={0.6} /> -->
 
 <Environment path="{base}/envmap/hdr/" files="kloofendal_28d_misty_puresky_1k.hdr" isBackground={false} format="hdr" />
-{#each history as step, stepIdx}
+{#each history as step}
   {#if isPointStep(step)}
     <Point3D
-      id={`${stepIdx}`}
-      x={step.interop_node.Point.x}
-      y={step.interop_node.Point.y}
-      z={step.interop_node.Point.z}
-      hidden={step.interop_node.Point.hidden}
+      id={`${step.hash}`}
+      x={step.result.Point.x}
+      y={step.result.Point.y}
+      z={step.result.Point.z}
+      hidden={step.result.Point.hidden}
       {collisionLineMaterial}
     />
   {:else if isPlaneStep(step)}
     <Plane
       name={step.name}
-      id={`${stepIdx}`}
+      id={`${step.hash}`}
       height={100}
       width={100}
-      origin={step.interop_node.Plane.origin}
-      primary={step.interop_node.Plane.primary}
-      secondary={step.interop_node.Plane.secondary}
-      tertiary={step.interop_node.Plane.tertiary}
+      origin={step.result.Plane.origin}
+      primary={step.result.Plane.primary}
+      secondary={step.result.Plane.secondary}
+      tertiary={step.result.Plane.tertiary}
     />
   {:else if isSketchStep(step)}
     <Sketch
-      uniqueId={`${stepIdx}`}
+      uniqueId={`${step.hash}`}
       name={step.name}
-      sketch={step.interop_node.Sketch}
-      editing={$sketchBeingEdited === `${stepIdx}`}
+      sketch={step.result.Sketch.sketch}
+      editing={$sketchBeingEdited === step.hash}
       {solidLineMaterial}
       {solidHoveredMaterial}
       {solidSelectedMaterial}
@@ -160,7 +160,7 @@
       {collisionLineMaterial}
     />
   {:else if isSolidStep(step)}
-    {#each step.interop_node.Solid as solid}
+    {#each step.result.Solid as solid}
       <Solid
         name={step.name}
         indices={solid.indices}

@@ -329,7 +329,7 @@ pub mod tests {
         let new_name = "New Extrusion Name".to_string();
         let target = workbench.history.last().unwrap();
 
-        step::Rename {
+        step::actions::Rename {
             new_name: new_name.clone(),
         }
         .handle_message(target.clone())

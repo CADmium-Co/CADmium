@@ -6,9 +6,20 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use xxhash_rust::xxh3::xxh3_64;
 
-use crate::message::{Identifiable, Message, MessageHandler};
+use crate::message::{Identifiable, Message};
 use crate::workbench::Workbench;
-use crate::{interop, IDType};
+use crate::IDType;
+
+pub mod actions;
+pub mod result;
+
+pub use result::StepResult;
+
+#[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(transparent)]
+#[repr(transparent)]
+pub struct StepHash(pub u64);
 
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -17,18 +28,18 @@ pub struct Step {
     pub name: String,
     pub suppressed: bool,
     pub data: Message,
-    pub interop_node: Option<interop::node::Node>,
+    pub result: StepResult,
 }
 
 impl Step {
-    pub fn new(data: Message, interop_node: Option<interop::Node>) -> Self {
+    pub fn new(data: Message, result: StepResult) -> Self {
         let hash = xxh3_64(serde_json::to_string(&data).unwrap().as_bytes());
         Self {
             hash,
             name: format!("{}-{}", data, hash),
             suppressed: false,
             data,
-            interop_node,
+            result: result,
         }
     }
 
@@ -56,41 +67,5 @@ impl Identifiable for Rc<RefCell<Step>> {
                 id
             ))?
             .clone())
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(from_wasm_abi, into_wasm_abi)]
-pub struct Rename {
-    pub new_name: String,
-}
-
-impl MessageHandler for Rename {
-    type Parent = Rc<RefCell<Step>>;
-    fn handle_message(
-        &self,
-        step_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
-        let mut step = step_ref.borrow_mut();
-        step.name = self.new_name.clone();
-        Ok(None)
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(from_wasm_abi, into_wasm_abi)]
-pub struct Delete {
-    pub step_id: IDType,
-}
-
-impl MessageHandler for Delete {
-    type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(
-        &self,
-        workbench_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
-        let mut workbench = workbench_ref.borrow_mut();
-        workbench.history.remove(self.step_id as usize);
-        Ok(None)
     }
 }

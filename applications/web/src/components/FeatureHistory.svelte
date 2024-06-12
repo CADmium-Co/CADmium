@@ -55,18 +55,18 @@
 <div class="flex flex-col select-none dark:text-gray-300">
   <div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
     <div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
-    {#each history as step}
+    {#each history as step, featureIndex}
       <div>
         {#if isPointStep(step)}
-          <PointFeature name={step.name} index={step.id} />
+          <PointFeature name={step.name} index={featureIndex} />
         {:else if isPlaneStep(step)}
-          <PlaneFeature name={step.name} index={step.id} plane={step.interop_node.Plane} {setCameraFocus} />
+          <PlaneFeature name={step.name} index={featureIndex} plane={step.result.Plane} {setCameraFocus} />
         {:else if isSketchStep(step)}
-          <SketchFeature name={step.name} index={step.id} id={`${step.id}`} plane_desc={step.data.WorkbenchSketchAdd.plane_description} />
+          <SketchFeature name={step.name} index={featureIndex} hash={step.hash} plane_desc={step.data.WorkbenchSketchAdd.plane_description} />
         {:else if isExtrusionStep(step)}
-          <ExtrusionFeature name={step.name} index={step.id} data={step.data} id={`${step.id}`} />
+          <ExtrusionFeature name={step.name} index={featureIndex} hash={step.hash} data={step.data} />
         {:else}
-          TODO: {step.name} {step.interop_node}
+          TODO: {step.name} {step.result}
         {/if}
       </div>
     {/each}

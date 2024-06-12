@@ -27,8 +27,8 @@ pub enum Message {
 
     FeatureExtrusionAdd(IDWrap<crate::feature::extrusion::Add>),
 
-    StepRename(IDWrap<IDWrap<crate::step::Rename>>),
-    StepDelete(IDWrap<crate::step::Delete>),
+    StepRename(IDWrap<IDWrap<crate::step::actions::Rename>>),
+    StepDelete(IDWrap<crate::step::actions::Delete>),
 }
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]

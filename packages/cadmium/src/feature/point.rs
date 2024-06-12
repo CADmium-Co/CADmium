@@ -104,8 +104,9 @@ impl PartialEq for Point3 {
 }
 
 use crate::message::{Identifiable, MessageHandler};
+use crate::step::StepResult;
 use crate::workbench::Workbench;
-use crate::{interop, IDType};
+use crate::IDType;
 
 impl Identifiable for Rc<RefCell<Point3>> {
     type Parent = Rc<RefCell<Workbench>>;
@@ -121,10 +122,7 @@ impl Identifiable for Rc<RefCell<Point3>> {
             ))?
             .clone();
 
-        let interop::Node::Point(point) = step.borrow().interop_node.clone().ok_or(
-            anyhow::anyhow!("No interop node found for step with hash {}", id),
-        )?
-        else {
+        let StepResult::Point(point) = step.borrow().result.clone() else {
             return Err(anyhow::anyhow!("The step with hash {} is not a point", id));
         };
 
@@ -145,7 +143,7 @@ impl MessageHandler for WorkbenchPointUpdate {
     fn handle_message(
         &self,
         point_ref: Rc<RefCell<Point3>>,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut point = point_ref.borrow_mut();
         point.x = self.x;
         point.y = self.y;

@@ -8,7 +8,8 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
 use crate::message::MessageHandler;
-use crate::{interop, IDType};
+use crate::step::StepResult;
+use crate::IDType;
 
 use super::compound::{Compound, CompoundLike};
 use super::ISketch;
@@ -76,7 +77,7 @@ impl MessageHandler for Add {
     fn handle_message(
         &self,
         sketch_ref: Rc<RefCell<ISketch>>,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut isketch = sketch_ref.borrow_mut();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -102,6 +103,6 @@ impl MessageHandler for Add {
         isketch.compounds.insert(rectangle_id, compound.clone());
         isketch.compounds_next_id += 1;
 
-        Ok(Some((rectangle_id, interop::Node::Compound(compound))))
+        Ok(Some((rectangle_id, StepResult::Compound(compound))))
     }
 }

@@ -13,8 +13,9 @@ use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::feature::point::Point3;
 use crate::message::Identifiable;
+use crate::step::StepResult;
 use crate::workbench::Workbench;
-use crate::{interop, IDType};
+use crate::IDType;
 
 pub mod compound;
 pub mod compound_rectangle;
@@ -155,10 +156,7 @@ impl Identifiable for Rc<RefCell<ISketch>> {
             ))?
             .clone();
 
-        let interop::Node::Sketch(sketch, _) = step.borrow().interop_node.clone().ok_or(
-            anyhow::anyhow!("No interop node found for step with hash {}", id),
-        )?
-        else {
+        let StepResult::Sketch { sketch, faces: _ } = step.borrow().result.clone() else {
             return Err(anyhow::anyhow!("The step with hash {} is not a sketch", id));
         };
 

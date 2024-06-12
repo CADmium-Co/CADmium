@@ -9,8 +9,8 @@ use crate::feature::point::Point3;
 use crate::feature::solid::Solid;
 use crate::feature::Feature;
 use crate::isketch::ISketch;
-use crate::step::Step;
-use crate::{interop, IDType};
+use crate::step::{Step, StepResult};
+use crate::IDType;
 
 use crate::message::*;
 
@@ -79,7 +79,7 @@ impl Workbench {
             .cloned()
     }
 
-    pub fn add_message_step(&mut self, message: &Message, node: Option<interop::Node>) {
+    pub fn add_message_step(&mut self, message: &Message, node: StepResult) {
         self.history
             .push(Rc::new(RefCell::new(Step::new(message.clone(), node))));
     }
@@ -137,14 +137,14 @@ impl MessageHandler for AddPoint {
     fn handle_message(
         &self,
         sketch_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut wb = sketch_ref.borrow_mut();
 
         let new_id = wb.points_next_id;
         let point = Rc::new(RefCell::new(Point3::new(self.x, self.y, self.z)));
         wb.points.insert(new_id, point.clone());
         wb.points_next_id += 1;
-        Ok(Some((new_id, interop::Node::Point(point))))
+        Ok(Some((new_id, StepResult::Point(point))))
     }
 }
 
@@ -161,14 +161,14 @@ impl MessageHandler for AddPlane {
     fn handle_message(
         &self,
         sketch_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut wb = sketch_ref.borrow_mut();
 
         let new_id = wb.planes_next_id;
         let plane = Rc::new(RefCell::new(self.plane.clone()));
         wb.planes.insert(new_id, plane.clone());
         wb.planes_next_id += 1;
-        Ok(Some((new_id, interop::Node::Plane(plane))))
+        Ok(Some((new_id, StepResult::Plane(plane))))
     }
 }
 
@@ -183,7 +183,7 @@ impl MessageHandler for AddSketch {
     fn handle_message(
         &self,
         workbench_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut wb = workbench_ref.borrow_mut();
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
         let faces = sketch.faces();
@@ -194,7 +194,10 @@ impl MessageHandler for AddSketch {
         wb.sketches_next_id += 1;
         Ok(Some((
             new_id,
-            interop::Node::Sketch(sketch_cell.clone(), faces),
+            StepResult::Sketch {
+                sketch: sketch_cell.clone(),
+                faces,
+            },
         )))
     }
 }
@@ -210,7 +213,7 @@ impl MessageHandler for WorkbenchRename {
     fn handle_message(
         &self,
         workbench_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut workbench = workbench_ref.borrow_mut();
         workbench.name = self.new_name.clone();
         Ok(None)
@@ -229,7 +232,7 @@ impl MessageHandler for SetSketchPlane {
     fn handle_message(
         &self,
         workbench_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let wb = workbench_ref.borrow();
 
         let plane = match self.plane_description {

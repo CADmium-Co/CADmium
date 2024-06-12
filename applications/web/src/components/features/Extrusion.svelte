@@ -10,7 +10,7 @@
   // @ts-ignore
   const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, id: string, data: FeatureExtrusionAdd
+  export let name: string, index: number, hash: number, data: FeatureExtrusionAdd
 
   // $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
   // $: data, log("[props]", "typeof id:", typeof id, "id:", id)
@@ -40,13 +40,13 @@
 
   function sendUpdate(specificFaceIds?: string[]) {
     if (specificFaceIds) {
-      updateExtrusion(id, data.sketch_id, length, specificFaceIds)
+      updateExtrusion(hash, data.sketch_id, length, specificFaceIds)
     } else {
       const faceIdsFromSelection = $currentlySelected
         .filter(e => e.type === "face")
         .map(e => e.id)
         .sort()
-      updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
+      updateExtrusion(hash, data.sketch_id, length, faceIdsFromSelection)
     }
   }
 
