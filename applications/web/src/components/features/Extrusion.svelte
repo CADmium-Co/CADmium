@@ -4,12 +4,13 @@
   import {arraysEqual, renameStep, updateExtrusion} from "shared/projectUtils"
   import {selectingFor, workbenchIsStale, featureIndex, currentlySelected, hiddenSketches} from "shared/stores"
   import X from "phosphor-svelte/lib/X"
-  import type {ExtrusionData} from "shared/types"
   import {base} from "../../base"
+  import type {FeatureExtrusionAdd} from "shared/cadmium-api"
 
+  // @ts-ignore
   const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
+  export let name: string, index: number, id: string, data: FeatureExtrusionAdd
 
   // $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
   // $: data, log("[props]", "typeof id:", typeof id, "id:", id)

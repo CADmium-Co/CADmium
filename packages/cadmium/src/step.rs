@@ -22,7 +22,7 @@ pub struct Step {
 
 impl Step {
     pub fn new(id: IDType, data: Message, interop_node: Option<interop::Node>) -> Self {
-        Step {
+        Self {
             id,
             name: format!("{}-{}", data, id),
             suppressed: false,
@@ -42,7 +42,6 @@ impl Display for Step {
     }
 }
 
-
 impl Identifiable for Rc<RefCell<Step>> {
     type Parent = Rc<RefCell<Workbench>>;
     const ID_NAME: &'static str = "step_id";
@@ -50,8 +49,12 @@ impl Identifiable for Rc<RefCell<Step>> {
     fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
         Ok(parent
             .borrow()
-            .history.get(id as usize)
-            .ok_or(anyhow::anyhow!("No step with ID {} exists in the current workbench", id))?
+            .history
+            .get(id as usize)
+            .ok_or(anyhow::anyhow!(
+                "No step with ID {} exists in the current workbench",
+                id
+            ))?
             .clone())
     }
 }
@@ -64,7 +67,10 @@ pub struct Rename {
 
 impl MessageHandler for Rename {
     type Parent = Rc<RefCell<Step>>;
-    fn handle_message(&self, step_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        step_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut step = step_ref.borrow_mut();
         step.name = self.new_name.clone();
         Ok(None)
@@ -79,7 +85,10 @@ pub struct Delete {
 
 impl MessageHandler for Delete {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        workbench_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut workbench = workbench_ref.borrow_mut();
         workbench.history.remove(self.step_id as usize);
         Ok(None)
