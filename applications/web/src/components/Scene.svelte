@@ -4,7 +4,7 @@
   import {Vector2, Vector3, type Vector3Like} from "three"
   import {interactivity} from "@threlte/extras"
   import {LineMaterial} from "three/addons/lines/LineMaterial.js"
-  import { workbench, workbenchSolids, sketchBeingEdited } from "shared/stores"
+  import {workbench, workbenchSolids, sketchBeingEdited} from "shared/stores"
   import Point3D from "./Point3D.svelte"
   import Plane from "./Plane.svelte"
   import Solid from "./Solid.svelte"

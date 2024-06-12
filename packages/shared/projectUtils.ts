@@ -1,30 +1,11 @@
 import * as cad from "./cadmium-api"
-(window as any).cad = cad
+;(window as any).cad = cad
 import type {Message} from "./cadmium-api"
 
-import {
-  workbenchIsStale,
-  workbenchIndex,
-  workbench,
-  project,
-  featureIndex,
-  wasmProject,
-  projectIsStale,
-  messageHistory,
-  workbenchSolids,
-} from "./stores"
+import {workbenchIsStale, workbenchIndex, workbench, project, featureIndex, wasmProject, projectIsStale, messageHistory, workbenchSolids} from "./stores"
 import {get} from "svelte/store"
 import {Vector2, Vector3, type Vector2Like} from "three"
-import type {
-  Entity,
-  ExtrusionHistoryStep,
-  HistoryStep,
-  MessageHistory,
-  PlaneHistoryStep,
-  PointHistoryStep,
-  SketchHistoryStep,
-  WithTarget,
-} from "./types"
+import type {Entity, ExtrusionHistoryStep, HistoryStep, MessageHistory, PlaneHistoryStep, PointHistoryStep, SketchHistoryStep, WithTarget} from "./types"
 import type {Primitive, Workbench, MessageResult, IDType, Solid} from "cadmium"
 import {isMessage} from "./typeGuards"
 
@@ -34,21 +15,21 @@ const log = (function () { const context = "[projectUtils.ts]"; const color = "a
 export const CIRCLE_TOLERANCE = 0.05
 
 function createWrapperFunctions(originalNamespace: any, newNamespace: any) {
-  Object.keys(originalNamespace).forEach((funcName) => {
-    const originalFunction = originalNamespace[funcName];
-    if (typeof originalFunction === 'function') {
+  Object.keys(originalNamespace).forEach(funcName => {
+    const originalFunction = originalNamespace[funcName]
+    if (typeof originalFunction === "function") {
       newNamespace[funcName] = (...args: any[]) => {
-        const workbench_id = get(workbenchIndex);
-        return originalFunction(workbench_id, ...args);
-      };
+        const workbench_id = get(workbenchIndex)
+        return originalFunction(workbench_id, ...args)
+      }
     }
-  });
+  })
 }
 
 export namespace bench {
-    createWrapperFunctions(cad, bench);
+  createWrapperFunctions(cad, bench)
 }
-(window as any).bench = bench
+;(window as any).bench = bench
 
 export function getWorkbenchSolids(): Solid[] {
   let wp = get(wasmProject)
@@ -121,12 +102,12 @@ export function updateExtrusion(extrusionId: number, sketchId: number, length: n
 }
 
 export function setSketchPlane(sketchId: number, planeId: number) {
-  return cad.workbenchSketchSetPlane(get(workbenchIndex), sketchId, { PlaneId: planeId })
+  return cad.workbenchSketchSetPlane(get(workbenchIndex), sketchId, {PlaneId: planeId})
 }
 
 export function newSketchOnPlane() {
   // TODO: Why are we defaulting to plane 0?
-  cad.workbenchSketchAdd(get(workbenchIndex), { PlaneId: 0 })
+  cad.workbenchSketchAdd(get(workbenchIndex), {PlaneId: 0})
 }
 
 export function newExtrusion() {
@@ -139,7 +120,7 @@ export function newExtrusion() {
     console.warn("[newExtrusion] step:", step)
     if (step.data.type === "Sketch") {
       // TODO: This doesn't work, we should retrieve the sketch id
-      sketchId = step.id;
+      sketchId = step.id
     }
   }
 
@@ -303,9 +284,9 @@ export function flatten(points: Vector3[]): number[] {
 
 function isStringInt(s: string, errorCallback: {(id: any): void; (arg0: string): void}): boolean {
   if (typeof s !== "string") console.error("[proectUtils.ts] [isStringInt]", s, "is not a string:", typeof s)
-    const isInt = !Number.isNaN(parseInt(s, 10))
+  const isInt = !Number.isNaN(parseInt(s, 10))
   if (!isInt) errorCallback(s)
-    return isInt
+  return isInt
 }
 
 function reduceToInts(data: string[], errorCallback: (id: any) => void): number[] {
@@ -331,7 +312,7 @@ export function checkWasmMessage(message: Message, abort = true, logError = true
   function logOrAbort() {
     const error = `[${key}] message failed typecheck:`
     if (logError) console.error("[projectUtils.ts]", error, message)
-      // if (abort && isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
+    // if (abort && isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
     return false
   }
 

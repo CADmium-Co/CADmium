@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { workbench } from "shared/stores"
+  import {workbench} from "shared/stores"
   import PointFeature from "./features/Point.svelte"
   import PlaneFeature from "./features/Plane.svelte"
   import SketchFeature from "./features/Sketch.svelte"
   import ExtrusionFeature from "./features/Extrusion.svelte"
   import SolidItem from "./SolidItem.svelte"
-  import { isPoint, isPlane, isExtrusion, isSketch } from "shared/projectUtils"
+  import {isPoint, isPlane, isExtrusion, isSketch} from "shared/projectUtils"
   import type {SetCameraFocus} from "shared/types"
 
   const log = (function () { const context = "[FeatureHistory.svelte]"; const color="pink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
