@@ -1,4 +1,4 @@
-import { Arc2, Circle2, Compound, ISketch, Line2, Node, Plane, Point2, Point3, Primitive, Solid, Step } from "cadmium"
+import { Arc2, Circle2, Compound, IDType, ISketch, Line2, Node, Plane, Point2, Point3, Primitive, Solid, Step } from "cadmium"
 import { FeatureExtrusionAdd, SketchAddArc, SketchAddCircle, SketchAddLine, SketchAddPoint, SketchAddRectangle, WorkbenchPlaneAdd, WorkbenchPointAdd, WorkbenchSketchAdd } from "./cadmium-api"
 
 // --- Workbench operations ---

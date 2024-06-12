@@ -62,7 +62,7 @@
         {:else if isPlaneStep(step)}
           <PlaneFeature name={step.name} index={stepIdx} plane={step.interop_node} {setCameraFocus} />
         {:else if isSketchStep(step)}
-          <SketchFeature name={step.name} index={stepIdx} id={`${step.id}`} plane_id={step.data.plane_description.PlaneId} />
+          <SketchFeature name={step.name} index={stepIdx} plane_desc={step.data.plane_description} />
         {:else if isExtrusionStep(step)}
           <ExtrusionFeature name={step.name} index={stepIdx} data={step.data} id={`${step.id}`} />
         {:else}
@@ -77,8 +77,10 @@
     <div class="font-bold text-sm px-2 py-2">
       Solids ({solids ? Object.keys(solids).length : 0})
     </div>
-    {#each Object.keys(solids) as name (name)}
-      <SolidItem {name} />
+    {#each history as step, stepIdx}
+      {#if isSolidStep(step)}
+        <SolidItem name={step.name} />
+      {/if}
     {/each}
   </div>
 </div>
