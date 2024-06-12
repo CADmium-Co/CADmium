@@ -6,10 +6,6 @@ use serde::Deserialize;
 use serde::Serialize;
 use tsify_next::Tsify;
 
-use crate::message::Identifiable;
-use crate::workbench::Workbench;
-use crate::IDType;
-
 pub mod extrusion;
 pub mod helpers;
 pub mod point;
@@ -26,9 +22,10 @@ pub trait SolidLike: Debug {
     fn to_solids(&self) -> anyhow::Result<Vec<Solid>> {
         let truck_solids = self.get_truck_solids()?;
 
-        Ok(truck_solids.iter().map(|truck_solid| {
-            Solid::from_truck_solid("".to_owned(), truck_solid.clone())
-        }).collect())
+        Ok(truck_solids
+            .iter()
+            .map(|truck_solid| Solid::from_truck_solid("".to_owned(), truck_solid.clone()))
+            .collect())
     }
 }
 
@@ -44,14 +41,5 @@ impl Feature {
         match self {
             Feature::Extrusion(extrusion) => extrusion,
         }
-    }
-}
-
-impl Identifiable for Rc<RefCell<Feature>> {
-    type Parent = Rc<RefCell<Workbench>>;
-    const ID_NAME: &'static str = "feature_id";
-
-    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
-        Ok(parent.borrow().features.get(&id).ok_or(anyhow::anyhow!("No feature with ID {} was found", id))?.clone())
     }
 }

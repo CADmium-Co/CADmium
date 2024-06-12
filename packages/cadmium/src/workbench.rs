@@ -80,13 +80,18 @@ impl Workbench {
     }
 
     pub fn add_message_step(&mut self, message: &Message, node: Option<interop::Node>) {
-        self.history.push(Rc::new(RefCell::new(Step::new(
-            self.history.len() as IDType,
-            message.clone(),
-            node,
-        ))));
+        self.history
+            .push(Rc::new(RefCell::new(Step::new(message.clone(), node))));
     }
 
+    pub fn get_step_by_hash(&self, hash: IDType) -> Option<Rc<RefCell<Step>>> {
+        self.history
+            .iter()
+            .find(|step| step.borrow().hash() == hash)
+            .cloned()
+    }
+
+    // TODO: Remove
     pub fn get_solids(&self) -> Vec<Solid> {
         self.features
             .values()
@@ -181,12 +186,16 @@ impl MessageHandler for AddSketch {
     ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = workbench_ref.borrow_mut();
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
+        let faces = sketch.faces();
 
         let new_id = wb.sketches_next_id;
         let sketch_cell = Rc::new(RefCell::new(sketch));
         wb.sketches.insert(new_id, sketch_cell.clone());
         wb.sketches_next_id += 1;
-        Ok(Some((new_id, interop::Node::Sketch(sketch_cell))))
+        Ok(Some((
+            new_id,
+            interop::Node::Sketch(sketch_cell.clone(), faces),
+        )))
     }
 }
 

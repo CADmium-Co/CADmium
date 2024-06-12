@@ -4,7 +4,7 @@ use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
-use wasm_bindgen::prelude::*;
+use xxhash_rust::xxh3::xxh3_64;
 
 use crate::message::{Identifiable, Message, MessageHandler};
 use crate::workbench::Workbench;
@@ -13,7 +13,7 @@ use crate::{interop, IDType};
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
-    pub id: IDType,
+    pub hash: IDType,
     pub name: String,
     pub suppressed: bool,
     pub data: Message,
@@ -21,24 +21,25 @@ pub struct Step {
 }
 
 impl Step {
-    pub fn new(id: IDType, data: Message, interop_node: Option<interop::Node>) -> Self {
+    pub fn new(data: Message, interop_node: Option<interop::Node>) -> Self {
+        let hash = xxh3_64(serde_json::to_string(&data).unwrap().as_bytes());
         Self {
-            id,
-            name: format!("{}-{}", data, id),
+            hash,
+            name: format!("{}-{}", data, hash),
             suppressed: false,
             data,
             interop_node,
         }
     }
 
-    pub fn unique_id(&self) -> String {
-        format!("{}", self)
+    pub fn hash(&self) -> IDType {
+        self.hash as IDType
     }
 }
 
 impl Display for Step {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}-{}", self.data, self.id)
+        write!(f, "{}-{}", self.data, self.hash)
     }
 }
 
@@ -49,10 +50,9 @@ impl Identifiable for Rc<RefCell<Step>> {
     fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
         Ok(parent
             .borrow()
-            .history
-            .get(id as usize)
+            .get_step_by_hash(id)
             .ok_or(anyhow::anyhow!(
-                "No step with ID {} exists in the current workbench",
+                "No step with hash {} exists in the current workbench",
                 id
             ))?
             .clone())

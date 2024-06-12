@@ -49,17 +49,19 @@ where
         &self,
         project: &mut crate::project::Project,
     ) -> anyhow::Result<Option<IDType>> {
-        let wb = T::Parent::from_parent_id(project, self.id)?;
-        let result = self.inner.handle_message(wb.clone())?;
-        let (id, node) = if let Some((id, node)) = result {
+        let wb_cell = T::Parent::from_parent_id(project, self.id)?;
+        let result = self.inner.handle_message(wb_cell.clone())?;
+        let (_id, node) = if let Some((id, node)) = result {
             (Some(id), Some(node))
         } else {
             (None, None)
         };
 
-        wb.borrow_mut().add_message_step(&self.clone().into(), node);
+        let mut wb = wb_cell.borrow_mut();
+        wb.add_message_step(&self.clone().into(), node);
 
-        Ok(id)
+        // Return the step ID (hash) instead of the message handler returned ID
+        Ok(wb.history.last().map(|step| step.borrow().hash()).clone())
     }
 }
 

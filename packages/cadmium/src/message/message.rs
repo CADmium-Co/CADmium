@@ -4,8 +4,8 @@ use tsify_next::Tsify;
 
 use crate::IDType;
 
-use super::ProjectMessageHandler;
 use super::idwrap::IDWrap;
+use super::ProjectMessageHandler;
 
 #[derive(MessageEnum, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
@@ -23,12 +23,9 @@ pub enum Message {
     SketchAddCircle(IDWrap<IDWrap<crate::isketch::primitive::AddCircle>>),
     SketchAddLine(IDWrap<IDWrap<crate::isketch::primitive::AddLine>>),
     SketchAddRectangle(IDWrap<IDWrap<crate::isketch::compound_rectangle::Add>>),
-    SketchDeleteCompound(IDWrap<IDWrap<crate::isketch::compound::DeleteCompound>>),
     SketchDeletePrimitive(IDWrap<IDWrap<crate::isketch::primitive::DeletePrimitive>>),
 
     FeatureExtrusionAdd(IDWrap<crate::feature::extrusion::Add>),
-    FeatureExtrusionUpdateFaces(IDWrap<crate::feature::extrusion::UpdateFaces>),
-    FeatureExtrusionUpdateForm(IDWrap<IDWrap<crate::feature::extrusion::UpdateForm>>),
 
     StepRename(IDWrap<IDWrap<crate::step::Rename>>),
     StepDelete(IDWrap<crate::step::Delete>),
@@ -47,11 +44,15 @@ impl From<anyhow::Result<Option<IDType>>> for MessageResult {
             // TODO: The Success should be a stable enum
             Ok(msg) => Self {
                 success: true,
-                data: if let Some(id) = msg { id.to_string() } else { "null".to_string() }
+                data: if let Some(id) = msg {
+                    id.to_string()
+                } else {
+                    "null".to_string()
+                },
             },
             Err(e) => Self {
                 success: false,
-                data: e.backtrace().to_string()
+                data: e.backtrace().to_string(),
             },
         }
     }

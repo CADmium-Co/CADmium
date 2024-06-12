@@ -1,4 +1,4 @@
-use std::cell::{RefCell, RefMut};
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
@@ -10,7 +10,7 @@ use super::prelude::*;
 use crate::archetypes::Vector3;
 use crate::isketch::face::{FaceSelector, Selector};
 use crate::isketch::ISketch;
-use crate::message::MessageHandler;
+use crate::message::{Identifiable, MessageHandler};
 use crate::workbench::Workbench;
 use crate::{interop, IDType};
 
@@ -139,11 +139,11 @@ impl MessageHandler for Add {
         &self,
         workbench_ref: Self::Parent,
     ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+        let sketch = <Rc<RefCell<ISketch>>>::from_parent_id(&workbench_ref, self.sketch_id)?;
         let mut workbench = workbench_ref.borrow_mut();
-        let sketch = workbench.get_sketch_by_id(self.sketch_id)?;
 
         let extrusion = Extrusion::new(
-            vec![],
+            self.faces.clone(),
             sketch.clone(),
             self.length,
             self.offset,
@@ -156,79 +156,8 @@ impl MessageHandler for Add {
         workbench.features.insert(id, extrusion_cell);
         workbench.features_next_id += 1;
         let id = workbench.features_next_id - 1;
-        drop(workbench);
-
-        // We can't keep the workbench borrow during the UpdateFaces
-        // as it also needs a mutable borrow of the workbench
-        UpdateFaces {
-            extrusion_id: id,
-            sketch_id: self.sketch_id,
-            faces: self.faces.clone(),
-        }
-        .handle_message(workbench_ref.clone())?;
 
         Ok(Some((id, interop::Node::Solid(extrusion.to_solids()?))))
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(from_wasm_abi, into_wasm_abi)]
-pub struct UpdateFaces {
-    pub extrusion_id: IDType,
-    pub sketch_id: IDType,
-    pub faces: Vec<IDType>,
-}
-
-impl MessageHandler for UpdateFaces {
-    // Parent to workbench to add to solids and be able to reference the sketch
-    type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(
-        &self,
-        workbench_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
-        let workbench = workbench_ref.borrow_mut();
-        let feature_ref = workbench
-            .features
-            .get(&self.extrusion_id)
-            .ok_or(anyhow::anyhow!(
-                "No feature with ID {} was found",
-                self.extrusion_id
-            ))?;
-        let sketch_ref = workbench.get_sketch_by_id(self.sketch_id)?;
-        let mut extrusion: RefMut<'_, Extrusion> =
-            RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
-
-        extrusion.faces = Selector::from_face_ids(&sketch_ref.borrow(), self.faces.clone());
-
-        Ok(None)
-    }
-}
-
-#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
-#[tsify(from_wasm_abi, into_wasm_abi)]
-pub struct UpdateForm {
-    pub length: f64,
-    pub offset: f64,
-    pub direction: Direction,
-    pub mode: Mode,
-}
-
-impl MessageHandler for UpdateForm {
-    // Parent to workbench to add to solids and be able to reference the sketch
-    type Parent = Rc<RefCell<Feature>>;
-    fn handle_message(
-        &self,
-        feature_ref: Self::Parent,
-    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
-        let mut extrusion: RefMut<'_, Extrusion> =
-            RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
-
-        extrusion.length = self.length;
-        extrusion.offset = self.offset;
-        extrusion.direction = self.direction.clone();
-        extrusion.mode = self.mode.clone();
-
-        Ok(None)
     }
 }
 

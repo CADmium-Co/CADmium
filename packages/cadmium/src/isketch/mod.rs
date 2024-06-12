@@ -9,13 +9,12 @@ use isotope::sketch::Sketch;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
-
-use crate::IDType;
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::feature::point::Point3;
 use crate::message::Identifiable;
 use crate::workbench::Workbench;
+use crate::{interop, IDType};
 
 pub mod compound;
 pub mod compound_rectangle;
@@ -48,23 +47,38 @@ impl ISketch {
         };
 
         for (id, point) in real_sketch.sketch.borrow().get_all_points().iter() {
-            real_sketch.points_3d.insert(*id, Point3::from_plane_point(&plane.borrow().clone(), point));
+            real_sketch.points_3d.insert(
+                *id,
+                Point3::from_plane_point(&plane.borrow().clone(), point),
+            );
         }
 
         real_sketch
     }
 
-    pub fn try_from_plane_description(wb: &Workbench, plane_description: &PlaneDescription) -> anyhow::Result<Self> {
+    pub fn try_from_plane_description(
+        wb: &Workbench,
+        plane_description: &PlaneDescription,
+    ) -> anyhow::Result<Self> {
         let plane = match plane_description {
-            PlaneDescription::PlaneId(plane_id) =>
-                wb.planes.get(plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
-            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
-        }.clone();
+            PlaneDescription::PlaneId(plane_id) => wb
+                .planes
+                .get(plane_id)
+                .ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::SolidFace {
+                solid_id: _,
+                normal: _,
+            } => todo!("Implement SolidFace"),
+        }
+        .clone();
         Ok(Self::new(plane))
     }
 
     /// Helper function to go from an isotope point2D to a point_3D, as calculated during new
-    pub fn get_point_3d(&self, point: Rc<RefCell<ISOPoint2>>) -> Result<(u64, Point3), CADmiumError> {
+    pub fn get_point_3d(
+        &self,
+        point: Rc<RefCell<ISOPoint2>>,
+    ) -> Result<(u64, Point3), CADmiumError> {
         let cell = PrimitiveCell::Point2(point.clone());
         let point_id = self.sketch.borrow().get_primitive_id(&cell).unwrap();
 
@@ -92,28 +106,38 @@ impl ISketch {
     }
 
     pub fn get_face_ids(&self, ids: Vec<IDType>) -> Vec<Face> {
-        self.sketch.borrow().get_merged_faces().iter().enumerate().filter_map(|(id, f)| {
-            if ids.contains(&(id as IDType)) {
-                Some(f.clone())
-            } else {
-                None
-            }
-        }).collect()
-    }
-
-    pub fn find_point_ref(&self, x: f64, y: f64) -> Option<Rc<RefCell<ISOPoint2>>> {
-        self.sketch.borrow().primitives().iter().find_map(|(_, prim)| {
-            if let PrimitiveCell::Point2(point_ref) = prim {
-                let point = point_ref.borrow();
-                if (point.x() - x).abs() < 0.0001 && (point.y() - y).abs() < 0.0001 {
-                    Some(point_ref.clone())
+        self.sketch
+            .borrow()
+            .get_merged_faces()
+            .iter()
+            .enumerate()
+            .filter_map(|(id, f)| {
+                if ids.contains(&(id as IDType)) {
+                    Some(f.clone())
                 } else {
                     None
                 }
-            } else {
-                None
-            }
-        })
+            })
+            .collect()
+    }
+
+    pub fn find_point_ref(&self, x: f64, y: f64) -> Option<Rc<RefCell<ISOPoint2>>> {
+        self.sketch
+            .borrow()
+            .primitives()
+            .iter()
+            .find_map(|(_, prim)| {
+                if let PrimitiveCell::Point2(point_ref) = prim {
+                    let point = point_ref.borrow();
+                    if (point.x() - x).abs() < 0.0001 && (point.y() - y).abs() < 0.0001 {
+                        Some(point_ref.clone())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
     }
 }
 
@@ -122,6 +146,22 @@ impl Identifiable for Rc<RefCell<ISketch>> {
     const ID_NAME: &'static str = "sketch_id";
 
     fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
-        Ok(parent.borrow().sketches.get(&id).ok_or(anyhow::anyhow!(""))?.clone())
+        let step = parent
+            .borrow()
+            .get_step_by_hash(id)
+            .ok_or(anyhow::anyhow!(
+                "No step with hash {} exists in the current workbench",
+                id
+            ))?
+            .clone();
+
+        let interop::Node::Sketch(sketch, _) = step.borrow().interop_node.clone().ok_or(
+            anyhow::anyhow!("No interop node found for step with hash {}", id),
+        )?
+        else {
+            return Err(anyhow::anyhow!("The step with hash {} is not a sketch", id));
+        };
+
+        Ok(sketch)
     }
 }

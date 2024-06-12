@@ -112,12 +112,23 @@ impl Identifiable for Rc<RefCell<Point3>> {
     const ID_NAME: &'static str = "point_id";
 
     fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
-        Ok(parent
+        let step = parent
             .borrow()
-            .points
-            .get(&id)
-            .ok_or(anyhow::anyhow!(""))?
-            .clone())
+            .get_step_by_hash(id)
+            .ok_or(anyhow::anyhow!(
+                "No step with hash {} exists in the current workbench",
+                id
+            ))?
+            .clone();
+
+        let interop::Node::Point(point) = step.borrow().interop_node.clone().ok_or(
+            anyhow::anyhow!("No interop node found for step with hash {}", id),
+        )?
+        else {
+            return Err(anyhow::anyhow!("The step with hash {} is not a point", id));
+        };
+
+        Ok(point)
     }
 }
 

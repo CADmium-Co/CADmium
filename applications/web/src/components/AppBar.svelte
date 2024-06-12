@@ -13,6 +13,7 @@
   import {base} from "../base"
   import {renameProject} from "shared/projectUtils"
 
+  // @ts-ignore
   const log = (function () { const context = "[AppBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let project: Project
