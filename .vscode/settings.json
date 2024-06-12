@@ -7,5 +7,6 @@
 	"cSpell.words": [
 		"Threlte",
 		"wireframe"
-	]
+	],
+	"editor.formatOnSave": true
 }

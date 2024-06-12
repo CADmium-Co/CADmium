@@ -14,10 +14,14 @@ pub trait Identifiable: Sized {
 }
 
 pub trait ProjectMessageHandler: RefFromWasmAbi {
-    fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<IDType>>;
+    fn handle_project_message(
+        &self,
+        project: &mut crate::project::Project,
+    ) -> anyhow::Result<Option<IDType>>;
 }
 
 pub trait MessageHandler: Serialize + for<'de> Deserialize<'de> + RefFromWasmAbi {
     type Parent: Identifiable;
-    fn handle_message(&self, item: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>>;
+    fn handle_message(&self, item: Self::Parent)
+        -> anyhow::Result<Option<(IDType, interop::Node)>>;
 }

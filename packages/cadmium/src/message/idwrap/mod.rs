@@ -7,7 +7,7 @@ use tsify_next::Tsify;
 use wasm_bindgen::convert::RefFromWasmAbi;
 
 use crate::workbench::Workbench;
-use crate::IDType;
+use crate::{interop, IDType};
 
 mod de;
 mod ser;
@@ -23,10 +23,7 @@ pub struct IDWrap<T: Clone + Serialize + DeserializeOwned + RefFromWasmAbi> {
 
 impl<T: Clone + Serialize + DeserializeOwned + RefFromWasmAbi> IDWrap<T> {
     pub fn new(id: IDType, h: T) -> Self {
-        Self {
-            id,
-            inner: h,
-        }
+        Self { id, inner: h }
     }
 
     pub fn id(&self) -> IDType {
@@ -41,16 +38,23 @@ impl<T: Clone + Serialize + DeserializeOwned + RefFromWasmAbi> IDWrap<T> {
 // First level message handler
 impl<'a, T> ProjectMessageHandler for IDWrap<T>
 where
-    T: MessageHandler<Parent = Rc<RefCell<Workbench>>> + Clone + Serialize + DeserializeOwned + RefFromWasmAbi,
-    crate::message::message::Message: From<Self>
+    T: MessageHandler<Parent = Rc<RefCell<Workbench>>>
+        + Clone
+        + Serialize
+        + DeserializeOwned
+        + RefFromWasmAbi,
+    crate::message::message::Message: From<Self>,
 {
-    fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<IDType>> {
+    fn handle_project_message(
+        &self,
+        project: &mut crate::project::Project,
+    ) -> anyhow::Result<Option<IDType>> {
         let wb = T::Parent::from_parent_id(project, self.id)?;
         let result = self.inner.handle_message(wb.clone())?;
 
         wb.borrow_mut().add_message_step(&self.clone().into());
 
-        Ok(result)
+        Ok(result.map(|(id, _)| id))
     }
 }
 
@@ -62,7 +66,10 @@ where
     P: Identifiable,
 {
     type Parent = C::Parent;
-    fn handle_message(&self, parent: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(
+        &self,
+        parent: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let msg_parent = C::from_parent_id(&parent, self.id)?;
         self.inner.handle_message(msg_parent)
     }
