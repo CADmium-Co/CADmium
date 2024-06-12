@@ -6,9 +6,11 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
+use crate::archetypes::Plane;
 use crate::error::CADmiumError;
+use crate::message::idwrap::IDWrap;
 use crate::message::ProjectMessageHandler;
-use crate::workbench::Workbench;
+use crate::workbench::{AddPlane, AddPoint, Workbench};
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -32,10 +34,46 @@ impl Project {
             workbenches: vec![],
         };
 
-        let wb = Workbench::new("Workbench 1");
-        p.workbenches.push(Rc::new(RefCell::new(wb)));
+        p.add_workbench("Workbench 1");
 
         p
+    }
+
+    pub fn add_workbench(&mut self, name: &str) {
+        let wb = Workbench::new(name);
+        let wb_cell = Rc::new(RefCell::new(wb));
+        self.workbenches.push(wb_cell.clone());
+
+        IDWrap {
+            id: 0,
+            inner: AddPoint {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        }
+        .handle_project_message(self)
+        .unwrap()
+        .unwrap();
+
+        for plane_inst in [Plane::top(), Plane::front(), Plane::right()].iter() {
+            IDWrap {
+                id: 0,
+                inner: AddPlane {
+                    plane: plane_inst.clone(),
+                    width: 100.0,
+                    height: 100.0,
+                },
+            }
+            .handle_project_message(self)
+            .unwrap()
+            .unwrap();
+        }
+
+        wb_cell.borrow().history.get(0).unwrap().borrow_mut().name = "Origin".to_string();
+        wb_cell.borrow().history.get(1).unwrap().borrow_mut().name = "Top Plane".to_string();
+        wb_cell.borrow().history.get(2).unwrap().borrow_mut().name = "Front Plane".to_string();
+        wb_cell.borrow().history.get(3).unwrap().borrow_mut().name = "Right Plane".to_string();
     }
 
     pub fn json(&self) -> String {
@@ -72,14 +110,19 @@ impl Project {
 
     pub fn get_workbench_by_id(&self, id: u64) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
-            .get(id as usize).cloned()
+            .get(id as usize)
+            .cloned()
             .ok_or(CADmiumError::WorkbenchIDNotFound(id))
     }
 
-    pub fn get_workbench_by_name(&self, name: &str) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
+    pub fn get_workbench_by_name(
+        &self,
+        name: &str,
+    ) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
             .iter()
-            .find(|wb| wb.borrow().name == name).cloned()
+            .find(|wb| wb.borrow().name == name)
+            .cloned()
             .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
     }
 }
@@ -91,23 +134,25 @@ pub struct ProjectRename {
 }
 
 impl ProjectMessageHandler for ProjectRename {
-    fn handle_project_message(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<crate::IDType>> {
+    fn handle_project_message(
+        &self,
+        project: &mut crate::project::Project,
+    ) -> anyhow::Result<Option<crate::IDType>> {
         project.name = self.new_name.clone();
         Ok(None)
     }
 }
-
 
 #[cfg(test)]
 pub mod tests {
 
     use crate::archetypes::PlaneDescription;
 
+    use crate::feature::extrusion;
+    use crate::feature::extrusion::{Direction, Mode};
     use crate::isketch::primitive::{AddLine, SketchAddPointMessage};
     use crate::message::idwrap::IDWrap;
     use crate::message::MessageHandler;
-    use crate::feature::extrusion;
-    use crate::feature::extrusion::{Direction, Mode};
     use crate::step;
     use crate::workbench::{AddSketch, SetSketchPlane};
     use crate::IDType;
@@ -117,7 +162,13 @@ pub mod tests {
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
         let plane_description = PlaneDescription::PlaneId(0);
-        let sketch_id = IDWrap { id: 0, inner: AddSketch { plane_description } }.handle_project_message(&mut p).unwrap().unwrap();
+        let sketch_id = IDWrap {
+            id: 0,
+            inner: AddSketch { plane_description },
+        }
+        .handle_project_message(&mut p)
+        .unwrap()
+        .unwrap();
 
         add_test_rectangle(&mut p, sketch_id, 0.0, 0.0, 40.0, 40.0);
 
@@ -129,23 +180,114 @@ pub mod tests {
                 length: 25.0,
                 offset: 0.0,
                 direction: Direction::Normal,
-                mode: Mode::New
-            }
-        }.handle_project_message(&mut p).unwrap().unwrap();
+                mode: Mode::New,
+            },
+        }
+        .handle_project_message(&mut p)
+        .unwrap()
+        .unwrap();
 
         p
     }
 
-    pub fn add_test_rectangle(p: &mut Project, sketch_id: IDType, x_start: f64, y_start: f64, x_end: f64, y_end: f64) {
-        let ll = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_start, y: y_start } } }.handle_project_message(p).unwrap().unwrap();
-        let lr = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_end,  y: y_start } } }.handle_project_message(p).unwrap().unwrap();
-        let ul = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_start,  y: y_end } } }.handle_project_message(p).unwrap().unwrap();
-        let ur = IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: x_end, y: y_end } } }.handle_project_message(p).unwrap().unwrap();
+    pub fn add_test_rectangle(
+        p: &mut Project,
+        sketch_id: IDType,
+        x_start: f64,
+        y_start: f64,
+        x_end: f64,
+        y_end: f64,
+    ) {
+        let ll = IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: SketchAddPointMessage {
+                    x: x_start,
+                    y: y_start,
+                },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
+        let lr = IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: SketchAddPointMessage {
+                    x: x_end,
+                    y: y_start,
+                },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
+        let ul = IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: SketchAddPointMessage {
+                    x: x_start,
+                    y: y_end,
+                },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
+        let ur = IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: SketchAddPointMessage { x: x_end, y: y_end },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
 
-        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ll, end: lr } } }.handle_project_message(p).unwrap().unwrap();
-        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: lr, end: ur } } }.handle_project_message(p).unwrap().unwrap();
-        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ur, end: ul } } }.handle_project_message(p).unwrap().unwrap();
-        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddLine { start: ul, end: ll } } }.handle_project_message(p).unwrap().unwrap();
+        IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: AddLine { start: ll, end: lr },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
+        IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: AddLine { start: lr, end: ur },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
+        IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: AddLine { start: ur, end: ul },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
+        IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: AddLine { start: ul, end: ll },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
     }
 
     #[test]
@@ -168,7 +310,9 @@ pub mod tests {
         SetSketchPlane {
             sketch_id: 0,
             plane_description: PlaneDescription::PlaneId(1),
-        }.handle_message(workbench_ref.clone()).unwrap();
+        }
+        .handle_message(workbench_ref.clone())
+        .unwrap();
     }
 
     #[test]
@@ -179,7 +323,11 @@ pub mod tests {
         let new_name = "New Extrusion Name".to_string();
         let target = workbench.history.last().unwrap();
 
-        step::Rename { new_name: new_name.clone() }.handle_message(target.clone()).unwrap();
+        step::Rename {
+            new_name: new_name.clone(),
+        }
+        .handle_message(target.clone())
+        .unwrap();
 
         assert_eq!(target.borrow().name, new_name);
     }

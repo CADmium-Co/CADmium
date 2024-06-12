@@ -2,17 +2,17 @@ import { Arc2, Circle2, Compound, IDType, ISketch, Line2, Node, Plane, Point2, P
 import { FeatureExtrusionAdd, SketchAddArc, SketchAddCircle, SketchAddLine, SketchAddPoint, SketchAddRectangle, WorkbenchPlaneAdd, WorkbenchPointAdd, WorkbenchSketchAdd } from "./cadmium-api"
 
 // --- Workbench operations ---
-export type PointStep = Step & {interop_node: Point3, data: WorkbenchPointAdd}
+export type PointStep = Step & {interop_node: { Point: Point3 }, data: WorkbenchPointAdd}
 export function isPointStep(step: Step): step is PointStep {
   return "WorkbenchPointAdd" in step.data && "Point" in step.interop_node!
 }
 
-export type PlaneStep = Step & {interop_node: Plane, data: WorkbenchPlaneAdd }
+export type PlaneStep = Step & {interop_node: { Plane: Plane }, data: WorkbenchPlaneAdd }
 export function isPlaneStep(step: Step): step is PlaneStep {
   return "WorkbenchPlaneAdd" in step.data && "Plane" in step.interop_node!
 }
 
-export type SketchStep = Step & {interop_node: ISketch, data: WorkbenchSketchAdd }
+export type SketchStep = Step & {interop_node: { Sketch: ISketch }, data: WorkbenchSketchAdd }
 export function isSketchStep(step: Step): step is SketchStep {
   return "WorkbenchSketchAdd" in step.data && "Sketch" in step.interop_node!
 }
@@ -58,7 +58,7 @@ export function isSketchCompoundStep(step: Step): step is SketchCompoundStep {
 
 // --- Solid operations ---
 // Any step that produces solids is a solid step
-export type SolidStep = Step & {interop_node: Solid}
+export type SolidStep = Step & {interop_node: {Solid: Solid[]}}
 export function isSolidStep(step: Step): step is SolidStep {
   return "Solid" in step
 }

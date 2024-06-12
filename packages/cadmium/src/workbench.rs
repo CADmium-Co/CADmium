@@ -39,29 +39,21 @@ pub struct Workbench {
 
 impl Workbench {
     pub fn new(name: &str) -> Self {
-        info!("Creating new workbench: {:?}", name);
-        let mut wb = Workbench {
+        info!("Creating new workbench: {}", name);
+        Workbench {
             name: name.to_owned(),
             history: vec![],
 
             points: BTreeMap::new(),
-            points_next_id: 1,
+            points_next_id: 0,
             planes: BTreeMap::new(),
-            planes_next_id: 3,
+            planes_next_id: 0,
 
             sketches: BTreeMap::new(),
             sketches_next_id: 0,
             features: BTreeMap::new(),
             features_next_id: 0,
-        };
-
-        wb.points
-            .insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0))));
-        wb.planes.insert(0, Rc::new(RefCell::new(Plane::front())));
-        wb.planes.insert(1, Rc::new(RefCell::new(Plane::front())));
-        wb.planes.insert(2, Rc::new(RefCell::new(Plane::front())));
-
-        wb
+        }
     }
 
     pub fn get_first_plane_id(&self) -> Option<IDType> {
@@ -130,9 +122,9 @@ impl Identifiable for Rc<RefCell<Workbench>> {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl MessageHandler for AddPoint {
@@ -154,9 +146,9 @@ impl MessageHandler for AddPoint {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPlane {
-    plane: Plane,
-    width: f64,
-    height: f64,
+    pub plane: Plane,
+    pub width: f64,
+    pub height: f64,
 }
 
 impl MessageHandler for AddPlane {

@@ -4,7 +4,7 @@
   import {Vector2, Vector3, type Vector3Like} from "three"
   import {interactivity} from "@threlte/extras"
   import {LineMaterial} from "three/addons/lines/LineMaterial.js"
-  import {workbench, workbenchSolids, sketchBeingEdited} from "shared/stores"
+  import {workbench, sketchBeingEdited} from "shared/stores"
   import Point3D from "./Point3D.svelte"
   import Plane from "./Plane.svelte"
   import Solid from "./Solid.svelte"
@@ -12,6 +12,7 @@
   import CubeGizmo from "./controls/CubeGizmo/CubeGizmo.svelte"
   import {base} from "../base"
   import CadControls from "./controls/CadControls/CadControls.svelte"
+  import {isPlaneStep, isPointStep, isSketchStep, isSolidStep} from "shared/stepTypeGuards"
 
   // @ts-ignore
   const log = (function () { const context = "[Scene.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -20,10 +21,7 @@
 
   const {size, dpr, camera} = useThrelte()
 
-  $: points = $workbench.points ? Object.entries($workbench.points) : []
-  $: planes = $workbench.planes ? Object.entries($workbench.planes) : []
-  $: solids = $workbenchSolids ? Object.entries($workbenchSolids) : []
-  $: sketches = $workbench.sketches ? Object.entries($workbench.sketches) : []
+  $: history = $workbench.history ?? []
 
   export function setCameraFocus(goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like): void {
     // TODO: make this tween nicely
@@ -127,57 +125,57 @@
 <!-- <T.AmbientLight intensity={0.6} /> -->
 
 <Environment path="{base}/envmap/hdr/" files="kloofendal_28d_misty_puresky_1k.hdr" isBackground={false} format="hdr" />
-
-{#each points as [pointName, point] (`${$workbench.name}-${pointName}`)}
-  <Point3D id={pointName} x={point.x} y={point.y} z={point.z} hidden={point.hidden} {collisionLineMaterial} />
-{/each}
-
-{#each planes as [planeName, plane] (`${$workbench.name}-${planeName}`)}
-  <!-- TODO: Plane names -->
-  <!-- TODO: Plane size -->
-  <Plane
-    name="PLANE"
-    id={planeName}
-    height={100}
-    width={100}
-    origin={plane.origin}
-    primary={plane.primary}
-    secondary={plane.secondary}
-    tertiary={plane.tertiary}
-  />
-{/each}
-
-{#each sketches as [sketchId, sketch] (`${$workbench.name}-${sketchId}`)}
-  <!-- TODO: Sketch names -->
-  <!-- TODO: Sketch size -->
-  <Sketch
-    uniqueId={sketchId}
-    name={`SKETCH-${sketchId}`}
-    {sketch}
-    editing={$sketchBeingEdited === sketchId}
-    {solidLineMaterial}
-    {solidHoveredMaterial}
-    {solidSelectedMaterial}
-    {dashedHoveredMaterial}
-    {dashedLineMaterial}
-    {collisionLineMaterial}
-  />
-{/each}
-
-{#each solids as [solidName, solid] (`${$workbench.name}-${solidName}-${solid.crc32}`)}
-  <Solid
-    name={solidName}
-    indices={solid.indices}
-    vertices={solid.vertices}
-    normals={solid.normals}
-    truckSolid={solid.truck_solid}
-    {solidLineMaterial}
-    {solidHoveredMaterial}
-    {solidSelectedMaterial}
-    {dashedHoveredMaterial}
-    {dashedLineMaterial}
-    {collisionLineMaterial}
-  />
+{#each history as step, stepIdx}
+  {#if isPointStep(step)}
+    <Point3D
+      id={`${stepIdx}`}
+      x={step.interop_node.Point.x}
+      y={step.interop_node.Point.y}
+      z={step.interop_node.Point.z}
+      hidden={step.interop_node.Point.hidden}
+      {collisionLineMaterial}
+    />
+  {:else if isPlaneStep(step)}
+    <Plane
+      name={step.name}
+      id={`${stepIdx}`}
+      height={100}
+      width={100}
+      origin={step.interop_node.Plane.origin}
+      primary={step.interop_node.Plane.primary}
+      secondary={step.interop_node.Plane.secondary}
+      tertiary={step.interop_node.Plane.tertiary}
+    />
+  {:else if isSketchStep(step)}
+    <Sketch
+      uniqueId={`${stepIdx}`}
+      name={step.name}
+      sketch={step.interop_node.Sketch}
+      editing={$sketchBeingEdited === `${stepIdx}`}
+      {solidLineMaterial}
+      {solidHoveredMaterial}
+      {solidSelectedMaterial}
+      {dashedHoveredMaterial}
+      {dashedLineMaterial}
+      {collisionLineMaterial}
+    />
+  {:else if isSolidStep(step)}
+    {#each step.interop_node.Solid as solid}
+      <Solid
+        name={step.name}
+        indices={solid.indices}
+        vertices={solid.vertices}
+        normals={solid.normals}
+        truckSolid={solid.truck_solid}
+        {solidLineMaterial}
+        {solidHoveredMaterial}
+        {solidSelectedMaterial}
+        {dashedHoveredMaterial}
+        {dashedLineMaterial}
+        {collisionLineMaterial}
+      />
+    {/each}
+  {/if}
 {/each}
 
 <CubeGizmo verticalPlacement={"top"} size={140} paddingX={20} paddingY={20} {setCameraFocus} />
