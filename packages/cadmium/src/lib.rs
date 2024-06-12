@@ -6,12 +6,12 @@ use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
 pub mod archetypes;
-pub mod interop;
 pub mod error;
+pub mod feature;
+pub mod interop;
 pub mod isketch;
 pub mod message;
 pub mod project;
-pub mod feature;
 // pub mod state;
 pub mod step;
 pub mod workbench;
@@ -70,7 +70,8 @@ impl Project {
     #[wasm_bindgen]
     pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
         // TODO: Use get() and return a Result
-        self.native.workbenches
+        self.native
+            .workbenches
             .get(workbench_index as usize)
             .unwrap()
             .borrow()
@@ -79,42 +80,54 @@ impl Project {
 
     #[wasm_bindgen]
     pub fn send_message(&mut self, message: &Message) -> MessageResult {
-        // TODO: Move this to a MessageHandler trait during first stage indirection
-        self.get_workbench(0).add_message_step(message);
-
         message.handle(&mut self.native).into()
     }
 
     #[wasm_bindgen]
     pub fn get_workbench_solids(&self, workbench_index: u32) -> SolidArray {
-        SolidArray(self.native.workbenches
-            .get(workbench_index as usize)
-            .unwrap()
-            .borrow()
-            .get_solids())
+        SolidArray(
+            self.native
+                .workbenches
+                .get(workbench_index as usize)
+                .unwrap()
+                .borrow()
+                .get_solids(),
+        )
     }
 
     #[wasm_bindgen]
-    pub fn get_sketch_primitive(&self, workbench_id: IDType, sketch_id: IDType, primitive_id: IDType) -> archetypes::WrappedPrimitive {
-        let binding = self.native.get_workbench_by_id(workbench_id)
-            .unwrap();
-        let workbench = binding
-            .borrow();
+    pub fn get_sketch_primitive(
+        &self,
+        workbench_id: IDType,
+        sketch_id: IDType,
+        primitive_id: IDType,
+    ) -> archetypes::WrappedPrimitive {
+        let binding = self.native.get_workbench_by_id(workbench_id).unwrap();
+        let workbench = binding.borrow();
         let binding = workbench
             .get_sketch_by_id(sketch_id)
             .unwrap()
             .borrow()
             .sketch();
-        let sketch = binding
-            .borrow();
+        let sketch = binding.borrow();
         let binding = sketch.primitives();
         let primitive = binding.get(&primitive_id).unwrap().borrow().to_primitive();
 
         match primitive {
-            isotope::primitives::Primitive::Point2(point) => archetypes::WrappedPrimitive::Point2(archetypes::Point2::from_sketch(&sketch, &point)),
-            isotope::primitives::Primitive::Line(line) => archetypes::WrappedPrimitive::Line2(archetypes::Line2::from_sketch(&sketch, &line)),
-            isotope::primitives::Primitive::Circle(circle) => archetypes::WrappedPrimitive::Circle2(archetypes::Circle2::from_sketch(&sketch, &circle)),
-            isotope::primitives::Primitive::Arc(arc) => archetypes::WrappedPrimitive::Arc2(archetypes::Arc2::from_sketch(&sketch, &arc)),
+            isotope::primitives::Primitive::Point2(point) => archetypes::WrappedPrimitive::Point2(
+                archetypes::Point2::from_sketch(&sketch, &point),
+            ),
+            isotope::primitives::Primitive::Line(line) => {
+                archetypes::WrappedPrimitive::Line2(archetypes::Line2::from_sketch(&sketch, &line))
+            }
+            isotope::primitives::Primitive::Circle(circle) => {
+                archetypes::WrappedPrimitive::Circle2(archetypes::Circle2::from_sketch(
+                    &sketch, &circle,
+                ))
+            }
+            isotope::primitives::Primitive::Arc(arc) => {
+                archetypes::WrappedPrimitive::Arc2(archetypes::Arc2::from_sketch(&sketch, &arc))
+            }
         }
     }
 }

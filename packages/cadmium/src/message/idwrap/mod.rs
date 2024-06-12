@@ -51,10 +51,15 @@ where
     ) -> anyhow::Result<Option<IDType>> {
         let wb = T::Parent::from_parent_id(project, self.id)?;
         let result = self.inner.handle_message(wb.clone())?;
+        let (id, node) = if let Some((id, node)) = result {
+            (Some(id), Some(node))
+        } else {
+            (None, None)
+        };
 
-        wb.borrow_mut().add_message_step(&self.clone().into());
+        wb.borrow_mut().add_message_step(&self.clone().into(), node);
 
-        Ok(result.map(|(id, _)| id))
+        Ok(id)
     }
 }
 

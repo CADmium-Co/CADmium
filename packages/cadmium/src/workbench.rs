@@ -5,10 +5,10 @@ use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
-use crate::feature::solid::Solid;
-use crate::isketch::ISketch;
-use crate::feature::Feature;
 use crate::feature::point::Point3;
+use crate::feature::solid::Solid;
+use crate::feature::Feature;
+use crate::isketch::ISketch;
 use crate::step::Step;
 use crate::{interop, IDType};
 
@@ -55,7 +55,8 @@ impl Workbench {
             features_next_id: 0,
         };
 
-        wb.points.insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0))));
+        wb.points
+            .insert(0, Rc::new(RefCell::new(Point3::new(0.0, 0.0, 0.0))));
         wb.planes.insert(0, Rc::new(RefCell::new(Plane::front())));
         wb.planes.insert(1, Rc::new(RefCell::new(Plane::front())));
         wb.planes.insert(2, Rc::new(RefCell::new(Plane::front())));
@@ -80,20 +81,26 @@ impl Workbench {
     }
 
     pub fn get_sketch_by_id(&self, id: IDType) -> Result<Rc<RefCell<ISketch>>, CADmiumError> {
-        self.sketches.get(&id).ok_or(CADmiumError::SketchIDNotFound(id)).cloned()
+        self.sketches
+            .get(&id)
+            .ok_or(CADmiumError::SketchIDNotFound(id))
+            .cloned()
     }
 
-    pub fn add_message_step(&mut self, message: &Message) {
-        self.history.push(
-            Rc::new(
-                RefCell::new(
-                    Step::new(self.history.len() as IDType, message.clone(), None))));
+    pub fn add_message_step(&mut self, message: &Message, node: Option<interop::Node>) {
+        self.history.push(Rc::new(RefCell::new(Step::new(
+            self.history.len() as IDType,
+            message.clone(),
+            node,
+        ))));
     }
 
     pub fn get_solids(&self) -> Vec<Solid> {
-        self.features.values().map(|feature| {
-            feature.borrow().as_solid_like().to_solids().unwrap()
-        }).flatten().collect()
+        self.features
+            .values()
+            .map(|feature| feature.borrow().as_solid_like().to_solids().unwrap())
+            .flatten()
+            .collect()
     }
 }
 
@@ -130,7 +137,10 @@ pub struct AddPoint {
 
 impl MessageHandler for AddPoint {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        sketch_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = sketch_ref.borrow_mut();
 
         let new_id = wb.points_next_id;
@@ -140,7 +150,6 @@ impl MessageHandler for AddPoint {
         Ok(Some((new_id, interop::Node::Point(point))))
     }
 }
-
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
@@ -152,7 +161,10 @@ pub struct AddPlane {
 
 impl MessageHandler for AddPlane {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        sketch_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = sketch_ref.borrow_mut();
 
         let new_id = wb.planes_next_id;
@@ -171,7 +183,10 @@ pub struct AddSketch {
 
 impl MessageHandler for AddSketch {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        workbench_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = workbench_ref.borrow_mut();
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
 
@@ -191,7 +206,10 @@ pub struct WorkbenchRename {
 
 impl MessageHandler for WorkbenchRename {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        workbench_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut workbench = workbench_ref.borrow_mut();
         workbench.name = self.new_name.clone();
         Ok(None)
@@ -207,16 +225,28 @@ pub struct SetSketchPlane {
 
 impl MessageHandler for SetSketchPlane {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+    fn handle_message(
+        &self,
+        workbench_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let wb = workbench_ref.borrow();
 
         let plane = match self.plane_description {
-            PlaneDescription::PlaneId(plane_id) =>
-                wb.planes.get(&plane_id).ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
-            PlaneDescription::SolidFace { solid_id: _, normal: _ } => todo!("Implement SolidFace"),
-        }.clone();
+            PlaneDescription::PlaneId(plane_id) => wb
+                .planes
+                .get(&plane_id)
+                .ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::SolidFace {
+                solid_id: _,
+                normal: _,
+            } => todo!("Implement SolidFace"),
+        }
+        .clone();
 
-        let sketch = wb.sketches.get(&self.sketch_id).ok_or(anyhow::anyhow!("Failed to find sketch with id {}", self.sketch_id))?;
+        let sketch = wb.sketches.get(&self.sketch_id).ok_or(anyhow::anyhow!(
+            "Failed to find sketch with id {}",
+            self.sketch_id
+        ))?;
         sketch.borrow_mut().plane = plane;
 
         Ok(None)
