@@ -9,7 +9,7 @@ use crate::feature::point::Point3;
 use crate::feature::solid::Solid;
 use crate::feature::Feature;
 use crate::isketch::ISketch;
-use crate::step::{Step, StepResult};
+use crate::step::{Step, StepHash, StepResult};
 use crate::IDType;
 
 use crate::message::*;
@@ -84,7 +84,7 @@ impl Workbench {
             .push(Rc::new(RefCell::new(Step::new(message.clone(), node))));
     }
 
-    pub fn get_step_by_hash(&self, hash: IDType) -> Option<Rc<RefCell<Step>>> {
+    pub fn get_step_by_hash(&self, hash: StepHash) -> Option<Rc<RefCell<Step>>> {
         self.history
             .iter()
             .find(|step| step.borrow().hash() == hash)
@@ -105,7 +105,11 @@ impl Identifiable for Rc<RefCell<Workbench>> {
     type Parent = crate::project::Project;
     const ID_NAME: &'static str = "workbench_id";
 
-    fn from_parent_id(parent: &crate::project::Project, id: IDType) -> anyhow::Result<Self> {
+    fn from_parent_id(parent: &crate::project::Project, hash: StepHash) -> anyhow::Result<Self> {
+        // For now at least there's no good way to differentiate between a workbench
+        // ID and a step hash. The workbench can't be hash-indexed as it's always
+        // changing
+        let id = hash.give_the_int_im_not_stupid();
         Ok(parent.get_workbench_by_id(id)?)
     }
 }

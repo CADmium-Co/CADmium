@@ -10,7 +10,7 @@ use tsify_next::Tsify;
 
 use crate::feature::point::Point3;
 use crate::message::MessageHandler;
-use crate::step::StepResult;
+use crate::step::{StepHash, StepResult};
 use crate::{archetypes, IDType};
 
 use super::ISketch;
@@ -134,8 +134,8 @@ impl MessageHandler for AddCircle {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddLine {
-    pub start: IDType,
-    pub end: IDType,
+    pub start: StepHash,
+    pub end: StepHash,
 }
 
 impl MessageHandler for AddLine {

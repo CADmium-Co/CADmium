@@ -2,7 +2,7 @@ use cadmium_macros::MessageEnum;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
-use crate::IDType;
+use crate::step::StepHash;
 
 use super::idwrap::IDWrap;
 use super::ProjectMessageHandler;
@@ -38,8 +38,8 @@ pub struct MessageResult {
     pub data: String,
 }
 
-impl From<anyhow::Result<Option<IDType>>> for MessageResult {
-    fn from(result: anyhow::Result<Option<IDType>>) -> Self {
+impl From<anyhow::Result<Option<StepHash>>> for MessageResult {
+    fn from(result: anyhow::Result<Option<StepHash>>) -> Self {
         match result {
             // TODO: The Success should be a stable enum
             Ok(msg) => Self {

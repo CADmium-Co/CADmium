@@ -1,4 +1,4 @@
-use crate::step::StepResult;
+use crate::step::{StepHash, StepResult};
 use crate::IDType;
 
 pub mod idwrap;
@@ -11,14 +11,14 @@ use wasm_bindgen::convert::RefFromWasmAbi;
 pub trait Identifiable: Sized {
     type Parent;
     const ID_NAME: &'static str;
-    fn from_parent_id(parent: &Self::Parent, id: IDType) -> Result<Self, anyhow::Error>;
+    fn from_parent_id(parent: &Self::Parent, hash: StepHash) -> Result<Self, anyhow::Error>;
 }
 
 pub trait ProjectMessageHandler: RefFromWasmAbi {
     fn handle_project_message(
         &self,
         project: &mut crate::project::Project,
-    ) -> anyhow::Result<Option<IDType>>;
+    ) -> anyhow::Result<Option<StepHash>>;
 }
 
 pub trait MessageHandler: Serialize + for<'de> Deserialize<'de> + RefFromWasmAbi {

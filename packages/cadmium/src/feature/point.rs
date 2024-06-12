@@ -104,7 +104,7 @@ impl PartialEq for Point3 {
 }
 
 use crate::message::{Identifiable, MessageHandler};
-use crate::step::StepResult;
+use crate::step::{StepHash, StepResult};
 use crate::workbench::Workbench;
 use crate::IDType;
 
@@ -112,18 +112,21 @@ impl Identifiable for Rc<RefCell<Point3>> {
     type Parent = Rc<RefCell<Workbench>>;
     const ID_NAME: &'static str = "point_id";
 
-    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
+    fn from_parent_id(parent: &Self::Parent, hash: StepHash) -> anyhow::Result<Self> {
         let step = parent
             .borrow()
-            .get_step_by_hash(id)
+            .get_step_by_hash(hash)
             .ok_or(anyhow::anyhow!(
                 "No step with hash {} exists in the current workbench",
-                id
+                hash
             ))?
             .clone();
 
         let StepResult::Point(point) = step.borrow().result.clone() else {
-            return Err(anyhow::anyhow!("The step with hash {} is not a point", id));
+            return Err(anyhow::anyhow!(
+                "The step with hash {} is not a point",
+                hash
+            ));
         };
 
         Ok(point)

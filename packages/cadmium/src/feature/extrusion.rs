@@ -11,7 +11,7 @@ use crate::archetypes::Vector3;
 use crate::isketch::face::{FaceSelector, Selector};
 use crate::isketch::ISketch;
 use crate::message::{Identifiable, MessageHandler};
-use crate::step::StepResult;
+use crate::step::{StepHash, StepResult};
 use crate::workbench::Workbench;
 use crate::IDType;
 
@@ -125,7 +125,7 @@ impl<'a> TryFrom<&'a mut Feature> for &'a mut Extrusion {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct Add {
-    pub sketch_id: IDType,
+    pub sketch_id: StepHash,
     pub faces: Vec<IDType>,
     pub length: f64,
     pub offset: f64,

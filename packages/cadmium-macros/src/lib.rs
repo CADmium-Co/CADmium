@@ -11,43 +11,67 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
         _ => panic!("MessageEnum can only be derived for enums"),
     };
 
-    let variants_typescript = data.variants.iter().map(|variant| {
-        let syn::Fields::Unnamed(field) = &variant.fields else {
-            panic!("MessageEnum can only be derived for enums with unnamed fields");
-        };
+    let variants_typescript = data
+        .variants
+        .iter()
+        .map(|variant| {
+            let syn::Fields::Unnamed(field) = &variant.fields else {
+                panic!("MessageEnum can only be derived for enums with unnamed fields");
+            };
 
-        let field_type = &field.unnamed[0].ty;
+            let field_type = &field.unnamed[0].ty;
 
-        variant_to_typescript(field_type.clone())
-    }).collect::<Vec<(_, Vec<_>)>>();
-    let variants_typescript_type = variants_typescript.clone().iter().map(|v| v.0.clone()).collect::<Vec<_>>();
-    let variants_typescript_additional = variants_typescript.clone().iter().map(|v| v.1.clone()).collect::<Vec<_>>();
+            variant_to_typescript(field_type.clone())
+        })
+        .collect::<Vec<(_, Vec<_>)>>();
+    let variants_typescript_type = variants_typescript
+        .clone()
+        .iter()
+        .map(|v| v.0.clone())
+        .collect::<Vec<_>>();
+    let variants_typescript_additional = variants_typescript
+        .clone()
+        .iter()
+        .map(|v| v.1.clone())
+        .collect::<Vec<_>>();
 
-    let variants_type = data.variants.iter().map(|variant| {
-        let syn::Fields::Unnamed(field) = &variant.fields else {
-            panic!("MessageEnum can only be derived for enums with unnamed fields");
-        };
+    let variants_type = data
+        .variants
+        .iter()
+        .map(|variant| {
+            let syn::Fields::Unnamed(field) = &variant.fields else {
+                panic!("MessageEnum can only be derived for enums with unnamed fields");
+            };
 
-        let field_type = &field.unnamed[0].ty;
-        quote! { #field_type }
-    }).collect::<Vec<_>>();
+            let field_type = &field.unnamed[0].ty;
+            quote! { #field_type }
+        })
+        .collect::<Vec<_>>();
 
-    let variants = data.variants.iter().map(|variant| {
-        println!("Message Handler: {}", variant.ident);
-        let variant_name = &variant.ident;
+    let variants = data
+        .variants
+        .iter()
+        .map(|variant| {
+            println!("Message Handler: {}", variant.ident);
+            let variant_name = &variant.ident;
 
-        quote! {
-            #name::#variant_name(msg)
-        }
-    }).collect::<Vec<_>>();
+            quote! {
+                #name::#variant_name(msg)
+            }
+        })
+        .collect::<Vec<_>>();
 
-    let variant_names = data.variants.iter().map(|variant| &variant.ident).collect::<Vec<_>>();
+    let variant_names = data
+        .variants
+        .iter()
+        .map(|variant| &variant.ident)
+        .collect::<Vec<_>>();
     let variants_clone = variants.clone();
     let variants_clone2 = variants.clone();
 
     quote! {
         impl #name {
-            pub fn handle(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<crate::IDType>> {
+            pub fn handle(&self, project: &mut crate::project::Project) -> anyhow::Result<Option<crate::step::StepHash>> {
                 match self {
                     #( #variants_clone => msg.handle_project_message(project), )*
                 }
@@ -95,7 +119,10 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
 }
 
 #[proc_macro_attribute]
-pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn message(
+    attr: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
     let args = parse_macro_input!(attr as syn::AttributeArgs);
     let input = parse_macro_input!(item as ItemFn);
 
@@ -108,7 +135,10 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
     for arg in args.iter() {
         match arg {
             NestedMeta::Meta(Meta::Path(path)) => {
-                parent_opt = Some(path.get_ident().expect("Parent type mut be an identifier (e.g. ISketch, not crate::ISketch)"));
+                parent_opt =
+                    Some(path.get_ident().expect(
+                        "Parent type mut be an identifier (e.g. ISketch, not crate::ISketch)",
+                    ));
             }
             NestedMeta::Meta(Meta::NameValue(name_value)) => {
                 if name_value.path.is_ident("rename_parent") {
@@ -118,16 +148,24 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
                     rename_parent = Some(rename_parent_val.value());
                 }
             }
-            _ => panic!("Invalid attribute argument")
+            _ => panic!("Invalid attribute argument"),
         }
     }
 
     // Create a struct name based on the function name
     let parent = parent_opt.expect("Parent type must be specified");
     let struct_name = if let Some(rename_parent) = rename_parent {
-        format_ident!("{}{}Message", rename_parent, fn_name.to_string().to_case(Case::Pascal))
+        format_ident!(
+            "{}{}Message",
+            rename_parent,
+            fn_name.to_string().to_case(Case::Pascal)
+        )
     } else {
-        format_ident!("{}{}Message", parent, fn_name.to_string().to_case(Case::Pascal))
+        format_ident!(
+            "{}{}Message",
+            parent,
+            fn_name.to_string().to_case(Case::Pascal)
+        )
     };
 
     // Generate struct fields from function arguments
@@ -183,9 +221,12 @@ fn variant_to_typescript(field_type: Type) -> (Type, Vec<proc_macro2::TokenStrea
         type_str = idwrap_type.to_token_stream().to_string();
     }
 
-    let additional_types = idwrap_types.iter().map(|idwrap_type| {
-        quote! {<#idwrap_type as crate::message::MessageHandler>::Parent::ID_NAME }
-    }).collect::<Vec<proc_macro2::TokenStream>>();
+    let additional_types = idwrap_types
+        .iter()
+        .map(|idwrap_type| {
+            quote! {<#idwrap_type as crate::message::MessageHandler>::Parent::ID_NAME }
+        })
+        .collect::<Vec<proc_macro2::TokenStream>>();
 
     (inner_type, additional_types)
 }
@@ -198,7 +239,8 @@ fn get_idwrap_type(field_type: Type) -> Type {
     let syn::PathArguments::AngleBracketed(idwrap_generic) = inner_type_args else {
         panic!("IDWrap type argument must be a generic type");
     };
-    let syn::GenericArgument::Type(idwrap_generic_type) = idwrap_generic.args.first().unwrap() else {
+    let syn::GenericArgument::Type(idwrap_generic_type) = idwrap_generic.args.first().unwrap()
+    else {
         panic!("IDWrap type argument must be a path type");
     };
     idwrap_generic_type.clone()

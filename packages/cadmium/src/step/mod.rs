@@ -4,27 +4,21 @@ use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
-use xxhash_rust::xxh3::xxh3_64;
 
 use crate::message::{Identifiable, Message};
 use crate::workbench::Workbench;
-use crate::IDType;
 
 pub mod actions;
+pub mod hash;
 pub mod result;
 
+pub use hash::StepHash;
 pub use result::StepResult;
 
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[serde(transparent)]
-#[repr(transparent)]
-pub struct StepHash(pub u64);
-
-#[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
-    pub hash: IDType,
+    pub hash: StepHash,
     pub name: String,
     pub suppressed: bool,
     pub data: Message,
@@ -33,9 +27,9 @@ pub struct Step {
 
 impl Step {
     pub fn new(data: Message, result: StepResult) -> Self {
-        let hash = xxh3_64(serde_json::to_string(&data).unwrap().as_bytes());
+        let hash = (&data).into();
         Self {
-            hash,
+            hash: hash,
             name: format!("{}-{}", data, hash),
             suppressed: false,
             data,
@@ -43,8 +37,8 @@ impl Step {
         }
     }
 
-    pub fn hash(&self) -> IDType {
-        self.hash as IDType
+    pub fn hash(&self) -> StepHash {
+        self.hash
     }
 }
 
@@ -58,13 +52,13 @@ impl Identifiable for Rc<RefCell<Step>> {
     type Parent = Rc<RefCell<Workbench>>;
     const ID_NAME: &'static str = "step_id";
 
-    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
+    fn from_parent_id(parent: &Self::Parent, hash: StepHash) -> anyhow::Result<Self> {
         Ok(parent
             .borrow()
-            .get_step_by_hash(id)
+            .get_step_by_hash(hash)
             .ok_or(anyhow::anyhow!(
                 "No step with hash {} exists in the current workbench",
-                id
+                hash
             ))?
             .clone())
     }

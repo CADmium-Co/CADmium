@@ -10,6 +10,7 @@ use crate::archetypes::Plane;
 use crate::error::CADmiumError;
 use crate::message::idwrap::IDWrap;
 use crate::message::ProjectMessageHandler;
+use crate::step::StepHash;
 use crate::workbench::{AddPlane, AddPoint, Workbench};
 
 #[derive(Tsify, Debug, Serialize, Deserialize)]
@@ -43,9 +44,11 @@ impl Project {
         let wb = Workbench::new(name);
         let wb_cell = Rc::new(RefCell::new(wb));
         self.workbenches.push(wb_cell.clone());
+        let wb_id = self.workbenches.len() as u64 - 1;
+        let wb_hash = StepHash::take_the_int_im_not_stupid(wb_id);
 
         IDWrap {
-            id: 0,
+            id: wb_hash.clone(),
             inner: AddPoint {
                 x: 0.0,
                 y: 0.0,
@@ -58,7 +61,7 @@ impl Project {
 
         for plane_inst in [Plane::top(), Plane::front(), Plane::right()].iter() {
             IDWrap {
-                id: 0,
+                id: wb_hash.clone(),
                 inner: AddPlane {
                     plane: plane_inst.clone(),
                     width: 100.0,
@@ -143,7 +146,7 @@ impl ProjectMessageHandler for ProjectRename {
     fn handle_project_message(
         &self,
         project: &mut crate::project::Project,
-    ) -> anyhow::Result<Option<crate::IDType>> {
+    ) -> anyhow::Result<Option<StepHash>> {
         project.name = self.new_name.clone();
         Ok(None)
     }
@@ -161,15 +164,16 @@ pub mod tests {
     use crate::message::MessageHandler;
     use crate::step;
     use crate::workbench::{AddSketch, SetSketchPlane};
-    use crate::IDType;
 
     use super::*;
+
+    pub const WORKBENCH_HASH: StepHash = StepHash::take_the_int_im_not_stupid(0);
 
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
         let plane_description = PlaneDescription::PlaneId(0);
         let sketch_id = IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: AddSketch { plane_description },
         }
         .handle_project_message(&mut p)
@@ -179,9 +183,9 @@ pub mod tests {
         add_test_rectangle(&mut p, sketch_id, 0.0, 0.0, 40.0, 40.0);
 
         IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: extrusion::Add {
-                sketch_id: 0,
+                sketch_id,
                 faces: vec![0],
                 length: 25.0,
                 offset: 0.0,
@@ -198,14 +202,14 @@ pub mod tests {
 
     pub fn add_test_rectangle(
         p: &mut Project,
-        sketch_id: IDType,
+        sketch_id: StepHash,
         x_start: f64,
         y_start: f64,
         x_end: f64,
         y_end: f64,
     ) {
         let ll = IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: SketchAddPointMessage {
@@ -218,7 +222,7 @@ pub mod tests {
         .unwrap()
         .unwrap();
         let lr = IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: SketchAddPointMessage {
@@ -231,7 +235,7 @@ pub mod tests {
         .unwrap()
         .unwrap();
         let ul = IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: SketchAddPointMessage {
@@ -244,7 +248,7 @@ pub mod tests {
         .unwrap()
         .unwrap();
         let ur = IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: SketchAddPointMessage { x: x_end, y: y_end },
@@ -255,7 +259,7 @@ pub mod tests {
         .unwrap();
 
         IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: AddLine { start: ll, end: lr },
@@ -265,7 +269,7 @@ pub mod tests {
         .unwrap()
         .unwrap();
         IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: AddLine { start: lr, end: ur },
@@ -275,7 +279,7 @@ pub mod tests {
         .unwrap()
         .unwrap();
         IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: AddLine { start: ur, end: ul },
@@ -285,7 +289,7 @@ pub mod tests {
         .unwrap()
         .unwrap();
         IDWrap {
-            id: 0,
+            id: WORKBENCH_HASH,
             inner: IDWrap {
                 id: sketch_id,
                 inner: AddLine { start: ul, end: ll },

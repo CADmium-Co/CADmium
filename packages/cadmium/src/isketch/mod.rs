@@ -13,7 +13,7 @@ use crate::archetypes::{Plane, PlaneDescription};
 use crate::error::CADmiumError;
 use crate::feature::point::Point3;
 use crate::message::Identifiable;
-use crate::step::StepResult;
+use crate::step::{StepHash, StepResult};
 use crate::workbench::Workbench;
 use crate::IDType;
 
@@ -146,18 +146,21 @@ impl Identifiable for Rc<RefCell<ISketch>> {
     type Parent = Rc<RefCell<Workbench>>;
     const ID_NAME: &'static str = "sketch_id";
 
-    fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
+    fn from_parent_id(parent: &Self::Parent, hash: StepHash) -> anyhow::Result<Self> {
         let step = parent
             .borrow()
-            .get_step_by_hash(id)
+            .get_step_by_hash(hash)
             .ok_or(anyhow::anyhow!(
                 "No step with hash {} exists in the current workbench",
-                id
+                hash
             ))?
             .clone();
 
         let StepResult::Sketch { sketch, faces: _ } = step.borrow().result.clone() else {
-            return Err(anyhow::anyhow!("The step with hash {} is not a sketch", id));
+            return Err(anyhow::anyhow!(
+                "The step with hash {} is not a sketch",
+                hash
+            ));
         };
 
         Ok(sketch)

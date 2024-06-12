@@ -6,7 +6,7 @@ use serde::Serialize;
 use tsify_next::Tsify;
 use wasm_bindgen::convert::RefFromWasmAbi;
 
-use crate::step::StepResult;
+use crate::step::{StepHash, StepResult};
 use crate::workbench::Workbench;
 use crate::IDType;
 
@@ -18,16 +18,16 @@ use super::{Identifiable, MessageHandler, ProjectMessageHandler};
 #[derive(Tsify, Debug, Clone)]
 #[tsify(from_wasm_abi)]
 pub struct IDWrap<T: Clone + Serialize + DeserializeOwned + RefFromWasmAbi> {
-    pub id: u64,
+    pub id: StepHash,
     pub inner: T,
 }
 
 impl<T: Clone + Serialize + DeserializeOwned + RefFromWasmAbi> IDWrap<T> {
-    pub fn new(id: IDType, h: T) -> Self {
+    pub fn new(id: StepHash, h: T) -> Self {
         Self { id, inner: h }
     }
 
-    pub fn id(&self) -> IDType {
+    pub fn id(&self) -> StepHash {
         self.id
     }
 
@@ -49,7 +49,7 @@ where
     fn handle_project_message(
         &self,
         project: &mut crate::project::Project,
-    ) -> anyhow::Result<Option<IDType>> {
+    ) -> anyhow::Result<Option<StepHash>> {
         let wb_cell = T::Parent::from_parent_id(project, self.id)?;
         let result = self.inner.handle_message(wb_cell.clone())?;
         let node = if let Some((_id, node)) = result {
