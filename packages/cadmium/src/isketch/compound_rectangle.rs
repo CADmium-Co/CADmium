@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
 use crate::message::MessageHandler;
-use crate::IDType;
+use crate::{interop, IDType};
 
 use super::compound::{Compound, CompoundLike};
 use super::ISketch;
@@ -42,7 +42,6 @@ impl Rectangle {
             new_lines,
         }
     }
-
 }
 
 impl CompoundLike for Rectangle {
@@ -74,27 +73,35 @@ pub struct Add {
 
 impl MessageHandler for Add {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(
+        &self,
+        sketch_ref: Rc<RefCell<ISketch>>,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut isketch = sketch_ref.borrow_mut();
         let mut sketch = isketch.sketch.borrow_mut();
 
-        let start_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.start).unwrap() {
-            point
-        } else {
-            return Err(anyhow::anyhow!("Start point is not a point"));
-        };
-        let end_point = if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.end).unwrap() {
-            point
-        } else {
-            return Err(anyhow::anyhow!("End point is not a point"));
-        };
+        let start_point =
+            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.start).unwrap() {
+                point
+            } else {
+                return Err(anyhow::anyhow!("Start point is not a point"));
+            };
+        let end_point =
+            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.end).unwrap() {
+                point
+            } else {
+                return Err(anyhow::anyhow!("End point is not a point"));
+            };
 
         let rectangle = Rectangle::new(start_point.clone(), end_point.clone());
         rectangle.populate_created_references(&mut sketch)?;
         drop(sketch);
 
-        let point_id = isketch.compounds_next_id;
-        isketch.compounds.insert(point_id, Rc::new(RefCell::new(Compound::Rectangle(rectangle))));
+        let compound = Rc::new(RefCell::new(Compound::Rectangle(rectangle)));
+        let rectangle_id = isketch.compounds_next_id;
+        isketch.compounds.insert(rectangle_id, compound.clone());
         isketch.compounds_next_id += 1;
-        Ok(Some(point_id))}
+
+        Ok(Some((rectangle_id, interop::Node::Compound(compound))))
+    }
 }

@@ -2,9 +2,9 @@ use std::cell::RefCell;
 use std::ops::{Add, Sub};
 use std::rc::Rc;
 
+use isotope::primitives::point2::Point2 as ISOPoint2;
 use serde::{Deserialize, Serialize};
 use truck_polymesh::Point3 as PolyTruckPoint3;
-use isotope::primitives::point2::Point2 as ISOPoint2;
 use tsify_next::Tsify;
 
 use crate::archetypes::{Plane, Vector3};
@@ -51,7 +51,7 @@ impl Point3 {
         (dx * dx + dy * dy + dz * dz).sqrt()
     }
 
-		pub fn from_plane_point(plane: &Plane, point: &ISOPoint2) -> Point3 {
+    pub fn from_plane_point(plane: &Plane, point: &ISOPoint2) -> Point3 {
         let o = plane.origin.clone();
         let x = plane.primary.clone();
         let y = plane.secondary.clone();
@@ -62,57 +62,62 @@ impl Point3 {
 }
 
 impl From<Point3> for PolyTruckPoint3 {
-		fn from(val: Point3) -> Self {
-				PolyTruckPoint3 {
-						x: val.x,
-						y: val.y,
-						z: val.z,
-				}
-		}
+    fn from(val: Point3) -> Self {
+        PolyTruckPoint3 {
+            x: val.x,
+            y: val.y,
+            z: val.z,
+        }
+    }
 }
 
 impl Add for Point3 {
-		type Output = Point3;
+    type Output = Point3;
 
-		fn add(self, other: Point3) -> Point3 {
-				Point3 {
-						x: self.x + other.x,
-						y: self.y + other.y,
-						z: self.z + other.z,
-						hidden: false,
-				}
-		}
+    fn add(self, other: Point3) -> Point3 {
+        Point3 {
+            x: self.x + other.x,
+            y: self.y + other.y,
+            z: self.z + other.z,
+            hidden: false,
+        }
+    }
 }
 
 impl Sub for Point3 {
-		type Output = Point3;
+    type Output = Point3;
 
-		fn sub(self, other: Point3) -> Point3 {
-				Point3 {
-						x: self.x - other.x,
-						y: self.y - other.y,
-						z: self.z - other.z,
-						hidden: false,
-				}
-		}
+    fn sub(self, other: Point3) -> Point3 {
+        Point3 {
+            x: self.x - other.x,
+            y: self.y - other.y,
+            z: self.z - other.z,
+            hidden: false,
+        }
+    }
 }
 
 impl PartialEq for Point3 {
-		fn eq(&self, other: &Self) -> bool {
-				self.x == other.x && self.y == other.y && self.z == other.z
-		}
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y && self.z == other.z
+    }
 }
 
 use crate::message::{Identifiable, MessageHandler};
 use crate::workbench::Workbench;
-use crate::IDType;
+use crate::{interop, IDType};
 
 impl Identifiable for Rc<RefCell<Point3>> {
     type Parent = Rc<RefCell<Workbench>>;
     const ID_NAME: &'static str = "point_id";
 
     fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
-        Ok(parent.borrow().points.get(&id).ok_or(anyhow::anyhow!(""))?.clone())
+        Ok(parent
+            .borrow()
+            .points
+            .get(&id)
+            .ok_or(anyhow::anyhow!(""))?
+            .clone())
     }
 }
 
@@ -126,7 +131,10 @@ pub struct WorkbenchPointUpdate {
 
 impl MessageHandler for WorkbenchPointUpdate {
     type Parent = Rc<RefCell<Point3>>;
-    fn handle_message(&self, point_ref: Rc<RefCell<Point3>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(
+        &self,
+        point_ref: Rc<RefCell<Point3>>,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut point = point_ref.borrow_mut();
         point.x = self.x;
         point.y = self.y;

@@ -12,7 +12,7 @@ use crate::isketch::face::{FaceSelector, Selector};
 use crate::isketch::ISketch;
 use crate::message::MessageHandler;
 use crate::workbench::Workbench;
-use crate::IDType;
+use crate::{interop, IDType};
 
 use super::get_isoface_wires;
 use super::{Feature, SolidLike};
@@ -86,10 +86,12 @@ impl SolidLike for Extrusion {
 
         let extrusion_vector = extrusion_direction.times(self.length - self.offset);
         let offset_vector = extrusion_direction.times(self.offset);
-        let extrusion_tvector = TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
+        let extrusion_tvector =
+            TruckVector3::new(extrusion_vector.x, extrusion_vector.y, extrusion_vector.z);
         let offset_tvector = TruckVector3::new(offset_vector.x, offset_vector.y, offset_vector.z);
 
-        Ok(self.faces
+        Ok(self
+            .faces
             .get_selected_faces(&sketch)
             .iter()
             .map(|f| {
@@ -99,9 +101,9 @@ impl SolidLike for Extrusion {
                 // Can we calculate ALL the wires at once and not iter-sweep?
                 let sweep = builder::tsweep(&face, extrusion_tvector);
 
-
                 builder::translated(&sweep, offset_tvector)
-            }).collect())
+            })
+            .collect())
     }
 }
 
@@ -112,7 +114,7 @@ impl<'a> TryFrom<&'a mut Feature> for &'a mut Extrusion {
     #[allow(irrefutable_let_patterns)]
     fn try_from(value: &'a mut Feature) -> Result<Self, Self::Error> {
         let Feature::Extrusion(ref mut extrusion) = value else {
-            return Err(anyhow::anyhow!("Failed to convert Feature to Extrusion"))
+            return Err(anyhow::anyhow!("Failed to convert Feature to Extrusion"));
         };
 
         Ok(extrusion)
@@ -133,7 +135,10 @@ pub struct Add {
 impl MessageHandler for Add {
     // Parent to workbench to add to solids and be able to reference the sketch
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(
+        &self,
+        workbench_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut workbench = workbench_ref.borrow_mut();
         let sketch = workbench.get_sketch_by_id(self.sketch_id)?;
 
@@ -145,9 +150,10 @@ impl MessageHandler for Add {
             self.direction.clone(),
             self.mode.clone(),
         );
+        let extrusion_cell = Rc::new(RefCell::new(extrusion.to_feature()));
 
         let id = workbench.features_next_id;
-        workbench.features.insert(id, Rc::new(RefCell::new(extrusion.to_feature())));
+        workbench.features.insert(id, extrusion_cell);
         workbench.features_next_id += 1;
         let id = workbench.features_next_id - 1;
         drop(workbench);
@@ -158,9 +164,10 @@ impl MessageHandler for Add {
             extrusion_id: id,
             sketch_id: self.sketch_id,
             faces: self.faces.clone(),
-        }.handle_message(workbench_ref.clone())?;
+        }
+        .handle_message(workbench_ref.clone())?;
 
-        Ok(Some(id))
+        Ok(Some((id, interop::Node::Solid(extrusion.to_solids()?))))
     }
 }
 
@@ -175,11 +182,21 @@ pub struct UpdateFaces {
 impl MessageHandler for UpdateFaces {
     // Parent to workbench to add to solids and be able to reference the sketch
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(
+        &self,
+        workbench_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let workbench = workbench_ref.borrow_mut();
-        let feature_ref = workbench.features.get(&self.extrusion_id).ok_or(anyhow::anyhow!("No feature with ID {} was found", self.extrusion_id))?;
+        let feature_ref = workbench
+            .features
+            .get(&self.extrusion_id)
+            .ok_or(anyhow::anyhow!(
+                "No feature with ID {} was found",
+                self.extrusion_id
+            ))?;
         let sketch_ref = workbench.get_sketch_by_id(self.sketch_id)?;
-        let mut extrusion: RefMut<'_, Extrusion> = RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
+        let mut extrusion: RefMut<'_, Extrusion> =
+            RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
 
         extrusion.faces = Selector::from_face_ids(&sketch_ref.borrow(), self.faces.clone());
 
@@ -199,8 +216,12 @@ pub struct UpdateForm {
 impl MessageHandler for UpdateForm {
     // Parent to workbench to add to solids and be able to reference the sketch
     type Parent = Rc<RefCell<Feature>>;
-    fn handle_message(&self, feature_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
-        let mut extrusion: RefMut<'_, Extrusion> = RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
+    fn handle_message(
+        &self,
+        feature_ref: Self::Parent,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
+        let mut extrusion: RefMut<'_, Extrusion> =
+            RefMut::map(feature_ref.borrow_mut(), |f| f.try_into().unwrap());
 
         extrusion.length = self.length;
         extrusion.offset = self.offset;

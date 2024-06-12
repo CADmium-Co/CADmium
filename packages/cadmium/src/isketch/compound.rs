@@ -7,14 +7,17 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
 use crate::message::{Identifiable, MessageHandler};
-use crate::IDType;
+use crate::{interop, IDType};
 
 use super::{compound_rectangle, ISketch};
 
 pub trait CompoundLike: Debug {
     fn references(&self) -> Vec<PrimitiveCell>;
     fn created_references(&self) -> Vec<PrimitiveCell>;
-    fn populate_created_references(&self, sketch: &mut isotope::sketch::Sketch) -> anyhow::Result<()> {
+    fn populate_created_references(
+        &self,
+        sketch: &mut isotope::sketch::Sketch,
+    ) -> anyhow::Result<()> {
         for reference in self.created_references() {
             sketch.add_primitive(reference)?;
         }
@@ -34,7 +37,12 @@ impl Identifiable for Rc<RefCell<Compound>> {
     const ID_NAME: &'static str = "compound_id";
 
     fn from_parent_id(parent: &Self::Parent, id: IDType) -> anyhow::Result<Self> {
-        Ok(parent.borrow().compounds.get(&id).ok_or(anyhow::anyhow!("No feature with ID {} was found", id))?.clone())
+        Ok(parent
+            .borrow()
+            .compounds
+            .get(&id)
+            .ok_or(anyhow::anyhow!("No feature with ID {} was found", id))?
+            .clone())
     }
 }
 
@@ -54,13 +62,22 @@ pub struct DeleteCompound {
 
 impl MessageHandler for DeleteCompound {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Rc<RefCell<ISketch>>) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(
+        &self,
+        sketch_ref: Rc<RefCell<ISketch>>,
+    ) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut isketch = sketch_ref.borrow_mut();
         let mut sketch = isketch.sketch.borrow_mut();
-        let compound = isketch.compounds.get(&self.id).ok_or(anyhow::anyhow!("No compound with ID {} was found", self.id))?;
+        let compound = isketch
+            .compounds
+            .get(&self.id)
+            .ok_or(anyhow::anyhow!("No compound with ID {} was found", self.id))?;
 
         for reference in compound.borrow().as_compound_like().created_references() {
-            let id = sketch.get_primitive_id(&reference).ok_or(anyhow::anyhow!("Failed to find primitive with reference {:?}", reference))?;
+            let id = sketch.get_primitive_id(&reference).ok_or(anyhow::anyhow!(
+                "Failed to find primitive with reference {:?}",
+                reference
+            ))?;
             sketch.delete_primitive(id)?;
         }
         drop(sketch);

@@ -8,7 +8,6 @@ use isotope::primitives::PrimitiveCell;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
-use crate::archetypes::FromSketchPrimitive;
 use crate::feature::point::Point3;
 use crate::message::MessageHandler;
 use crate::{archetypes, interop, IDType};
