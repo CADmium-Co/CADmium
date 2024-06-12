@@ -71,6 +71,11 @@ export function sendWasmMessage(message: Message): MessageResult {
     log("[sendWasmMessage] [messageHistory.update] update:", {message, result})
     return [...history, {message, result}]
   })
+
+  if (!result.success) {
+    throw new Error(`[sendWasmMessage] message failed: ${result.data}`)
+  }
+
   return result
 }
 

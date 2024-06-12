@@ -52,7 +52,7 @@ impl From<anyhow::Result<Option<IDType>>> for MessageResult {
             },
             Err(e) => Self {
                 success: false,
-                data: e.backtrace().to_string(),
+                data: e.to_string() + "\n\n" + e.backtrace().to_string().as_str(),
             },
         }
     }
