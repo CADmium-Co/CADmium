@@ -6,6 +6,7 @@ use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
 
 pub mod archetypes;
+pub mod interop;
 pub mod error;
 pub mod isketch;
 pub mod message;

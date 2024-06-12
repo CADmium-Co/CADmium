@@ -37,6 +37,7 @@ cadmium-macros = { path = "../cadmium-macros", version = "*" }
 log = "0.4.21"
 wasm-logger = "0.2.0"
 convert_case = "0.6"
+lazy_static = "1.4.0"
 
 [lib]
 crate-type = ["cdylib", "rlib"]

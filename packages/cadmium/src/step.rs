@@ -8,24 +8,26 @@ use wasm_bindgen::prelude::*;
 
 use crate::message::{Identifiable, Message, MessageHandler};
 use crate::workbench::Workbench;
-use crate::IDType;
+use crate::{interop, IDType};
 
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
-    pub(crate) id: IDType,
-    pub(crate) name: String,
-    pub(crate) suppressed: bool,
-    pub(crate) data: Message,
+    pub id: IDType,
+    pub name: String,
+    pub suppressed: bool,
+    pub data: Message,
+    pub interop_node: Option<interop::node::Node>,
 }
 
 impl Step {
-    pub fn new(id: IDType, data: Message) -> Self {
+    pub fn new(id: IDType, data: Message, interop_node: Option<interop::Node>) -> Self {
         Step {
             id,
             name: format!("{}-{}", data, id),
             suppressed: false,
             data,
+            interop_node,
         }
     }
 
@@ -62,7 +64,7 @@ pub struct Rename {
 
 impl MessageHandler for Rename {
     type Parent = Rc<RefCell<Step>>;
-    fn handle_message(&self, step_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, step_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut step = step_ref.borrow_mut();
         step.name = self.new_name.clone();
         Ok(None)
@@ -77,7 +79,7 @@ pub struct Delete {
 
 impl MessageHandler for Delete {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut workbench = workbench_ref.borrow_mut();
         workbench.history.remove(self.step_id as usize);
         Ok(None)

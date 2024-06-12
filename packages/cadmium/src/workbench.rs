@@ -10,7 +10,7 @@ use crate::isketch::ISketch;
 use crate::feature::Feature;
 use crate::feature::point::Point3;
 use crate::step::Step;
-use crate::IDType;
+use crate::{interop, IDType};
 
 use crate::message::*;
 
@@ -87,7 +87,7 @@ impl Workbench {
         self.history.push(
             Rc::new(
                 RefCell::new(
-                    Step::new(self.history.len() as IDType, message.clone()))));
+                    Step::new(self.history.len() as IDType, message.clone(), None))));
     }
 
     pub fn get_solids(&self) -> Vec<Solid> {
@@ -130,13 +130,14 @@ pub struct AddPoint {
 
 impl MessageHandler for AddPoint {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = sketch_ref.borrow_mut();
 
         let new_id = wb.points_next_id;
-        wb.points.insert(new_id, Rc::new(RefCell::new(Point3::new(self.x, self.y, self.z))));
+        let point = Rc::new(RefCell::new(Point3::new(self.x, self.y, self.z)));
+        wb.points.insert(new_id, point.clone());
         wb.points_next_id += 1;
-        Ok(Some(new_id))
+        Ok(Some((new_id, interop::Node::Point(point))))
     }
 }
 
@@ -151,13 +152,14 @@ pub struct AddPlane {
 
 impl MessageHandler for AddPlane {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = sketch_ref.borrow_mut();
 
         let new_id = wb.planes_next_id;
-        wb.planes.insert(new_id, Rc::new(RefCell::new(self.plane.clone())));
+        let plane = Rc::new(RefCell::new(self.plane.clone()));
+        wb.planes.insert(new_id, plane.clone());
         wb.planes_next_id += 1;
-        Ok(Some(new_id))
+        Ok(Some((new_id, interop::Node::Plane(plane))))
     }
 }
 
@@ -169,14 +171,15 @@ pub struct AddSketch {
 
 impl MessageHandler for AddSketch {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut wb = workbench_ref.borrow_mut();
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
 
         let new_id = wb.sketches_next_id;
-        wb.sketches.insert(new_id, Rc::new(RefCell::new(sketch)));
+        let sketch_cell = Rc::new(RefCell::new(sketch));
+        wb.sketches.insert(new_id, sketch_cell.clone());
         wb.sketches_next_id += 1;
-        Ok(Some(new_id))
+        Ok(Some((new_id, interop::Node::Sketch(sketch_cell))))
     }
 }
 
@@ -188,7 +191,7 @@ pub struct WorkbenchRename {
 
 impl MessageHandler for WorkbenchRename {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let mut workbench = workbench_ref.borrow_mut();
         workbench.name = self.new_name.clone();
         Ok(None)
@@ -204,7 +207,7 @@ pub struct SetSketchPlane {
 
 impl MessageHandler for SetSketchPlane {
     type Parent = Rc<RefCell<Workbench>>;
-    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let wb = workbench_ref.borrow();
 
         let plane = match self.plane_description {

@@ -3,5 +3,9 @@
 	"vite.autoStart": false,
 	"vite.buildCommand": "pnpm run build",
 	"vite.devCommand": "pnpm run dev",
-	"vite.showTerminal": true
+	"vite.showTerminal": true,
+	"cSpell.words": [
+		"Threlte",
+		"wireframe"
+	]
 }

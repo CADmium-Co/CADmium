@@ -8,14 +8,15 @@ use isotope::primitives::PrimitiveCell;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
+use crate::archetypes::FromSketchPrimitive;
 use crate::message::MessageHandler;
-use crate::IDType;
+use crate::{archetypes, interop, IDType};
 use crate::feature::point::Point3;
 
 use super::ISketch;
 
 #[message(ISketch, rename_parent = "Sketch")]
-pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<IDType>> {
+pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<(IDType, interop::Node)>> {
     let iso_point = ISOPoint2::new(x, y);
     let iso_point_cell = PrimitiveCell::Point2(Rc::new(RefCell::new(iso_point.clone())));
 
@@ -38,7 +39,7 @@ pub struct AddArc {
 
 impl MessageHandler for AddArc {
     type Parent = Rc<RefCell<ISketch>>;
-    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+    fn handle_message(&self, sketch_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
         let isketch = sketch_ref.borrow();
         let mut sketch = isketch.sketch.borrow_mut();
 
@@ -48,10 +49,17 @@ impl MessageHandler for AddArc {
             return Err(anyhow::anyhow!("Center point is not a point"));
         };
 
-        let arc = PrimitiveCell::Arc(Rc::new(RefCell::new(isotope::primitives::arc::Arc::new(center_point.clone(), self.radius, self.clockwise, self.start_angle, self.end_angle))));
+        let isoarc = PrimitiveCell::Arc(Rc::new(RefCell::new(isotope::primitives::arc::Arc::new(center_point.clone(), self.radius, self.clockwise, self.start_angle, self.end_angle))));
+        let arc = archetypes::Arc2 {
+            center: self.center,
+            radius: self.radius,
+            clockwise: self.clockwise,
+            start_angle: self.start_angle,
+            end_angle: self.end_angle,
+        };
 
-        let point_id = sketch.add_primitive(arc)?;
-        Ok(Some(point_id))
+        let arc_id = sketch.add_primitive(isoarc)?;
+        Ok(Some(arc_id))
     }
 }
 

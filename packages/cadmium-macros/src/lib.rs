@@ -164,7 +164,7 @@ pub fn message(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> 
 
         impl crate::message::MessageHandler for #struct_name {
             type Parent = Rc<RefCell<#parent>>;
-            fn handle_message(&self, parent_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
+            fn handle_message(&self, parent_ref: Self::Parent) -> anyhow::Result<Option<(IDType, interop::Node)>> {
                 parent_ref.borrow_mut().#fn_name( #(self.#parameters.clone()),* )
             }
         }
@@ -188,20 +188,6 @@ fn variant_to_typescript(field_type: Type) -> (Type, Vec<proc_macro2::TokenStrea
     }).collect::<Vec<proc_macro2::TokenStream>>();
 
     (inner_type, additional_types)
-
-    // let additional_types_len = additional_types.len();
-
-    // quote! {
-    //     let inner_decl: &'static str = #inner_type::DECL;
-    //     let id_fields: [&'static str; #additional_types_len] = [#(#additional_types,)*];
-    //     let id_fields_idtype = id_fields
-    //         .iter()
-    //         .map(|field| format!("{}: IDType;", field))
-    //         .collect::<Vec<String>>();
-
-    //     let new_decl = inner_decl.replace("{", format!("{{\n    {}", id_fields_idtype.join("\n    ")).as_str());
-    //     println!("{}", new_decl);
-    // }
 }
 
 fn get_idwrap_type(field_type: Type) -> Type {

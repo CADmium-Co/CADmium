@@ -276,3 +276,14 @@ pub enum WrappedPrimitive {
     Arc2(Arc2),
     Circle2(Circle2),
 }
+
+impl WrappedPrimitive {
+    pub fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &isotope::primitives::Primitive) -> Self {
+        match primitive {
+            isotope::primitives::Primitive::Point2(p) => WrappedPrimitive::Point2(Point2::from_sketch(sketch, p)),
+            isotope::primitives::Primitive::Line(l) => WrappedPrimitive::Line2(Line2::from_sketch(sketch, l)),
+            isotope::primitives::Primitive::Arc(a) => WrappedPrimitive::Arc2(Arc2::from_sketch(sketch, a)),
+            isotope::primitives::Primitive::Circle(c) => WrappedPrimitive::Circle2(Circle2::from_sketch(sketch, c)),
+        }
+    }
+}
