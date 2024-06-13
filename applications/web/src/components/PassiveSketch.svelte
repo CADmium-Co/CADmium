@@ -163,12 +163,12 @@
 
     {#each history as step}
       {#if isSketchPointStep(step)}
-        <Point2D x={step.result.Point2.x} y={step.result.Point2.y} hidden={step.result.Point2.hidden} id={`${step.id}`} {collisionLineMaterial} />
+        <Point2D x={step.result.Point2.x} y={step.result.Point2.y} hidden={step.result.Point2.hidden} id={step.hash} {collisionLineMaterial} />
       {:else if isSketchCircleStep(step)}
         <Circle
           center={pointsById[step.result.Circle2.center]}
           radius={step.result.Circle2.radius}
-          id={`${step.id}`}
+          id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
           {solidSelectedMaterial}
@@ -182,7 +182,7 @@
           center={pointsById[step.result.Arc2.center]}
           start={pointsById[0]}
           end={pointsById[1]}
-          id={`${step.id}`}
+          id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
           {solidSelectedMaterial}
@@ -194,7 +194,7 @@
         <Line
           start={pointsById[step.result.Line2.start]}
           end={pointsById[step.result.Line2.end]}
-          id={`${step.id}`}
+          id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
           {solidSelectedMaterial}

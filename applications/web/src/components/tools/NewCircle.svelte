@@ -19,7 +19,7 @@
 
   function pushToStack(point: PointLikeById) {
     if (!point) return
-    point.id = point.id ?? bench.sketchAddPoint(sketchId, point.x, point.y).data
+    point.id = point.id ?? bench.sketchAddPoint(sketchId, point.twoD.x, point.threeD.y).data
     stack.push(point)
   }
 

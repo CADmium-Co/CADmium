@@ -1,6 +1,6 @@
 <script lang="ts">
   import {snapPoints, sketchTool, previewGeometry, currentlyMousedOver} from "shared/stores"
-  import {addLineToSketch, addPointToSketch} from "shared/projectUtils"
+  import {addLineToSketch, addPointToSketch, bench} from "shared/projectUtils"
   import {Vector3} from "three"
   import type {IDictionary, Point, PointLikeById, PreviewGeometry, ProjectToPlane, SketchPoint} from "shared/types"
 
@@ -22,7 +22,7 @@
     // - id: a string representing the id of the point in the sketch
     // If the id is nullish we call addPointToSketch to create a new point in the sketch.
     if (!point) return
-    point.id = point.id ?? addPointToSketch(sketchIndex, point.twoD, false)
+    point.id = point.id ?? bench.sketchAddPoint(sketchIndex, point.twoD.x, point.twoD.y).data
     stack.push(point)
   }
 
