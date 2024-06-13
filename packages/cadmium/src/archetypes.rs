@@ -1,6 +1,3 @@
-use isotope::primitives::arc::Arc as ISOArc;
-use isotope::primitives::circle::Circle as ISOCircle;
-use isotope::primitives::line::Line as ISOLine;
 use isotope::primitives::point2::Point2 as ISOPoint2;
 use serde::{Deserialize, Serialize};
 use truck_modeling::InnerSpace;
@@ -213,50 +210,50 @@ impl FromSketchPrimitive<ISOPoint2> for Point2 {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Arc2 {
-    pub center: IDType,
+    pub center: StepHash,
     pub radius: f64,
     pub clockwise: bool,
     pub start_angle: f64,
     pub end_angle: f64,
 }
 
-impl FromSketchPrimitive<ISOArc> for Arc2 {
-    fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &ISOArc) -> Self {
-        let center = sketch
-            .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(
-                primitive.center(),
-            ))
-            .unwrap();
-        Self {
-            center,
-            radius: primitive.radius(),
-            clockwise: primitive.clockwise(),
-            start_angle: primitive.start_angle(),
-            end_angle: primitive.end_angle(),
-        }
-    }
-}
+// impl FromSketchPrimitive<ISOArc> for Arc2 {
+//     fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &ISOArc) -> Self {
+//         let center = sketch
+//             .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(
+//                 primitive.center(),
+//             ))
+//             .unwrap();
+//         Self {
+//             center,
+//             radius: primitive.radius(),
+//             clockwise: primitive.clockwise(),
+//             start_angle: primitive.start_angle(),
+//             end_angle: primitive.end_angle(),
+//         }
+//     }
+// }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Circle2 {
-    pub center: IDType,
+    pub center: StepHash,
     pub radius: f64,
 }
 
-impl FromSketchPrimitive<ISOCircle> for Circle2 {
-    fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &ISOCircle) -> Self {
-        let center = sketch
-            .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(
-                primitive.center(),
-            ))
-            .unwrap();
-        Self {
-            center,
-            radius: primitive.radius(),
-        }
-    }
-}
+// impl FromSketchPrimitive<ISOCircle> for Circle2 {
+//     fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &ISOCircle) -> Self {
+//         let center = sketch
+//             .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(
+//                 primitive.center(),
+//             ))
+//             .unwrap();
+//         Self {
+//             center,
+//             radius: primitive.radius(),
+//         }
+//     }
+// }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -265,20 +262,20 @@ pub struct Line2 {
     pub end: StepHash,
 }
 
-impl FromSketchPrimitive<ISOLine> for Line2 {
-    fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &ISOLine) -> Self {
-        let start_prim = sketch
-            .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(
-                primitive.start(),
-            ))
-            .unwrap();
-        let end_prim = sketch
-            .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(primitive.end()))
-            .unwrap();
+// impl FromSketchPrimitive<ISOLine> for Line2 {
+//     fn from_sketch(sketch: &isotope::sketch::Sketch, primitive: &ISOLine) -> Self {
+//         let start_prim = sketch
+//             .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(
+//                 primitive.start(),
+//             ))
+//             .unwrap();
+//         let end_prim = sketch
+//             .get_primitive_id(&isotope::primitives::PrimitiveCell::Point2(primitive.end()))
+//             .unwrap();
 
-        Self { start, end }
-    }
-}
+//         Self { start, end }
+//     }
+// }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -289,24 +286,24 @@ pub enum WrappedPrimitive {
     Circle2(Circle2),
 }
 
-impl WrappedPrimitive {
-    pub fn from_sketch(
-        sketch: &isotope::sketch::Sketch,
-        primitive: &isotope::primitives::Primitive,
-    ) -> Self {
-        match primitive {
-            isotope::primitives::Primitive::Point2(p) => {
-                WrappedPrimitive::Point2(Point2::from_sketch(sketch, p))
-            }
-            isotope::primitives::Primitive::Line(l) => {
-                WrappedPrimitive::Line2(Line2::from_sketch(sketch, l))
-            }
-            isotope::primitives::Primitive::Arc(a) => {
-                WrappedPrimitive::Arc2(Arc2::from_sketch(sketch, a))
-            }
-            isotope::primitives::Primitive::Circle(c) => {
-                WrappedPrimitive::Circle2(Circle2::from_sketch(sketch, c))
-            }
-        }
-    }
-}
+// impl WrappedPrimitive {
+//     pub fn from_sketch(
+//         sketch: &isotope::sketch::Sketch,
+//         primitive: &isotope::primitives::Primitive,
+//     ) -> Self {
+//         match primitive {
+//             isotope::primitives::Primitive::Point2(p) => {
+//                 WrappedPrimitive::Point2(Point2::from_sketch(sketch, p))
+//             }
+//             isotope::primitives::Primitive::Line(l) => {
+//                 WrappedPrimitive::Line2(Line2::from_sketch(sketch, l))
+//             }
+//             isotope::primitives::Primitive::Arc(a) => {
+//                 WrappedPrimitive::Arc2(Arc2::from_sketch(sketch, a))
+//             }
+//             isotope::primitives::Primitive::Circle(c) => {
+//                 WrappedPrimitive::Circle2(Circle2::from_sketch(sketch, c))
+//             }
+//         }
+//     }
+// }

@@ -29,6 +29,7 @@ pub struct ISketch {
     pub plane: Rc<RefCell<Plane>>,
 
     sketch: Rc<RefCell<Sketch>>,
+    primitive_map: BTreeMap<StepHash, IDType>,
     compounds: BTreeMap<u64, Rc<RefCell<compound::Compound>>>,
     compounds_next_id: u64,
     points_3d: BTreeMap<u64, Point3>,
@@ -42,6 +43,7 @@ impl ISketch {
         let mut real_sketch = Self {
             plane: plane.clone(),
             points_3d: BTreeMap::new(),
+            primitive_map: BTreeMap::new(),
             compounds: BTreeMap::new(),
             compounds_next_id: 0,
             sketch: Rc::new(RefCell::new(Sketch::new())),

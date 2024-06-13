@@ -31,13 +31,14 @@ indexmap = "2.1.0"
 anyhow = { version = "1.0.86", features = ["backtrace"] }
 thiserror = "1.0.61"
 strum = { version = "0.26.2", features = ["derive"] }
-isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*", features = ["tsify"] }
+isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*", features = [
+	"tsify",
+] }
 paste = "1.0.15"
 cadmium-macros = { path = "../cadmium-macros", version = "*" }
 log = "0.4.21"
 wasm-logger = "0.2.0"
 convert_case = "0.6"
-lazy_static = "1.4.0"
 xxhash-rust = { version = "0.8.10", features = ["xxh3"] }
 
 [lib]

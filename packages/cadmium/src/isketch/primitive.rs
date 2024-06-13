@@ -42,7 +42,7 @@ pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<(IDType, St
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddArc {
-    pub center: IDType,
+    pub center: StepHash,
     pub radius: f64,
     pub clockwise: bool,
     pub start_angle: f64,
@@ -56,15 +56,18 @@ impl MessageHandler for AddArc {
         sketch_ref: Self::Parent,
     ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
+        // let center_id = isketch.primitive_map.get(&self.center).unwrap();
+        let center_id = crate::ID_MAP
+            .with_borrow(|m| m.get(&self.center).cloned())
+            .ok_or(anyhow::anyhow!("center point not found"))?;
         let mut sketch = isketch.sketch.borrow_mut();
 
-        let center_point = if let PrimitiveCell::Point2(point) =
-            sketch.get_primitive_by_id(self.center).unwrap()
-        {
-            point
-        } else {
-            return Err(anyhow::anyhow!("Center point is not a point"));
-        };
+        let center_point =
+            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center_id).unwrap() {
+                point
+            } else {
+                return Err(anyhow::anyhow!("Center point is not a point"));
+            };
 
         let isoarc = PrimitiveCell::Arc(Rc::new(RefCell::new(isotope::primitives::arc::Arc::new(
             center_point.clone(),
@@ -93,7 +96,7 @@ impl MessageHandler for AddArc {
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddCircle {
-    pub center: IDType,
+    pub center: StepHash,
     pub radius: f64,
 }
 
@@ -104,15 +107,18 @@ impl MessageHandler for AddCircle {
         sketch_ref: Self::Parent,
     ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
+        // let center_id = isketch.primitive_map.get(&self.center).unwrap();
+        let center_id = crate::ID_MAP
+            .with_borrow(|m| m.get(&self.center).cloned())
+            .ok_or(anyhow::anyhow!("center point not found"))?;
         let mut sketch = isketch.sketch.borrow_mut();
 
-        let center_point = if let PrimitiveCell::Point2(point) =
-            sketch.get_primitive_by_id(self.center).unwrap()
-        {
-            point
-        } else {
-            return Err(anyhow::anyhow!("Center point is not a point"));
-        };
+        let center_point =
+            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(center_id).unwrap() {
+                point
+            } else {
+                return Err(anyhow::anyhow!("Center point is not a point"));
+            };
 
         let iso_circle = PrimitiveCell::Circle(Rc::new(RefCell::new(
             isotope::primitives::circle::Circle::new(center_point.clone(), self.radius),
@@ -145,16 +151,24 @@ impl MessageHandler for AddLine {
         sketch_ref: Self::Parent,
     ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let isketch = sketch_ref.borrow();
+        // let start_id = isketch.primitive_map.get(&self.start).unwrap();
+        // let end_id = isketch.primitive_map.get(&self.end).unwrap();
+        let start_id = crate::ID_MAP
+            .with_borrow(|m| m.get(&self.start).cloned())
+            .ok_or(anyhow::anyhow!("start point not found"))?;
+        let end_id = crate::ID_MAP
+            .with_borrow(|m| m.get(&self.end).cloned())
+            .ok_or(anyhow::anyhow!("end point not found"))?;
         let mut sketch = isketch.sketch.borrow_mut();
 
         let start_point =
-            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.start).unwrap() {
+            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(start_id).unwrap() {
                 point
             } else {
                 return Err(anyhow::anyhow!("Start point is not a point"));
             };
         let end_point =
-            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(self.end).unwrap() {
+            if let PrimitiveCell::Point2(point) = sketch.get_primitive_by_id(end_id).unwrap() {
                 point
             } else {
                 return Err(anyhow::anyhow!("End point is not a point"));

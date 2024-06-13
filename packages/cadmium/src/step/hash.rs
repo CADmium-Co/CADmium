@@ -13,7 +13,7 @@ use crate::message::Message;
 /// The only way to construct a new one is to calculate a hash of a message.
 ///
 /// We also implement Copy as this is just a u64.
-#[derive(Tsify, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Tsify, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 #[serde(transparent)]
 #[repr(transparent)]

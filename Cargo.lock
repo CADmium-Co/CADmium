@@ -299,7 +299,6 @@ dependencies = [
  "indexmap 2.2.6",
  "isotope",
  "itertools 0.13.0",
- "lazy_static",
  "log",
  "paste",
  "serde",
