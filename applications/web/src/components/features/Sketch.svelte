@@ -18,13 +18,13 @@
   import X from "phosphor-svelte/lib/X"
   import type {Entity} from "shared/types"
   import {base} from "../../base"
-  import type {PlaneDescription} from "cadmium"
+  import type {PlaneDescription, StepHash} from "cadmium"
   import {isPlaneDescriptionPlane, isPlaneDescriptionSolid} from "shared/typeGuards"
 
   // @ts-ignore
   const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, hash: number, plane_desc: PlaneDescription | undefined
+  export let name: string, index: number, hash: StepHash, plane_desc: PlaneDescription | undefined
   log("[props]", "name:", name, "index:", index, "hash:", hash, "plane_desc:", plane_desc)
 
   const source = `${base}/actions/sketch_min.svg`
@@ -54,7 +54,7 @@
   const closeAndRefresh = () => {
     log("closing, refreshing")
     $featureIndex = 1000
-    $sketchBeingEdited = -1
+    $sketchBeingEdited = null
     $sketchTool = ""
     $selectingFor = []
     $selectionMax = 1000

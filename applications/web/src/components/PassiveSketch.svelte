@@ -144,7 +144,7 @@
 
     <SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool === "select"} />
     <NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} active={$sketchTool === "line"} {projectToPlane} />
-    <NewCircleTool bind:this={newCircleTool} {pointsById} sketchIndex={uniqueId} active={$sketchTool === "circle"} {projectToPlane} />
+    <NewCircleTool bind:this={newCircleTool} {pointsById} sketchId={uniqueId} active={$sketchTool === "circle"} {projectToPlane} />
     <NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={uniqueId} active={$sketchTool === "rectangle"} {projectToPlane} />
 
     <T.Line2

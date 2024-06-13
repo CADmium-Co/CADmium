@@ -7,9 +7,16 @@ use cadmium::IDType;
 
 use crate::FaceSelectorType;
 
-pub const COLORS: [&str; 6] = ["#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF"];
+pub const COLORS: [&str; 6] = [
+    "#FF0000", "#00FF00", "#0000FF", "#FFFF00", "#FF00FF", "#00FFFF",
+];
 
-pub fn draw_sketch_faces(p: &mut Project, selector: &FaceSelectorType, sketch_id: IDType, name: String) {
+pub fn draw_sketch_faces(
+    p: &mut Project,
+    selector: &FaceSelectorType,
+    sketch_id: IDType,
+    name: String,
+) {
     let wb_ref = p.get_workbench_by_id(0).unwrap();
     let wb = wb_ref.borrow();
     let sketch_ref = wb.get_sketch_by_id(sketch_id).unwrap();

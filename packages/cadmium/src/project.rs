@@ -45,7 +45,7 @@ impl Project {
         let wb_cell = Rc::new(RefCell::new(wb));
         self.workbenches.push(wb_cell.clone());
         let wb_id = self.workbenches.len() as u64 - 1;
-        let wb_hash = StepHash::take_the_int_im_not_stupid(wb_id);
+        let wb_hash = StepHash::from_int(wb_id);
 
         IDWrap {
             id: wb_hash.clone(),
@@ -167,7 +167,7 @@ pub mod tests {
 
     use super::*;
 
-    pub const WORKBENCH_HASH: StepHash = StepHash::take_the_int_im_not_stupid(0);
+    pub const WORKBENCH_HASH: StepHash = StepHash::from_int(0);
 
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");

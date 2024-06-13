@@ -40,6 +40,8 @@ log = "0.4.21"
 wasm-logger = "0.2.0"
 convert_case = "0.6"
 xxhash-rust = { version = "0.8.10", features = ["xxh3"] }
+js-sys = "0.3.69"
+tsify = { version = "0.4.5", features = ["js", "wasm-bindgen"], default-features = false }
 
 [lib]
 crate-type = ["cdylib", "rlib"]

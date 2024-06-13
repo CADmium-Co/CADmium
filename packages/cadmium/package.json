@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "pnpm build:dev && onchange 'src/**/*.rs' -- pnpm build:dev",
     "build:dev": "cross-env cargo check && wasm-pack build --no-pack --target web --dev",
-    "build": "wasm-pack build --target web --no-pack",
+    "build": "cross-env cargo run --bin gen-types && wasm-pack build --target web --no-pack",
     "clean": "rimraf target pkg node_modules",
     "test": "cargo test",
     "postinstall": "pnpm build"

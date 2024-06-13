@@ -1,4 +1,4 @@
-import { MessageResult, Workbench } from "cadmium"
+import { MessageResult, StepHash, Workbench } from "cadmium"
 import { Message } from "./cadmium-api"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
@@ -364,7 +364,7 @@ interface PointLikeById {
   [x: string]: any // hack todo fix
   twoD?: Vector2Like | Vector2 | Point2D
   threeD?: Vector3Like | Vector3 | Point3D
-  id?: string | null
+  id?: StepHash | null
 }
 
 type PointsById = IDictionary<PointById>

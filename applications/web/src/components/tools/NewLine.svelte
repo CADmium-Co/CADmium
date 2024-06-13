@@ -38,7 +38,7 @@
       default:
         const endPoint = popFromStack()
         const startPoint = popFromStack()
-        addLineToSketch(sketchIndex, +startPoint!.id!, +endPoint!.id!)
+        addLineToSketch(sketchIndex, startPoint!.id!, endPoint!.id!)
 
         // leave the current point on the stack in case we want to create another line from here
         pushToStack(point)

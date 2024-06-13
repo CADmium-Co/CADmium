@@ -1,6 +1,6 @@
 <script lang="ts">
   import {snapPoints, sketchTool, previewGeometry, currentlyMousedOver} from "shared/stores"
-  import {addCircleBetweenPoints, addPointToSketch} from "shared/projectUtils"
+  import {addCircleBetweenPoints, addPointToSketch, bench} from "shared/projectUtils"
   import {Vector3, type Vector2Like, type Vector3Like} from "three"
   import type {PointLikeById, Point2D, PointsLikeById, ProjectToPlane} from "shared/types"
 
@@ -8,7 +8,7 @@
   const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let pointsById: PointsLikeById
-  export let sketchIndex: string
+  export let sketchId: string
   export let active: boolean
   export let projectToPlane: ProjectToPlane
 
@@ -19,7 +19,7 @@
 
   function pushToStack(point: PointLikeById) {
     if (!point) return
-    point.id = point.id ?? addPointToSketch(sketchIndex, point.twoD, false)
+    point.id = point.id ?? bench.sketchAddPoint(sketchId, point.x, point.y).data
     stack.push(point)
   }
 
@@ -35,7 +35,7 @@
       default:
         const circumference = popFromStack()
         const center = popFromStack()
-        addCircleBetweenPoints(sketchIndex, center!.id!, circumference!.id!)
+        bench.sketchAddCircle(sketchId, center!.id!, circumference!.id!)
         clearStack()
         break
     }

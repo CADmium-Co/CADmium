@@ -9,7 +9,11 @@ use super::IDWrap;
 
 impl<'de, T, C> Deserialize<'de> for IDWrap<T>
 where
-    T: MessageHandler<Parent = C> + Clone + Serialize + for<'dh> Deserialize<'dh> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = C>
+        + Clone
+        + Serialize
+        + for<'dh> Deserialize<'dh>
+        + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable,
 {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
@@ -31,7 +35,11 @@ where
         // Implementation of Visitor trait for IDWrapVisitor
         impl<'de, T, C> Visitor<'de> for IDWrapVisitor<IDWrap<T>>
         where
-            T: MessageHandler<Parent = C> + Clone + Serialize + for<'dh> Deserialize<'dh> + wasm_bindgen::convert::RefFromWasmAbi,
+            T: MessageHandler<Parent = C>
+                + Clone
+                + Serialize
+                + for<'dh> Deserialize<'dh>
+                + wasm_bindgen::convert::RefFromWasmAbi,
             C: Identifiable,
         {
             type Value = IDWrap<T>;
@@ -42,11 +50,10 @@ where
 
             fn visit_map<V>(self, mut map: V) -> Result<Self::Value, V::Error>
             where
-                    V: MapAccess<'de>,
+                V: MapAccess<'de>,
             {
                 let mut parent_id = None;
                 let mut inner_map = serde_json::Map::new();
-
 
                 // Loop through the map and extract fields
                 while let Some(key) = map.next_key::<String>()? {
@@ -67,10 +74,7 @@ where
                 let inner = T::deserialize(inner_value).map_err(de::Error::custom)?;
 
                 // Construct the nested IDWrap structure
-                Ok(IDWrap {
-                    id,
-                    inner,
-                })
+                Ok(IDWrap { id, inner })
             }
         }
 

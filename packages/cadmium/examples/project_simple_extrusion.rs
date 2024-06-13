@@ -10,7 +10,7 @@ use cadmium::workbench::AddSketch;
 
 fn main() {
     let mut p = Project::new("Test Project");
-    let wb_hash = StepHash::take_the_int_im_not_stupid(0);
+    let wb_hash = StepHash::from_int(0);
     let plane_description = PlaneDescription::PlaneId(0);
     let sketch_id = AddSketch { plane_description }
         .id_wrap(wb_hash)

@@ -106,7 +106,7 @@ pub fn message_handler_derive(input: proc_macro::TokenStream) -> proc_macro::Tok
                 let only_interface_iter = interface_right.split("}").collect::<Vec<_>>();
                 let only_interface = only_interface_iter.get(0).unwrap();
                 let inner_fields = only_interface.split(";").map(|f| f.trim().to_string()).collect::<Vec<_>>();
-                let mut additional = vec![ #( format!("{}: IDType", #variants_typescript_additional) ),* ];
+                let mut additional = vec![ #( format!("{}: StepHash", #variants_typescript_additional) ),* ];
                 additional.extend(inner_fields.clone());
 
                 result.push((stringify!(#variant_names), additional));

@@ -1,10 +1,9 @@
 use std::fmt::Display;
 
+use crate::message::Message;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use xxhash_rust::xxh3::xxh3_64;
-
-use crate::message::Message;
 
 /// This represents a hash of a step.
 /// It's really just a wrapper around a u64, but it's used to ensure that the hash
@@ -13,18 +12,17 @@ use crate::message::Message;
 /// The only way to construct a new one is to calculate a hash of a message.
 ///
 /// We also implement Copy as this is just a u64.
-#[derive(Tsify, Clone, Copy, Debug, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Tsify, Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[serde(transparent)]
 #[repr(transparent)]
-pub struct StepHash(#[tsify(type = "bigint")] u64);
+pub struct StepHash(#[tsify(type = "string")] u64);
 
 impl StepHash {
-    pub fn give_the_int_im_not_stupid(&self) -> u64 {
+    pub fn into_int(&self) -> u64 {
         self.0
     }
 
-    pub const fn take_the_int_im_not_stupid(val: u64) -> Self {
+    pub const fn from_int(val: u64) -> Self {
         Self(val)
     }
 }
@@ -39,6 +37,21 @@ impl From<&Message> for StepHash {
 
 impl Display for StepHash {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:x}", self.0)
+        write!(f, "{}", self.0)
+    }
+}
+
+// Serialize as string
+impl Serialize for StepHash {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        self.0.to_string().serialize(serializer)
+    }
+}
+
+// Deserialize from string
+impl<'de> Deserialize<'de> for StepHash {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let s = String::deserialize(deserializer)?;
+        Ok(Self(s.parse().unwrap()))
     }
 }

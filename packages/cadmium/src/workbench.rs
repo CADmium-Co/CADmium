@@ -1,4 +1,4 @@
-use log::info;
+use log::{debug, info};
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
@@ -85,6 +85,14 @@ impl Workbench {
     }
 
     pub fn get_step_by_hash(&self, hash: StepHash) -> Option<Rc<RefCell<Step>>> {
+        debug!(
+            "Looking for step with hash {} in hashes {:?}",
+            hash,
+            self.history
+                .iter()
+                .map(|step| step.borrow().hash())
+                .collect::<Vec<_>>()
+        );
         self.history
             .iter()
             .find(|step| step.borrow().hash() == hash)
@@ -109,7 +117,7 @@ impl Identifiable for Rc<RefCell<Workbench>> {
         // For now at least there's no good way to differentiate between a workbench
         // ID and a step hash. The workbench can't be hash-indexed as it's always
         // changing
-        let id = hash.give_the_int_im_not_stupid();
+        let id = hash.into_int();
         Ok(parent.get_workbench_by_id(id)?)
     }
 }

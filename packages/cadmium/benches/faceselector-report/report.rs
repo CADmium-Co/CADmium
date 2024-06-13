@@ -46,14 +46,16 @@ pub fn save_report_html(results: Vec<(String, String, String)>) {
     let mut report = HTML_HEAD.to_string();
 
     for (selector, case, name) in results.iter() {
-        report.push_str(&format!(r#"
+        report.push_str(&format!(
+            r#"
             <tr>
                 <td>{selector}</td>
                 <td>{case}</td>
                 <td><a href="{name}_before.svg"><img width="200" src="{name}_before.svg" /></a></td>
                 <td><a href="{name}_after.svg"><img width="200" src="{name}_after.svg" /></a></td>
             </tr>
-        "#))
+        "#
+        ))
     }
 
     report.push_str(HTML_FOOT);

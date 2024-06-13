@@ -9,7 +9,19 @@ use crate::TestCase;
 pub struct SingleCircle();
 impl TestCase for SingleCircle {
     fn pre_selection(&self, p: &mut cadmium::project::Project, sketch_id: IDType) {
-        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddCircle { center: 0, radius: 10.0 } } }.handle_project_message(p).unwrap().unwrap();
+        IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: AddCircle {
+                    center: 0,
+                    radius: 10.0,
+                },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
     }
     fn post_selection(&self, _p: &mut cadmium::project::Project, _sketch_id: IDType) {}
 }
@@ -21,6 +33,18 @@ impl TestCase for SingleCircleAddAnother {
         SingleCircle().pre_selection(p, sketch_id)
     }
     fn post_selection(&self, p: &mut cadmium::project::Project, sketch_id: IDType) {
-        IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: AddCircle { center: 0, radius: 20.0 } } }.handle_project_message(p).unwrap().unwrap();
+        IDWrap {
+            id: 0,
+            inner: IDWrap {
+                id: sketch_id,
+                inner: AddCircle {
+                    center: 0,
+                    radius: 20.0,
+                },
+            },
+        }
+        .handle_project_message(p)
+        .unwrap()
+        .unwrap();
     }
 }

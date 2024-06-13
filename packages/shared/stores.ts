@@ -1,4 +1,4 @@
-import {Solid, Project as WasmProject, Workbench} from "cadmium"
+import {Solid, StepHash, Project as WasmProject, Workbench} from "cadmium"
 import {writable} from "svelte/store"
 import type {MessageHistory, Project, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry} from "./types"
 import {isArcEntity, isCircleEntity, isEntity, isFaceEntity, isLineEntity, isMeshFaceEntity, isPlaneEntity, isPoint3DEntity, isPointEntity} from "./typeGuards"
@@ -19,7 +19,7 @@ export const featureIndex = writable<number>(1000)
 export const extrusionFeatures = writable<Entity[]>([])
 
 export const hiddenSketches = writable<number[]>([])
-export const sketchBeingEdited = writable(-1)
+export const sketchBeingEdited = writable<StepHash | null>(null)
 export const sketchTool = writable("")
 
 // could be looking for 'face' or 'plane' or other things

@@ -54,15 +54,17 @@ impl FaceSelector for CentroidSelector {
             .filter_map(|c| {
                 let point = geo::Point::new(c.x(), c.y());
                 let faces = sketch.faces();
-                let min = faces
-                    .iter()
-                    .min_by(|a, b| {
-                        let Some(a_centroid) = &a.as_polygon().centroid() else { return std::cmp::Ordering::Greater };
-                        let Some(b_centroid) = &b.as_polygon().centroid() else { return std::cmp::Ordering::Greater };
-                        let a_distance = a_centroid.euclidean_distance(&point);
-                        let b_distance = b_centroid.euclidean_distance(&point);
-                        a_distance.partial_cmp(&b_distance).unwrap()
-                    });
+                let min = faces.iter().min_by(|a, b| {
+                    let Some(a_centroid) = &a.as_polygon().centroid() else {
+                        return std::cmp::Ordering::Greater;
+                    };
+                    let Some(b_centroid) = &b.as_polygon().centroid() else {
+                        return std::cmp::Ordering::Greater;
+                    };
+                    let a_distance = a_centroid.euclidean_distance(&point);
+                    let b_distance = b_centroid.euclidean_distance(&point);
+                    a_distance.partial_cmp(&b_distance).unwrap()
+                });
 
                 min.cloned()
             })
@@ -71,7 +73,8 @@ impl FaceSelector for CentroidSelector {
 
     fn from_face_ids(sketch: &ISketch, ids: Vec<IDType>) -> Self {
         Self {
-            centroids: sketch.get_face_ids(ids)
+            centroids: sketch
+                .get_face_ids(ids)
                 .iter()
                 .filter_map(|f| {
                     // We're straight-up skipping faces without a centroid

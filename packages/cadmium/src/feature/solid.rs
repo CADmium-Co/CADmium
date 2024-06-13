@@ -34,10 +34,7 @@ pub struct Solid {
 }
 
 impl Solid {
-    pub fn from_truck_solid(
-        name: String,
-        truck_solid: TruckClosedSolid,
-    ) -> Self {
+    pub fn from_truck_solid(name: String, truck_solid: TruckClosedSolid) -> Self {
         let mut solid = Solid {
             name,
             crc32: "".to_owned(),
@@ -151,5 +148,4 @@ impl Solid {
         let mut step_file = std::fs::File::create(filename).unwrap();
         std::io::Write::write_all(&mut step_file, step_text.as_ref()).unwrap();
     }
-
 }

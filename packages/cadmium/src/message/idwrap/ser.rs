@@ -5,10 +5,13 @@ use crate::message::{Identifiable, MessageHandler};
 
 use super::IDWrap;
 
-
 impl<T, C> Serialize for IDWrap<T>
 where
-    T: MessageHandler<Parent = C> + Clone + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi,
+    T: MessageHandler<Parent = C>
+        + Clone
+        + Serialize
+        + for<'de> Deserialize<'de>
+        + wasm_bindgen::convert::RefFromWasmAbi,
     C: Identifiable,
 {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
@@ -24,7 +27,8 @@ where
             .map_err(serde::ser::Error::custom)?
             .as_object()
             .ok_or_else(|| serde::ser::Error::custom("Expected object"))?
-            .iter().try_for_each(|(k, v)| {
+            .iter()
+            .try_for_each(|(k, v)| {
                 map.serialize_entry(k, v)?;
                 Ok(())
             })?;

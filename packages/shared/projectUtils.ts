@@ -1,13 +1,15 @@
-import * as cad from "./cadmium-api"
-;(window as any).cad = cad
 import type {Message} from "./cadmium-api"
 
 import {workbenchIsStale, workbenchIndex, workbench, project, featureIndex, wasmProject, projectIsStale, messageHistory, workbenchSolids} from "./stores"
 import {get} from "svelte/store"
 import {Vector2, Vector3, type Vector2Like} from "three"
 import type {Entity, ExtrusionHistoryStep, HistoryStep, MessageHistory, PlaneHistoryStep, PointHistoryStep, SketchHistoryStep, WithTarget} from "./types"
-import type {Primitive, Workbench, MessageResult, IDType, Solid, Step, Node, Point3, Plane, ISketch, SolidArray} from "cadmium"
+import type {Primitive, Workbench, MessageResult, IDType, Solid, Step, Node, Point3, Plane, ISketch, SolidArray, StepHash} from "cadmium"
 import {isMessage} from "./typeGuards"
+
+import * as cad from "./cadmium-api"
+(window as any).cad = cad
+export { cad }
 
 // prettier-ignore
 const log = (function () { const context = "[projectUtils.ts]"; const color = "aqua"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
@@ -20,7 +22,7 @@ function createWrapperFunctions(originalNamespace: any, newNamespace: any) {
     if (typeof originalFunction === "function") {
       newNamespace[funcName] = (...args: any[]) => {
         const workbench_id = get(workbenchIndex)
-        return originalFunction(workbench_id, ...args)
+        return originalFunction(workbench_id.toString(), ...args)
       }
     }
   })
@@ -29,7 +31,7 @@ function createWrapperFunctions(originalNamespace: any, newNamespace: any) {
 export namespace bench {
   createWrapperFunctions(cad, bench)
 }
-;(window as any).bench = bench
+(window as any).bench = bench
 
 export function getWorkbenchSolids(): Solid[] {
   let wp = get(wasmProject)
@@ -115,7 +117,7 @@ export function setSketchPlane(sketchId: number, planeId: number) {
 
 export function newSketchOnPlane() {
   // TODO: Why are we defaulting to plane 0?
-  cad.workbenchSketchAdd(get(workbenchIndex), {PlaneId: 0})
+  cad.workbenchSketchAdd(get(workbenchIndex).toString(), {PlaneId: 0})
 }
 
 export function newExtrusion() {
@@ -132,41 +134,40 @@ export function newExtrusion() {
     }
   }
 
-  return cad.featureExtrusionAdd(get(workbenchIndex), sketchId, [], 25, 0.0, "Normal", "New")
+  return cad.featureExtrusionAdd(get(workbenchIndex).toString(), sketchId, [], 25, 0.0, "Normal", "New")
 }
 
 export function deleteEntities(sketchIdx: string, selection: Entity[]) {
-  const workbenchIdx = get(workbenchIndex)
+  const workbenchIdx = get(workbenchIndex).toString()
 
   // TODO: Handle compounds as well
   for (const entity of selection) {
-    cad.sketchDeletePrimitive(workbenchIdx, parseInt(sketchIdx), parseInt(entity.id))
+    cad.sketchDeletePrimitive(workbenchIdx, sketchIdx, parseInt(entity.id))
   }
 }
 
-export function addRectangleBetweenPoints(sketchIdx: string, point1: number, point2: number) {
-  return cad.sketchAddRectangle(get(workbenchIndex), parseInt(sketchIdx), point1, point2)
+export function addRectangleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
+  return cad.sketchAddRectangle(get(workbenchIndex).toString(), sketchIdx, point1, point2)
 }
 
 export function addCircleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
-  return cad.sketchAddCircle(get(workbenchIndex), parseInt(sketchIdx), parseInt(point1), parseInt(point2))
+  return cad.sketchAddCircle(get(workbenchIndex).toString(), sketchIdx, point1, point2)
 }
 
-export function addLineToSketch(sketchIdx: string, point1: number, point2: number) {
-  return cad.sketchAddLine(get(workbenchIndex), parseInt(sketchIdx), point1, point2)
+export function addLineToSketch(sketchIdx: string, point1: string, point2: string) {
+  return cad.sketchAddLine(get(workbenchIndex).toString(), sketchIdx, point1, point2)
 }
 
-export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: boolean) {
-  const reply = cad.sketchAddPoint(get(workbenchIndex), parseInt(sketchIdx), point.x, point.y)
-  return JSON.parse(reply.data).id
+export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: boolean): StepHash {
+  return cad.sketchAddPoint(get(workbenchIndex).toString(), sketchIdx, point.x, point.y).data
 }
 
-export function renameStep(stepIdx: number, newName: string): void {
-  cad.stepRename(get(workbenchIndex), stepIdx, newName)
+export function renameStep(stepIdx: string, newName: string): void {
+  cad.stepRename(get(workbenchIndex).toString(), stepIdx, newName)
 }
 
 export function renameWorkbench(newName: string): void {
-  cad.workbenchRename(get(workbenchIndex), newName)
+  cad.workbenchRename(get(workbenchIndex).toString(), newName)
 }
 
 export function renameProject(newName: string): void {

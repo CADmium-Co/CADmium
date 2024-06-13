@@ -25,8 +25,23 @@ use report::*;
 fn create_project() -> (Project, IDType) {
     let mut p = Project::new("Test Project");
     let plane_description = PlaneDescription::PlaneId(0);
-    let sketch_id = IDWrap { id: 0, inner: AddSketch { plane_description } }.handle_project_message(&mut p).unwrap().unwrap();
-    IDWrap { id: 0, inner: IDWrap { id: sketch_id, inner: SketchAddPointMessage { x: 0.0, y: 0.0 } } }.handle_project_message(&mut p).unwrap().unwrap();
+    let sketch_id = IDWrap {
+        id: 0,
+        inner: AddSketch { plane_description },
+    }
+    .handle_project_message(&mut p)
+    .unwrap()
+    .unwrap();
+    IDWrap {
+        id: 0,
+        inner: IDWrap {
+            id: sketch_id,
+            inner: SketchAddPointMessage { x: 0.0, y: 0.0 },
+        },
+    }
+    .handle_project_message(&mut p)
+    .unwrap()
+    .unwrap();
 
     (p, sketch_id)
 }
@@ -38,7 +53,10 @@ pub enum FaceSelectorType {
 }
 
 impl FaceSelector for FaceSelectorType {
-    fn get_selected_faces(&self, isketch: &cadmium::isketch::ISketch) -> Vec<cadmium::isketch::face::Face> {
+    fn get_selected_faces(
+        &self,
+        isketch: &cadmium::isketch::ISketch,
+    ) -> Vec<cadmium::isketch::face::Face> {
         match self {
             FaceSelectorType::ID(selector) => selector.get_selected_faces(isketch),
             FaceSelectorType::Centroid(selector) => selector.get_selected_faces(isketch),
@@ -64,11 +82,22 @@ fn main() {
         let (mut p, sketch_id) = create_project();
 
         case_struct.pre_selection(&mut p, sketch_id);
-        let sketch_ref = p.get_workbench_by_id(0).unwrap().borrow().get_sketch_by_id(sketch_id).unwrap();
+        let sketch_ref = p
+            .get_workbench_by_id(0)
+            .unwrap()
+            .borrow()
+            .get_sketch_by_id(sketch_id)
+            .unwrap();
 
         let selectors = vec![
-            FaceSelectorType::ID(cadmium::isketch::face::IDSelector::from_face_ids(&sketch_ref.borrow(), vec![*index])),
-            FaceSelectorType::Centroid(cadmium::isketch::face::CentroidSelector::from_face_ids(&sketch_ref.borrow(), vec![*index])),
+            FaceSelectorType::ID(cadmium::isketch::face::IDSelector::from_face_ids(
+                &sketch_ref.borrow(),
+                vec![*index],
+            )),
+            FaceSelectorType::Centroid(cadmium::isketch::face::CentroidSelector::from_face_ids(
+                &sketch_ref.borrow(),
+                vec![*index],
+            )),
         ];
 
         for selector in selectors.iter() {
@@ -78,7 +107,11 @@ fn main() {
             let selector_name_variant = selector_name_full.split_once(" ").unwrap().0;
             let selector_name = selector_name_variant.split_once("(").unwrap().1;
             let name = format!("{}_{}", selector_name, case_name);
-            results.push((selector_name.to_string(), case_name.to_string(), name.clone()));
+            results.push((
+                selector_name.to_string(),
+                case_name.to_string(),
+                name.clone(),
+            ));
 
             draw_sketch_faces(&mut p, selector, *index, format!("{}_before", name));
         }
