@@ -105,7 +105,7 @@
       on:submit|preventDefault={() => {
         closeAndRefresh()
       }}
-      class="px-3 py-2 bg-gray-100 flex flex-col space-y-2"
+      class="px-3 py-2 bg-gray-100 dark:bg-gray-600 flex flex-col space-y-2"
       autocomplete="off"
     >
       <label>
@@ -135,7 +135,7 @@
       Faces
       <!-- svelte-ignore a11y-no-noninteractive-tabindex -->
       <div tabindex="0" class="bg-gray-50 rounded flex shadow border focus:ring focus:border-blue-500 min-h-8 flex-wrap">
-        <div class="h-8" />
+        <div class="h-8"></div>
         {#each faceIdsFromInputs as faceId}
           <div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
             {faceId}<button

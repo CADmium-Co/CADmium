@@ -7,6 +7,8 @@
   import Bug from "phosphor-svelte/lib/Bug"
   import DiscordLogo from "phosphor-svelte/lib/DiscordLogo"
   import GithubLogo from "phosphor-svelte/lib/GithubLogo"
+  import Moon from "phosphor-svelte/lib/Moon"
+  import Sun from "phosphor-svelte/lib/Sun"
   import type {WithTarget} from "shared/types"
   import {isProject} from "shared/typeGuards"
   import {base} from "../base"
@@ -81,7 +83,7 @@
     {/if}
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-      class="hover:bg-gray-300 rounded p-1"
+      class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1"
       on:click={() => {
         let asString = $wasmProject.to_json()
         fileDownload(asString, `${project.name}.cadmium`)
@@ -91,7 +93,7 @@
     </div>
 
     <!-- svelte-ignore a11y-no-static-element-interactions -->
-    <div class="hover:bg-gray-300 rounded p-1">
+    <div class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1">
       <!-- <Upload class="h-6 w-6" /> -->
       <!-- <input id="file-inp" type="file" style="visibility:hidden;" onchange="readFile(event)" /> -->
       <label for="file-inp">
@@ -102,13 +104,17 @@
 
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
-      class="hover:bg-gray-300 rounded p-1"
+      class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1"
       on:click={() => {
         let asString = JSON.stringify($messageHistory)
         fileDownload(asString, `${project.name}.history.json`)
       }}
     >
       <Bug class="h-6 w-6" />
+    </div>
+
+    <div class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1">
+      <Sun class="h-6 w-6" />
     </div>
 
     <div class="flex-grow flex flex-row-reverse gap-4 mr-4">
