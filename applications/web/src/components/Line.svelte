@@ -5,13 +5,14 @@
   import {T} from "@threlte/core"
   import {flatten, promoteTo3} from "shared/projectUtils"
   import {currentlySelected, currentlyMousedOver, sketchTool} from "shared/stores"
-  import type {EntityType, PointById} from "shared/types"
+  import type {EntityType} from "shared/types"
   import {isEntity} from "shared/typeGuards"
+  import type { Point2 } from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[Line.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let id: string, start: PointById, end: PointById
+  export let id: string, start: Point2, end: Point2
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
@@ -23,19 +24,10 @@
   const type: EntityType = "line"
 
   let hovered = false
-  $: selected = $currentlySelected.some(e => checkIsEntity(e) && e.id === id && e.type === type) ? true : false
-
-  function checkIsEntity(e: unknown) {
-    // log("[checkIsEntity]", isEntity(e), e)
-    return isEntity(e)
-  }
-
-  // $: selected, log("[selected] an entity has been selected:", selected, "Line.id:", id)
-  // prettier-ignore
-  // $: $currentlySelected, ()=> {if (selected && !$currentlySelected.every((e) => isEntity(e))) log("ERROR [currentlySelected] are not all isEntity", $currentlySelected)}
+  $: selected = $currentlySelected.some(e => isEntity(e) && e.id === id && e.type === type) ? true : false
 
   const points = flatten(
-		promoteTo3([new Vector2(start.twoD.x, start.twoD.y), new Vector2(end.twoD.x, end.twoD.y)])
+		promoteTo3([new Vector2(start.x, start.y), new Vector2(end.x, end.y)])
 	)
 
   const lineGeometry = new LineGeometry()

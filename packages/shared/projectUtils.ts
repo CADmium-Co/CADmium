@@ -76,6 +76,8 @@ export function sendWasmMessage(message: Message): MessageResult {
 
   if (!result.success) {
     throw new Error(`[sendWasmMessage] message failed: ${result.data}`)
+  } else {
+    workbenchIsStale.set(true)
   }
 
   return result

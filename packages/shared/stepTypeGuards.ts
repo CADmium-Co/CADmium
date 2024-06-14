@@ -19,29 +19,29 @@ export function isSketchStep(step: Step): step is SketchStep {
 
 // --- Sketch primitive operations ---
 // Any primitive operation
-export type SketchPrimitiveStep = Step & {result: {Primitive: WrappedPrimitive}}
+export type SketchPrimitiveStep = Step & {result: StepResult & {Primitive: WrappedPrimitive}}
 export function isSketchPrimitiveStep(step: Step): step is SketchPrimitiveStep {
   return typeof step.result === "object" && "Primitive" in step.result
 }
 
-export type SketchPointStep = SketchPrimitiveStep & {result: {Point2: Point2}, data: {SketchAddPoint: SketchAddPoint}}
+export type SketchPointStep = SketchPrimitiveStep & {result: {Primitive: {Point2: Point2}}, data: {SketchAddPoint: SketchAddPoint}}
 export function isSketchPointStep(step: Step): step is SketchPointStep {
-  return isSketchPrimitiveStep(step) && "SketchAddPoint" in step.data && "Point2" in step.result
+  return isSketchPrimitiveStep(step) && "SketchAddPoint" in step.data && "Point2" in step.result.Primitive
 }
 
-export type SketchLineStep = SketchPrimitiveStep & {result: {Line2: Line2}, data: {SketchAddLine: SketchAddLine}}
+export type SketchLineStep = SketchPrimitiveStep & {result: {Primitive: {Line2: Line2}}, data: {SketchAddLine: SketchAddLine}}
 export function isSketchLineStep(step: Step): step is SketchLineStep {
-  return isSketchPrimitiveStep(step) && "SketchAddLine" in step.data && "Line2" in step.result
+  return isSketchPrimitiveStep(step) && "SketchAddLine" in step.data && "Line2" in step.result.Primitive
 }
 
-export type SketchCircleStep = SketchPrimitiveStep & {result: {Circle2: Circle2}, data: {SketchAddCircle: SketchAddCircle}}
+export type SketchCircleStep = SketchPrimitiveStep & {result: {Primitive: {Circle2: Circle2}}, data: {SketchAddCircle: SketchAddCircle}}
 export function isSketchCircleStep(step: Step): step is SketchCircleStep {
-  return isSketchPrimitiveStep(step) && "SketchAddCircle" in step.data && "Circle2" in step.result
+  return isSketchPrimitiveStep(step) && "SketchAddCircle" in step.data && "Circle2" in step.result.Primitive
 }
 
-export type SketchArcStep = SketchPrimitiveStep & {result: {Arc2: Arc2}, data: {SketchAddArc: SketchAddArc}}
+export type SketchArcStep = SketchPrimitiveStep & {result: {Primitive: {Arc2: Arc2}}, data: {SketchAddArc: SketchAddArc}}
 export function isSketchArcStep(step: Step): step is SketchArcStep {
-  return isSketchPrimitiveStep(step) && "SketchAddArc" in step.data && "Arc2" in step.result
+  return isSketchPrimitiveStep(step) && "SketchAddArc" in step.data && "Arc2" in step.result.Primitive
 }
 
 // --- Sketch compound operations ---
@@ -53,7 +53,7 @@ export function isSketchCompoundStep(step: Step): step is SketchCompoundStep {
 // TODO: export rectangle
 // export type SketchRectangleStep = SketchCompoundStep & {result: Rectangle, data: SketchAddRectangle}
 // export function isSketchRectangleStep(step: Step): step is SketchRectangleStep {
-//   return isSketchCompoundStep(step) && "SketchAddRectangle" in step.data && "Rectangle" in step.result
+//   return isSketchCompoundStep(step) && "SketchAddRectangle" in step.data && "Rectangle" in step.result.Compound
 // }
 
 // --- Solid operations ---

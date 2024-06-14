@@ -47,7 +47,6 @@
   <PassiveSketch
     {name}
     {uniqueId}
-    sketch={sketch.sketch}
     plane={sketch.plane}
     editing
     {solidLineMaterial}
@@ -61,7 +60,6 @@
   <PassiveSketch
     {name}
     {uniqueId}
-    sketch={sketch.sketch}
     plane={sketch.plane}
     {solidLineMaterial}
     {solidHoveredMaterial}

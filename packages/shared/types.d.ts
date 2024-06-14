@@ -1,10 +1,12 @@
-import { MessageResult, StepHash, Workbench } from "cadmium"
+import { MessageResult, Point2, StepHash, Workbench } from "cadmium"
 import { Message } from "./cadmium-api"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
-interface IDictionary<TValue> {
+export interface IDictionary<TValue> {
   [id: string]: TValue
 }
+
+export type Point2WithID = Point2 & { id?: StepHash }
 
 type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
@@ -335,9 +337,9 @@ interface ExtrusionSketchData {
 
 interface PreviewGeometry {
   type: EntityType
-  start?: PointLikeById
-  end?: PointLikeById
-  center?: PointLikeById
+  start?: Point2
+  end?: Point2
+  center?: Point2
   radius?: number
   x?: number
   y?: number

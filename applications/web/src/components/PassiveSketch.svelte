@@ -1,31 +1,34 @@
 <script lang="ts">
-  import {Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3} from "three"
-  import {T, useThrelte} from "@threlte/core"
-  import {Text, Suspense} from "@threlte/extras"
-  import {hiddenSketches, previewGeometry, sketchTool, workbench} from "shared/stores"
   import Point2D from "./Point2D.svelte"
   import Line from "./Line.svelte"
   import Circle from "./Circle.svelte"
   import Arc from "./Arc.svelte"
-  import Face from "./Face.svelte"
-  import {LineMaterial} from "three/addons/lines/LineMaterial.js"
-  import {LineGeometry} from "three/addons/lines/LineGeometry.js"
+  // import Face from "./Face.svelte"
+
   import NewLineTool from "./tools/NewLine.svelte"
   import NewCircleTool from "./tools/NewCircle.svelte"
   import NewRectangleTool from "./tools/NewRectangle.svelte"
   import SelectTool from "./tools/Select.svelte"
-  import type {FaceTuple, IDictionary, PreviewGeometry, SketchPoint} from "shared/types"
+
+  import {T, useThrelte} from "@threlte/core"
+  import {Text, Suspense} from "@threlte/extras"
+  import {Matrix4, Euler, MeshStandardMaterial, Vector2, Vector3} from "three"
+  import {LineMaterial} from "three/addons/lines/LineMaterial.js"
+  import {LineGeometry} from "three/addons/lines/LineGeometry.js"
+
   import debounce from "just-debounce-it"
-  import type {ISketch, Plane} from "cadmium"
+
   import {isSketchArcStep, isSketchCircleStep, isSketchLineStep, isSketchPointStep} from "shared/stepTypeGuards"
+  import {hiddenSketches, previewGeometry, sketchTool, workbench} from "shared/stores"
+  import type {IDictionary, PreviewGeometry} from "shared/types"
+  import type {Plane, Point2, StepHash} from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[PassiveSketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let name: string,
-    sketch: ISketch,
     plane: Plane,
-    uniqueId: string,
+    uniqueId: StepHash,
     editing = false
 
   const {size, dpr} = useThrelte()
@@ -40,9 +43,6 @@
     collisionLineMaterial: LineMaterial
 
   let newLineTool: NewLineTool, newCircleTool: NewCircleTool, newRectangleTool: NewRectangleTool, selectTool: SelectTool
-
-  let faceTuples: FaceTuple[] = []
-  let pointsById: IDictionary<SketchPoint> = {}
 
   // Build some Three.js vectors from the props
   const origin_point = new Vector3(plane.origin.x, plane.origin.y, plane.origin.z)
@@ -88,7 +88,11 @@
   lineGeometry.setPositions(points)
 
   $: hidden = $hiddenSketches.includes(uniqueId) && !editing
-  // $: $hiddenSketches, log("[$hiddenSketches]", $hiddenSketches)
+  $: $hiddenSketches, log("[$hiddenSketches]", hidden)
+  $: pointsById = history.reduce((acc, step) => {
+    if (isSketchPointStep(step)) acc[step.hash] = step.result.Primitive.Point2
+    return acc
+  }, {} as IDictionary<Point2>)
 
   $: if (editing) $sketchTool = "select"
 
@@ -117,7 +121,7 @@
       on:click={e => {
         if (editing) {
           if ($sketchTool === "line") {
-            newLineTool.click(e, {twoD: projectToPlane(e.point), threeD: e.point})
+            newLineTool.click(e, projectToPlane(e.point))
           } else if ($sketchTool === "circle") {
             newCircleTool.click(e, {twoD: projectToPlane(e.point), threeD: e.point})
           } else if ($sketchTool === "rectangle") {
@@ -163,11 +167,11 @@
 
     {#each history as step}
       {#if isSketchPointStep(step)}
-        <Point2D x={step.result.Point2.x} y={step.result.Point2.y} hidden={step.result.Point2.hidden} id={step.hash} {collisionLineMaterial} />
+        <Point2D x={step.result.Primitive.Point2.x} y={step.result.Primitive.Point2.y} hidden={step.result.Primitive.Point2.hidden} id={step.hash} {collisionLineMaterial} />
       {:else if isSketchCircleStep(step)}
         <Circle
-          center={pointsById[step.result.Circle2.center]}
-          radius={step.result.Circle2.radius}
+          center={pointsById[step.result.Primitive.Circle2.center]}
+          radius={step.result.Primitive.Circle2.radius}
           id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -179,7 +183,7 @@
       {:else if isSketchArcStep(step)}
         <!-- TODO: Use start & end angle instead of points -->
         <Arc
-          center={pointsById[step.result.Arc2.center]}
+          center={pointsById[step.result.Primitive.Arc2.center]}
           start={pointsById[0]}
           end={pointsById[1]}
           id={step.hash}
@@ -192,8 +196,8 @@
         />
       {:else if isSketchLineStep(step)}
         <Line
-          start={pointsById[step.result.Line2.start]}
-          end={pointsById[step.result.Line2.end]}
+          start={pointsById[step.result.Primitive.Line2.start]}
+          end={pointsById[step.result.Primitive.Line2.end]}
           id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -208,8 +212,8 @@
     {#each $previewGeometry as geom (geom.uuid)}
       {#if isGeomType(geom, "line")}
         <Line
-          start={geom.start}
-          end={geom.end}
+          start={geom.start!}
+          end={geom.end!}
           id={geom.uuid}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -220,8 +224,8 @@
         />
       {:else if isGeomType(geom, "circle")}
         <Circle
-          center={geom.center}
-          radius={geom.radius}
+          center={geom.center!}
+          radius={geom.radius!}
           id={geom.uuid}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -231,12 +235,12 @@
           {collisionLineMaterial}
         />
       {:else if isGeomType(geom, "point")}
-        <Point2D x={geom.x} y={geom.y} hidden={false} id={geom.uuid} isPreview {collisionLineMaterial} />
+        <Point2D x={geom.x!} y={geom.y!} hidden={false} id={geom.uuid} isPreview {collisionLineMaterial} />
       {/if}
     {/each}
 
-    {#each faceTuples as face (`${faceTuples.length}-${face.id}`)}
+    <!-- {#each faceTuples as face (`${faceTuples.length}-${face.id}`)}
       <Face face={face.face} id={face.id} {pointsById} />
-    {/each}
+    {/each} -->
   </T.Group>
 {/if}

@@ -1,6 +1,6 @@
 import {Solid, StepHash, Project as WasmProject, Workbench} from "cadmium"
 import {writable} from "svelte/store"
-import type {MessageHistory, Project, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry} from "./types"
+import type {MessageHistory, Project, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry, Point2WithID} from "./types"
 import {isArcEntity, isCircleEntity, isEntity, isFaceEntity, isLineEntity, isMeshFaceEntity, isPlaneEntity, isPoint3DEntity, isPointEntity} from "./typeGuards"
 
 // prettier-ignore
@@ -18,7 +18,7 @@ export const workbenchIsStale = writable(false)
 export const featureIndex = writable<number>(1000)
 export const extrusionFeatures = writable<Entity[]>([])
 
-export const hiddenSketches = writable<number[]>([])
+export const hiddenSketches = writable<StepHash[]>([])
 export const sketchBeingEdited = writable<StepHash | null>(null)
 export const sketchTool = writable("")
 
@@ -29,7 +29,7 @@ export const selectionMin = writable(0)
 
 export const currentlyMousedOver = writable<SnapEntity[]>([])
 export const currentlySelected = writable<Entity[]>([])
-export const snapPoints = writable<PointLikeById[]>([])
+export const snapPoints = writable<Point2WithID[]>([])
 export const previewGeometry = writable<PreviewGeometry[]>([])
 
 export const messageHistory = writable<MessageHistory[]>([])

@@ -128,7 +128,7 @@
 {#each history as step}
   {#if isPointStep(step)}
     <Point3D
-      id={`${step.hash}`}
+      id={step.hash}
       x={step.result.Point.x}
       y={step.result.Point.y}
       z={step.result.Point.z}
@@ -138,7 +138,7 @@
   {:else if isPlaneStep(step)}
     <Plane
       name={step.name}
-      id={`${step.hash}`}
+      id={step.hash}
       height={100}
       width={100}
       origin={step.result.Plane.origin}
@@ -148,7 +148,7 @@
     />
   {:else if isSketchStep(step)}
     <Sketch
-      uniqueId={`${step.hash}`}
+      uniqueId={step.hash}
       name={step.name}
       sketch={step.result.Sketch.sketch}
       editing={$sketchBeingEdited === step.hash}

@@ -66,8 +66,9 @@ where
         if let Some(id) = id {
             if let Some(hash) = hash {
                 crate::ID_MAP.with_borrow_mut(|m| m.insert(hash, id));
+            } else {
+                warn!("IDWrap::handle_project_message: IDWrap returned an ID, but no hash was found in the workbench history");
             }
-            warn!("IDWrap::handle_project_message: IDWrap returned an ID, but no hash was found in the workbench history");
         }
 
         // Return the step ID (hash) instead of the message handler returned ID

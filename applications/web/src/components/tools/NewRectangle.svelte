@@ -2,12 +2,13 @@
   import {snapPoints, sketchTool, previewGeometry, currentlyMousedOver} from "shared/stores"
   import {addRectangleBetweenPoints, addPointToSketch} from "shared/projectUtils"
   import {Vector3} from "three"
-  import type {IDictionary, PointLikeById, ProjectToPlane, SketchPoint} from "shared/types"
+  import type {IDictionary, PointLikeById, ProjectToPlane} from "shared/types"
+  import type { Point2 } from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let pointsById: IDictionary<SketchPoint>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
+  export let pointsById: IDictionary<Point2>, sketchIndex: string, active: boolean, projectToPlane: ProjectToPlane
 
   let anchorPoint: PointLikeById | null = null
 

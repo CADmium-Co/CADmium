@@ -1,29 +1,30 @@
 <script lang="ts">
   import {snapPoints, sketchTool, previewGeometry, currentlyMousedOver} from "shared/stores"
-  import {addCircleBetweenPoints, addPointToSketch, bench} from "shared/projectUtils"
+  import {bench} from "shared/projectUtils"
   import {Vector3, type Vector2Like, type Vector3Like} from "three"
-  import type {PointLikeById, Point2D, PointsLikeById, ProjectToPlane} from "shared/types"
+  import type {PointLikeById, Point2D, ProjectToPlane, IDictionary, PointById} from "shared/types"
+  import type { Point2 } from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[NewCircleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let pointsById: PointsLikeById
+  export let pointsById: IDictionary<Point2>
   export let sketchId: string
   export let active: boolean
   export let projectToPlane: ProjectToPlane
 
-  let centerPoint: PointLikeById | null = null
-  let stack: PointLikeById[] = []
+  let centerPoint: Point2 | null = null
+  let stack: Point2[] = []
 
   $: if ($sketchTool !== "circle") clearStack()
 
-  function pushToStack(point: PointLikeById) {
+  function pushToStack(point: PointById) {
     if (!point) return
     point.id = point.id ?? bench.sketchAddPoint(sketchId, point.twoD.x, point.threeD.y).data
     stack.push(point)
   }
 
-  function processPoint(point: PointLikeById) {
+  function processPoint(point: PointById) {
     pushToStack(point)
     centerPoint = point
 
@@ -68,7 +69,7 @@
       }
       if (geom.type === "point") {
         const point = pointsById[geom.id]
-        if (point.twoD && point.threeD && geom.id) snappedTo = {twoD: point.twoD, threeD: point.threeD, id: geom.id}
+        if (point && geom.id) snappedTo = {point: point, id: geom.id}
         break // If there is a 2D point, prefer to use it rather than the 3D point
       }
     }
@@ -83,7 +84,7 @@
         const dy = a.y - b?.y!
         return Math.hypot(dx, dy)
       }
-      const radius = snappedTo ? calcDeltas(snappedTo.twoD, centerPoint.twoD) : calcDeltas(projected, centerPoint.twoD)
+      const radius = snappedTo ? calcDeltas(snappedTo.point!, centerPoint.twoD) : calcDeltas(projected, centerPoint.twoD)
 
       previewGeometry.set([
         {
