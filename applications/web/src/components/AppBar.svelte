@@ -40,7 +40,7 @@
   }
 </script>
 
-<div class="bg-gray-200 h-[45px]">
+<div class="bg-gray-200 dark:bg-gray-900 dark:text-slate-300 h-[45px]">
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <div class="flex items-center gap-4 bg-gray-">
     <div class="shrink-0 select-none">
@@ -113,10 +113,10 @@
 
     <div class="flex-grow flex flex-row-reverse gap-4 mr-4">
       <div>
-        <a href="https://discord.com/invite/qJCsKJeyZv" target="_blank"><DiscordLogo class="h-6 w-6"/></a>
+        <a href="https://discord.com/invite/qJCsKJeyZv" target="_blank"><DiscordLogo class="h-6 w-6" /></a>
       </div>
       <div>
-        <a href="https://github.com/mattferraro/cadmium" target="_blank"><GithubLogo class="h-6 w-6"/></a>
+        <a href="https://github.com/mattferraro/cadmium" target="_blank"><GithubLogo class="h-6 w-6" /></a>
       </div>
     </div>
   </div>

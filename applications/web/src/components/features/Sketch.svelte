@@ -103,7 +103,7 @@
 </script>
 
 <div
-  class="flex items-center text-sm hover:bg-sky-200"
+  class="flex items-center text-sm hover:bg-sky-200 dark:hover:bg-gray-600"
   role="button"
   tabindex="0"
   on:dblclick={() => {
@@ -126,7 +126,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded"
+    class="ml-auto mr-2 bg-gray-100 px-1 py-1 rounded dark:bg-gray-800"
     on:click={() => {
       if ($hiddenSketches.includes(id)) {
         // cool, unhide

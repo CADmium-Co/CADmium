@@ -22,7 +22,7 @@
 </script>
 
 <div
-  class="flex items-center text-sm hover:bg-sky-200"
+  class="flex items-center text-sm hover:bg-sky-200 dark:hover:bg-gray-600"
   role="button"
   tabindex="0"
   on:dblclick={() => {
@@ -44,7 +44,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="ml-auto mr-2 bg-slate-100 px-1 py-1 rounded hover:bg-slate-200"
+    class="ml-auto mr-2 bg-gray-100 dark:bg-gray-800 px-1 py-1 rounded hover:bg-gray-200"
     on:mousedown={() => {
       setCameraFocus(plane.tertiary, plane.origin, plane.secondary)
       // move camera to focus on plane
