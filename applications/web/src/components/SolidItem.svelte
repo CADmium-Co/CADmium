@@ -71,7 +71,7 @@
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <div
-  class="flex items-center text-sm hover:bg-sky-200"
+  class="flex items-center text-sm hover:bg-sky-200 dark:hover:bg-gray-600"
   role="button"
   tabindex="0"
   on:contextmenu|preventDefault={e => {
@@ -85,11 +85,11 @@
 
 {#if contextMenuVisible}
   <nav use:getContextMenuDimension style="position: absolute; top:{pos.y}px; left:{pos.x}px">
-    <div class="navbar inline-flex border w-[210px] bg-white overflow-hidden flex-col rounded-[10px] border-[solid]" id="navbar">
+    <div class="navbar inline-flex border w-[210px] bg-white dark:bg-gray-700 overflow-hidden flex-col rounded-[10px] border-[solid]" id="navbar">
       <ul class="m-1.5">
         <li class="block list-none w-[1fr] my-1">
           <button
-            class="text-base text-[#222] w-full h-[30px] text-left bg-white border-0 hover:text-black hover:text-left hover:bg-[#eee] hover:rounded-[5px] flex"
+            class="text-base text-[#222] w-full h-[30px] text-left bg-white dark:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-300 dark:hover:bg-gray-600 border-0 hover:text-black hover:text-left hover:bg-[#eee] rounded-[5px] flex"
             on:click={exportSolidOBJ}
           >
             <FileArrowDown class="h-6 w-6 mx-2" /> Download as OBJ
@@ -98,7 +98,7 @@
 
         <li class="block list-none w-[1fr] my-1">
           <button
-            class="text-base text-[#222] w-full h-[30px] text-left bg-white border-0 hover:text-black hover:text-left hover:bg-[#eee] hover:rounded-[5px] flex"
+            class="text-base text-[#222] w-full h-[30px] text-left bg-white dark:bg-gray-700 dark:text-gray-300 dark:hover:text-gray-300 dark:hover:bg-gray-600 border-0 hover:text-black hover:text-left hover:bg-[#eee] rounded-[5px] flex"
             on:click={exportSolidSTEP}
           >
             <FileArrowDown class="h-6 w-6 mx-2" />Download as STEP

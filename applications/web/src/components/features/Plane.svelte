@@ -44,7 +44,7 @@
   <!-- svelte-ignore a11y-click-events-have-key-events -->
   <!-- svelte-ignore a11y-no-static-element-interactions -->
   <div
-    class="ml-auto mr-2 bg-gray-100 dark:bg-gray-800 px-1 py-1 rounded hover:bg-gray-200"
+    class="ml-auto mr-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-500 px-1 py-1 rounded"
     on:mousedown={() => {
       setCameraFocus(plane.tertiary, plane.origin, plane.secondary)
       // move camera to focus on plane
@@ -61,7 +61,7 @@
         // editing = false
         closeAndRefresh()
       }}
-      class="px-3 py-2 bg-gray-100 flex flex-col space-y-2"
+      class="px-3 py-2 bg-gray-100 dark:bg-gray-600 flex flex-col space-y-2"
       autocomplete="off"
     >
       <label>
