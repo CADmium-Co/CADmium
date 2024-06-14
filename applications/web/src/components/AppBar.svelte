@@ -22,6 +22,8 @@
 
   export let newFileContent: string | null = null
 
+  let isDarkMode = localStorage.getItem("theme") === "dark"
+
   $: project,
     (() => {
       // log("[project]", project)
@@ -120,13 +122,15 @@
         if (localStorage.getItem("theme") === "light") {
           document.documentElement.classList.add("dark")
           localStorage.setItem("theme", "dark")
+          isDarkMode = true
         } else {
           document.documentElement.classList.remove("dark")
           localStorage.setItem("theme", "light")
+          isDarkMode = false
         }
       }}
     >
-      {#if document.documentElement.classList.contains("dark")}
+      {#if isDarkMode}
         <Moon class="h-6 w-6" />
       {:else}
         <Sun class="h-6 w-6" />

@@ -45,7 +45,7 @@
 
   const origin = new Vector3(0, 0, 0)
   const textureSize = 64
-  const gray = 0xdde6ed
+  const gray = 0xa1a8ad
   const black = 0x000000
 
   const {autoRenderTask, renderer, camera, invalidate} = useThrelte()

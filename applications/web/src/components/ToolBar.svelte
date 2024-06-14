@@ -50,7 +50,7 @@
     {/each}
   {:else}
     {#each actions as action}
-      <button class="inline-flex items-center {action.text === 'Solve' && solving ? 'bg-gray-400' : ''} hover:bg-gray-200 p-1" on:click={action.handler}>
+      <button class="inline-flex items-center hover:bg-gray-200 p-1 rounded dark:hover:bg-gray-600 dark:hover:text-gray-300" on:click={action.handler}>
         <img class="h-8 w-8" src={action.src} alt={action.alt} />{action.text ? action.text : ""}
       </button>
     {/each}
