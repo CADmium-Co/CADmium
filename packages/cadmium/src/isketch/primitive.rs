@@ -10,6 +10,7 @@ use tsify_next::Tsify;
 
 use crate::feature::point::Point3;
 use crate::message::MessageHandler;
+use crate::step::sketch_action::IntoSketchActionResult;
 use crate::step::{StepHash, StepResult};
 use crate::{archetypes, IDType};
 
@@ -36,7 +37,7 @@ pub fn add_point(&mut self, x: f64, y: f64) -> anyhow::Result<Option<(IDType, St
     self.points_3d
         .insert(point_id, Point3::from_plane_point(&plane, &iso_point));
 
-    Ok(Some((point_id, StepResult::Primitive(point_wrapped))))
+    Ok(Some((point_id, point_wrapped.into_result(self))))
 }
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
@@ -83,13 +84,12 @@ impl MessageHandler for AddArc {
             start_angle: self.start_angle,
             end_angle: self.end_angle,
         };
-        let arc_wrapped = StepResult::Primitive(Rc::new(RefCell::new(
-            archetypes::WrappedPrimitive::Arc2(arc),
-        )));
+        let arc_wrapped = Rc::new(RefCell::new(archetypes::WrappedPrimitive::Arc2(arc)));
         // TODO: link
 
         let arc_id = sketch.add_primitive(isoarc)?;
-        Ok(Some((arc_id, arc_wrapped)))
+        drop(sketch); // We need to drop the mutable borrow because into_result borrows the sketch
+        Ok(Some((arc_id, arc_wrapped.into_result(&isketch))))
     }
 }
 
@@ -127,13 +127,12 @@ impl MessageHandler for AddCircle {
             center: self.center,
             radius: self.radius,
         };
-        let circle_wrapped = StepResult::Primitive(Rc::new(RefCell::new(
-            archetypes::WrappedPrimitive::Circle2(circle),
-        )));
+        let circle_wrapped = Rc::new(RefCell::new(archetypes::WrappedPrimitive::Circle2(circle)));
         // TODO: link
 
         let circle_id = sketch.add_primitive(iso_circle)?;
-        Ok(Some((circle_id, circle_wrapped)))
+        drop(sketch); // We need to drop the mutable borrow because into_result borrows the sketch
+        Ok(Some((circle_id, circle_wrapped.into_result(&isketch))))
     }
 }
 
@@ -183,13 +182,12 @@ impl MessageHandler for AddLine {
             start: self.start,
             end: self.end,
         };
-        let line_wrapped = StepResult::Primitive(Rc::new(RefCell::new(
-            archetypes::WrappedPrimitive::Line2(line),
-        )));
+        let line_wrapped = Rc::new(RefCell::new(archetypes::WrappedPrimitive::Line2(line)));
         // TODO: link
 
         let line_id = sketch.add_primitive(iso_line)?;
-        Ok(Some((line_id, line_wrapped)))
+        drop(sketch); // We need to drop the mutable borrow because into_result borrows the sketch
+        Ok(Some((line_id, line_wrapped.into_result(&isketch))))
     }
 }
 

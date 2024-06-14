@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
 use crate::message::MessageHandler;
+use crate::step::sketch_action::IntoSketchActionResult;
 use crate::step::StepResult;
 use crate::IDType;
 
@@ -103,6 +104,6 @@ impl MessageHandler for Add {
         isketch.compounds.insert(rectangle_id, compound.clone());
         isketch.compounds_next_id += 1;
 
-        Ok(Some((rectangle_id, StepResult::Compound(compound))))
+        Ok(Some((rectangle_id, compound.into_result(&isketch))))
     }
 }

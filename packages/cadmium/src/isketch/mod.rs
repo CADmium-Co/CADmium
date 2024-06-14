@@ -104,7 +104,6 @@ impl ISketch {
     }
 
     pub fn faces(&self) -> Vec<Face> {
-        // TODO: How do we keep track of faces vs IDs?
         self.sketch.borrow().get_merged_faces()
     }
 
@@ -158,7 +157,7 @@ impl Identifiable for Rc<RefCell<ISketch>> {
             ))?
             .clone();
 
-        let StepResult::Sketch { sketch, faces: _ } = step.borrow().result.clone() else {
+        let StepResult::Sketch(sketch) = step.borrow().result.clone() else {
             return Err(anyhow::anyhow!(
                 "The step with hash {} is not a sketch",
                 hash

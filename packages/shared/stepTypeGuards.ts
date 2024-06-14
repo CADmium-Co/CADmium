@@ -1,53 +1,47 @@
-import type { Arc2, Circle2, Compound, IDType, ISketch, Line2, StepResult, Plane, Point2, Point3, Primitive, Solid, Step, WrappedPrimitive } from "cadmium"
-import { FeatureExtrusionAdd, SketchAddArc, SketchAddCircle, SketchAddLine, SketchAddPoint, SketchAddRectangle, WorkbenchPlaneAdd, WorkbenchPointAdd, WorkbenchSketchAdd } from "./cadmium-api"
+import type { Arc2, Circle2, Line2, Point2, Solid, Step, SketchActionResult } from "cadmium"
+import { FeatureExtrusionAdd, SketchAddArc, SketchAddCircle, SketchAddLine, SketchAddPoint, WorkbenchPlaneAdd, WorkbenchPointAdd, WorkbenchSketchAdd } from "./cadmium-api"
 
 // --- Workbench operations ---
-export type PointStep = Step & {result: { Point: Point3 }, data: {WorkbenchPointAdd: WorkbenchPointAdd}}
+export type PointStep = Step & {result: { type: "Point" }, data: {type: "WorkbenchPointAdd"} & WorkbenchPointAdd}
 export function isPointStep(step: Step): step is PointStep {
-  return "WorkbenchPointAdd" in step.data && typeof step.result === "object" && "Point" in step.result
+  return step.data.type === "WorkbenchPointAdd" && step.result.type === "Point"
 }
 
-export type PlaneStep = Step & {result: { Plane: Plane }, data: {WorkbenchPlaneAdd: WorkbenchPlaneAdd} }
+export type PlaneStep = Step & {result: { type: "Plane" }, data: {type: "WorkbenchPlaneAdd"} & WorkbenchPlaneAdd }
 export function isPlaneStep(step: Step): step is PlaneStep {
-  return "WorkbenchPlaneAdd" in step.data && typeof step.result === "object" && "Plane" in step.result
+  return step.data.type === "WorkbenchPlaneAdd" && step.result.type === "Plane"
 }
 
-export type SketchStep = Step & {result: { Sketch: { sketch: ISketch, faces: Face[] } }, data: {WorkbenchSketchAdd: WorkbenchSketchAdd} }
+export type SketchStep = Step & {result: { type: "Sketch" }, data: {type: "WorkbenchSketchAdd"} & WorkbenchSketchAdd }
 export function isSketchStep(step: Step): step is SketchStep {
-  return "WorkbenchSketchAdd" in step.data && typeof step.result === "object" && "Sketch" in step.result
+  return step.data.type === "WorkbenchSketchAdd" && step.result.type === "Sketch"
 }
 
 // --- Sketch primitive operations ---
 // Any primitive operation
-export type SketchPrimitiveStep = Step & {result: StepResult & {Primitive: WrappedPrimitive}}
-export function isSketchPrimitiveStep(step: Step): step is SketchPrimitiveStep {
-  return typeof step.result === "object" && "Primitive" in step.result
+export type SketchActionStep = Step & {result: { type: "SketchAction", action: SketchActionResult & {type: string}, faces: Face[]}}
+export function isSketchActionStep(step: Step): step is SketchActionStep {
+  return step.result.type === "SketchAction"
 }
 
-export type SketchPointStep = SketchPrimitiveStep & {result: {Primitive: {Point2: Point2}}, data: {SketchAddPoint: SketchAddPoint}}
+export type SketchPointStep = SketchActionStep & {result: {action: {type: "Point2"} & Point2}, data: {type: "SketchAddPoint"} & SketchAddPoint}
 export function isSketchPointStep(step: Step): step is SketchPointStep {
-  return isSketchPrimitiveStep(step) && "SketchAddPoint" in step.data && "Point2" in step.result.Primitive
+  return isSketchActionStep(step) && step.result.action.type === "Point2" && step.data.type === "SketchAddPoint"
 }
 
-export type SketchLineStep = SketchPrimitiveStep & {result: {Primitive: {Line2: Line2}}, data: {SketchAddLine: SketchAddLine}}
+export type SketchLineStep = SketchActionStep & {result: {action: {type: "Line2"} & Line2}, data: {type: "SketchAddLine"} & SketchAddLine}
 export function isSketchLineStep(step: Step): step is SketchLineStep {
-  return isSketchPrimitiveStep(step) && "SketchAddLine" in step.data && "Line2" in step.result.Primitive
+  return isSketchActionStep(step) && step.result.action.type === "Line2" && step.data.type === "SketchAddLine"
 }
 
-export type SketchCircleStep = SketchPrimitiveStep & {result: {Primitive: {Circle2: Circle2}}, data: {SketchAddCircle: SketchAddCircle}}
+export type SketchCircleStep = SketchActionStep & {result: {action: {type: "Circle2"} & Circle2}, data: {type: "SketchAddCircle"} & SketchAddCircle}
 export function isSketchCircleStep(step: Step): step is SketchCircleStep {
-  return isSketchPrimitiveStep(step) && "SketchAddCircle" in step.data && "Circle2" in step.result.Primitive
+  return isSketchActionStep(step) && step.result.action.type === "Circle2" && step.data.type === "SketchAddCircle"
 }
 
-export type SketchArcStep = SketchPrimitiveStep & {result: {Primitive: {Arc2: Arc2}}, data: {SketchAddArc: SketchAddArc}}
+export type SketchArcStep = SketchActionStep & {result: {action: {type: "Arc2"} & Arc2}, data: {type: "SketchAddArc"} & SketchAddArc}
 export function isSketchArcStep(step: Step): step is SketchArcStep {
-  return isSketchPrimitiveStep(step) && "SketchAddArc" in step.data && "Arc2" in step.result.Primitive
-}
-
-// --- Sketch compound operations ---
-export type SketchCompoundStep = Step & {result: {Compound: Compound}}
-export function isSketchCompoundStep(step: Step): step is SketchCompoundStep {
-  return typeof step.result === "object" && "Compound" in step.result
+  return isSketchActionStep(step) && step.result.action.type === "Arc2" && step.data.type === "SketchAddArc"
 }
 
 // TODO: export rectangle
@@ -58,12 +52,12 @@ export function isSketchCompoundStep(step: Step): step is SketchCompoundStep {
 
 // --- Solid operations ---
 // Any step that produces solids is a solid step
-export type SolidStep = Step & {result: {Solid: Solid[]}}
+export type SolidStep = Step & {result: {type: "Solid"} & Solid[]}
 export function isSolidStep(step: Step): step is SolidStep {
-  return "Solid" in step
+  return step.result.type === "Solid"
 }
 
-export type ExtrusionStep = SolidStep & {data: FeatureExtrusionAdd}
+export type ExtrusionStep = SolidStep & {data: {type: "FeatureExtrusionAdd"} & FeatureExtrusionAdd}
 export function isExtrusionStep(step: Step): step is ExtrusionStep {
-  return isSolidStep(step) && "FeatureExtrusionAdd" in step.data
+  return isSolidStep(step) && step.data.type === "FeatureExtrusionAdd"
 }

@@ -6,11 +6,12 @@
   import X from "phosphor-svelte/lib/X"
   import {base} from "../../base"
   import type {FeatureExtrusionAdd} from "shared/cadmium-api"
+  import type { StepHash } from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, hash: number, data: FeatureExtrusionAdd
+  export let name: string, index: number, hash: StepHash, data: FeatureExtrusionAdd
 
   // $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
   // $: data, log("[props]", "typeof id:", typeof id, "id:", id)

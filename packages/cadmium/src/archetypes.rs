@@ -279,6 +279,7 @@ pub struct Line2 {
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
 pub enum WrappedPrimitive {
     Point2(Point2),
     Line2(Line2),

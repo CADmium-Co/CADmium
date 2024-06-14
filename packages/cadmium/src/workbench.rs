@@ -198,20 +198,12 @@ impl MessageHandler for AddSketch {
     ) -> anyhow::Result<Option<(IDType, StepResult)>> {
         let mut wb = workbench_ref.borrow_mut();
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
-        let faces = sketch.faces();
-        info!("Sketch has {} faces", faces.len());
 
         let new_id = wb.sketches_next_id;
         let sketch_cell = Rc::new(RefCell::new(sketch));
         wb.sketches.insert(new_id, sketch_cell.clone());
         wb.sketches_next_id += 1;
-        Ok(Some((
-            new_id,
-            StepResult::Sketch {
-                sketch: sketch_cell.clone(),
-                faces,
-            },
-        )))
+        Ok(Some((new_id, StepResult::Sketch(sketch_cell.clone()))))
     }
 }
 

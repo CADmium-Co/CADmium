@@ -129,10 +129,10 @@
   {#if isPointStep(step)}
     <Point3D
       id={step.hash}
-      x={step.result.Point.x}
-      y={step.result.Point.y}
-      z={step.result.Point.z}
-      hidden={step.result.Point.hidden}
+      x={step.result.x}
+      y={step.result.y}
+      z={step.result.z}
+      hidden={step.result.hidden}
       {collisionLineMaterial}
     />
   {:else if isPlaneStep(step)}
@@ -141,17 +141,16 @@
       id={step.hash}
       height={100}
       width={100}
-      origin={step.result.Plane.origin}
-      primary={step.result.Plane.primary}
-      secondary={step.result.Plane.secondary}
-      tertiary={step.result.Plane.tertiary}
+      origin={step.result.origin}
+      primary={step.result.primary}
+      secondary={step.result.secondary}
+      tertiary={step.result.tertiary}
     />
   {:else if isSketchStep(step)}
     <Sketch
       hash={step.hash}
       name={step.name}
-      sketch={step.result.Sketch.sketch}
-      faces={step.result.Sketch.faces}
+      sketch={step.result}
       editing={$sketchBeingEdited === step.hash}
       {solidLineMaterial}
       {solidHoveredMaterial}
@@ -161,7 +160,7 @@
       {collisionLineMaterial}
     />
   {:else if isSolidStep(step)}
-    {#each step.result.Solid as solid}
+    {#each step.result as solid}
       <Solid
         name={step.name}
         indices={solid.indices}

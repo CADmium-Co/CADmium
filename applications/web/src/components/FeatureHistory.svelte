@@ -60,9 +60,9 @@
         {#if isPointStep(step)}
           <PointFeature name={step.name} index={featureIndex} />
         {:else if isPlaneStep(step)}
-          <PlaneFeature name={step.name} index={featureIndex} plane={step.result.Plane} {setCameraFocus} />
+          <PlaneFeature name={step.name} index={featureIndex} plane={step.result} {setCameraFocus} />
         {:else if isSketchStep(step)}
-          <SketchFeature name={step.name} index={featureIndex} hash={step.hash} plane_desc={step.data.WorkbenchSketchAdd.plane_description} />
+          <SketchFeature name={step.name} index={featureIndex} hash={step.hash} plane_desc={step.data.plane_description} />
         {:else if isExtrusionStep(step)}
           <ExtrusionFeature name={step.name} index={featureIndex} hash={step.hash} data={step.data} />
         {:else}

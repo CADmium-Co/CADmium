@@ -36,7 +36,7 @@ fn main() {
             r#"
 export interface {name} {{ {iface_fields} }}
 export function {fn_name}({fn_params}): MessageResult {{
-    const message: Message = {{ {name}: {{ {iface_params} }} }};
+    const message: Message = {{ type: "{name}", {iface_params} }};
     return sendWasmMessage(message);
 }}"#
         )
@@ -45,7 +45,7 @@ export function {fn_name}({fn_params}): MessageResult {{
 
     let message_variants = all_defs
         .iter()
-        .map(|(name, _)| format!("{{ {name}: {name} }}"))
+        .map(|(name, _)| format!("{{ type: \"{name}\" }} & {name}"))
         .collect::<Vec<_>>()
         .join(" | ");
 

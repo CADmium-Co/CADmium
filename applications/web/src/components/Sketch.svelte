@@ -4,13 +4,12 @@
   import type {LineMaterial} from "three/examples/jsm/lines/LineMaterial.js"
 
   import {currentlySelected, previewGeometry, sketchTool} from "shared/stores"
-  import type {Face} from "shared/types"
   import type {ISketch} from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let hash: string, name: string, sketch: ISketch, faces: Face[], editing: boolean = false
+  export let hash: string, name: string, sketch: ISketch, editing: boolean = false
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
@@ -50,7 +49,6 @@
   {name}
   {hash}
   plane={sketch.plane}
-  {faces}
   editing
   {solidLineMaterial}
   {solidHoveredMaterial}

@@ -9,6 +9,7 @@ use super::ProjectMessageHandler;
 
 #[derive(MessageEnum, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
+#[serde(tag = "type")]
 pub enum Message {
     ProjectRename(crate::project::ProjectRename),
     WorkbenchRename(IDWrap<crate::workbench::WorkbenchRename>),

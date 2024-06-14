@@ -10,7 +10,9 @@ use wasm_bindgen::prelude::*;
 
 use crate::archetypes;
 use crate::feature::{self, solid};
-use crate::isketch::{compound, ISketch};
+use crate::isketch::{face, ISketch};
+
+use super::sketch_action::SketchActionResult;
 
 pub trait NodeLike:
     Debug + Clone + Serialize + DeserializeOwned + IntoWasmAbi + RefFromWasmAbi
@@ -21,17 +23,19 @@ pub trait NodeLike:
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+#[serde(tag = "type")]
 pub enum StepResult {
     Empty,
     // TODO: Add a variable/expression
     Point(Rc<RefCell<feature::point::Point3>>),
     Plane(Rc<RefCell<archetypes::Plane>>),
-    Sketch {
-        sketch: Rc<RefCell<ISketch>>,
-        faces: Vec<isotope::decompose::face::Face>,
+    Sketch(Rc<RefCell<ISketch>>),
+    // Primitive(Rc<RefCell<archetypes::WrappedPrimitive>>),
+    // Constraint(Rc<RefCell<isotope::constraints::Constraint>>),
+    // Compound(Rc<RefCell<compound::Compound>>),
+    SketchAction {
+        action: SketchActionResult,
+        faces: Vec<face::Face>,
     },
-    Primitive(Rc<RefCell<archetypes::WrappedPrimitive>>),
-    Constraint(Rc<RefCell<isotope::constraints::Constraint>>),
-    Compound(Rc<RefCell<compound::Compound>>),
     Solid(Vec<solid::Solid>),
 }

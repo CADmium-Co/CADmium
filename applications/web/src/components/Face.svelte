@@ -42,24 +42,26 @@
     } else if (wire.Segments) {
       let points = []
       for (let segment of wire.Segments) {
-        if (segment.type === "Line") {
-          let start = pointsById[segment.start]
-          let end = pointsById[segment.end]
+        console.log("segment", segment)
+        if ("Line" in segment) {
+          let start = segment.Line.start
+          let end = segment.Line.end
 
           if (points.length === 0) {
-            points.push(new Vector2(start.x, start.y))
+            points.push(new Vector2(start.data[0], start.data[1]))
           }
-          points.push(new Vector2(end.x, end.y))
-        } else if (segment.type === "Arc") {
-          let center = pointsById[segment.center]
-          let start = pointsById[segment.start]
-          let end = pointsById[segment.end]
+          points.push(new Vector2(end.data[0], end.data[1]))
+        } else if ("Arc" in segment) {
+          // TODO: We use a center + angles, not 3 points
+          let center = segment.Arc.center
+          let start = pointsById[segment.Arc.start]
+          let end = pointsById[segment.Arc.end]
 
           let arcPoints = arcToPoints(
             new Vector2(center.x, center.y),
             new Vector2(start.x, start.y),
             new Vector2(end.x, end.y),
-            segment.clockwise,
+            segment.Arc.clockwise,
           )
 
           if (points.length !== 0) {

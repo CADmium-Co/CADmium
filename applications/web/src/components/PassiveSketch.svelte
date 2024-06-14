@@ -18,7 +18,7 @@
 
   import debounce from "just-debounce-it"
 
-  import {isSketchArcStep, isSketchCircleStep, isSketchLineStep, isSketchPointStep} from "shared/stepTypeGuards"
+  import {isSketchActionStep, isSketchArcStep, isSketchCircleStep, isSketchLineStep, isSketchPointStep} from "shared/stepTypeGuards"
   import {hiddenSketches, previewGeometry, sketchTool, workbench} from "shared/stores"
   import type {IDictionary, PreviewGeometry} from "shared/types"
   import type {Plane, Point2, StepHash} from "cadmium"
@@ -29,7 +29,6 @@
   export let name: string,
     plane: Plane,
     hash: StepHash,
-    faces: Face[],
     editing: boolean = false
 
   const {size, dpr} = useThrelte()
@@ -91,7 +90,7 @@
   $: hidden = $hiddenSketches.includes(hash) && !editing
   $: $hiddenSketches, log("[$hiddenSketches]", hidden)
   $: pointsById = history.reduce((acc, step) => {
-    if (isSketchPointStep(step)) acc[step.hash] = step.result.Primitive.Point2
+    if (isSketchPointStep(step)) acc[step.hash] = step.result.action
     return acc
   }, {} as IDictionary<Point2>)
 
@@ -124,9 +123,9 @@
           if ($sketchTool === "line") {
             newLineTool.click(e, projectToPlane(e.point))
           } else if ($sketchTool === "circle") {
-            newCircleTool.click(e, {twoD: projectToPlane(e.point), threeD: e.point})
+            newCircleTool.click(e, projectToPlane(e.point))
           } else if ($sketchTool === "rectangle") {
-            newRectangleTool.click(e, {twoD: projectToPlane(e.point), threeD: e.point})
+            newRectangleTool.click(e, projectToPlane(e.point))
           } else if ($sketchTool === "select") {
             selectTool.click(e, projectToPlane(e.point))
           }
@@ -168,11 +167,11 @@
 
     {#each history as step}
       {#if isSketchPointStep(step)}
-        <Point2D x={step.result.Primitive.Point2.x} y={step.result.Primitive.Point2.y} hidden={step.result.Primitive.Point2.hidden} id={step.hash} {collisionLineMaterial} />
+        <Point2D x={step.result.action.x} y={step.result.action.y} hidden={step.result.action.hidden} id={step.hash} {collisionLineMaterial} />
       {:else if isSketchCircleStep(step)}
         <Circle
-          center={pointsById[step.result.Primitive.Circle2.center]}
-          radius={step.result.Primitive.Circle2.radius}
+          center={pointsById[step.result.action.center]}
+          radius={step.result.action.radius}
           id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -184,7 +183,7 @@
       {:else if isSketchArcStep(step)}
         <!-- TODO: Use start & end angle instead of points -->
         <Arc
-          center={pointsById[step.result.Primitive.Arc2.center]}
+          center={pointsById[step.result.action.center]}
           start={pointsById[0]}
           end={pointsById[1]}
           id={step.hash}
@@ -197,8 +196,8 @@
         />
       {:else if isSketchLineStep(step)}
         <Line
-          start={pointsById[step.result.Primitive.Line2.start]}
-          end={pointsById[step.result.Primitive.Line2.end]}
+          start={pointsById[step.result.action.start]}
+          end={pointsById[step.result.action.end]}
           id={step.hash}
           {solidLineMaterial}
           {solidHoveredMaterial}
@@ -207,6 +206,12 @@
           {dashedLineMaterial}
           {collisionLineMaterial}
         />
+      {/if}
+
+      {#if isSketchActionStep(step)}
+        {#each step.result.faces as face, faceId}
+          <Face face={face} id={`${hash}-${faceId}`} {pointsById} />
+        {/each}
       {/if}
     {/each}
 
@@ -238,10 +243,6 @@
       {:else if isGeomType(geom, "point")}
         <Point2D x={geom.x!} y={geom.y!} hidden={false} id={geom.uuid} isPreview {collisionLineMaterial} />
       {/if}
-    {/each}
-
-    {#each faces as face, faceId}
-      <Face face={face} id={`${hash}-${faceId}`} {pointsById} />
     {/each}
   </T.Group>
 {/if}

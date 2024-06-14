@@ -11,6 +11,7 @@ use crate::workbench::Workbench;
 pub mod actions;
 pub mod hash;
 pub mod result;
+pub mod sketch_action;
 
 pub use hash::StepHash;
 pub use result::StepResult;
