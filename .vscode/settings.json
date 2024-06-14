@@ -3,5 +3,13 @@
 	"vite.autoStart": false,
 	"vite.buildCommand": "pnpm run build",
 	"vite.devCommand": "pnpm run dev",
-	"vite.showTerminal": true
+	"vite.showTerminal": true,
+	"cSpell.words": [
+		"bindgen",
+		"isketch",
+		"Threlte",
+		"tsify",
+		"wireframe"
+	],
+	"editor.formatOnSave": true
 }

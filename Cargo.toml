@@ -1,6 +1,3 @@
 [workspace]
-members = ["packages/cadmium", "applications/tauri"]
+members = [ "packages/cadmium", "packages/cadmium-macros", "applications/tauri" ]
 resolver = "2"
-
-[patch.crates-io]
-tsify = { git = "https://github.com/siefkenj/tsify" }
