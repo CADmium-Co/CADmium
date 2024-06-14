@@ -163,6 +163,38 @@ Most especially, we need help in the following areas:
 
 If you feel like you would be willing and able to help, please join [our discord](https://discord.gg/qJCsKJeyZv)!
 
+## License FAQs
+
+### What license do you use?
+We use the [Elastic License v2.0](https://github.com/CADmium-Co/CADmium/blob/main/LICENSE.md).
+
+### What are the terms of that license?
+You can do anything you want with the code except offer it as a service to third parties.
+
+### Why do you use that license instead of MIT, GPL, etc?
+Because we don't want Autodesk, Siemens, Dassault, or PTC to clone our code, change the logo, and start offering it as one of their products.
+
+### Can I host a CADmium instance for my family?
+Yes.
+
+### Can I host a CADmium instance for my company for internal use?
+Yes.
+
+### Can I host a CADmium instance for my company for my clients as a free service?
+No.
+
+### Can I host a CADmium instance for my company for my clients as a paid service?
+No.
+
+### If you choose at some point to stop developing CADmium, what will/can happen to the project?
+We would convert the license to MIT, GPL, or something similar.
+
+### If I fork the project and change it (rebranding or adding a new feature) can I host it myself?
+Yes, so long as your fork is only used by you or your company. You are not permitted to host your fork as a service for third parties.
+
+### Do I have to publish my fork?
+No.
+
 ## Immediate TODOs for V0.0.1 release (The Demo)
 
 Github project for tracking progress is [here](https://github.com/orgs/CADmium-Co/projects/1/views/1?pane=info)
