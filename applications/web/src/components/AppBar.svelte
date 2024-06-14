@@ -113,8 +113,24 @@
       <Bug class="h-6 w-6" />
     </div>
 
-    <div class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1">
-      <Sun class="h-6 w-6" />
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div
+      class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1"
+      on:click={() => {
+        if (localStorage.getItem("theme") === "light") {
+          document.documentElement.classList.add("dark")
+          localStorage.setItem("theme", "dark")
+        } else {
+          document.documentElement.classList.remove("dark")
+          localStorage.setItem("theme", "light")
+        }
+      }}
+    >
+      {#if document.documentElement.classList.contains("dark")}
+        <Moon class="h-6 w-6" />
+      {:else}
+        <Sun class="h-6 w-6" />
+      {/if}
     </div>
 
     <div class="flex-grow flex flex-row-reverse gap-4 mr-4">
