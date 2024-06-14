@@ -148,9 +148,10 @@
     />
   {:else if isSketchStep(step)}
     <Sketch
-      uniqueId={step.hash}
+      hash={step.hash}
       name={step.name}
       sketch={step.result.Sketch.sketch}
+      faces={step.result.Sketch.faces}
       editing={$sketchBeingEdited === step.hash}
       {solidLineMaterial}
       {solidHoveredMaterial}

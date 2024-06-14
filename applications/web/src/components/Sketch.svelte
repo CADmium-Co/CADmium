@@ -1,13 +1,16 @@
 <script lang="ts">
-  import type {LineMaterial} from "three/examples/jsm/lines/LineMaterial.js"
   import PassiveSketch from "./PassiveSketch.svelte"
+
+  import type {LineMaterial} from "three/examples/jsm/lines/LineMaterial.js"
+
   import {currentlySelected, previewGeometry, sketchTool} from "shared/stores"
+  import type {Face} from "shared/types"
   import type {ISketch} from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let uniqueId: string, name: string, sketch: ISketch, editing: boolean
+  export let hash: string, name: string, sketch: ISketch, faces: Face[], editing: boolean = false
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
@@ -43,31 +46,18 @@
   }
 </script>
 
-{#if editing}
-  <PassiveSketch
-    {name}
-    {uniqueId}
-    plane={sketch.plane}
-    editing
-    {solidLineMaterial}
-    {solidHoveredMaterial}
-    {solidSelectedMaterial}
-    {dashedHoveredMaterial}
-    {dashedLineMaterial}
-    {collisionLineMaterial}
-  />
-{:else}
-  <PassiveSketch
-    {name}
-    {uniqueId}
-    plane={sketch.plane}
-    {solidLineMaterial}
-    {solidHoveredMaterial}
-    {solidSelectedMaterial}
-    {dashedHoveredMaterial}
-    {dashedLineMaterial}
-    {collisionLineMaterial}
-  />
-{/if}
+<PassiveSketch
+  {name}
+  {hash}
+  plane={sketch.plane}
+  {faces}
+  editing
+  {solidLineMaterial}
+  {solidHoveredMaterial}
+  {solidSelectedMaterial}
+  {dashedHoveredMaterial}
+  {dashedLineMaterial}
+  {collisionLineMaterial}
+/>
 
 <svelte:window on:keydown={onKeyDown} />

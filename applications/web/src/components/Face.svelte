@@ -3,8 +3,7 @@
   import {Path, Vector2, Shape, MeshStandardMaterial, DoubleSide, ShapeGeometry} from "three"
   import {circleToPoints, arcToPoints} from "shared/projectUtils"
   import {currentlySelected, currentlyMousedOver, selectingFor} from "shared/stores"
-  import type {EntityType, IDictionary, SketchPoint} from "shared/types"
-  // import Sketch from './Sketch.svelte'
+  import type {EntityType, IDictionary, Point2WithID} from "shared/types"
 
   // @ts-ignore
   const log = (function () { const context = "[Face.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -14,8 +13,7 @@
   // 	 exterior: wire
   //   holes: wires[]
   // }
-  export let face: any, id: string, pointsById: IDictionary<SketchPoint>
-  // log("[props]", "face:", face, "id:", id, "pointsById:", pointsById)
+  export let face: any, id: string, pointsById: IDictionary<Point2WithID>
 
   const type: EntityType = "face"
 
@@ -39,7 +37,7 @@
       let circle = wire.Circle
       let center = pointsById[circle.center]
       let radius = circle.radius
-      let points = circleToPoints(new Vector2(center.twoD.x, center.twoD.y), radius)
+      let points = circleToPoints(new Vector2(center.x, center.y), radius)
       shape.setFromPoints(points)
     } else if (wire.Segments) {
       let points = []
@@ -49,18 +47,18 @@
           let end = pointsById[segment.end]
 
           if (points.length === 0) {
-            points.push(new Vector2(start.twoD.x, start.twoD.y))
+            points.push(new Vector2(start.x, start.y))
           }
-          points.push(new Vector2(end.twoD.x, end.twoD.y))
+          points.push(new Vector2(end.x, end.y))
         } else if (segment.type === "Arc") {
           let center = pointsById[segment.center]
           let start = pointsById[segment.start]
           let end = pointsById[segment.end]
 
           let arcPoints = arcToPoints(
-            new Vector2(center.twoD.x, center.twoD.y),
-            new Vector2(start.twoD.x, start.twoD.y),
-            new Vector2(end.twoD.x, end.twoD.y),
+            new Vector2(center.x, center.y),
+            new Vector2(start.x, start.y),
+            new Vector2(end.x, end.y),
             segment.clockwise,
           )
 

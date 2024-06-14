@@ -8,6 +8,9 @@ export interface IDictionary<TValue> {
 
 export type Point2WithID = Point2 & { id?: StepHash }
 
+// TODO: Somehow export the Face struct
+export type Face = any
+
 type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
 type SetCameraFocus = (goTo: Vector3Like, lookAt: Vector3Like, up: Vector3Like) => void

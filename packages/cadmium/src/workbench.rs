@@ -199,6 +199,7 @@ impl MessageHandler for AddSketch {
         let mut wb = workbench_ref.borrow_mut();
         let sketch = ISketch::try_from_plane_description(&wb, &self.plane_description)?;
         let faces = sketch.faces();
+        info!("Sketch has {} faces", faces.len());
 
         let new_id = wb.sketches_next_id;
         let sketch_cell = Rc::new(RefCell::new(sketch));

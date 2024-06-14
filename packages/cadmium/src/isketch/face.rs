@@ -1,8 +1,9 @@
 use geo::{Centroid, EuclideanDistance as _};
-pub use isotope::decompose::face::Face;
 use isotope::primitives::point2::Point2;
 use itertools::Itertools;
 use serde::{Deserialize, Serialize};
+
+pub use isotope::decompose::face::Face;
 
 use crate::IDType;
 

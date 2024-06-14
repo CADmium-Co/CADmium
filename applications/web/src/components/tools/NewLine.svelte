@@ -31,22 +31,16 @@
     pushToStack(point)
     previousPoint = point
 
-    switch (stack.length) {
-      case 0: // nothing to do, the stack is empty
-        break
-      case 1: // can't create a line with only one point!
-        break
-      default:
-        const endPoint = popFromStack()
-        const startPoint = popFromStack()
-        bench.sketchAddLine(sketchIndex, startPoint!.id!, endPoint!.id!)
+    if (stack.length > 1) {
+      const endPoint = popFromStack()
+      const startPoint = popFromStack()
+      bench.sketchAddLine(sketchIndex, startPoint!.id!, endPoint!.id!)
 
-        // leave the current point on the stack in case we want to create another line from here
-        pushToStack(point)
-        // unless it's an earlier point, which means we're finished making lines, so we clear the stack
-        const isEarlierPoint = pointsById[point.id!]
-        if (isEarlierPoint) clearStack()
-        break
+      // leave the current point on the stack in case we want to create another line from here
+      pushToStack(point)
+      // unless it's an earlier point, which means we're finished making lines, so we clear the stack
+      const isEarlierPoint = pointsById[point.id!]
+      if (isEarlierPoint) clearStack()
     }
   }
 
@@ -98,7 +92,6 @@
         previewGeoms.push(p)
       }
 
-      log("[previewGeoms]", previewGeoms)
       previewGeometry.set(previewGeoms)
     } else previewGeometry.set([])
   }

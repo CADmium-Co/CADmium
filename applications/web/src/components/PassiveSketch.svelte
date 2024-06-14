@@ -3,7 +3,7 @@
   import Line from "./Line.svelte"
   import Circle from "./Circle.svelte"
   import Arc from "./Arc.svelte"
-  // import Face from "./Face.svelte"
+  import Face from "./Face.svelte"
 
   import NewLineTool from "./tools/NewLine.svelte"
   import NewCircleTool from "./tools/NewCircle.svelte"
@@ -28,8 +28,9 @@
 
   export let name: string,
     plane: Plane,
-    uniqueId: StepHash,
-    editing = false
+    hash: StepHash,
+    faces: Face[],
+    editing: boolean = false
 
   const {size, dpr} = useThrelte()
 
@@ -87,7 +88,7 @@
   const lineGeometry = new LineGeometry()
   lineGeometry.setPositions(points)
 
-  $: hidden = $hiddenSketches.includes(uniqueId) && !editing
+  $: hidden = $hiddenSketches.includes(hash) && !editing
   $: $hiddenSketches, log("[$hiddenSketches]", hidden)
   $: pointsById = history.reduce((acc, step) => {
     if (isSketchPointStep(step)) acc[step.hash] = step.result.Primitive.Point2
@@ -146,10 +147,10 @@
       <T.PlaneGeometry args={[width * 100, height * 100]} />
     </T.Mesh>
 
-    <SelectTool bind:this={selectTool} sketchIndex={uniqueId} active={$sketchTool === "select"} />
-    <NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={uniqueId} active={$sketchTool === "line"} {projectToPlane} />
-    <NewCircleTool bind:this={newCircleTool} {pointsById} sketchId={uniqueId} active={$sketchTool === "circle"} {projectToPlane} />
-    <NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={uniqueId} active={$sketchTool === "rectangle"} {projectToPlane} />
+    <SelectTool bind:this={selectTool} sketchIndex={hash} active={$sketchTool === "select"} />
+    <NewLineTool bind:this={newLineTool} {pointsById} sketchIndex={hash} active={$sketchTool === "line"} {projectToPlane} />
+    <NewCircleTool bind:this={newCircleTool} {pointsById} sketchId={hash} active={$sketchTool === "circle"} {projectToPlane} />
+    <NewRectangleTool bind:this={newRectangleTool} {pointsById} sketchIndex={hash} active={$sketchTool === "rectangle"} {projectToPlane} />
 
     <T.Line2
       geometry={lineGeometry}
@@ -239,8 +240,8 @@
       {/if}
     {/each}
 
-    <!-- {#each faceTuples as face (`${faceTuples.length}-${face.id}`)}
-      <Face face={face.face} id={face.id} {pointsById} />
-    {/each} -->
+    {#each faces as face, faceId}
+      <Face face={face} id={`${hash}-${faceId}`} {pointsById} />
+    {/each}
   </T.Group>
 {/if}
