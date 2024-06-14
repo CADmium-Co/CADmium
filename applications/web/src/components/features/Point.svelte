@@ -18,7 +18,7 @@
 </script>
 
 <div
-  class="flex items-center text-sm hover:bg-sky-200"
+  class="flex items-center text-sm hover:bg-sky-200 dark:hover:bg-gray-600"
   role="button"
   tabindex="0"
   on:dblclick={() => {
@@ -39,7 +39,7 @@
       on:submit|preventDefault={() => {
         closeAndRefresh()
       }}
-      class="px-3 py-2 bg-gray-100 flex flex-col space-y-2"
+      class="px-3 py-2 bg-gray-100 dark:bg-gray-600 flex flex-col space-y-2"
       autocomplete="off"
     >
       <label>

@@ -9,7 +9,7 @@
   $: workbenches = $project.workbenches ?? []
 </script>
 
-<div class="bg-gray-100 h-[45px] flex">
+<div class="bg-gray-100 dark:bg-gray-800 h-[45px] flex">
   {#each workbenches as wb, i (wb.name)}
     {#if wb.renaming}
       <input
@@ -32,7 +32,9 @@
       />
     {:else}
       <button
-        class="{$workbenchIndex === i ? 'bg-gray-300' : 'bg-gray-200'} hover:bg-sky-300 text-gray-700 py-2 px-4"
+        class="{$workbenchIndex === i
+          ? 'bg-gray-300 dark:bg-gray-600'
+          : 'bg-gray-200 dark:bg-gray-800'} hover:bg-sky-300 text-gray-700 dark:text-gray-300 dark:hover:text-gray-700 py-2 px-4"
         type="button"
         on:dblclick={() => {
           if ($workbenchIndex !== i) {

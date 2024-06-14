@@ -53,7 +53,7 @@
   }
 </script>
 
-<div class="flex flex-col select-none">
+<div class="flex flex-col select-none dark:text-gray-300">
   <div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
     <div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
     {#each history as feature, featureIdx (feature.data.type + ":" + feature.unique_id)}
@@ -73,7 +73,7 @@
     {/each}
   </div>
   <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="h-[12px] cursor-row-resize border-b-2 border-b-gray-300" on:mousedown={onMouseDown} />
+  <div class="h-[12px] cursor-row-resize border-b-2 border-b-gray-300" on:mousedown={onMouseDown}></div>
   <div style="height:{partsHeight}px" class="overflow-y-auto">
     <div class="font-bold text-sm px-2 py-2">
       Solids ({solids ? Object.keys(solids).length : 0})
