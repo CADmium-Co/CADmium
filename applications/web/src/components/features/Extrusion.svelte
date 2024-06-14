@@ -78,7 +78,7 @@
 </script>
 
 <div
-  class="flex items-center text-sm hover:bg-sky-200"
+  class="flex items-center text-sm hover:bg-sky-200 dark:hover:bg-gray-600"
   role="button"
   tabindex="0"
   on:dblclick={() => {

@@ -44,16 +44,16 @@
   }
 </script>
 
-<div style="width:{width}px; height:{height}px">
+<div style="width:{width}px; height:{height}px" class="dark:bg-gray-700">
   <FeatureHistory {setCameraFocus} />
 </div>
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<div class="w-[12px] cursor-col-resize border-r-gray-300 border-r-2" on:mousedown={onMouseDown} />
+<div class="w-[12px] cursor-col-resize border-r-gray-300 dark:bg-gray-700 border-r-2" on:mousedown={onMouseDown}></div>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <div
-  class="bg-white {$sketchTool === 'line' || $sketchTool === 'circle' || $sketchTool === 'rectangle' ? 'cursor-crosshair' : ''}"
+  class="bg-white dark:bg-gray-700 {$sketchTool === 'line' || $sketchTool === 'circle' || $sketchTool === 'rectangle' ? 'cursor-crosshair' : ''}"
   style="width:{viewportWidth}px; height:{height}px"
   on:mousedown={e => {
     if ($selectingFor.length > 0) {
