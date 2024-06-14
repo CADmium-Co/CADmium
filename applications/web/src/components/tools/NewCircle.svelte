@@ -2,7 +2,7 @@
   import {snapPoints, sketchTool, previewGeometry, currentlyMousedOver} from "shared/stores"
   import {bench} from "shared/projectUtils"
   import {Vector2, Vector3, type Vector2Like} from "three"
-  import type {PointLikeById, Point2D, ProjectToPlane, IDictionary, Point2WithID} from "shared/types"
+  import type {Point2D, ProjectToPlane, IDictionary, Point2WithID} from "shared/types"
   import type { Point2 } from "cadmium"
 
   // @ts-ignore
@@ -13,7 +13,7 @@
   export let active: boolean
   export let projectToPlane: ProjectToPlane
 
-  let centerPoint: Point2 | null = null
+  let centerPoint: Point2WithID | undefined = undefined
   let stack: Point2WithID[] = []
 
   $: if ($sketchTool !== "circle") clearStack()
@@ -25,14 +25,14 @@
   }
 
   function processPoint(point: Point2WithID) {
-    pushToStack(point)
-    centerPoint = point
+    if (stack.length === 0) {
+      centerPoint = point
+      pushToStack(point)
+      return
+    }
 
-    if (stack.length < 2) return
-
-    const circumference = popFromStack()
-    const center = popFromStack()
-    bench.sketchAddCircle(sketchId, center!.id!, circumference!.id!)
+    const radius = calcDeltas(centerPoint!, point)
+    bench.sketchAddCircle(sketchId, centerPoint!.id!, radius)
     clearStack()
   }
 
@@ -68,11 +68,6 @@
     else if ($snapPoints.length > 0) $snapPoints = []
 
     if (centerPoint) {
-      function calcDeltas(a: Vector2Like | Point2D | {x: number; y: number}, b: Vector2Like | undefined) {
-        const dx = a.x - b?.x!
-        const dy = a.y - b?.y!
-        return Math.hypot(dx, dy)
-      }
       const radius = snappedTo ? calcDeltas(snappedTo!, centerPoint) : calcDeltas(projected, centerPoint)
 
       previewGeometry.set([
@@ -102,14 +97,20 @@
     }
   }
 
+  function calcDeltas(a: Vector2Like | Point2D | {x: number; y: number}, b: Vector2Like | undefined) {
+    const dx = a.x - b?.x!
+    const dy = a.y - b?.y!
+    return Math.hypot(dx, dy)
+  }
+
   function clearStack() {
-    centerPoint = null
+    centerPoint = undefined
     previewGeometry.set([])
     snapPoints.set([])
     stack = []
   }
 
-  function popFromStack(): PointLikeById | undefined {
+  function popFromStack(): Point2WithID | undefined {
     return stack.pop()
   }
 </script>

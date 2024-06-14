@@ -8,6 +8,7 @@
   import {isPointStep, isPlaneStep, isSolidStep, isSketchStep, isExtrusionStep} from "shared/stepTypeGuards"
   import type {SetCameraFocus} from "shared/types"
 
+  // @ts-ignore
   const log = (function () { const context = "[FeatureHistory.svelte]"; const color="pink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   const minHeight = 30
@@ -66,7 +67,7 @@
         {:else if isExtrusionStep(step)}
           <ExtrusionFeature name={step.name} index={featureIndex} hash={step.hash} data={step.data} />
         {:else}
-          TODO: {step.name} {step.result}
+          <!-- TODO: {step.name} {step.result} -->
         {/if}
       </div>
     {/each}

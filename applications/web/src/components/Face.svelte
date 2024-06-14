@@ -35,9 +35,9 @@
   function writeWireToShape(wire: {Circle: any; Segments: any}, shape: Path) {
     if (wire.Circle) {
       let circle = wire.Circle
-      let center = pointsById[circle.center]
-      let radius = circle.radius
-      let points = circleToPoints(new Vector2(center.x, center.y), radius)
+      let center = circle.center.data
+      let radius = circle.data
+      let points = circleToPoints(new Vector2(center[0], center[1]), radius)
       shape.setFromPoints(points)
     } else if (wire.Segments) {
       let points = []
