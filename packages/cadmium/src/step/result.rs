@@ -37,5 +37,9 @@ pub enum StepResult {
         action: SketchActionResult,
         faces: Vec<face::Face>,
     },
-    Solid(Vec<solid::Solid>),
+    // We need the solids to be a named field so that we can serialize it with tag = "type"
+    // otherwise it would result in { type: "Solid", Solid[] } which isn't valid
+    Solid {
+        solids: Vec<solid::Solid>,
+    },
 }

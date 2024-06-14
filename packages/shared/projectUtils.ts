@@ -3,8 +3,9 @@ import type {Message} from "./cadmium-api"
 import {workbenchIsStale, workbenchIndex, workbench, project, featureIndex, wasmProject, projectIsStale, messageHistory, workbenchSolids} from "./stores"
 import {get} from "svelte/store"
 import {Vector2, Vector3, type Vector2Like} from "three"
-import type {Entity, ExtrusionHistoryStep, HistoryStep, MessageHistory, PlaneHistoryStep, PointHistoryStep, SketchHistoryStep, WithTarget} from "./types"
-import type {Primitive, Workbench, MessageResult, IDType, Solid, Step, Node, Point3, Plane, ISketch, SolidArray, StepHash} from "cadmium"
+import type {Entity, MessageHistory, WithTarget} from "./types"
+import type {Workbench, MessageResult, Solid, Step, Point3, Plane, ISketch, StepHash} from "cadmium"
+import {isSketchActionStep} from "./stepTypeGuards"
 import {isMessage} from "./typeGuards"
 
 import * as cad from "./cadmium-api"
@@ -114,7 +115,7 @@ export function updateExtrusion(extrusionId: number, sketchId: number, length: n
 }
 
 export function setSketchPlane(sketchId: number, planeId: number) {
-  return cad.workbenchSketchSetPlane(get(workbenchIndex), sketchId, {PlaneId: planeId})
+  return cad.workbenchSketchSetPlane(get(workbenchIndex).toString(), sketchId, {PlaneId: planeId})
 }
 
 export function newSketchOnPlane() {
@@ -127,16 +128,17 @@ export function newExtrusion() {
   // log("[newExtrusion] workbench:", workbench)
   // log("[newExtrusion] bench:", bench)
 
-  let sketchId: IDType = 0
-  for (let step of bench.history) {
+  let faces: number[] = []
+  for (let step of bench.history.reverse()) {
     console.warn("[newExtrusion] step:", step)
-    if (step.data.type === "Sketch") {
-      // TODO: This doesn't work, we should retrieve the sketch id
-      sketchId = step.id
+    if (isSketchActionStep(step) && faces.length === 0) {
+      faces = Array.from({ length: step.result.faces.length }, (_value, index) => index);
+      console.log("[newExtrusion] faces:", faces)
+      return cad.featureExtrusionAdd(get(workbenchIndex).toString(), step.data.sketch_id, faces, 25, 0.0, "Normal", "New")
     }
   }
 
-  return cad.featureExtrusionAdd(get(workbenchIndex).toString(), sketchId, [], 25, 0.0, "Normal", "New")
+  throw new Error("No sketch faces found to extrude")
 }
 
 export function deleteEntities(sketchIdx: string, selection: Entity[]) {

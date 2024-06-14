@@ -52,7 +52,7 @@ export function isSketchArcStep(step: Step): step is SketchArcStep {
 
 // --- Solid operations ---
 // Any step that produces solids is a solid step
-export type SolidStep = Step & {result: {type: "Solid"} & Solid[]}
+export type SolidStep = Step & {result: {type: "Solid", solids: Solid[]}}
 export function isSolidStep(step: Step): step is SolidStep {
   return step.result.type === "Solid"
 }

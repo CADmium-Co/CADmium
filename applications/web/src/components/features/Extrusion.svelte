@@ -18,10 +18,10 @@
   // $: data, log("[props]", "typeof data.face_ids[0]:", typeof data.face_ids[0], "data.face_ids:", data.face_ids)
 
   // coerce from number[] to string[] for frontend as we use strings for ids here
-  let faceIdsFromInputs = data.face_ids.sort().map(e => e + "")
+  let faceIdsFromInputs = data.faces.sort().map(e => e + "")
 
   // reactive update of selected faces
-  $: if (data && data.face_ids) faceIdsFromInputs = data.face_ids.map(e => e + "").sort()
+  $: if (data && data.faces) faceIdsFromInputs = data.faces.map(e => e + "").sort()
 
   let length = data.length
 
@@ -153,7 +153,7 @@
         <button
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
-            renameStep(index, name)
+            renameStep(hash, name)
           }}>Done</button
         >
 

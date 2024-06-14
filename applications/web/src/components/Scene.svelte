@@ -160,7 +160,7 @@
       {collisionLineMaterial}
     />
   {:else if isSolidStep(step)}
-    {#each step.result as solid}
+    {#each step.result.solids as solid}
       <Solid
         name={step.name}
         indices={solid.indices}

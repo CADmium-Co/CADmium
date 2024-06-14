@@ -158,7 +158,12 @@ impl MessageHandler for Add {
         workbench.features_next_id += 1;
         let id = workbench.features_next_id - 1;
 
-        Ok(Some((id, StepResult::Solid(extrusion.to_solids()?))))
+        Ok(Some((
+            id,
+            StepResult::Solid {
+                solids: extrusion.to_solids()?,
+            },
+        )))
     }
 }
 
