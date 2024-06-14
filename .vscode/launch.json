@@ -13,6 +13,7 @@
 				"pattern": "Local: +http://127.0.0.1:([0-9]+)/",
 				"uriFormat": "http://127.0.0.1:%s",
 				"webRoot": "${workspaceFolder}/applications/web/src",
+				"killOnServerStop": true
 			}
 		},
 	],

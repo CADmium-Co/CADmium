@@ -8,7 +8,6 @@
   import type {EntityType, TruckEdge, TruckFace, TruckFaceBoundary} from "shared/types"
   import nurbs from "nurbs"
 
-  // @ts-ignore
   const log = (function () { const context = "[SelectableSurface.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let truck_face: TruckFace, truck_edges: TruckEdge[], id: string

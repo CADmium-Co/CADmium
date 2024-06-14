@@ -6,11 +6,11 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "pnpm test:e2e && pnpm test:unit",
+    "test": "pnpm test:integration && pnpm test:unit",
     "lint": "prettier --check . && eslint \"src/**/*.ts\"",
     "format": "prettier . --write .",
     "check": "svelte-check --tsconfig ./tsconfig.json",
-    "test:e2e": "playwright test",
+    "test:integration": "playwright test",
     "test:unit": "vitest",
     "types:guard": "ts-auto-guard --export-all src/types.d.ts"
   },

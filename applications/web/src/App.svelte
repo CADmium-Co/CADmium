@@ -37,7 +37,7 @@
 
   // log('featureIndex changed to', val)
   // refresh workbench when featureIndex mutates
-  featureIndex.subscribe(_ => $wasmProject["get_workbench"] && workbenchIsStale.set(true))
+  featureIndex.subscribe(val => $wasmProject["get_workbench"] && workbenchIsStale.set(true))
 </script>
 
 <div class="w-[100vw] h-[100vh] block" style="overflow: hidden;">

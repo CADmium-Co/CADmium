@@ -10,10 +10,10 @@
   import Moon from "phosphor-svelte/lib/Moon"
   import Sun from "phosphor-svelte/lib/Sun"
   import type {WithTarget} from "shared/types"
+  import {isProject} from "shared/typeGuards"
   import {base} from "../base"
   import {renameProject} from "shared/projectUtils"
 
-  // @ts-ignore
   const log = (function () { const context = "[AppBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let project: Project

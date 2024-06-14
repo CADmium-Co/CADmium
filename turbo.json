@@ -8,8 +8,6 @@
     "test": {
       "dependsOn": ["^build"]
     },
-    "test:unit": {},
-    "test:e2e": {},
     "lint": {},
     "format": {
       "cache": false,

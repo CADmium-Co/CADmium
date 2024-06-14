@@ -4,24 +4,22 @@
   import {arraysEqual, renameStep, updateExtrusion} from "shared/projectUtils"
   import {selectingFor, workbenchIsStale, featureIndex, currentlySelected, hiddenSketches} from "shared/stores"
   import X from "phosphor-svelte/lib/X"
+  import type {ExtrusionData} from "shared/types"
   import {base} from "../../base"
-  import type {FeatureExtrusionAdd} from "shared/cadmium-api"
-  import type { StepHash } from "cadmium"
 
-  // @ts-ignore
   const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, hash: StepHash, data: FeatureExtrusionAdd
+  export let name: string, index: number, id: string, data: ExtrusionData["data"]["extrusion"]
 
   // $: data, log("[props]", "name:", name, "index:", index, "id:", id, "data:", data)
   // $: data, log("[props]", "typeof id:", typeof id, "id:", id)
   // $: data, log("[props]", "typeof data.face_ids[0]:", typeof data.face_ids[0], "data.face_ids:", data.face_ids)
 
   // coerce from number[] to string[] for frontend as we use strings for ids here
-  let faceIdsFromInputs = data.faces.sort().map(e => e + "")
+  let faceIdsFromInputs = data.face_ids.sort().map(e => e + "")
 
   // reactive update of selected faces
-  $: if (data && data.faces) faceIdsFromInputs = data.faces.map(e => e + "").sort()
+  $: if (data && data.face_ids) faceIdsFromInputs = data.face_ids.map(e => e + "").sort()
 
   let length = data.length
 
@@ -41,13 +39,13 @@
 
   function sendUpdate(specificFaceIds?: string[]) {
     if (specificFaceIds) {
-      updateExtrusion(hash, data.sketch_id, length, specificFaceIds)
+      updateExtrusion(id, data.sketch_id, length, specificFaceIds)
     } else {
       const faceIdsFromSelection = $currentlySelected
         .filter(e => e.type === "face")
         .map(e => e.id)
         .sort()
-      updateExtrusion(hash, data.sketch_id, length, faceIdsFromSelection)
+      updateExtrusion(id, data.sketch_id, length, faceIdsFromSelection)
     }
   }
 
@@ -153,7 +151,7 @@
         <button
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
-            renameStep(hash, name)
+            renameStep(index, name)
           }}>Done</button
         >
 

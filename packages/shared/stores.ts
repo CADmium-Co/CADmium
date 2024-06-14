@@ -1,25 +1,29 @@
-import {Solid, StepHash, Project as WasmProject, Workbench} from "cadmium"
+import {Project as WasmProject, Realization as WasmRealization} from "cadmium"
 import {writable} from "svelte/store"
-import type {MessageHistory, Project, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry, Point2WithID} from "./types"
+import type {WorkBench, MessageHistory, Project, Realization, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry} from "./types"
 import {isArcEntity, isCircleEntity, isEntity, isFaceEntity, isLineEntity, isMeshFaceEntity, isPlaneEntity, isPoint3DEntity, isPointEntity} from "./typeGuards"
+// import { isDevelopment } from "../+layout"
 
 // prettier-ignore
 const log = (function () { const context = "[stores.ts]"; const color = "hotpink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
 
-export const wasmProject = writable<WasmProject>({} as WasmProject)
+// @ts-ignore
+export const wasmProject = writable<WasmProject>({})
 export const project = writable<Project>(emptyProject())
 export const projectIsStale = writable(false)
 
 export const workbenchIndex = writable(0)
-export const workbench = writable<Workbench>(emptyWorkBench())
-export const workbenchSolids = writable<Solid[]>([])
+export const workbench = writable<WorkBench>(emptyWorkBench())
 export const workbenchIsStale = writable(false)
 
 export const featureIndex = writable<number>(1000)
 export const extrusionFeatures = writable<Entity[]>([])
+export const wasmRealization = writable<WasmRealization>()
+export const realization = writable<Realization>(emptyRealization())
+export const realizationIsStale = writable(false)
 
-export const hiddenSketches = writable<StepHash[]>([])
-export const sketchBeingEdited = writable<StepHash | null>(null)
+export const hiddenSketches = writable<string[]>([])
+export const sketchBeingEdited = writable("")
 export const sketchTool = writable("")
 
 // could be looking for 'face' or 'plane' or other things
@@ -29,17 +33,20 @@ export const selectionMin = writable(0)
 
 export const currentlyMousedOver = writable<SnapEntity[]>([])
 export const currentlySelected = writable<Entity[]>([])
-export const snapPoints = writable<Point2WithID[]>([])
+export const snapPoints = writable<PointLikeById[]>([])
 export const previewGeometry = writable<PreviewGeometry[]>([])
 
 export const messageHistory = writable<MessageHistory[]>([])
 
+// if (isDevelopment()) {
 project.subscribe(store => log("[project]", store))
 workbenchIndex.subscribe(store => log("[workbenchIndex]", store))
 workbench.subscribe(store => log("[workbench]", store))
 workbenchIsStale.subscribe(store => log("[workbenchIsStale]", store))
 featureIndex.subscribe(store => log("[featureIndex]", store))
 extrusionFeatures.subscribe(store => log("[extrusionFeatures]", store))
+realization.subscribe(store => log("[realization]", store))
+realizationIsStale.subscribe(store => log("[realizationIsStale]", store))
 sketchBeingEdited.subscribe(store => log("[sketchBeingEdited]", store))
 messageHistory.subscribe(store => log("[messageHistory]", store))
 
@@ -58,6 +65,7 @@ currentlySelected.subscribe(store => {
     if (isType) log(`[currentlySelected] entity is ${type === "arc" ? "an" : "a"} ${type}:`, entity)
   })
 })
+// }
 
 function latestIsEntity(store: Entity[], type: EntityType) {
   if (store.length === 0) return [false, null]
@@ -86,18 +94,16 @@ function latestIsEntity(store: Entity[], type: EntityType) {
   return [false, null]
 }
 
-function emptyWorkBench(): Workbench {
+function emptyWorkBench(): WorkBench {
   return {
     name: "",
     history: [],
-    points: [],
-    points_next_id: 0,
-    sketches: [],
-    sketches_next_id: 0,
-    planes: [],
-    planes_next_id: 0,
-    features: [],
-    features_next_id: 0,
+    step_counters: {
+      Extrusion: 0,
+      Plane: 0,
+      Point: 0,
+      Sketch: 0,
+    },
   }
 }
 function emptyProject(): Project {
@@ -105,5 +111,13 @@ function emptyProject(): Project {
     name: "",
     assemblies: [],
     workbenches: [],
+  }
+}
+function emptyRealization(): Realization {
+  return {
+    planes: {},
+    points: {},
+    sketches: {},
+    solids: {},
   }
 }

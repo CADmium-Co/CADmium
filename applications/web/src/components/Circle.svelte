@@ -4,15 +4,13 @@
   import {T} from "@threlte/core"
   import {flatten, circleToPoints, promoteTo3} from "shared/projectUtils"
   import {currentlySelected, currentlyMousedOver, sketchTool} from "shared/stores"
-  import type {EntityType} from "shared/types"
-  import type { Point2 } from "cadmium"
+  import type {CircleTuple, EntityType} from "shared/types"
 
-  // @ts-ignore
   const log = (function () { const context = "[Circle.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   const type: EntityType = "circle"
 
-  export let id: string, center: Point2, radius: number
+  export let id: string, center: CircleTuple["center"], radius: number
 
   // log("[props]", "id:", id, "center:", center, "radius:", radius)
 
@@ -27,7 +25,7 @@
   $: selected = $currentlySelected.some(e => e.id === id && e.type === type) ? true : false
 
   // array of x,y,z points
-  const points = flatten(promoteTo3(circleToPoints(center, radius)))
+  const points = flatten(promoteTo3(circleToPoints(center.twoD, radius)))
 
   const lineGeometry = new LineGeometry()
   lineGeometry.setPositions(points)

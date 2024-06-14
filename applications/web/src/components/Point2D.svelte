@@ -9,7 +9,7 @@
   import type {EntityType} from "shared/types"
   import {base} from "../base"
 
-  export let x: number, y: number, hidden: boolean, id: string
+  export let x, y, hidden: boolean, id: string
   export let isPreview = false
 
   export let collisionLineMaterial: LineMaterial

@@ -1,4 +1,3 @@
-import { IDType, PlaneDescription } from "cadmium"
 import type {
   IDictionary,
   WithTarget,
@@ -1066,14 +1065,4 @@ export function isMessage(obj: unknown): obj is Message {
 export function isMessageHistory(obj: unknown): obj is MessageHistory {
   const typedObj = obj as MessageHistory
   return ((typedObj !== null && typeof typedObj === "object") || typeof typedObj === "function") && (isMessage(typedObj["message"]) as boolean)
-}
-
-export type PlaneDescriptionPlane = PlaneDescription & {PlaneId: IDType}
-export function isPlaneDescriptionPlane(plane_desc: PlaneDescription): plane_desc is PlaneDescriptionPlane {
-  return "PlaneId" in plane_desc
-}
-
-export type PlaneDescriptionSolid = PlaneDescription & {solid_id: IDType}
-export function isPlaneDescriptionSolid(plane_desc: PlaneDescription): plane_desc is PlaneDescriptionSolid {
-  return "SolidFace" in plane_desc
 }

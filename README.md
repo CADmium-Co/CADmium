@@ -108,13 +108,8 @@ yay -S aur/enchant1.6 aur/icu66 aur/libwebp052
 Watch vitest unit tests only:
 
 ```shell
-pnpm test:unit -- -w
-```
-
-Run playwright e2e tests only:
-
-```shell
-pnpm test:unit -- -w
+cd applications/web
+pnpm test:unit -w
 ```
 
 ### rust
@@ -130,8 +125,7 @@ cargo test
 Simple exaples using the rust code can be found in `packages/cadmium/examples`
 
 Run simple rust example with:
-
-```shell
+```
 cargo run --example project_simple_extrusion
 ```
 

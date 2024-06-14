@@ -1,83 +1,35 @@
-use cadmium::archetypes::PlaneDescription;
-use cadmium::feature::extrusion::{self, Direction, Mode};
-use cadmium::isketch::primitive::{AddLine, SketchAddPointMessage};
-use cadmium::message::idwrap::IDWrapable;
-use cadmium::message::MessageHandler as _;
-use cadmium::message::ProjectMessageHandler;
-use cadmium::project::Project;
-use cadmium::step::{StepHash, StepResult};
-use cadmium::workbench::AddSketch;
+use cadmium::{
+    extrusion::{Direction, Extrusion, ExtrusionMode},
+    project::Project,
+};
 
 fn main() {
-    let mut p = Project::new("Test Project");
-    let wb_hash = StepHash::from_int(0);
-    let plane_description = PlaneDescription::PlaneId(0);
-    let sketch_id = AddSketch { plane_description }
-        .id_wrap(wb_hash)
-        .handle_project_message(&mut p)
-        .unwrap()
-        .unwrap();
+    let mut p = Project::new("Example Project");
+    let wb = p.workbenches.get_mut(0).unwrap();
+    wb.add_sketch_to_plane("Sketch 1", "Plane-0");
+    let s = wb.get_sketch_mut("Sketch 1").unwrap();
+    let ll = s.add_point(0.0, 0.0);
+    let lr = s.add_point(40.0, 0.0);
+    let ul = s.add_point(0.0, 40.0);
+    let ur = s.add_point(40.0, 40.0);
+    s.add_segment(ll, lr);
+    s.add_segment(lr, ur);
+    s.add_segment(ur, ul);
+    s.add_segment(ul, ll);
 
-    let wb_ref = p.workbenches.first().unwrap().clone();
-    let step = wb_ref.borrow().get_step_by_hash(sketch_id).unwrap();
+    let extrusion = Extrusion::new(
+        "Sketch-0".to_owned(),
+        vec![0],
+        25.0,
+        0.0,
+        Direction::Normal,
+        ExtrusionMode::New,
+    );
+    wb.add_extrusion("Ext1", extrusion);
 
-    let StepResult::Sketch(sketch) = step.borrow().result.clone() else {
-        panic!("Expected a sketch");
-    };
-
-    let ll = SketchAddPointMessage { x: 0.0, y: 0.0 }
-        .id_wrap(sketch_id)
-        .id_wrap(wb_hash)
-        .handle_project_message(&mut p)
-        .unwrap()
-        .unwrap();
-    let lr = SketchAddPointMessage { x: 40.0, y: 0.0 }
-        .id_wrap(sketch_id)
-        .id_wrap(wb_hash)
-        .handle_project_message(&mut p)
-        .unwrap()
-        .unwrap();
-    let ul = SketchAddPointMessage { x: 0.0, y: 40.0 }
-        .id_wrap(sketch_id)
-        .id_wrap(wb_hash)
-        .handle_project_message(&mut p)
-        .unwrap()
-        .unwrap();
-    let ur = SketchAddPointMessage { x: 40.0, y: 40.0 }
-        .id_wrap(sketch_id)
-        .id_wrap(wb_hash)
-        .handle_project_message(&mut p)
-        .unwrap()
-        .unwrap();
-
-    AddLine { start: ll, end: lr }
-        .handle_message(sketch.clone())
-        .unwrap();
-    AddLine { start: lr, end: ur }
-        .handle_message(sketch.clone())
-        .unwrap();
-    AddLine { start: ur, end: ul }
-        .handle_message(sketch.clone())
-        .unwrap();
-    AddLine { start: ul, end: ll }
-        .handle_message(sketch.clone())
-        .unwrap();
-
-    extrusion::Add {
-        sketch_id,
-        faces: vec![0],
-        length: 25.0,
-        offset: 0.0,
-        direction: Direction::Normal,
-        mode: Mode::New,
-    }
-    .handle_message(wb_ref.clone())
-    .unwrap();
-
-    let wb = wb_ref.borrow();
-    let feature_ref = wb.features.first_key_value().unwrap().1;
-    let solid_like = feature_ref.borrow().as_solid_like().to_solids().unwrap();
-    let solid = solid_like.get(0).unwrap();
+    let realization = p.get_realization(0, 1000);
+    let solids = realization.solids;
+    let solid = &solids["Ext1:0"];
 
     println!("{:?}", solid);
 

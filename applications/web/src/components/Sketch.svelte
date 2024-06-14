@@ -1,15 +1,14 @@
 <script lang="ts">
-  import PassiveSketch from "./PassiveSketch.svelte"
-
   import type {LineMaterial} from "three/examples/jsm/lines/LineMaterial.js"
-
+  import PassiveSketch from "./PassiveSketch.svelte"
   import {currentlySelected, previewGeometry, sketchTool} from "shared/stores"
-  import type {ISketch} from "cadmium"
+  import type {PlaneRealized, SketchTuple} from "shared/types"
 
-  // @ts-ignore
   const log = (function () { const context = "[Sketch.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let hash: string, name: string, sketch: ISketch, editing: boolean = false
+  export let uniqueId: string, name: string, sketchTuple: SketchTuple, editing: boolean, plane: PlaneRealized
+
+  // log("[props]", "uniqueId:", uniqueId, "name:", name, "sketchTuple", sketchTuple, "editing", editing, "plane", plane)
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
@@ -45,17 +44,33 @@
   }
 </script>
 
-<PassiveSketch
-  {name}
-  {hash}
-  plane={sketch.plane}
-  editing
-  {solidLineMaterial}
-  {solidHoveredMaterial}
-  {solidSelectedMaterial}
-  {dashedHoveredMaterial}
-  {dashedLineMaterial}
-  {collisionLineMaterial}
-/>
+{#if editing}
+  <PassiveSketch
+    {name}
+    {uniqueId}
+    sketch={sketchTuple[0]}
+    plane={plane.plane}
+    editing
+    {solidLineMaterial}
+    {solidHoveredMaterial}
+    {solidSelectedMaterial}
+    {dashedHoveredMaterial}
+    {dashedLineMaterial}
+    {collisionLineMaterial}
+  />
+{:else}
+  <PassiveSketch
+    {name}
+    {uniqueId}
+    sketch={sketchTuple[1]}
+    plane={plane.plane}
+    {solidLineMaterial}
+    {solidHoveredMaterial}
+    {solidSelectedMaterial}
+    {dashedHoveredMaterial}
+    {dashedLineMaterial}
+    {collisionLineMaterial}
+  />
+{/if}
 
 <svelte:window on:keydown={onKeyDown} />

@@ -6,7 +6,6 @@
   import type {TruckBoundary, TruckEdge, TruckFace, TruckSolid} from "shared/types"
   import type {Vector3Like} from "three"
 
-  // @ts-ignore
   const log = (function () { const context = "[Solid.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let name: string, indices, vertices, normals, truckSolid: TruckSolid

@@ -5,9 +5,6 @@
     "dev": "turbo run dev --no-daemon",
     "preview": "turbo run preview --no-daemon",
     "test": "turbo run test --no-daemon",
-    "test:unit": "turbo run test:unit --no-daemon",
-    "test:e2e": "turbo run test:e2e --no-daemon",
-    "test:rust": "cargo test",
     "clean": "turbo run clean --no-daemon",
     "lint": "turbo run lint --no-daemon",
     "format": "prettier --write \"**/*.{js,cjs,mjs,ts,tsx,json,svelte,md}\""

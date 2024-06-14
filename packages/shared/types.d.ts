@@ -1,15 +1,9 @@
-import { MessageResult, Point2, StepHash, Workbench } from "cadmium"
-import { Message } from "./cadmium-api"
+import { Message, MessageResult } from "cadmium"
 import type { Vector2, Vector3, Vector2Like, Vector3Like } from "three"
 
-export interface IDictionary<TValue> {
+interface IDictionary<TValue> {
   [id: string]: TValue
 }
-
-export type Point2WithID = Point2 & { id?: StepHash }
-
-// TODO: Somehow export the Face struct
-export type Face = any
 
 type WithTarget<Event, Target> = Event & { currentTarget: Target }
 
@@ -66,7 +60,16 @@ type MeshFaceEntity = {
 interface Project {
   name: string
   assemblies: []
-  workbenches: Workbench[]
+  workbenches: WorkBench[]
+}
+
+interface WorkBench {
+  name: string
+  history: HistoryStep[]
+  renaming: boolean
+  step_counters: {
+    Extrusion: number, Plane: number, Point: number, Sketch: number
+  }
 }
 
 interface Realization {
@@ -133,6 +136,19 @@ interface SketchData {
       highest_constraint_id: number
     }
   }
+}
+
+export interface Sketch_GeneratedFromRust {
+  points: Record<number, Point2>;
+  highest_point_id: number;
+  line_segments: Record<number, Line2>;
+  highest_line_segment_id: number;
+  circles: Record<number, Circle2>;
+  highest_circle_id: number;
+  arcs: Record<number, Arc2>;
+  highest_arc_id: number;
+  constraints: Record<number, Constraint>;
+  highest_constraint_id: number;
 }
 
 interface ExtrusionData {
@@ -340,9 +356,9 @@ interface ExtrusionSketchData {
 
 interface PreviewGeometry {
   type: EntityType
-  start?: Point2
-  end?: Point2
-  center?: Point2
+  start?: PointLikeById
+  end?: PointLikeById
+  center?: PointLikeById
   radius?: number
   x?: number
   y?: number
@@ -369,7 +385,7 @@ interface PointLikeById {
   [x: string]: any // hack todo fix
   twoD?: Vector2Like | Vector2 | Point2D
   threeD?: Vector3Like | Vector3 | Point3D
-  id?: StepHash | null
+  id?: string | null
 }
 
 type PointsById = IDictionary<PointById>

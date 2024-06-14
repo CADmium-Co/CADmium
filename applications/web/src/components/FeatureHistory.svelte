@@ -1,14 +1,13 @@
 <script lang="ts">
-  import {workbench} from "shared/stores"
+  import {workbench, realization} from "shared/stores"
   import PointFeature from "./features/Point.svelte"
   import PlaneFeature from "./features/Plane.svelte"
   import SketchFeature from "./features/Sketch.svelte"
   import ExtrusionFeature from "./features/Extrusion.svelte"
   import SolidItem from "./SolidItem.svelte"
-  import {isPointStep, isPlaneStep, isSolidStep, isSketchStep, isExtrusionStep} from "shared/stepTypeGuards"
+  import {isPoint, isPlane, isExtrusion, isSketch} from "shared/projectUtils"
   import type {SetCameraFocus} from "shared/types"
 
-  // @ts-ignore
   const log = (function () { const context = "[FeatureHistory.svelte]"; const color="pink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   const minHeight = 30
@@ -23,10 +22,11 @@
   $: partsHeight = overallHeight - height - 12
 
   $: history = $workbench.history ?? []
-  $: solids = []
+  $: solids = $realization.solids ?? {}
 
   $: $workbench, log("[$workbench]", $workbench)
   $: $workbench.history, log("[$workbench.history]", $workbench.history)
+  $: $realization, log("[$realization]", $realization)
 
   export let setCameraFocus: SetCameraFocus
 
@@ -56,18 +56,18 @@
 <div class="flex flex-col select-none dark:text-gray-300">
   <div style="height:{Math.min(height, overallHeight - 12)}px" class="overflow-y-auto">
     <div id="history" class="font-bold text-sm px-2 py-2">History ({history.length})</div>
-    {#each history as step, featureIndex}
+    {#each history as feature, featureIdx (feature.data.type + ":" + feature.unique_id)}
       <div>
-        {#if isPointStep(step)}
-          <PointFeature name={step.name} index={featureIndex} />
-        {:else if isPlaneStep(step)}
-          <PlaneFeature name={step.name} index={featureIndex} plane={step.result} {setCameraFocus} />
-        {:else if isSketchStep(step)}
-          <SketchFeature name={step.name} index={featureIndex} hash={step.hash} plane_desc={step.data.plane_description} />
-        {:else if isExtrusionStep(step)}
-          <ExtrusionFeature name={step.name} index={featureIndex} hash={step.hash} data={step.data} />
+        {#if isPoint(feature)}
+          <PointFeature name={feature.name} index={featureIdx} />
+        {:else if isPlane(feature)}
+          <PlaneFeature name={feature.name} index={featureIdx} plane={feature.data.plane} {setCameraFocus} />
+        {:else if isSketch(feature)}
+          <SketchFeature name={feature.name} index={featureIdx} id={feature.unique_id} plane_id={feature.data.plane_description.PlaneId} />
+        {:else if isExtrusion(feature)}
+          <ExtrusionFeature name={feature.name} index={featureIdx} data={feature.data.extrusion} id={feature.unique_id} />
         {:else}
-          <!-- TODO: {step.name} {step.result} -->
+          TODO: {feature.name} {feature.data.type}
         {/if}
       </div>
     {/each}
@@ -78,10 +78,8 @@
     <div class="font-bold text-sm px-2 py-2">
       Solids ({solids ? Object.keys(solids).length : 0})
     </div>
-    {#each history as step}
-      {#if isSolidStep(step)}
-        <SolidItem name={step.name} />
-      {/if}
+    {#each Object.keys(solids) as name (name)}
+      <SolidItem {name} />
     {/each}
   </div>
 </div>

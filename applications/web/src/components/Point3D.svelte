@@ -11,7 +11,6 @@
 
   export let x: number, y: number, z: number, hidden: boolean, id: string
   export let isPreview = false
-  console.log("Point3D.svelte", {x, y, z, hidden, id})
 
   export let collisionLineMaterial: LineMaterial
 

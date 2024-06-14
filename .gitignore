@@ -4,7 +4,6 @@
 /dist
 /target
 /packages/cadmium/target
-/packages/cadmium/bench-*-report
 **/.svelte-kit
 /package
 *.env*
@@ -14,4 +13,3 @@ vite.config.ts.timestamp-*
 /.pnpm-store/
 **/*.obj
 **/*.step
-.vscode

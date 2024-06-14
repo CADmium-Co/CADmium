@@ -11,7 +11,7 @@ test("has history pane", async ({page}) => {
   await expect(page.getByText("History")).toBeVisible()
 })
 
-test.skip("has origin in history panel", async ({page}) => {
+test("has origin in history panel", async ({page}) => {
   await page.goto("")
   await expect(page.getByText("origin")).toBeVisible()
 })

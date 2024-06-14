@@ -18,14 +18,12 @@
   import X from "phosphor-svelte/lib/X"
   import type {Entity} from "shared/types"
   import {base} from "../../base"
-  import type {PlaneDescription, StepHash} from "cadmium"
-  import {isPlaneDescriptionPlane, isPlaneDescriptionSolid} from "shared/typeGuards"
 
-  // @ts-ignore
   const log = (function () { const context = "[SketchFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let name: string, index: number, hash: StepHash, plane_desc: PlaneDescription | undefined
-  log("[props]", "name:", name, "index:", index, "hash:", hash, "plane_desc:", plane_desc)
+  export let name: string, index: number, id: string, plane_id: string
+
+  // $: name, log("[props] name:", name, "index:", index, "id:", id, "plane_id:", plane_id)
 
   const source = `${base}/actions/sketch_min.svg`
 
@@ -33,18 +31,10 @@
   let selectingForSketchPlane = false
 
   $: {
-    if (plane_desc === undefined) {
-      surface = null
-    } else if (isPlaneDescriptionPlane(plane_desc!)) {
-      surface = {type: "plane", id: `${plane_desc!.PlaneId}`}
-    } else if (isPlaneDescriptionSolid(plane_desc!)) {
-      // surface = {type: "meshFace", id: plane_desc!.solid_id}
-      log("Surface is a meshFace", surface)
+    if (plane_id !== "") {
+      surface = {type: "plane", id: plane_id}
     } else {
       surface = null
-    }
-
-    if (surface === null) {
       engageSearchForPlane()
     }
   }
@@ -54,7 +44,7 @@
   const closeAndRefresh = () => {
     log("closing, refreshing")
     $featureIndex = 1000
-    $sketchBeingEdited = null
+    $sketchBeingEdited = ""
     $sketchTool = ""
     $selectingFor = []
     $selectionMax = 1000
@@ -62,7 +52,10 @@
     $currentlySelected = []
   }
 
-  $: if ($featureIndex === index) $sketchBeingEdited = hash
+  $: if ($featureIndex === index) $sketchBeingEdited = id
+
+  // $: $sketchBeingEdited,
+  // 	log("[$sketchBeingEdited]", `${$sketchBeingEdited === "" ? "empty" : ""}`, $sketchBeingEdited)
 
   const engageSearchForPlane = () => {
     // log("engage search!")
@@ -92,13 +85,13 @@
 
   currentlySelected.subscribe(() => {
     if (!selectingForSketchPlane) return
-    if (!hash) return
+    if (!id) return
     if (!$currentlySelected.length) return
     // log("CS changed when selecting for Sketch Plane:", $currentlySelected)
 
     let thingSelected = $currentlySelected[0]
     if (thingSelected.type === "plane") {
-      setSketchPlane(hash, parseInt(thingSelected.id))
+      setSketchPlane(id, thingSelected.id)
     } else if (thingSelected.type === "meshFace") {
       log("HOW DO I HANDLE THIS?")
       log(thingSelected)
@@ -135,20 +128,20 @@
   <div
     class="ml-auto mr-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-500 px-1 py-1 rounded"
     on:click={() => {
-      if ($hiddenSketches.includes(hash)) {
+      if ($hiddenSketches.includes(id)) {
         // cool, unhide
         hiddenSketches.update(sketches => {
-          return sketches.filter(sketch => sketch !== hash)
+          return sketches.filter(sketch => sketch !== id)
         })
       } else {
         // cool, hide
         hiddenSketches.update(sketches => {
-          return [...sketches, hash]
+          return [...sketches, id]
         })
       }
     }}
   >
-    {#if $hiddenSketches.includes(hash)}
+    {#if $hiddenSketches.includes(id)}
       <EyeSlash weight="light" size="18px" />
     {:else}
       <Eye weight="light" size="18px" />
@@ -184,7 +177,7 @@
         on:focusin={engageSearchForPlane}
         on:focusout={disengageSearchForPlane}
       >
-        <div class="h-8"></div>
+        <div class="h-8" />
         {#if surface !== null}
           <div class="bg-sky-200 pl-2 py-0.5 m-1 rounded text-sm">
             {surface.type}:{surface.id}<button
@@ -201,7 +194,7 @@
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
             // This is a form button so remember that it triggers the form's on:submit
-            renameStep(hash, name)
+            renameStep(index, name)
           }}>Done</button
         >
 

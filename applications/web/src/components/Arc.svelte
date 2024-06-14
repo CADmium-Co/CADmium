@@ -5,16 +5,14 @@
   import {T} from "@threlte/core"
   import {flatten, arcToPoints, promoteTo3} from "shared/projectUtils"
   import {currentlySelected, currentlyMousedOver, sketchTool} from "shared/stores"
-  import type {EntityType} from "shared/types"
+  import type {EntityType, SketchPoint} from "shared/types"
   import {isEntity} from "shared/typeGuards"
-  import type { Point2 } from "cadmium"
 
-  // @ts-ignore
   const log = (function () { const context = "[Arc.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   const type: EntityType = "arc"
 
-  export let id: string, center: Point2, start: Point2, end: Point2
+  export let id: string, center: SketchPoint, start: SketchPoint, end: SketchPoint
 
   export let dashedLineMaterial: LineMaterial,
     dashedHoveredMaterial: LineMaterial,
@@ -27,9 +25,9 @@
 
   $: selected = $currentlySelected.some(e => isEntity(e) && e.id === id && e.type === type) ? true : false
 
-  const center2 = new Vector2(center.x, center.y)
-  const start2 = new Vector2(start.x, start.y)
-  const end2 = new Vector2(end.x, end.y)
+  const center2 = new Vector2(center.twoD.x, center.twoD.y)
+  const start2 = new Vector2(start.twoD.x, start.twoD.y)
+  const end2 = new Vector2(end.twoD.x, end.twoD.y)
 
   const points = flatten(promoteTo3(arcToPoints(center2, start2, end2 /** implicit false */))) // defaulted false in function todo ask Matt
 

@@ -10,10 +10,11 @@
   import {currentlySelected, currentlyMousedOver, selectingFor, selectionMin, selectionMax} from "shared/stores"
   import type {EntityType} from "shared/types"
 
-  // @ts-ignore
   const log = (function () { const context = "[Plane.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
   export let name: string, id: string, width: number, height: number, origin: Vector3Like, primary: Vector3Like, secondary: Vector3Like, tertiary: Vector3Like
+
+  // log("[props]","name:",name,"id:",id,"width:",width,"height:",height,"origin:",origin,"primary:",primary,"secondary:",secondary,"tertiary:",tertiary)
 
   extend({Line2})
 
@@ -139,9 +140,9 @@
           // number of selected entities, boot the oldest one
           if ($currentlySelected.length + 1 > $selectionMax) $currentlySelected.shift()
 
-          /**   cadmium wants a string for id whereas for most ids it wants number, u64 iirc
+          /**   cadmium wants a string for id whereas for most ids it wants number, u64 iirc 
 								we should use number for all entity ids? seems cleaner to use one type. otherwise we could do:
-
+					
 					  		interface Entity {
 									id: number | string
 									type: EntityType
