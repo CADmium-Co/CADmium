@@ -5,6 +5,7 @@ edition = "2021"
 repository = "https://github.com/mattferraro/cadmium"
 authors = ["Matt Ferraro"]
 description = "A CAD program written in Rust with a JS front end"
+default-run = "cadmium"
 license = "Elastic License 2.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -30,9 +31,31 @@ indexmap = "2.1.0"
 anyhow = { version = "1.0.86", features = ["backtrace"] }
 thiserror = "1.0.61"
 strum = { version = "0.26.2", features = ["derive"] }
-isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*", features = ["tsify"] }
+isotope = { git = "https://github.com/CADmium-Co/ISOtope.git", version = "*", features = [
+	"tsify",
+] }
 paste = "1.0.15"
 cadmium-macros = { path = "../cadmium-macros", version = "*" }
+log = "0.4.21"
+wasm-logger = "0.2.0"
+convert_case = "0.6"
+xxhash-rust = { version = "0.8.10", features = ["xxh3"] }
+js-sys = "0.3.69"
+tsify = { version = "0.4.5", features = ["js", "wasm-bindgen"], default-features = false }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[features]
+default = []
+bench-faceselector-report = []
+
+[[bin]]
+name = "gen-types"
+
+[[bench]]
+name = "faceselector-report"
+harness = false
+
+[dev-dependencies]
+svg = "0.17.0"

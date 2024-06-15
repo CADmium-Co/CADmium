@@ -1,5 +1,5 @@
 <script lang="ts">
-  import {forwardEventHandlers, T, useTask, useParent, useThrelte} from "@threlte/core"
+  import {T, useTask, useParent, useThrelte} from "@threlte/core"
 
   import type {Camera} from "three"
   import {TrackballControls as ThreeTrackballControls} from "./CadControls.js"
@@ -31,13 +31,14 @@
     autoInvalidate: false,
   })
 
-  const component = forwardEventHandlers()
+  // const component = forwardEventHandlers()
 
   const {trackballControls} = useControlsContext()
   trackballControls.set(ref)
   onDestroy(() => trackballControls.set(undefined))
 </script>
 
-<T is={ref} let:ref {...$$restProps} bind:this={$component} on:change={invalidate}>
+<!-- <T is={ref} let:ref {...$$restProps} bind:this={$component} on:change={invalidate}> -->
+<T is={ref} let:ref {...$$restProps} on:change={invalidate}>
   <slot {ref} />
 </T>

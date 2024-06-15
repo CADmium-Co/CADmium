@@ -1,11 +1,8 @@
-use std::cell::Ref;
-use std::cell::RefCell;
-use std::cell::RefMut;
 use std::fmt::Debug;
-use std::rc::Rc;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
+use wasm_bindgen::prelude::*;
 
 use truck_meshalgo::prelude::OptimizingFilter;
 use truck_meshalgo::tessellation::MeshableShape;
@@ -16,74 +13,12 @@ use truck_stepio::out;
 use crate::archetypes::Vector2;
 use crate::archetypes::Vector3;
 
-pub mod extrusion;
-pub mod helpers;
-pub mod point;
-pub mod prelude;
-
-use prelude::*;
-
-const MESH_TOLERANCE: f64 = 0.1;
-
-pub trait SolidLike: Debug {
-    fn references(&self) -> Vec<FeatureCell>;
-    fn get_truck_solids(&self) -> anyhow::Result<Vec<TruckClosedSolid>>;
-    fn to_feature(&self) -> Feature;
-
-    fn to_solids(&self) -> anyhow::Result<Vec<Solid>> {
-        let truck_solids = self.get_truck_solids()?;
-
-        Ok(truck_solids.iter().map(|truck_solid| {
-            Solid::from_truck_solid("".to_owned(), truck_solid.clone())
-        }).collect())
-    }
-}
+use super::prelude::*;
 
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum Feature {
-    Extrusion(extrusion::Extrusion),
-}
-
-impl Feature {
-    pub fn as_solid_like(&self) -> &dyn SolidLike {
-        match self {
-            Feature::Extrusion(extrusion) => extrusion,
-        }
-    }
-}
-
-#[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
-pub enum FeatureCell {
-    Extrusion(Rc<RefCell<extrusion::Extrusion>>),
-}
-
-impl FeatureCell {
-    pub fn borrow(&self) -> Ref<dyn SolidLike> {
-        match self {
-            FeatureCell::Extrusion(e) => e.borrow(),
-        }
-    }
-
-    pub fn borrow_mut(&self) -> RefMut<dyn SolidLike > {
-        match self {
-            FeatureCell::Extrusion(e) => e.borrow_mut(),
-        }
-    }
-
-    pub fn as_ptr(&self) -> *const dyn SolidLike {
-        match self {
-            FeatureCell::Extrusion(e) => e.as_ptr(),
-        }
-    }
-}
-
-impl PartialEq for FeatureCell {
-    fn eq(&self, other: &Self) -> bool {
-        std::ptr::eq(self.as_ptr(), other.as_ptr())
-    }
-}
+#[repr(transparent)]
+pub struct SolidArray(pub Vec<Solid>);
 
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -99,10 +34,7 @@ pub struct Solid {
 }
 
 impl Solid {
-    pub fn from_truck_solid(
-        name: String,
-        truck_solid: TruckClosedSolid,
-    ) -> Self {
+    pub fn from_truck_solid(name: String, truck_solid: TruckClosedSolid) -> Self {
         let mut solid = Solid {
             name,
             crc32: "".to_owned(),
@@ -216,5 +148,4 @@ impl Solid {
         let mut step_file = std::fs::File::create(filename).unwrap();
         std::io::Write::write_all(&mut step_file, step_text.as_ref()).unwrap();
     }
-
 }

@@ -4,6 +4,7 @@ use std::rc::Rc;
 use geo::LineString;
 use isotope::decompose::face::Face;
 
+use log::debug;
 use truck_modeling::{builder, Edge, Vertex, Wire};
 use truck_polymesh::InnerSpace;
 use truck_polymesh::Invertible;
@@ -11,17 +12,25 @@ use truck_polymesh::Tolerance;
 use truck_shapeops::{ShapeOpsCurve, ShapeOpsSurface};
 use truck_topology::Shell;
 
-use crate::isketch::ISketch;
 use super::prelude::*;
+use crate::isketch::ISketch;
 
-pub fn geopoint_to_truckpoint(point: geo::Point<f64>, sketch: Rc<RefCell<ISketch>>) -> Result<TruckPoint3, anyhow::Error> {
+pub fn geopoint_to_truckpoint(
+    point: geo::Point<f64>,
+    sketch: Rc<RefCell<ISketch>>,
+) -> Result<TruckPoint3, anyhow::Error> {
     let sketch_ref = sketch.borrow();
-    let sketch_point = sketch_ref.find_point_ref(point.x(), point.y()).ok_or(anyhow::anyhow!("geo::Point not found in sketch"))?;
+    let sketch_point = sketch_ref
+        .find_point_ref(point.x(), point.y())
+        .ok_or(anyhow::anyhow!("geo::Point not found in sketch"))?;
     let point_3d = sketch_ref.get_point_3d(sketch_point)?.1;
     Ok(point_3d.into())
 }
 
-pub fn linestring_to_wire(line: &LineString, sketch: Rc<RefCell<ISketch>>) -> Result<Wire, anyhow::Error> {
+pub fn linestring_to_wire(
+    line: &LineString,
+    sketch: Rc<RefCell<ISketch>>,
+) -> Result<Wire, anyhow::Error> {
     let mut vertices: Vec<Vertex> = Vec::new();
     for point in line.points() {
         let vertex = builder::vertex(geopoint_to_truckpoint(point, sketch.clone())?);
@@ -103,8 +112,6 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     solid0: &TruckTopoSolid<TruckPoint3, C, TruckSurface>,
     solid1: &TruckTopoSolid<TruckPoint3, C, TruckSurface>,
 ) -> Option<TruckTopoSolid<TruckPoint3, C, TruckSurface>> {
-    println!("Okay let's fuse!");
-
     let solid0_boundaries = solid0.boundaries();
     let solid1_boundaries = solid1.boundaries();
     assert!(solid0_boundaries.len() == 1);
@@ -116,10 +123,10 @@ pub fn fuse<C: ShapeOpsCurve<S> + std::fmt::Debug, S: ShapeOpsSurface + std::fmt
     assert!(fusable_faces.len() == 1);
     let fusable_faces = fusable_faces[0];
     // TODO: support the case where more than one is fusable
-    println!("fusable_faces: {:?}", fusable_faces);
+    debug!("fusable_faces: {:?}", fusable_faces);
 
     let secondary_mergeable_faces = find_coplanar_face_pairs(boundary0, boundary1, false);
-    println!("secondary_mergeable_faces: {:?}", secondary_mergeable_faces);
+    debug!("secondary_mergeable_faces: {:?}", secondary_mergeable_faces);
 
     // There's only one fused solid at the end. Create it by cloning solid0
     // and then removing the fusable face from it.
