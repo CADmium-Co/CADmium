@@ -13,7 +13,8 @@ license = "Elastic License 2.0"
 [dependencies]
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.87"
-tsify-next = { version = "0.5.3", features = ["js", "wasm-bindgen"], default-features = false }
+# tsify-next = { version = "0.5.3", features = ["js", "wasm-bindgen"], default-features = false }
+tsify-next = "0.5.3"
 truck-meshalgo = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
 truck-modeling = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
 truck-shapeops = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }

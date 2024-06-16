@@ -10,7 +10,6 @@
   import Moon from "phosphor-svelte/lib/Moon"
   import Sun from "phosphor-svelte/lib/Sun"
   import type {WithTarget} from "shared/types"
-  import {isProject} from "shared/typeGuards"
   import {base} from "../base"
   import {renameProject} from "shared/projectUtils"
 
@@ -26,8 +25,7 @@
 
   $: project,
     (() => {
-      // log("[project]", project)
-      project && !isProject(project) && console.error("[AppBar.svelte] [project] fails isProject(project) typecheck", project)
+      !project && console.error("[AppBar.svelte] [project] fails isProject(project) typecheck", project)
     })()
 
   function fileInput(e: WithTarget<Event, HTMLInputElement>) {

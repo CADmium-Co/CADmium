@@ -202,7 +202,7 @@ workbenchIsStale.subscribe(value => {
     const workbenchJson = wasmProj.get_workbench(workbenchIdx)
     workbench.set(workbenchJson)
     workbenchIsStale.set(false)
-    workbenchSolids.set(getWorkbenchSolids())
+    // workbenchSolids.set(getWorkbenchSolids())
   }
 })
 
