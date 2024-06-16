@@ -14,7 +14,6 @@
   const userName = "mattferraro.dev"
   let newFileContent: string | null = null
 
-  // if (browser) {
   onMount(() => {
     init().then(() => {
       wasmProject.set(new WasmProject("First Project"))
@@ -22,10 +21,6 @@
       projectIsStale.set(true)
     })
   })
-  // }
-
-  // $: $wasmProject, log("[$wasmProject]", $wasmProject)
-  // $: $project, log("[$project]", $project)
 
   $: if (newFileContent) {
     log("[newFileContent] received new file", newFileContent)

@@ -13,7 +13,7 @@ license = "Elastic License 2.0"
 [dependencies]
 console_error_panic_hook = "0.1.7"
 wasm-bindgen = "0.2.87"
-tsify-next = "0.5.3"
+tsify-next = { version = "0.5.3", features = ["js", "wasm-bindgen"], default-features = false }
 truck-meshalgo = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
 truck-modeling = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
 truck-shapeops = { git = "https://github.com/ricosjp/truck.git", rev = "c84318b8dec" }
@@ -41,7 +41,6 @@ wasm-logger = "0.2.0"
 convert_case = "0.6"
 xxhash-rust = { version = "0.8.10", features = ["xxh3"] }
 js-sys = "0.3.69"
-tsify = { version = "0.4.5", features = ["js", "wasm-bindgen"], default-features = false }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
