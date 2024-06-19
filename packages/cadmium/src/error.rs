@@ -3,6 +3,8 @@ use thiserror::Error;
 #[derive(Error, Debug)]
 pub enum CADmiumError {
     // Message errors
+    #[error("The project ID {0} was not found")]
+    ProjectIDNotFound(usize),
     #[error("The workbench ID {0} was not found")]
     WorkbenchIDNotFound(u64),
     #[error("The workbench name {0} was not found")]
@@ -28,4 +30,7 @@ pub enum CADmiumError {
 
     #[error("This function is not implemented yet")]
     NotImplemented,
+
+    #[error(transparent)]
+    Other(#[from] anyhow::Error),
 }

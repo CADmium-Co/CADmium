@@ -13,13 +13,13 @@ use crate::message::ProjectMessageHandler;
 use crate::step::StepHash;
 use crate::workbench::{AddPlane, AddPoint, Workbench};
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Assembly {
     name: String,
 }
 
-#[derive(Tsify, Debug, Serialize, Deserialize)]
+#[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Project {
     pub name: String,

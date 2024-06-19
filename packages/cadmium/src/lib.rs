@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
+use error::CADmiumError;
 use feature::solid::SolidArray;
 use message::{Message, MessageResult};
 use step::StepHash;
@@ -23,8 +24,62 @@ pub type IDType = u64;
 thread_local! {
     // TODO: This is a bad solution to the hash <-> crate-internal-ID mapping problem
     static ID_MAP: RefCell<BTreeMap<StepHash, IDType>> = RefCell::new(BTreeMap::new());
+    static PROJECTS: RefCell<Vec<project::Project>> = RefCell::new(Vec::new());
 }
 
+#[wasm_bindgen]
+pub fn create_project(name: &str) -> usize {
+    let p = project::Project::new(name);
+    PROJECTS.with(|projects_ref| {
+        let mut projects = projects_ref.borrow_mut();
+        projects.push(p);
+        projects.len() - 1
+    })
+}
+
+#[wasm_bindgen]
+pub fn get_project(project_index: usize) -> Result<project::Project, String> {
+    PROJECTS.with(|projects_ref| {
+        let projects = projects_ref.borrow();
+        Ok(projects
+            .get(project_index)
+            .ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?
+            .clone())
+    })
+}
+
+#[wasm_bindgen]
+pub fn send_message(project_index: usize, message: &Message) -> MessageResult {
+    PROJECTS.with(|projects_ref| {
+        let mut projects = projects_ref.borrow_mut();
+        let Some(mut p) = projects.get_mut(project_index as usize) else {
+            return CADmiumError::ProjectIDNotFound(project_index).into();
+        };
+
+        message.handle(&mut p).into()
+    })
+}
+
+#[wasm_bindgen]
+pub fn get_workbench(
+    project_index: usize,
+    workbench_index: usize,
+) -> Result<workbench::Workbench, String> {
+    PROJECTS.with(|projects_ref| {
+        let projects = projects_ref.borrow();
+        let p = projects
+            .get(project_index)
+            .ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
+        let wb = p
+            .workbenches
+            .get(workbench_index)
+            .ok_or(CADmiumError::WorkbenchIDNotFound(workbench_index as u64).to_string())?
+            .borrow();
+        Ok(wb.clone())
+    })
+}
+
+#[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct Project {
     native: project::Project,

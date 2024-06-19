@@ -58,3 +58,12 @@ impl From<anyhow::Result<Option<StepHash>>> for MessageResult {
         }
     }
 }
+
+impl From<crate::error::CADmiumError> for MessageResult {
+    fn from(e: crate::error::CADmiumError) -> Self {
+        Self {
+            success: false,
+            data: e.to_string(),
+        }
+    }
+}
