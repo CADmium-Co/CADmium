@@ -11,7 +11,17 @@ use cadmium::workbench::AddSketch;
 fn main() {
     let mut p = Project::new("Test Project");
     let wb_hash = StepHash::from_int(0);
-    let plane_description = PlaneDescription::PlaneId(0);
+    let top_hash = p
+        .workbenches
+        .get(0)
+        .unwrap()
+        .borrow()
+        .history
+        .get(1)
+        .unwrap()
+        .borrow()
+        .hash();
+    let plane_description = PlaneDescription::PlaneId(top_hash);
     let sketch_id = AddSketch { plane_description }
         .id_wrap(wb_hash)
         .handle_project_message(&mut p)

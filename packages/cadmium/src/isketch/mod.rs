@@ -15,7 +15,7 @@ use crate::feature::point::Point3;
 use crate::message::Identifiable;
 use crate::step::{StepHash, StepResult};
 use crate::workbench::Workbench;
-use crate::IDType;
+use crate::{IDType, ID_MAP};
 
 pub mod compound;
 pub mod compound_rectangle;
@@ -63,17 +63,22 @@ impl ISketch {
         wb: &Workbench,
         plane_description: &PlaneDescription,
     ) -> anyhow::Result<Self> {
-        let plane = match plane_description {
-            PlaneDescription::PlaneId(plane_id) => wb
-                .planes
-                .get(plane_id)
-                .ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
-            PlaneDescription::SolidFace {
-                solid_id: _,
-                normal: _,
-            } => todo!("Implement SolidFace"),
-        }
-        .clone();
+        let plane =
+            match plane_description {
+                PlaneDescription::PlaneId(plane_hash) => {
+                    let plane_id = ID_MAP.with_borrow(|m| m.get(plane_hash).cloned()).ok_or(
+                        anyhow::anyhow!("Failed to find plane with hash {}", plane_hash),
+                    )?;
+                    wb.planes
+                        .get(&plane_id)
+                        .ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?
+                }
+                PlaneDescription::SolidFace {
+                    solid_id: _,
+                    normal: _,
+                } => todo!("Implement SolidFace"),
+            }
+            .clone();
         Ok(Self::new(plane))
     }
 

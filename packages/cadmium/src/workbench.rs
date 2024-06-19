@@ -241,10 +241,17 @@ impl MessageHandler for SetSketchPlane {
         let wb = workbench_ref.borrow();
 
         let plane = match self.plane_description {
-            PlaneDescription::PlaneId(plane_id) => wb
-                .planes
-                .get(&plane_id)
-                .ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?,
+            PlaneDescription::PlaneId(plane_hash) => {
+                let plane_id = crate::ID_MAP
+                    .with_borrow(|m| m.get(&plane_hash).cloned())
+                    .ok_or(anyhow::anyhow!(
+                        "Failed to find plane with hash {}",
+                        plane_hash
+                    ))?;
+                wb.planes
+                    .get(&plane_id)
+                    .ok_or(anyhow::anyhow!("Failed to find plane with id {}", plane_id))?
+            }
             PlaneDescription::SolidFace {
                 solid_id: _,
                 normal: _,

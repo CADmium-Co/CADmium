@@ -171,7 +171,17 @@ pub mod tests {
 
     pub fn create_test_project() -> Project {
         let mut p = Project::new("Test Project");
-        let plane_description = PlaneDescription::PlaneId(0);
+        let top_hash = p
+            .workbenches
+            .get(0)
+            .unwrap()
+            .borrow()
+            .history
+            .get(1)
+            .unwrap()
+            .borrow()
+            .hash();
+        let plane_description = PlaneDescription::PlaneId(top_hash);
         let sketch_id = IDWrap {
             id: WORKBENCH_HASH,
             inner: AddSketch { plane_description },
@@ -316,10 +326,20 @@ pub mod tests {
     fn move_sketch() {
         let p = create_test_project();
         let workbench_ref = p.get_workbench_by_id(0).unwrap();
+        let front_hash = p
+            .workbenches
+            .get(0)
+            .unwrap()
+            .borrow()
+            .history
+            .get(2)
+            .unwrap()
+            .borrow()
+            .hash();
 
         SetSketchPlane {
             sketch_id: 0,
-            plane_description: PlaneDescription::PlaneId(1),
+            plane_description: PlaneDescription::PlaneId(front_hash),
         }
         .handle_message(workbench_ref.clone())
         .unwrap();

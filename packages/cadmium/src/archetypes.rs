@@ -11,7 +11,7 @@ use crate::IDType;
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub enum PlaneDescription {
-    PlaneId(IDType),
+    PlaneId(StepHash),
     SolidFace { solid_id: IDType, normal: Vector3 },
 }
 
