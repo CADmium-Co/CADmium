@@ -18,15 +18,41 @@ pub mod project;
 pub mod step;
 pub mod workbench;
 
+/// The primary type used to describe an internal ID in CADmium
+///
+/// Could be an index to a vector, a key in a map, etc.
 #[declare]
 pub type IDType = u64;
 
 thread_local! {
-    // TODO: This is a bad solution to the hash <-> crate-internal-ID mapping problem
+    /// This is a global map to keep track of hashes against local IDs
+    /// The hash is the unique identifier for a step
+    /// The ID could be any kind of ID, e.g. a isotope sketch primitive
+    ///
+    /// <div class="warning">
+    ///
+    /// Using this map in reverse (from local ID to hash) requires manual check logic
+    /// (that the resulting hash is a step of the correct type, points to the correct parent, etc.)
+    ///
+    /// </div>
     static ID_MAP: RefCell<BTreeMap<StepHash, IDType>> = RefCell::new(BTreeMap::new());
+
+    /// Global project list - this is the preferred way to store & access projects
     static PROJECTS: RefCell<Vec<project::Project>> = RefCell::new(Vec::new());
 }
 
+/// Creates a new [`project::Project`] and returns the index of the project in the global project list
+///
+/// # Examples
+///
+/// ```rust
+/// use cadmium::{create_project, get_project};
+///
+/// let project_id = create_project("My Project");
+/// let project = get_project(project_id).unwrap();
+///
+/// assert_eq!(project.name, "My Project");
+/// ```
 #[wasm_bindgen]
 pub fn create_project(name: &str) -> usize {
     let p = project::Project::new(name);
@@ -37,6 +63,9 @@ pub fn create_project(name: &str) -> usize {
     })
 }
 
+/// Returns a concrete [`project::Project`] from the global project list.
+///
+/// A new project can be created with [`create_project`] function.
 #[wasm_bindgen]
 pub fn get_project(project_index: usize) -> Result<project::Project, String> {
     PROJECTS.with(|projects_ref| {
@@ -48,6 +77,26 @@ pub fn get_project(project_index: usize) -> Result<project::Project, String> {
     })
 }
 
+/// Sends a message to a [`project::Project`] and returns the result
+///
+/// [`Message`]s are the primary way to interact with CADmium.
+/// They describe any kind of action that can be taken on a project.
+///
+/// # Examples
+///
+/// ```rust
+/// use cadmium::{create_project, get_project, send_message};
+/// use cadmium::message::Message;
+/// use cadmium::project::ProjectRename;
+///
+/// let project_id = create_project("My Project");
+/// let message = Message::ProjectRename(ProjectRename { new_name: "New Name".to_string() });
+/// let result = send_message(project_id, &message);
+/// assert!(result.success);
+///
+/// let project = get_project(project_id).unwrap();
+/// assert_eq!(project.name, "New Name");
+/// ```
 #[wasm_bindgen]
 pub fn send_message(project_index: usize, message: &Message) -> MessageResult {
     PROJECTS.with(|projects_ref| {
@@ -60,6 +109,7 @@ pub fn send_message(project_index: usize, message: &Message) -> MessageResult {
     })
 }
 
+/// Returns a concrete [`workbench::Workbench`] from a [`project::Project`].
 #[wasm_bindgen]
 pub fn get_workbench(
     project_index: usize,
