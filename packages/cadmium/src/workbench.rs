@@ -4,9 +4,7 @@ use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
 
 use crate::archetypes::{Plane, PlaneDescription};
-use crate::error::CADmiumError;
 use crate::feature::point::Point3;
-use crate::feature::solid::Solid;
 use crate::feature::Feature;
 use crate::isketch::ISketch;
 use crate::step::{Step, StepHash, StepResult};
@@ -18,27 +16,43 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::rc::Rc;
 
+/// A workbench is the main collection of set of objects that are being worked on.
+///
+/// CADmium is mostly designed around it and acts in objects that are descendants of the workbench.
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
+#[non_exhaustive]
 pub struct Workbench {
+    /// The workbench name - mainly used for display purposes.
     pub name: String,
+    /// A list of steps that have been taken in the workbench - it's append only and fork-able
     pub history: Vec<Rc<RefCell<Step>>>,
 
-    // These are free-standing points in 3D space, not part of sketches
+    /// Free-standing points in 3D space - not part of sketches
     pub points: BTreeMap<IDType, Rc<RefCell<Point3>>>,
+    /// The next ID to use for a point
     pub points_next_id: IDType,
 
+    /// Planes that can be used for sketches
     pub planes: BTreeMap<IDType, Rc<RefCell<Plane>>>,
+    /// The next ID to use for a plane
     pub planes_next_id: IDType,
 
+    /// Sketches that are part of the workbench
     pub sketches: BTreeMap<IDType, Rc<RefCell<ISketch>>>,
+    /// The next ID to use for a sketch
     pub sketches_next_id: IDType,
+    /// Features that are part of the workbench (e.g. [`Extrusion`])
+    ///
+    /// [`Extrusion`]: crate::feature::extrusion::Extrusion
     pub features: BTreeMap<IDType, Rc<RefCell<Feature>>>,
+    /// The next ID to use for a feature
     pub features_next_id: IDType,
 }
 
 impl Workbench {
-    pub fn new(name: &str) -> Self {
+    /// Create a new workbench with a given name
+    pub(crate) fn new(name: &str) -> Self {
         info!("Creating new workbench: {}", name);
         Workbench {
             name: name.to_owned(),
@@ -56,34 +70,25 @@ impl Workbench {
         }
     }
 
-    pub fn get_first_plane_id(&self) -> Option<IDType> {
-        if !self.planes.is_empty() {
-            Some(self.planes.keys().next().unwrap().to_owned())
-        } else {
-            None
-        }
-    }
-
-    pub fn get_last_plane_id(&self) -> Option<IDType> {
-        if !self.planes.is_empty() {
-            Some(self.planes.keys().last().unwrap().to_owned())
-        } else {
-            None
-        }
-    }
-
-    pub fn get_sketch_by_id(&self, id: IDType) -> Result<Rc<RefCell<ISketch>>, CADmiumError> {
-        self.sketches
-            .get(&id)
-            .ok_or(CADmiumError::SketchIDNotFound(id))
-            .cloned()
-    }
-
+    /// Records the given message as a [`Step`] in the workbench history
+    ///
+    /// <div class="warning">
+    ///
+    /// Does NOT call the message handler itself, only appends it to the history
+    ///
+    /// </div>
     pub fn add_message_step(&mut self, message: &Message, node: StepResult) {
         self.history
             .push(Rc::new(RefCell::new(Step::new(message.clone(), node))));
     }
 
+    /// Returns a [`Step`] by its [`StepHash`]
+    ///
+    /// <div class="warning">
+    ///
+    /// Does NOT check for hash collision (i.e. two steps with the same hash)
+    ///
+    /// </div>
     pub fn get_step_by_hash(&self, hash: StepHash) -> Option<Rc<RefCell<Step>>> {
         debug!(
             "Looking for step with hash {} in hashes {:?}",
@@ -97,15 +102,6 @@ impl Workbench {
             .iter()
             .find(|step| step.borrow().hash() == hash)
             .cloned()
-    }
-
-    // TODO: Remove
-    pub fn get_solids(&self) -> Vec<Solid> {
-        self.features
-            .values()
-            .map(|feature| feature.borrow().as_solid_like().to_solids().unwrap())
-            .flatten()
-            .collect()
     }
 }
 

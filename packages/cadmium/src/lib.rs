@@ -2,7 +2,6 @@ use std::cell::RefCell;
 use std::collections::BTreeMap;
 
 use error::CADmiumError;
-use feature::solid::SolidArray;
 use message::{Message, MessageResult};
 use step::StepHash;
 use tsify_next::declare;
@@ -192,17 +191,5 @@ impl Project {
     #[wasm_bindgen]
     pub fn send_message(&mut self, message: &Message) -> MessageResult {
         message.handle(&mut self.native).into()
-    }
-
-    #[wasm_bindgen]
-    pub fn get_workbench_solids(&self, workbench_index: u32) -> SolidArray {
-        SolidArray(
-            self.native
-                .workbenches
-                .get(workbench_index as usize)
-                .unwrap()
-                .borrow()
-                .get_solids(),
-        )
     }
 }
