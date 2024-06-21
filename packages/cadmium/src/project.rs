@@ -19,15 +19,26 @@ pub struct Assembly {
     name: String,
 }
 
+/// The main data structure of CADmium. A project contains a list of [`Assembly`]s and [`Workbench`]es.
+///
+/// A project describes a collection of parts and how they are assembled together.
+///
+/// During creation a new workbench is added to the project.
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Project {
+    /// The project name - mainly used for display purposes.
     pub name: String,
     pub assemblies: Vec<Assembly>,
+    /// The list of workbenches in the project.
     pub workbenches: Vec<Rc<RefCell<Workbench>>>,
 }
 
 impl Project {
+    /// Creates a new project with a given name.
+    ///
+    /// A new [`Workbench`] is added to the project with the name "Workbench 1".
+    /// Check the [`add_workbench`] method for more details on the new workbench.
     pub fn new(name: &str) -> Self {
         let mut p = Project {
             name: name.to_owned(),
@@ -40,6 +51,11 @@ impl Project {
         p
     }
 
+    /// Adds a new [`Workbench`] to the project.
+    ///
+    /// The workbench is created with the given name,
+    /// an origin point (history index 0) and three planes: top, front, and right
+    /// (history index 1-3).
     pub fn add_workbench(&mut self, name: &str) {
         let wb = Workbench::new(name);
         let wb_cell = Rc::new(RefCell::new(wb));
@@ -104,35 +120,11 @@ impl Project {
         }
     }
 
-    // pub fn compute_constraint_errors(&mut self) {
-    //     for workbench in self.workbenches.iter_mut() {
-    //         for step in workbench.history.iter_mut() {
-    //             match &mut step.data {
-    //                 StepData::Sketch { sketch, .. } => {
-    //                     sketch.compute_constraint_errors();
-    //                 }
-    //                 _ => {}
-    //             }
-    //         }
-    //     }
-    // }
-
     pub fn get_workbench_by_id(&self, id: u64) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
         self.workbenches
             .get(id as usize)
             .cloned()
             .ok_or(CADmiumError::WorkbenchIDNotFound(id))
-    }
-
-    pub fn get_workbench_by_name(
-        &self,
-        name: &str,
-    ) -> Result<Rc<RefCell<Workbench>>, CADmiumError> {
-        self.workbenches
-            .iter()
-            .find(|wb| wb.borrow().name == name)
-            .cloned()
-            .ok_or(CADmiumError::WorkbenchNameNotFound(name.to_string()))
     }
 }
 
