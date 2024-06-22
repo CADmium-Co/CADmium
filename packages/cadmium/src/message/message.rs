@@ -7,6 +7,11 @@ use crate::step::StepHash;
 use super::idwrap::IDWrap;
 use super::ProjectMessageHandler;
 
+/// All the possible messages that can be sent to the backend.
+///
+/// Each variant is expected to implement the [`ProjectMessageHandler`] trait.
+/// It gets called by the `MessageEnum` derive macro which auto-implements the
+/// `handle` method.
 #[derive(MessageEnum, Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 #[serde(tag = "type")]

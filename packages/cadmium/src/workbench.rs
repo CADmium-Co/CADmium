@@ -118,20 +118,6 @@ impl Identifiable for Rc<RefCell<Workbench>> {
     }
 }
 
-// Add to history any messages that have Workbench as the parent
-// impl<T> MessageHandler for IDWrap<T>
-// where
-//     T: MessageHandler<Parent = Rc<RefCell<Workbench>>> + Serialize + for<'de> Deserialize<'de> + wasm_bindgen::convert::RefFromWasmAbi
-// {
-//     type Parent = Rc<RefCell<Workbench>>;
-//     fn handle_message(&self, workbench_ref: Self::Parent) -> anyhow::Result<Option<IDType>> {
-//         let mut workbench = workbench_ref.borrow_mut();
-//         workbench.add_message_step(&self);
-//         self.handle_message(workbench_ref)
-//     }
-
-// }
-
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(from_wasm_abi, into_wasm_abi)]
 pub struct AddPoint {
