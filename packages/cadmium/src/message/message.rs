@@ -37,17 +37,22 @@ pub enum Message {
     StepDelete(IDWrap<crate::step::actions::Delete>),
 }
 
+/// The result of a message handling operation.
 #[derive(Tsify, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct MessageResult {
+    // TODO: Add more data fields and not a blanket string
+    /// Whether the operation was successful or not.
     pub success: bool,
+    /// The data returned by the operation.
+    ///
+    /// Could be "null", contain an error message (in case of `success == false`) or valid JSON data.
     pub data: String,
 }
 
 impl From<anyhow::Result<Option<StepHash>>> for MessageResult {
     fn from(result: anyhow::Result<Option<StepHash>>) -> Self {
         match result {
-            // TODO: The Success should be a stable enum
             Ok(msg) => Self {
                 success: true,
                 data: if let Some(id) = msg {

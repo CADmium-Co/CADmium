@@ -1,3 +1,36 @@
+//! [`IDWrap`] is the solution to the problem of needing some kind of identifier
+//! for the ascendants of each message.
+//!
+//! For example the [`AddLine`](crate::isketch::primitive::AddLine)
+//! message requires a `workbench_id` and a `sketch_id`. That would pollute all
+//! the message structs with the exact same fields and code to handle them.
+//!
+//! Instead, the [`IDWrap`] struct is used to wrap the message and provide the
+//! necessary identifier - it accepts a generic type that implements the
+//! [`MessageHandler`] trait (the `inner` field) and adds an `id` field to
+//! store the identifier.
+//!
+//! That though introduces some problems:
+//! - Now serde (and WASM by extent) expects the `id` field to be present in the
+//!  serialized message, which is not the case for the original message.
+//! - The resulting rust API is quite cumbersome to use.
+//!
+//! The first is easily solved by custom serialization and deserialization
+//! implementations for the [`IDWrap`] struct. That way instead of expecting
+//!
+//! ```json
+//! { id: 0, inner: { x: 0.0, y: 0.0, z: 0.0 } }
+//! ```
+//!
+//! we expect
+//!
+//! ```json
+//! { workbench_id: 0, x: 0.0, y: 0.0, z: 0.0 }
+//! ```
+//!
+//! The second problem is not solved yet and currently constructing and handling
+//! a message looks like the example of the [`IDWrapable`] trait.
+
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -16,6 +49,9 @@ mod ser;
 
 use super::{Identifiable, MessageHandler, ProjectMessageHandler};
 
+/// A wrapper struct that adds an identifier to a message handler struct.
+///
+/// For more check out the module level documentation of [`idwrap`](super::idwrap).
 #[derive(Tsify, Debug, Clone)]
 #[tsify(from_wasm_abi)]
 pub struct IDWrap<T: Clone + Serialize + DeserializeOwned + RefFromWasmAbi> {
