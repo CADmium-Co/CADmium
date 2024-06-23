@@ -9,13 +9,22 @@ use crate::message::{Identifiable, Message};
 use crate::workbench::Workbench;
 
 pub mod actions;
-pub mod hash;
-pub mod result;
+mod hash;
+mod result;
 pub mod sketch_action;
 
 pub use hash::StepHash;
 pub use result::StepResult;
 
+/// A step describes a single operation that takes place in a [`Workbench`].
+///
+/// An operation is often a transformation of the part in the workbench,
+/// but it can also be a transformation of the meta-data of the workbench itself.
+///
+/// Each step is comprised by a [`Message`] that describes the operation,
+/// the [`StepHash`] of it and the [`StepResult`] of the operation.
+///
+/// It is safe to assume that the step `data` field will never change.
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
