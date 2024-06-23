@@ -56,6 +56,9 @@ jobs:
         run: pnpm exec playwright install
       - name: Run rust tests, vitest unit tests, and playwright e2e tests
         run: pnpm turbo run test
+
+      - name: Generate rust docs
+        run: cargo doc --no-deps --package cadmium --release && mv target/doc applications/web/dist/docs
       - uses: actions/upload-artifact@v4
         with:
           name: cadmium

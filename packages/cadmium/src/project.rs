@@ -38,7 +38,7 @@ impl Project {
     /// Creates a new project with a given name.
     ///
     /// A new [`Workbench`] is added to the project with the name "Workbench 1".
-    /// Check the [`add_workbench`] method for more details on the new workbench.
+    /// Check the [`add_workbench`](Project::add_workbench) method for more details on the new workbench.
     pub fn new(name: &str) -> Self {
         let mut p = Project {
             name: name.to_owned(),
