@@ -1,3 +1,75 @@
+//! CADmium is a library for building parametric CAD applications in Rust.
+//!
+//! Its main target is the web, as a WASM module, but it can also be used in native applications.
+//!
+//! The library is mostly an interface and interoperability layer for the [`ISOtope`](https://github.com/CADmium-Co/ISOtope)
+//! 2D constraint solver and the [`Truck`](https://github.com/ricosjp/truck) CAD kernel.
+//!
+//! It is designed to be used in a functional way, where the state
+//! of the application is stored in a single data structure in the global memory.
+//!
+//! ## Architecture
+//!
+//! The high-level architecture is as follows (tree-like, breadth-first):
+//!
+//! - A [`Project`] is the main data structure that holds every kind of
+//!   information about the project - mainly an array of [`Workbench`]es.
+//! - A [`Workbench`] holds both the history and the internal state of the
+//!   result of the operations in the project.
+//!   The following arrays of structs are held:
+//! - A [`Step`] is a single operation that takes place in a [`Workbench`].
+//!   Comprised of a [`Message`], its [`StepHash`] and its [`StepResult`],
+//!   an array of steps is also known as the history of the workbench.
+//! - A [`Point3`] represents a point in 3D space. In the context of direct
+//!   [`Workbench`] descendant, it's a free-standing point, not part of a sketch
+//!   or solid.
+//! - A [`Plane`] is a 2D plane that can be used to create sketches.
+//! - An [`ISketch`] is a 2D sketch that can be used to create 3D models.
+//!   It holds an ISOtope `Sketch` and a list of [`Compound`]s (a way to
+//!   describe complex 2D shapes using a set of ISOtope primitives and constraints).
+//! - A [`Feature`] is a 3D operation that mostly results in a 3D object -
+//!   either by creating or modifying it. For example, an [`Extrusion`] is a feature.
+//!
+//! ## Usage
+//! The way to interact with CADmium is through messages. A message is a single,
+//! pre-defined operation that can be applied to a project. For example, a message
+//! could be `ProjectRename` or `FeatureExtrusionAdd`, both variants of the
+//! [`Message`] enum.
+//!
+// TODO: Give a better example (e.g. a simple sketch and extrusion)
+//! ```rust
+//! use cadmium::{create_project, get_project, send_message};
+//! use cadmium::message::Message;
+//! use cadmium::project::ProjectRename;
+//!
+//! let project_id = create_project("My Project");
+//! let mut project = get_project(project_id).unwrap();
+//! let message = Message::ProjectRename(ProjectRename { new_name: "New Name".to_string() });
+//! let result = send_message(project_id, &message);
+//! assert!(result.success);
+//!
+//! let project = get_project(project_id).unwrap();
+//! assert_eq!(project.name, "New Name");
+//! ```
+//!
+//! ## WASM Usage
+//!
+//! CADmium is designed to be used in the browser as a WebAssembly module.
+//! It can be compiled with `wasm-pack` and automatically produces a TypeScript
+//! definition file that can be used in a web application.
+// TODO: Add a javascript example
+//!
+//! [`Compound`]: crate::isketch::compound::Compound
+//! [`Extrusion`]: crate::feature::extrusion::Extrusion
+//! [`Feature`]: crate::feature::Feature
+//! [`ISketch`]: crate::isketch::ISketch
+//! [`Point3`]: crate::feature::point::Point3
+//! [`Plane`]: crate::archetypes::Plane
+//! [`Step`]: crate::step::Step
+//! [`StepHash`]: crate::step::StepHash
+//! [`StepResult`]: crate::step::StepResult
+//! [`Workbench`]: crate::workbench::Workbench
+
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 
@@ -40,7 +112,7 @@ thread_local! {
     static PROJECTS: RefCell<Vec<project::Project>> = RefCell::new(Vec::new());
 }
 
-/// Creates a new [`project::Project`] and returns the index of the project in the global project list
+/// Creates a new [`Project`](project::Project) and returns the index of the project in the global project list
 ///
 /// # Examples
 ///
@@ -62,7 +134,7 @@ pub fn create_project(name: &str) -> usize {
     })
 }
 
-/// Returns a concrete [`project::Project`] from the global project list.
+/// Returns a concrete [`Project`](project::Project) from the global project list.
 ///
 /// A new project can be created with [`create_project`] function.
 #[wasm_bindgen]
@@ -76,7 +148,7 @@ pub fn get_project(project_index: usize) -> Result<project::Project, String> {
     })
 }
 
-/// Sends a message to a [`project::Project`] and returns the result
+/// Sends a message to a [`Project`](project::Project) and returns the result
 ///
 /// [`Message`]s are the primary way to interact with CADmium.
 /// They describe any kind of action that can be taken on a project.
@@ -108,7 +180,7 @@ pub fn send_message(project_index: usize, message: &Message) -> MessageResult {
     })
 }
 
-/// Returns a concrete [`workbench::Workbench`] from a [`project::Project`].
+/// Returns a concrete [`Workbench`](workbench::Workbench) from a [`Project`](project::Project).
 #[wasm_bindgen]
 pub fn get_workbench(
     project_index: usize,
