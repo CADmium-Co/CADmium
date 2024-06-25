@@ -1,6 +1,8 @@
 use std::fmt::Display;
 
+use crate::error::CADmiumError;
 use crate::message::Message;
+use loro::LoroValue;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use xxhash_rust::xxh3::xxh3_64;
@@ -54,5 +56,22 @@ impl<'de> Deserialize<'de> for StepHash {
 	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
 		let s = String::deserialize(deserializer)?;
 		Ok(Self(s.parse().unwrap()))
+	}
+}
+
+impl From<StepHash> for LoroValue {
+	fn from(hash: StepHash) -> Self {
+		LoroValue::I64(i64::from_ne_bytes(hash.0.to_ne_bytes()))
+	}
+}
+
+impl TryFrom<&LoroValue> for StepHash {
+	type Error = CADmiumError;
+
+	fn try_from(value: &LoroValue) -> Result<Self, Self::Error> {
+		match value {
+			LoroValue::I64(val) => Ok(Self(u64::from_ne_bytes(val.to_ne_bytes()))),
+			_ => Err(CADmiumError::EvTreeHashNotI64),
+		}
 	}
 }

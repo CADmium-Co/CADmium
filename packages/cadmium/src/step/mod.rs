@@ -18,6 +18,10 @@ pub mod sketch_action;
 pub use hash::StepHash;
 pub use result::StepResult;
 
+#[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
+#[tsify(into_wasm_abi, from_wasm_abi)]
+pub struct History(pub Vec<Rc<RefCell<Step>>>);
+
 /// A step describes a single operation that takes place in a [`Workbench`].
 ///
 /// An operation is often a transformation of the part in the workbench,

@@ -31,7 +31,7 @@ fn main() {
 	let wb_ref = p.workbenches.first().unwrap().clone();
 	let step = wb_ref.borrow().get_step_by_hash(sketch_id).unwrap();
 
-	let StepResult::Sketch(sketch) = step.borrow().result.clone() else {
+	let StepResult::Sketch(sketch) = step.borrow().result().clone() else {
 		panic!("Expected a sketch");
 	};
 

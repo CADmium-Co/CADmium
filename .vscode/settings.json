@@ -6,7 +6,9 @@
 	"vite.showTerminal": true,
 	"cSpell.words": [
 		"bindgen",
+		"evtree",
 		"isketch",
+		"Loro",
 		"Threlte",
 		"tsify",
 		"wireframe"

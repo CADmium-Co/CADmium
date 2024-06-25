@@ -75,7 +75,7 @@ use std::collections::BTreeMap;
 
 use error::CADmiumError;
 use message::{Message, MessageResult};
-use step::StepHash;
+use step::{History, StepHash};
 use tsify_next::declare;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
@@ -180,23 +180,66 @@ pub fn send_message(project_index: usize, message: &Message) -> MessageResult {
 	})
 }
 
-/// Returns a concrete [`Workbench`](workbench::Workbench) from a [`Project`](project::Project).
+/// Returns the history of a [`Workbench`](workbench::Workbench) as a [`History`] object
 #[wasm_bindgen]
-pub fn get_workbench(
+pub fn get_workbench_oplog(
 	project_index: usize,
 	workbench_index: usize,
-) -> Result<workbench::Workbench, String> {
+) -> Result<History, String> {
 	PROJECTS.with(|projects_ref| {
 		let projects = projects_ref.borrow();
 		let p = projects
 			.get(project_index)
 			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
-		let wb = p
-			.workbenches
-			.get(workbench_index)
-			.ok_or(CADmiumError::WorkbenchIDNotFound(workbench_index as u64).to_string())?
-			.borrow();
-		Ok(wb.clone())
+		let wb_cell = p
+			.get_workbench_by_id(workbench_index as u64)
+			.map_err(|e| e.to_string())?;
+		let wb = wb_cell.borrow();
+
+		Ok(History(wb.history.clone()))
+	})
+}
+
+/// Returns the event tree of a [`Workbench`](workbench::Workbench) as a serialized [`LoroDoc`](loro::LoroDoc) object
+// TODO: Add ability to retrieve partial event trees
+#[wasm_bindgen]
+pub fn get_workbench_evtree(
+	project_index: usize,
+	workbench_index: usize,
+) -> Result<Vec<u8>, String> {
+	PROJECTS.with(|projects_ref| {
+		let projects = projects_ref.borrow();
+		let p = projects
+			.get(project_index)
+			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
+		let wb_cell = p
+			.get_workbench_by_id(workbench_index as u64)
+			.map_err(|e| e.to_string())?;
+		let wb = wb_cell.borrow();
+
+		Ok(wb.evtree.export_snapshot())
+	})
+}
+
+// TODO: Add ability to retrieve partial event trees
+#[wasm_bindgen]
+pub fn set_workbench_evtree(
+	project_index: usize,
+	workbench_index: usize,
+	evtree: Vec<u8>,
+) -> Result<(), String> {
+	PROJECTS.with(|projects_ref| {
+		let projects = projects_ref.borrow();
+		let p = projects
+			.get(project_index)
+			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
+		let wb_cell = p
+			.get_workbench_by_id(workbench_index as u64)
+			.map_err(|e| e.to_string())?;
+		let wb = wb_cell.borrow();
+		wb.evtree.import(&evtree).map_err(|e| e.to_string())?;
+
+		Ok(())
 	})
 }
 
@@ -249,16 +292,16 @@ impl Project {
 		// self.native.compute_constraint_errors();
 	}
 
-	#[wasm_bindgen]
-	pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
-		// TODO: Use get() and return a Result
-		self.native
-			.workbenches
-			.get(workbench_index as usize)
-			.unwrap()
-			.borrow()
-			.clone() // This single call pollutes Clone derives for all MessageHandlers
-	}
+	// #[wasm_bindgen]
+	// pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
+	// 	// TODO: Use get() and return a Result
+	// 	self.native
+	// 		.workbenches
+	// 		.get(workbench_index as usize)
+	// 		.unwrap()
+	// 		.borrow()
+	// 		.clone() // This single call pollutes Clone derives for all MessageHandlers
+	// }
 
 	#[wasm_bindgen]
 	pub fn send_message(&mut self, message: &Message) -> MessageResult {
