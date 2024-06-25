@@ -5,6 +5,7 @@ use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
+use xxhash_rust::xxh3::xxh3_64;
 
 use crate::message::{Identifiable, Message};
 use crate::workbench::Workbench;
@@ -45,15 +46,28 @@ pub struct Step {
 
 impl Step {
 	pub fn new(data: Message, result: StepResult) -> Self {
-		let hash = (&data).into();
+		let timestamp = SystemTime::now();
+		let author = "Anonymous".to_string();
+
+		let message_data = serde_json::to_string(&data).unwrap();
+		let timestamp_str = serde_json::to_string(&timestamp).unwrap();
+		let author = serde_json::to_string(&author).unwrap();
+		let hash_data = [
+			message_data.as_bytes(),
+			timestamp_str.as_bytes(),
+			author.as_bytes(),
+		]
+		.concat();
+		let hash = StepHash::from_int(xxh3_64(&hash_data));
+
 		Self {
 			hash,
 			name: format!("{}-{}", data, hash),
 			suppressed: false,
 			data,
 			result,
-			timestamp: SystemTime::now(),
-			author: "Anonymous".to_string(),
+			timestamp,
+			author,
 		}
 	}
 
@@ -75,6 +89,10 @@ impl Step {
 
 	pub fn suppressed(&self) -> bool {
 		self.suppressed
+	}
+
+	pub fn timestamp(&self) -> SystemTime {
+		self.timestamp
 	}
 }
 

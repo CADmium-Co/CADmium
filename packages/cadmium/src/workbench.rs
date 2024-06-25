@@ -1,5 +1,4 @@
 use log::{debug, info};
-use loro::LoroDoc;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use wasm_bindgen::prelude::*;
@@ -8,6 +7,7 @@ use crate::archetypes::{Plane, PlaneDescription};
 use crate::feature::point::Point3;
 use crate::feature::Feature;
 use crate::isketch::ISketch;
+use crate::step::evtree::EvTree;
 use crate::step::{Step, StepHash, StepResult};
 use crate::IDType;
 
@@ -28,8 +28,7 @@ pub struct Workbench {
 	pub name: String,
 	/// A list of steps that have been taken in the workbench - it's append only and fork-able
 	pub history: Vec<Rc<RefCell<Step>>>,
-	#[serde(with = "crate::step::evtree::loro_serde")]
-	pub evtree: LoroDoc,
+	pub evtree: EvTree,
 
 	/// Free-standing points in 3D space - not part of sketches
 	#[serde(skip)]
@@ -68,7 +67,7 @@ impl Workbench {
 		Workbench {
 			name: name.to_owned(),
 			history: vec![],
-			evtree: LoroDoc::new(),
+			evtree: EvTree::default(),
 
 			points: BTreeMap::new(),
 			points_next_id: 0,
@@ -82,7 +81,7 @@ impl Workbench {
 		}
 	}
 
-	/// Records the given message as a [`Step`] in the workbench history
+	/// Records the given message as a [`Step`] in the workbench history and evolution tree
 	///
 	/// <div class="warning">
 	///
@@ -90,8 +89,9 @@ impl Workbench {
 	///
 	/// </div>
 	pub fn add_message_step(&mut self, message: &Message, node: StepResult) {
-		self.history
-			.push(Rc::new(RefCell::new(Step::new(message.clone(), node))));
+		let step = Step::new(message.clone(), node);
+		self.evtree.push(step.hash());
+		self.history.push(Rc::new(RefCell::new(step)));
 	}
 
 	/// Returns a [`Step`] by its [`StepHash`]

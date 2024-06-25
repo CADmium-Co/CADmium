@@ -1,11 +1,9 @@
 use std::fmt::Display;
 
 use crate::error::CADmiumError;
-use crate::message::Message;
 use loro::LoroValue;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
-use xxhash_rust::xxh3::xxh3_64;
 
 /// This represents a hash of a [`Message`].
 ///
@@ -27,14 +25,6 @@ impl StepHash {
 
 	pub const fn from_int(val: u64) -> Self {
 		Self(val)
-	}
-}
-
-impl From<&Message> for StepHash {
-	fn from(msg: &Message) -> Self {
-		// Maybe encode to binary instead of json?
-		let hash = xxh3_64(serde_json::to_string(msg).unwrap().as_bytes());
-		Self(hash)
 	}
 }
 

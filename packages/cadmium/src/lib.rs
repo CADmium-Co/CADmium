@@ -217,7 +217,7 @@ pub fn get_workbench_evtree(
 			.map_err(|e| e.to_string())?;
 		let wb = wb_cell.borrow();
 
-		Ok(wb.evtree.export_snapshot())
+		Ok(wb.evtree.export())
 	})
 }
 
