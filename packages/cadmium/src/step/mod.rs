@@ -1,6 +1,7 @@
 use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
+use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
@@ -9,6 +10,7 @@ use crate::message::{Identifiable, Message};
 use crate::workbench::Workbench;
 
 pub mod actions;
+pub mod evtree;
 mod hash;
 mod result;
 pub mod sketch_action;
@@ -28,48 +30,68 @@ pub use result::StepResult;
 #[derive(Tsify, Clone, Debug, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Step {
-    pub hash: StepHash,
-    pub name: String,
-    pub suppressed: bool,
-    pub data: Message,
-    pub result: StepResult,
+	hash: StepHash,
+	pub name: String,
+	suppressed: bool,
+	data: Message,
+	result: StepResult,
+	timestamp: SystemTime,
+	author: String,
 }
 
 impl Step {
-    pub fn new(data: Message, result: StepResult) -> Self {
-        let hash = (&data).into();
-        Self {
-            hash: hash,
-            name: format!("{}-{}", data, hash),
-            suppressed: false,
-            data,
-            result: result,
-        }
-    }
+	pub fn new(data: Message, result: StepResult) -> Self {
+		let hash = (&data).into();
+		Self {
+			hash,
+			name: format!("{}-{}", data, hash),
+			suppressed: false,
+			data,
+			result,
+			timestamp: SystemTime::now(),
+			author: "Anonymous".to_string(),
+		}
+	}
 
-    pub fn hash(&self) -> StepHash {
-        self.hash
-    }
+	pub fn hash(&self) -> StepHash {
+		self.hash
+	}
+
+	pub fn result(&self) -> &StepResult {
+		&self.result
+	}
+
+	pub fn suppress(&mut self) {
+		self.suppressed = true;
+	}
+
+	pub fn unsuppress(&mut self) {
+		self.suppressed = false;
+	}
+
+	pub fn suppressed(&self) -> bool {
+		self.suppressed
+	}
 }
 
 impl Display for Step {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}-{}", self.data, self.hash)
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}-{}", self.data, self.hash)
+	}
 }
 
 impl Identifiable for Rc<RefCell<Step>> {
-    type Parent = Rc<RefCell<Workbench>>;
-    const ID_NAME: &'static str = "step_id";
+	type Parent = Rc<RefCell<Workbench>>;
+	const ID_NAME: &'static str = "step_id";
 
-    fn from_parent_id(parent: &Self::Parent, hash: StepHash) -> anyhow::Result<Self> {
-        Ok(parent
-            .borrow()
-            .get_step_by_hash(hash)
-            .ok_or(anyhow::anyhow!(
-                "No step with hash {} exists in the current workbench",
-                hash
-            ))?
-            .clone())
-    }
+	fn from_parent_id(parent: &Self::Parent, hash: StepHash) -> anyhow::Result<Self> {
+		Ok(parent
+			.borrow()
+			.get_step_by_hash(hash)
+			.ok_or(anyhow::anyhow!(
+				"No step with hash {} exists in the current workbench",
+				hash
+			))?
+			.clone())
+	}
 }

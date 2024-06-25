@@ -43,11 +43,11 @@ tbody > tr:nth-of-type(even) {
 const HTML_FOOT: &str = "</tbody></table>";
 
 pub fn save_report_html(results: Vec<(String, String, String)>) {
-    let mut report = HTML_HEAD.to_string();
+	let mut report = HTML_HEAD.to_string();
 
-    for (selector, case, name) in results.iter() {
-        report.push_str(&format!(
-            r#"
+	for (selector, case, name) in results.iter() {
+		report.push_str(&format!(
+			r#"
             <tr>
                 <td>{selector}</td>
                 <td>{case}</td>
@@ -55,9 +55,9 @@ pub fn save_report_html(results: Vec<(String, String, String)>) {
                 <td><a href="{name}_after.svg"><img width="200" src="{name}_after.svg" /></a></td>
             </tr>
         "#
-        ))
-    }
+		))
+	}
 
-    report.push_str(HTML_FOOT);
-    fs::write("bench-faceselector-report/index.html", report).unwrap();
+	report.push_str(HTML_FOOT);
+	fs::write("bench-faceselector-report/index.html", report).unwrap();
 }
