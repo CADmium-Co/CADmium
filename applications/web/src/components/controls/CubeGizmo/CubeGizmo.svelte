@@ -75,6 +75,7 @@
       const y = verticalPlacement === "bottom" ? paddingY : renderer.domElement.offsetHeight - size - paddingY
 
       renderer.setViewport(x, y, size, size)
+      renderer.clearDepth()
       renderer.render(rotationRoot, orthoCam)
       renderer.render(triangleControls, orthoCam)
       renderer.setViewport(viewport.x, viewport.y, viewport.z, viewport.w)
