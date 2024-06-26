@@ -17,11 +17,6 @@ use super::prelude::*;
 
 #[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
-#[repr(transparent)]
-pub struct SolidArray(pub Vec<Solid>);
-
-#[derive(Tsify, Debug, Serialize, Deserialize, Clone)]
-#[tsify(into_wasm_abi, from_wasm_abi)]
 pub struct Solid {
     pub name: String,
     pub crc32: String,

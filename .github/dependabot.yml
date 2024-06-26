@@ -6,7 +6,37 @@
 
 version: 2
 updates:
- - package-ecosystem: "devcontainers"
-   directory: "/"
-   schedule:
-     interval: weekly
+  - package-ecosystem: "devcontainers"
+    directory: "/"
+    schedule:
+      interval: weekly
+
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: monthly
+  - package-ecosystem: "npm"
+    directory: "/applications/web"
+    schedule:
+      interval: monthly
+  - package-ecosystem: "npm"
+    directory: "/packages/shared"
+    schedule:
+      interval: monthly
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: monthly
+  - package-ecosystem: "cargo"
+    directory: "/packages/cadmium"
+    schedule:
+      interval: monthly
+  - package-ecosystem: "cargo"
+    directory: "/packages/cadmium-macros"
+    schedule:
+      interval: monthly
+  - package-ecosystem: "cargo"
+    directory: "/applications/tauri"
+    schedule:
+      interval: monthly

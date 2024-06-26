@@ -5,7 +5,8 @@ use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 use xxhash_rust::xxh3::xxh3_64;
 
-/// This represents a hash of a step.
+/// This represents a hash of a [`Message`].
+///
 /// It's really just a wrapper around a u64, but it's used to ensure that the hash
 /// is always calculated in the same way and doesn't get mixed
 /// with internal indexes or ids.
