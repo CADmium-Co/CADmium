@@ -1,9 +1,9 @@
 <script lang="ts">
   import {snapPoints, sketchTool, previewGeometry, currentlyMousedOver} from "shared/stores"
-  import {addRectangleBetweenPoints, addPointToSketch} from "shared/projectUtils"
+  import {bench} from "shared/projectUtils"
   import {Vector3} from "three"
   import type {IDictionary, PointLikeById, ProjectToPlane} from "shared/types"
-  import type { Point2 } from "cadmium"
+  import type {Point2} from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[NewRectangleTool.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -18,7 +18,7 @@
 
   function pushToStack(point: PointLikeById) {
     if (!point) return
-    point.id = point.id ?? addPointToSketch(sketchIndex, point.twoD, false)
+    point.id = point.id ?? bench.sketchAddPoint(sketchIndex, point.twoD, false)
     stack.push(point)
   }
 
@@ -34,7 +34,7 @@
       default:
         const endPoint = popFromStack()
         const anchor = popFromStack()
-        addRectangleBetweenPoints(sketchIndex, +anchor!.id!, +endPoint!.id!)
+        bench.sketchAddRectangle(sketchIndex, +anchor!.id!, +endPoint!.id!)
         clearStack()
         break
     }

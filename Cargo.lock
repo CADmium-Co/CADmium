@@ -343,6 +343,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "cadmium-macros",
+ "chrono",
  "console_error_panic_hook",
  "convert_case 0.6.0",
  "crc32fast",

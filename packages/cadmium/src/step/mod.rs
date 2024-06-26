@@ -1,7 +1,7 @@
+use chrono::{DateTime, Utc};
 use std::cell::RefCell;
 use std::fmt::Display;
 use std::rc::Rc;
-use std::time::SystemTime;
 
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
@@ -40,18 +40,17 @@ pub struct Step {
 	suppressed: bool,
 	data: Message,
 	pub result: StepResult,
-	timestamp: SystemTime,
+	timestamp: DateTime<Utc>,
 	author: String,
 }
 
 impl Step {
 	pub fn new(data: Message, result: StepResult) -> Self {
-		let timestamp = SystemTime::now();
+		let timestamp = Utc::now();
 		let author = "Anonymous".to_string();
 
 		let message_data = serde_json::to_string(&data).unwrap();
-		let timestamp_str = serde_json::to_string(&timestamp).unwrap();
-		let author = serde_json::to_string(&author).unwrap();
+		let timestamp_str = timestamp.to_string();
 		let hash_data = [
 			message_data.as_bytes(),
 			timestamp_str.as_bytes(),
@@ -95,7 +94,7 @@ impl Step {
 		self.suppressed
 	}
 
-	pub fn timestamp(&self) -> SystemTime {
+	pub fn timestamp(&self) -> DateTime<Utc> {
 		self.timestamp
 	}
 }

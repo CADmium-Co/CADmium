@@ -6,7 +6,6 @@ import {Vector2, Vector3, type Vector2Like} from "three"
 import type {Entity, MessageHistory, WithTarget} from "./types"
 import type {Workbench, MessageResult, Solid, Step, Point3, Plane, ISketch, StepHash} from "cadmium"
 import {isSketchActionStep} from "./stepTypeGuards"
-import {isMessage} from "./typeGuards"
 
 import * as cad from "./cadmium-api"
 (window as any).cad = cad
@@ -33,27 +32,6 @@ export namespace bench {
   createWrapperFunctions(cad, bench)
 }
 (window as any).bench = bench
-
-export function getWorkbenchSolids(): Solid[] {
-  let wp = get(wasmProject)
-  return wp.get_workbench_solids(get(workbenchIndex))
-}
-
-export function isPoint(node: Node): node is Node & Point3 {
-  // const typedObj = node as Point3
-  // return typedObj.x !== undefined && typedObj.y !== undefined && typedObj.z !== undefined
-  return "Point" in node
-}
-export function isPlane(node: Node): node is Node & Plane {
-  return "Plane" in node
-}
-export type SketchStep = Step & {result: ISketch, data: cad.WorkbenchSketchAdd }
-export function isSketchStep(step: Step): step is SketchStep {
-  return "WorkbenchSketchAdd" in step.data && "Sketch" in step.result
-}
-export function isSolid(node: Node): node is Node & Solid[] {
-  return "Solid" in node
-}
 
 export function arraysEqual(a: any[], b: any[]) {
   if (a.length !== b.length) return false
@@ -97,30 +75,8 @@ export function updateExtrusion(extrusionId: number, sketchId: number, length: n
       extrusion_id: extrusionId,
     },
   }
-  const isValid = checkWasmMessage(message)
-  const hasFaceIds = notEmpty(message.UpdateExtrusion.face_ids)
-  if (isValid) {
-    sendWasmMessage(message)
-    workbenchIsStale.set(true)
-    if (hasFaceIds) {
-      log("[updateExtrusion]", "[checkWasmMessage]", "is valid,", "sending message...", message)
-      // sendWasmMessage(message)
-    } else log("[updateExtrusion]", "[checkWasmMessage]", "is valid,", "but face_ids is empty,", "NOT sending message:", message)
-  } else log("[updateExtrusion]", "[checkWasmMessage]", "is bogus,", "abort message send!", message)
 
-  // sendWasmMessage(message)
-
-  // should this be set stale when not sending the wasm message? todo
-  // workbenchIsStale.set(true)
-}
-
-export function setSketchPlane(sketchId: number, planeId: number) {
-  return cad.workbenchSketchSetPlane(get(workbenchIndex).toString(), sketchId, {PlaneId: planeId})
-}
-
-export function newSketchOnPlane() {
-  // TODO: Why are we defaulting to plane 0?
-  cad.workbenchSketchAdd(get(workbenchIndex).toString(), {PlaneId: 0})
+  sendWasmMessage(message)
 }
 
 export function newExtrusion() {
@@ -148,34 +104,6 @@ export function deleteEntities(sketchIdx: string, selection: Entity[]) {
   for (const entity of selection) {
     cad.sketchDeletePrimitive(workbenchIdx, sketchIdx, parseInt(entity.id))
   }
-}
-
-export function addRectangleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
-  return cad.sketchAddRectangle(get(workbenchIndex).toString(), sketchIdx, point1, point2)
-}
-
-export function addCircleBetweenPoints(sketchIdx: string, point1: string, point2: string) {
-  return cad.sketchAddCircle(get(workbenchIndex).toString(), sketchIdx, point1, point2)
-}
-
-export function addLineToSketch(sketchIdx: string, point1: string, point2: string) {
-  return cad.sketchAddLine(get(workbenchIndex).toString(), sketchIdx, point1, point2)
-}
-
-export function addPointToSketch(sketchIdx: string, point: Vector2Like, hidden: boolean): StepHash {
-  return cad.sketchAddPoint(get(workbenchIndex).toString(), sketchIdx, point.x, point.y).data
-}
-
-export function renameStep(stepIdx: string, newName: string): void {
-  cad.stepRename(get(workbenchIndex).toString(), stepIdx, newName)
-}
-
-export function renameWorkbench(newName: string): void {
-  cad.workbenchRename(get(workbenchIndex).toString(), newName)
-}
-
-export function renameProject(newName: string): void {
-  cad.projectRename(newName)
 }
 
 // If the project ever becomes stale, refresh it. This should be pretty rare.
@@ -293,45 +221,4 @@ export function flatten(points: Vector3[]): number[] {
     pointsFlat.push(point.x, point.y, point.z)
   }
   return pointsFlat
-}
-
-function isStringInt(s: string, errorCallback: {(id: any): void; (arg0: string): void}): boolean {
-  if (typeof s !== "string") console.error("[proectUtils.ts] [isStringInt]", s, "is not a string:", typeof s)
-  const isInt = !Number.isNaN(parseInt(s, 10))
-  if (!isInt) errorCallback(s)
-  return isInt
-}
-
-function reduceToInts(data: string[], errorCallback: (id: any) => void): number[] {
-  function reducer(acc: number[], id: string): number[] {
-    return isStringInt(id, errorCallback) ? [...acc, parseInt(id, 10)] : acc
-  }
-  return data.reduce(reducer, [])
-}
-
-function notEmpty(array: unknown[]): boolean {
-  return array && Array.isArray(array) && array.length > 0
-}
-
-export function checkWasmMessage(message: Message, abort = true, logError = true): boolean {
-  const key = Object.keys(message)[0]
-  const command = message[key as keyof Message]
-  if (!command) {
-    console.error("[projectUtils.ts] [checkWasmMessage]", "messageType not found:", key, message)
-    return false
-  }
-  log("[checkWasmMessage]", "checking...", key, message)
-
-  function logOrAbort() {
-    const error = `[${key}] message failed typecheck:`
-    if (logError) console.error("[projectUtils.ts]", error, message)
-    // if (abort && isDevelopment()) throw new Error(`"[projectUtils.ts]" ${error}`)
-    return false
-  }
-
-  if (!isMessage(command)) {
-    logOrAbort()
-    return false
-  }
-  return true
 }

@@ -41,6 +41,7 @@ convert_case = "0.6"
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 js-sys = "0.3"
 loro = "0.16"
+chrono = { version = "0.4.38", features = ["js-sys", "serde", "wasm-bindgen"], default-features = false }
 
 [lib]
 crate-type = ["cdylib", "rlib"]
