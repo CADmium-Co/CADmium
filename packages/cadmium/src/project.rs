@@ -12,6 +12,7 @@ use crate::message::idwrap::IDWrap;
 use crate::message::ProjectMessageHandler;
 use crate::step::StepHash;
 use crate::workbench::{AddPlane, AddPoint, Workbench};
+use crate::IDType;
 
 #[derive(Tsify, Debug, Clone, Serialize, Deserialize)]
 #[tsify(into_wasm_abi, from_wasm_abi)]
@@ -125,6 +126,38 @@ impl Project {
 			.get(id as usize)
 			.cloned()
 			.ok_or(CADmiumError::WorkbenchIDNotFound(id))
+	}
+
+	pub fn rebuild_workbench(&self, workbench_index: IDType) -> anyhow::Result<()> {
+		let wb_cell = self.get_workbench_by_id(workbench_index)?;
+		let mut wb = wb_cell.borrow_mut();
+		wb.clean_state();
+
+		let mut steps = vec![];
+		for hash in wb.evtree.to_step_hashes()?.iter() {
+			let step = wb
+				.get_step_by_hash(*hash)
+				.ok_or(anyhow::anyhow!("Failed to find step with hash {}", hash))?;
+
+			steps.push(step.clone());
+		}
+		// Drop the borrow of the workbench before recalculating
+		// as each step will borrow the workbench itself
+		drop(wb);
+
+		for step_cell in steps.iter() {
+			let mut step = step_cell.borrow_mut();
+			step.result = step
+				.message()
+				.recalculate(wb_cell.clone())?
+				.ok_or(anyhow::anyhow!(
+					"Failed to recalculate step with hash {}",
+					step.hash()
+				))?
+				.1;
+		}
+
+		Ok(())
 	}
 }
 

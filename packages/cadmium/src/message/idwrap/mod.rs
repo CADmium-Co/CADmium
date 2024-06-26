@@ -34,7 +34,6 @@
 use std::cell::RefCell;
 use std::rc::Rc;
 
-use log::warn;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use tsify_next::Tsify;
@@ -96,19 +95,15 @@ where
 		};
 
 		let mut wb = wb_cell.borrow_mut();
-		wb.add_message_step(&self.clone().into(), node);
-		let hash = wb.history.last().map(|step| step.borrow().hash()).clone();
+		let hash = wb.add_message_step(&self.clone().into(), node);
 
 		if let Some(id) = id {
-			if let Some(hash) = hash {
-				crate::ID_MAP.with_borrow_mut(|m| m.insert(hash, id));
-			} else {
-				warn!("IDWrap::handle_project_message: IDWrap returned an ID, but no hash was found in the workbench history");
-			}
+			crate::ID_MAP.with_borrow_mut(|m| m.insert(hash, id));
 		}
 
 		// Return the step ID (hash) instead of the message handler returned ID
-		Ok(hash)
+		// TODO: Why is this an option?
+		Ok(Some(hash))
 	}
 }
 

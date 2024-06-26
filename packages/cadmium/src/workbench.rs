@@ -7,6 +7,7 @@ use crate::archetypes::{Plane, PlaneDescription};
 use crate::feature::point::Point3;
 use crate::feature::Feature;
 use crate::isketch::ISketch;
+use crate::message::MessageHandler;
 use crate::step::evtree::EvTree;
 use crate::step::{Step, StepHash, StepResult};
 use crate::IDType;
@@ -88,19 +89,16 @@ impl Workbench {
 	/// Does NOT call the message handler itself, only appends it to the history
 	///
 	/// </div>
-	pub fn add_message_step(&mut self, message: &Message, node: StepResult) {
+	pub fn add_message_step(&mut self, message: &Message, node: StepResult) -> StepHash {
 		let step = Step::new(message.clone(), node);
-		self.evtree.push(step.hash());
+		let hash = step.hash();
+		self.evtree.push(hash);
 		self.history.push(Rc::new(RefCell::new(step)));
+
+		hash
 	}
 
 	/// Returns a [`Step`] by its [`StepHash`]
-	///
-	/// <div class="warning">
-	///
-	/// Does NOT check for hash collision (i.e. two steps with the same hash)
-	///
-	/// </div>
 	pub fn get_step_by_hash(&self, hash: StepHash) -> Option<Rc<RefCell<Step>>> {
 		debug!(
 			"Looking for step with hash {} in hashes {:?}",
@@ -114,6 +112,34 @@ impl Workbench {
 			.iter()
 			.find(|step| step.borrow().hash() == hash)
 			.cloned()
+	}
+
+	/// Clean the internal workbench state
+	///
+	/// Keeps only the origin geometry (origin point & top, front, right planes)
+	///
+	/// Shouldn't be used directly, but rather through [`rebuild_state_from_evtree`]
+	pub(crate) fn clean_state(&mut self) {
+		// TODO: Handle None case for origin & planes
+		let origin = self.points.get(&0).unwrap().clone();
+		self.points = BTreeMap::new();
+		self.points.insert(0, origin);
+
+		let top = self.planes.get(&0).unwrap().clone();
+		let front = self.planes.get(&1).unwrap().clone();
+		let right = self.planes.get(&2).unwrap().clone();
+		self.planes = BTreeMap::new();
+		self.planes.insert(0, top);
+		self.planes.insert(1, front);
+		self.planes.insert(2, right);
+
+		self.sketches = BTreeMap::new();
+		self.features = BTreeMap::new();
+
+		self.points_next_id = 1;
+		self.planes_next_id = 3;
+		self.sketches_next_id = 0;
+		self.features_next_id = 0;
 	}
 }
 

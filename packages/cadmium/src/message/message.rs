@@ -1,11 +1,15 @@
+use std::cell::RefCell;
+use std::rc::Rc;
+
 use cadmium_macros::MessageEnum;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
 
-use crate::step::StepHash;
+use crate::step::{StepHash, StepResult};
+use crate::IDType;
 
 use super::idwrap::IDWrap;
-use super::ProjectMessageHandler;
+use super::{MessageHandler, ProjectMessageHandler};
 
 /// All the possible messages that can be sent to the backend.
 ///
@@ -35,6 +39,33 @@ pub enum Message {
 
 	StepRename(IDWrap<IDWrap<crate::step::actions::Rename>>),
 	StepDelete(IDWrap<crate::step::actions::Delete>),
+}
+
+impl Message {
+	pub fn recalculate(
+		&self,
+		workbench: Rc<RefCell<crate::workbench::Workbench>>,
+	) -> anyhow::Result<Option<(IDType, StepResult)>> {
+		match self {
+			// TODO: Move inside the derive macro
+			Message::WorkbenchRename(v) => v.inner().handle_message(workbench),
+			Message::WorkbenchPointAdd(v) => v.inner().handle_message(workbench),
+			Message::WorkbenchPlaneAdd(v) => v.inner().handle_message(workbench),
+			Message::WorkbenchSketchAdd(v) => v.inner().handle_message(workbench),
+			Message::WorkbenchSketchSetPlane(v) => v.inner().handle_message(workbench),
+			Message::WorkbenchPointUpdate(v) => v.inner().handle_message(workbench),
+
+			Message::SketchAddPoint(v) => v.inner().handle_message(workbench),
+			Message::SketchAddArc(v) => v.inner().handle_message(workbench),
+			Message::SketchAddCircle(v) => v.inner().handle_message(workbench),
+			Message::SketchAddLine(v) => v.inner().handle_message(workbench),
+			Message::SketchAddRectangle(v) => v.inner().handle_message(workbench),
+			Message::SketchDeletePrimitive(v) => v.inner().handle_message(workbench),
+
+			Message::FeatureExtrusionAdd(v) => v.inner.handle_message(workbench),
+			_ => Ok(None),
+		}
+	}
 }
 
 /// The result of a message handling operation.

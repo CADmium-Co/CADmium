@@ -39,7 +39,7 @@ pub struct Step {
 	pub name: String,
 	suppressed: bool,
 	data: Message,
-	result: StepResult,
+	pub result: StepResult,
 	timestamp: SystemTime,
 	author: String,
 }
@@ -73,6 +73,10 @@ impl Step {
 
 	pub fn hash(&self) -> StepHash {
 		self.hash
+	}
+
+	pub fn message(&self) -> &Message {
+		&self.data
 	}
 
 	pub fn result(&self) -> &StepResult {
