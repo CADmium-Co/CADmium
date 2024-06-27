@@ -3,10 +3,15 @@ import {svelte} from "@sveltejs/vite-plugin-svelte"
 import wasm from "vite-plugin-wasm"
 import topLevelAwait from "vite-plugin-top-level-await"
 import {base} from "./src/base"
+import child_process from "node:child_process"
 
 export default defineConfig({
   base,
   plugins: [svelte(), wasm(), topLevelAwait()],
+  define: {
+    GIT_HASH: JSON.stringify(child_process.execSync('git rev-parse --short=10 HEAD').toString().trim()),
+    GIT_BRANCH: JSON.stringify(child_process.execSync('git rev-parse --abbrev-ref HEAD').toString().trim()),
+  },
   build: {
     outDir: "dist",
     target: "esnext",
