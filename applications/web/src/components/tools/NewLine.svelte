@@ -21,7 +21,7 @@
     // - twoD: an object with x and y properties representing the point in 2D space
     // - threeD: an object with x, y, and z properties representing the point in 3D space
     // - id: a string representing the id of the point in the sketch
-    // If the id is nullish we call addPointToSketch to create a new point in the sketch.
+    // If the id is nullish we call sketchAddPoint to create a new point in the sketch.
     if (!point) return
     point.id = point.id ?? bench.sketchAddPoint(sketchIndex, point.x, point.y).data
     stack.push(point)
@@ -59,7 +59,7 @@
       if (geom.type === "point3D") {
         if (geom.x && geom.y && geom.z) {
           const twoD = projectToPlane(new Vector3(geom.x, geom.y, geom.z))
-          snappedTo = { x: twoD.x, y: twoD.y, hidden: false } as Point2WithID
+          snappedTo = {x: twoD.x, y: twoD.y, hidden: false} as Point2WithID
         }
       }
       if (geom.type === "point") {

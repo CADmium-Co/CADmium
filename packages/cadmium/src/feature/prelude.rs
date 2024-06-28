@@ -21,4 +21,4 @@ pub use truck_modeling::Vertex as TruckVertex;
 pub use truck_topology::Solid as TruckTopoSolid;
 
 pub type TruckClosedSolid =
-    TruckTopoSolid<truck_modeling::Point3, truck_modeling::Curve, truck_modeling::Surface>;
+	TruckTopoSolid<truck_modeling::Point3, truck_modeling::Curve, truck_modeling::Surface>;

@@ -1,7 +1,7 @@
 <script lang="ts">
   import {slide} from "svelte/transition"
   import {quintOut} from "svelte/easing"
-  import {renameStep} from "shared/projectUtils"
+  import {bench} from "shared/projectUtils"
   import {workbenchIsStale, featureIndex} from "shared/stores"
   import MagnifyingGlass from "phosphor-svelte/lib/MagnifyingGlass"
   import type {Plane, SetCameraFocus} from "shared/types"
@@ -78,7 +78,7 @@
         <button
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
-            renameStep(index, name)
+            bench.stepRename(index, name)
           }}>Done</button
         >
 

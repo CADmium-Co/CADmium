@@ -1,12 +1,12 @@
 <script lang="ts">
   import {slide} from "svelte/transition"
   import {quintOut} from "svelte/easing"
-  import {arraysEqual, renameStep, updateExtrusion} from "shared/projectUtils"
+  import {arraysEqual, bench, updateExtrusion} from "shared/projectUtils"
   import {selectingFor, workbenchIsStale, featureIndex, currentlySelected, hiddenSketches} from "shared/stores"
   import X from "phosphor-svelte/lib/X"
   import {base} from "../../base"
   import type {FeatureExtrusionAdd} from "shared/cadmium-api"
-  import type { StepHash } from "cadmium"
+  import type {StepHash} from "cadmium"
 
   // @ts-ignore
   const log = (function () { const context = "[ExtrusionFeature.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -153,7 +153,7 @@
         <button
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
-            renameStep(hash, name)
+            bench.stepRename(hash, name)
           }}>Done</button
         >
 

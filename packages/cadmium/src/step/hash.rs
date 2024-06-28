@@ -1,9 +1,9 @@
 use std::fmt::Display;
 
-use crate::message::Message;
+use crate::error::CADmiumError;
+use loro::LoroValue;
 use serde::{Deserialize, Serialize};
 use tsify_next::Tsify;
-use xxhash_rust::xxh3::xxh3_64;
 
 /// This represents a hash of a [`Message`].
 ///
@@ -19,40 +19,49 @@ use xxhash_rust::xxh3::xxh3_64;
 pub struct StepHash(#[tsify(type = "string")] u64);
 
 impl StepHash {
-    pub fn into_int(&self) -> u64 {
-        self.0
-    }
+	pub fn into_int(&self) -> u64 {
+		self.0
+	}
 
-    pub const fn from_int(val: u64) -> Self {
-        Self(val)
-    }
-}
-
-impl From<&Message> for StepHash {
-    fn from(msg: &Message) -> Self {
-        // Maybe encode to binary instead of json?
-        let hash = xxh3_64(serde_json::to_string(msg).unwrap().as_bytes());
-        Self(hash)
-    }
+	pub const fn from_int(val: u64) -> Self {
+		Self(val)
+	}
 }
 
 impl Display for StepHash {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
+	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+		write!(f, "{}", self.0)
+	}
 }
 
 // Serialize as string
 impl Serialize for StepHash {
-    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        self.0.to_string().serialize(serializer)
-    }
+	fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+		self.0.to_string().serialize(serializer)
+	}
 }
 
 // Deserialize from string
 impl<'de> Deserialize<'de> for StepHash {
-    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
-        let s = String::deserialize(deserializer)?;
-        Ok(Self(s.parse().unwrap()))
-    }
+	fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+		let s = String::deserialize(deserializer)?;
+		Ok(Self(s.parse().unwrap()))
+	}
+}
+
+impl From<StepHash> for LoroValue {
+	fn from(hash: StepHash) -> Self {
+		LoroValue::I64(i64::from_ne_bytes(hash.0.to_ne_bytes()))
+	}
+}
+
+impl TryFrom<&LoroValue> for StepHash {
+	type Error = CADmiumError;
+
+	fn try_from(value: &LoroValue) -> Result<Self, Self::Error> {
+		match value {
+			LoroValue::I64(val) => Ok(Self(u64::from_ne_bytes(val.to_ne_bytes()))),
+			_ => Err(CADmiumError::EvTreeHashNotI64),
+		}
+	}
 }

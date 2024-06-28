@@ -1,6 +1,6 @@
 <script>
   import {project, workbenchIndex, workbenchIsStale} from "shared/stores"
-  import {renameWorkbench} from "shared/projectUtils"
+  import {bench} from "shared/projectUtils"
 
   // prettier-ignore
   const log = (function () { const context = "[BottomBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})()
@@ -23,7 +23,7 @@
         on:keydown={e => {
           if (e.key === "Enter") {
             log("Renaming workbench index:", i)
-            renameWorkbench(new_workbench_name)
+            bench.workbenchRename(new_workbench_name)
             wb.name = new_workbench_name
             workbenchIsStale.set(true)
             wb.renaming = false

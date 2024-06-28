@@ -1,6 +1,6 @@
 <script>
   import {currentlySelected, currentlyMousedOver, selectingFor, featureIndex, sketchBeingEdited, sketchTool, workbench, hiddenSketches} from "shared/stores"
-  import {newExtrusion, newSketchOnPlane} from "shared/projectUtils"
+  import {bench, newExtrusion} from "shared/projectUtils"
   import {base} from "../base"
 
   const log = (function () { const context = "[ToolBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
@@ -14,7 +14,8 @@
   }
   const createNewSketch = () => {
     // log('Create new sketch')
-    newSketchOnPlane()
+    // TODO: This is wrong
+    bench.workbenchSketchAdd({PlaneId: "0"})
     $featureIndex = $workbench.history.length - 1
   }
   const debugging = false

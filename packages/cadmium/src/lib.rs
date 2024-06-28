@@ -75,7 +75,7 @@ use std::collections::BTreeMap;
 
 use error::CADmiumError;
 use message::{Message, MessageResult};
-use step::StepHash;
+use step::{History, StepHash};
 use tsify_next::declare;
 use wasm_bindgen::prelude::*;
 extern crate console_error_panic_hook;
@@ -96,20 +96,20 @@ pub mod workbench;
 pub type IDType = u64;
 
 thread_local! {
-    /// This is a global map to keep track of hashes against local IDs
-    /// The hash is the unique identifier for a step
-    /// The ID could be any kind of ID, e.g. a isotope sketch primitive
-    ///
-    /// <div class="warning">
-    ///
-    /// Using this map in reverse (from local ID to hash) requires manual check logic
-    /// (that the resulting hash is a step of the correct type, points to the correct parent, etc.)
-    ///
-    /// </div>
-    static ID_MAP: RefCell<BTreeMap<StepHash, IDType>> = RefCell::new(BTreeMap::new());
+	/// This is a global map to keep track of hashes against local IDs
+	/// The hash is the unique identifier for a step
+	/// The ID could be any kind of ID, e.g. a isotope sketch primitive
+	///
+	/// <div class="warning">
+	///
+	/// Using this map in reverse (from local ID to hash) requires manual check logic
+	/// (that the resulting hash is a step of the correct type, points to the correct parent, etc.)
+	///
+	/// </div>
+	static ID_MAP: RefCell<BTreeMap<StepHash, IDType>> = RefCell::new(BTreeMap::new());
 
-    /// Global project list - this is the preferred way to store & access projects
-    static PROJECTS: RefCell<Vec<project::Project>> = RefCell::new(Vec::new());
+	/// Global project list - this is the preferred way to store & access projects
+	static PROJECTS: RefCell<Vec<project::Project>> = RefCell::new(Vec::new());
 }
 
 /// Creates a new [`Project`](project::Project) and returns the index of the project in the global project list
@@ -126,12 +126,12 @@ thread_local! {
 /// ```
 #[wasm_bindgen]
 pub fn create_project(name: &str) -> usize {
-    let p = project::Project::new(name);
-    PROJECTS.with(|projects_ref| {
-        let mut projects = projects_ref.borrow_mut();
-        projects.push(p);
-        projects.len() - 1
-    })
+	let p = project::Project::new(name);
+	PROJECTS.with(|projects_ref| {
+		let mut projects = projects_ref.borrow_mut();
+		projects.push(p);
+		projects.len() - 1
+	})
 }
 
 /// Returns a concrete [`Project`](project::Project) from the global project list.
@@ -139,13 +139,13 @@ pub fn create_project(name: &str) -> usize {
 /// A new project can be created with [`create_project`] function.
 #[wasm_bindgen]
 pub fn get_project(project_index: usize) -> Result<project::Project, String> {
-    PROJECTS.with(|projects_ref| {
-        let projects = projects_ref.borrow();
-        Ok(projects
-            .get(project_index)
-            .ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?
-            .clone())
-    })
+	PROJECTS.with(|projects_ref| {
+		let projects = projects_ref.borrow();
+		Ok(projects
+			.get(project_index)
+			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?
+			.clone())
+	})
 }
 
 /// Sends a message to a [`Project`](project::Project) and returns the result
@@ -170,98 +170,141 @@ pub fn get_project(project_index: usize) -> Result<project::Project, String> {
 /// ```
 #[wasm_bindgen]
 pub fn send_message(project_index: usize, message: &Message) -> MessageResult {
-    PROJECTS.with(|projects_ref| {
-        let mut projects = projects_ref.borrow_mut();
-        let Some(mut p) = projects.get_mut(project_index as usize) else {
-            return CADmiumError::ProjectIDNotFound(project_index).into();
-        };
+	PROJECTS.with(|projects_ref| {
+		let mut projects = projects_ref.borrow_mut();
+		let Some(mut p) = projects.get_mut(project_index as usize) else {
+			return CADmiumError::ProjectIDNotFound(project_index).into();
+		};
 
-        message.handle(&mut p).into()
-    })
+		message.handle(&mut p).into()
+	})
 }
 
-/// Returns a concrete [`Workbench`](workbench::Workbench) from a [`Project`](project::Project).
+/// Returns the history of a [`Workbench`](workbench::Workbench) as a [`History`] object
 #[wasm_bindgen]
-pub fn get_workbench(
-    project_index: usize,
-    workbench_index: usize,
-) -> Result<workbench::Workbench, String> {
-    PROJECTS.with(|projects_ref| {
-        let projects = projects_ref.borrow();
-        let p = projects
-            .get(project_index)
-            .ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
-        let wb = p
-            .workbenches
-            .get(workbench_index)
-            .ok_or(CADmiumError::WorkbenchIDNotFound(workbench_index as u64).to_string())?
-            .borrow();
-        Ok(wb.clone())
-    })
+pub fn get_workbench_oplog(
+	project_index: usize,
+	workbench_index: usize,
+) -> Result<History, String> {
+	PROJECTS.with(|projects_ref| {
+		let projects = projects_ref.borrow();
+		let p = projects
+			.get(project_index)
+			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
+		let wb_cell = p
+			.get_workbench_by_id(workbench_index as u64)
+			.map_err(|e| e.to_string())?;
+		let wb = wb_cell.borrow();
+
+		Ok(History(wb.history.clone()))
+	})
+}
+
+/// Returns the event tree of a [`Workbench`](workbench::Workbench) as a serialized [`LoroDoc`](loro::LoroDoc) object
+// TODO: Add ability to retrieve partial event trees
+#[wasm_bindgen]
+pub fn get_workbench_evtree(
+	project_index: usize,
+	workbench_index: usize,
+) -> Result<Vec<u8>, String> {
+	PROJECTS.with(|projects_ref| {
+		let projects = projects_ref.borrow();
+		let p = projects
+			.get(project_index)
+			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
+		let wb_cell = p
+			.get_workbench_by_id(workbench_index as u64)
+			.map_err(|e| e.to_string())?;
+		let wb = wb_cell.borrow();
+
+		Ok(wb.evtree.export())
+	})
+}
+
+// TODO: Add ability to retrieve partial event trees
+#[wasm_bindgen]
+pub fn set_workbench_evtree(
+	project_index: usize,
+	workbench_index: usize,
+	evtree: Vec<u8>,
+) -> Result<(), String> {
+	PROJECTS.with(|projects_ref| {
+		let projects = projects_ref.borrow();
+		let p = projects
+			.get(project_index)
+			.ok_or(CADmiumError::ProjectIDNotFound(project_index).to_string())?;
+		let wb_cell = p
+			.get_workbench_by_id(workbench_index as u64)
+			.map_err(|e| e.to_string())?;
+		let wb = wb_cell.borrow();
+		wb.evtree.import(&evtree).map_err(|e| e.to_string())?;
+
+		Ok(())
+	})
 }
 
 #[derive(Debug, Clone)]
 #[wasm_bindgen]
 pub struct Project {
-    native: project::Project,
+	native: project::Project,
 }
 
 #[wasm_bindgen]
 impl Project {
-    #[wasm_bindgen(constructor)]
-    pub fn new(name: &str) -> Project {
-        console_error_panic_hook::set_once();
-        wasm_logger::init(wasm_logger::Config::default());
+	#[wasm_bindgen(constructor)]
+	pub fn new(name: &str) -> Project {
+		console_error_panic_hook::set_once();
+		wasm_logger::init(wasm_logger::Config::default());
 
-        Project {
-            native: project::Project::new(name),
-        }
-    }
+		Project {
+			native: project::Project::new(name),
+		}
+	}
 
-    #[wasm_bindgen(getter)]
-    pub fn name(&self) -> String {
-        self.native.name.clone()
-    }
+	#[wasm_bindgen(getter)]
+	pub fn name(&self) -> String {
+		self.native.name.clone()
+	}
 
-    #[wasm_bindgen(setter)]
-    pub fn set_name(&mut self, name: String) {
-        self.native.name = name;
-    }
+	#[wasm_bindgen(setter)]
+	pub fn set_name(&mut self, name: String) {
+		self.native.name = name;
+	}
 
-    #[wasm_bindgen(getter)]
-    pub fn json(&self) -> String {
-        self.native.json()
-    }
+	#[wasm_bindgen(getter)]
+	pub fn json(&self) -> String {
+		self.native.json()
+	}
 
-    #[wasm_bindgen]
-    pub fn to_json(&self) -> String {
-        self.native.json()
-    }
+	#[wasm_bindgen]
+	pub fn to_json(&self) -> String {
+		self.native.json()
+	}
 
-    #[wasm_bindgen]
-    pub fn from_json(json: String) -> Project {
-        let p = project::Project::from_json(&json);
-        Project { native: p }
-    }
+	#[wasm_bindgen]
+	pub fn from_json(json: String) -> Project {
+		let p = project::Project::from_json(&json);
+		Project { native: p }
+	}
 
-    #[wasm_bindgen]
-    pub fn compute_constraint_errors(&mut self) {
-        // self.native.compute_constraint_errors();
-    }
+	#[wasm_bindgen]
+	pub fn compute_constraint_errors(&mut self) {
+		// self.native.compute_constraint_errors();
+	}
 
-    #[wasm_bindgen]
-    pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
-        // TODO: Use get() and return a Result
-        self.native
-            .workbenches
-            .get(workbench_index as usize)
-            .unwrap()
-            .borrow()
-            .clone() // This single call pollutes Clone derives for all MessageHandlers
-    }
+	// #[wasm_bindgen]
+	// pub fn get_workbench(&self, workbench_index: u32) -> workbench::Workbench {
+	// 	// TODO: Use get() and return a Result
+	// 	self.native
+	// 		.workbenches
+	// 		.get(workbench_index as usize)
+	// 		.unwrap()
+	// 		.borrow()
+	// 		.clone() // This single call pollutes Clone derives for all MessageHandlers
+	// }
 
-    #[wasm_bindgen]
-    pub fn send_message(&mut self, message: &Message) -> MessageResult {
-        message.handle(&mut self.native).into()
-    }
+	#[wasm_bindgen]
+	pub fn send_message(&mut self, message: &Message) -> MessageResult {
+		message.handle(&mut self.native).into()
+	}
 }

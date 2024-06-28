@@ -1,7 +1,7 @@
 <script lang="ts">
   import {slide} from "svelte/transition"
   import {quintOut} from "svelte/easing"
-  import {renameStep, setSketchPlane} from "shared/projectUtils"
+  import {bench} from "shared/projectUtils"
   import {
     hiddenSketches,
     featureIndex,
@@ -98,11 +98,11 @@
 
     let thingSelected = $currentlySelected[0]
     if (thingSelected.type === "plane") {
-      setSketchPlane(hash, parseInt(thingSelected.id))
+      bench.workbenchSketchSetPlane(hash, thingSelected.id)
     } else if (thingSelected.type === "meshFace") {
       log("HOW DO I HANDLE THIS?")
       log(thingSelected)
-      // setSketchPlane(id, $currentlySelected[0].id)
+      // bench.workbenchSketchSetPlane(hash, $currentlySelected[0].id)
     }
 
     disengageSearchForPlane()
@@ -201,7 +201,7 @@
           class="flex-grow bg-sky-500 hover:bg-sky-700 text-white font-bold py-1.5 px-1 shadow"
           on:click={() => {
             // This is a form button so remember that it triggers the form's on:submit
-            renameStep(hash, name)
+            bench.stepRename(hash, name)
           }}>Done</button
         >
 
