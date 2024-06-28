@@ -66,6 +66,7 @@
   <Canvas>
     <Scene bind:setCameraFocus />
   </Canvas>
+  <div class="dark:text-gray-300 absolute bottom-1 right-1">{GIT_BRANCH} {GIT_HASH}</div>
 </div>
 
 <svelte:window on:mousemove={onMouseMove} on:mouseup={onMouseUp} bind:innerWidth bind:innerHeight />
