@@ -1,7 +1,6 @@
 <script lang="ts">
   import fileDownload from "js-file-download"
-  import {wasmProject, messageHistory} from "shared/stores"
-  import type {Project} from "cadmium"
+  import {messageHistory, project} from "shared/stores"
   import Download from "phosphor-svelte/lib/Download"
   import Upload from "phosphor-svelte/lib/Upload"
   import Bug from "phosphor-svelte/lib/Bug"
@@ -15,18 +14,12 @@
 
   const log = (function () { const context = "[AppBar.svelte]"; const color="gray"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`)})() // prettier-ignore
 
-  export let project: Project
   export let renaming: boolean = false
   export let newProjectName: string = ""
 
   export let newFileContent: string | null = null
 
   let isDarkMode = localStorage.getItem("theme") === "dark"
-
-  $: project,
-    (() => {
-      !project && console.error("[AppBar.svelte] [project] fails isProject(project) typecheck", project)
-    })()
 
   function fileInput(e: WithTarget<Event, HTMLInputElement>) {
     const target = e.target as HTMLInputElement
@@ -57,13 +50,13 @@
         on:blur={() => {
           log("Renaming project aborted")
           renaming = false
-          newProjectName = project.name ?? ""
+          newProjectName = $project.name ?? ""
         }}
         on:keydown={e => {
           if (e.key === "Enter") {
             log("Renaming project")
             bench.projectRename(newProjectName)
-            project.name = newProjectName
+            $project.name = newProjectName
             renaming = false
           }
         }}
@@ -75,18 +68,18 @@
         on:dblclick={() => {
           log("Renaming project")
           renaming = true
-          newProjectName = project.name ?? ""
+          newProjectName = $project.name ?? ""
         }}
       >
-        {project.name ?? ""}
+        {$project.name ?? ""}
       </div>
     {/if}
     <!-- svelte-ignore a11y-no-static-element-interactions -->
     <div
       class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1"
       on:click={() => {
-        let asString = $wasmProject.to_json()
-        fileDownload(asString, `${project.name}.cadmium`)
+        let asString = JSON.stringify(project)
+        fileDownload(asString, `${$project.name}.cadmium`)
       }}
     >
       <Download class="h-6 w-6" />
@@ -107,7 +100,7 @@
       class="hover:bg-gray-300 dark:hover:bg-gray-600 rounded p-1"
       on:click={() => {
         let asString = JSON.stringify($messageHistory)
-        fileDownload(asString, `${project.name}.history.json`)
+        fileDownload(asString, `${$project.name}.history.json`)
       }}
     >
       <Bug class="h-6 w-6" />

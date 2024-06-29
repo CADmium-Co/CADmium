@@ -148,6 +148,24 @@ pub fn get_project(project_index: usize) -> Result<project::Project, String> {
 	})
 }
 
+/// Loads a [`Project`](project::Project) into the global project list and
+/// returns the index of the project in the global project list
+#[wasm_bindgen]
+pub fn load_project(project: project::Project) -> usize {
+	PROJECTS.with(|projects_ref| {
+		let mut projects = projects_ref.borrow_mut();
+		projects.push(project);
+		projects.len() - 1
+	})
+}
+
+#[wasm_bindgen]
+pub fn load_project_from_str(project_str: String) -> Result<usize, String> {
+	let project = serde_json::from_str(&project_str)
+		.map_err(|e| format!("Could not decode project data: {}", e))?;
+	Ok(load_project(project))
+}
+
 /// Sends a message to a [`Project`](project::Project) and returns the result
 ///
 /// [`Message`]s are the primary way to interact with CADmium.

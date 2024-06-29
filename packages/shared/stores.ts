@@ -1,19 +1,16 @@
-import {Solid, StepHash, Project as WasmProject, Workbench} from "cadmium"
-import {writable} from "svelte/store"
-import type {MessageHistory, Project, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry, Point2WithID} from "./types"
+import {EvTree, Project, StepHash, Workbench, get_project} from "cadmium"
+import {derived, writable} from "svelte/store"
+import type {MessageHistory, Entity, EntityType, SnapEntity, PointLikeById, PreviewGeometry, Point2WithID} from "./types"
 import {isArcEntity, isCircleEntity, isEntity, isFaceEntity, isLineEntity, isMeshFaceEntity, isPlaneEntity, isPoint3DEntity, isPointEntity} from "./typeGuards"
 
 // prettier-ignore
 const log = (function () { const context = "[stores.ts]"; const color = "hotpink"; return Function.prototype.bind.call(console.log, console, `%c${context}`, `font-weight:bold;color:${color};`) })()
 
-export const wasmProject = writable<WasmProject>({} as WasmProject)
-export const project = writable<Project>(emptyProject())
-export const projectIsStale = writable(false)
+export const projectIndex = writable(0)
+export const project = derived<typeof projectIndex, Project>(projectIndex, $projectIndex => { get_project($projectIndex) })
 
 export const workbenchIndex = writable(0)
-export const workbench = writable<Workbench>(emptyWorkBench())
-export const workbenchSolids = writable<Solid[]>([])
-export const workbenchIsStale = writable(false)
+export const workbench = derived<[typeof project, typeof workbenchIndex], Workbench>([project, workbenchIndex], ([$project, $workbenchIndex]) => { $project.workbenches[$workbenchIndex] })
 
 export const featureIndex = writable<number>(1000)
 export const extrusionFeatures = writable<Entity[]>([])
@@ -35,11 +32,8 @@ export const previewGeometry = writable<PreviewGeometry[]>([])
 export const messageHistory = writable<MessageHistory[]>([])
 
 project.subscribe(store => log("[project]", store))
-workbenchIndex.subscribe(store => log("[workbenchIndex]", store))
 workbench.subscribe(store => log("[workbench]", store))
-workbenchIsStale.subscribe(store => log("[workbenchIsStale]", store))
 featureIndex.subscribe(store => log("[featureIndex]", store))
-extrusionFeatures.subscribe(store => log("[extrusionFeatures]", store))
 sketchBeingEdited.subscribe(store => log("[sketchBeingEdited]", store))
 messageHistory.subscribe(store => log("[messageHistory]", store))
 
@@ -90,14 +84,7 @@ function emptyWorkBench(): Workbench {
   return {
     name: "",
     history: [],
-    points: [],
-    points_next_id: 0,
-    sketches: [],
-    sketches_next_id: 0,
-    planes: [],
-    planes_next_id: 0,
-    features: [],
-    features_next_id: 0,
+    evtree: {} as EvTree,
   }
 }
 function emptyProject(): Project {

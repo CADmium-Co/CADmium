@@ -1,6 +1,6 @@
 import type {Message} from "./cadmium-api"
 
-import {workbenchIsStale, workbenchIndex, workbench, project, featureIndex, wasmProject, projectIsStale, messageHistory, workbenchSolids} from "./stores"
+import {workbenchIsStale, workbenchIndex, workbench, project, messageHistory} from "./stores"
 import {get} from "svelte/store"
 import {Vector2, Vector3, type Vector2Like} from "three"
 import type {Entity, MessageHistory, WithTarget} from "./types"
@@ -106,20 +106,6 @@ export function deleteEntities(sketchIdx: string, selection: Entity[]) {
   }
 }
 
-// If the project ever becomes stale, refresh it. This should be pretty rare.
-projectIsStale.subscribe(value => {
-  if (value) {
-    const wp = get(wasmProject)
-    project.set(JSON.parse(wp.to_json()))
-
-    workbenchIndex.set(0)
-    workbenchIsStale.set(true)
-    projectIsStale.set(false)
-    // @ts-ignore
-    log("[projectIsStale] Refreshing project", "value:", value, "wasmProject:", wp, "project:", project)
-  }
-})
-
 // If the workbench ever becomes stale, refresh it. This should be very common.
 // Every time you edit any part of the feature history, for example
 workbenchIsStale.subscribe(value => {
@@ -133,13 +119,6 @@ workbenchIsStale.subscribe(value => {
     // workbenchSolids.set(getWorkbenchSolids())
   }
 })
-
-export function getObjectString(solidId: string): string {
-  const solids = get(workbenchSolids)
-  // TODO: Does this work?
-  const objString = solids[solidId].solid_to_obj(solidId, 0.1)
-  return objString
-}
 
 export function readFile(e: WithTarget<Event, HTMLInputElement>): void {
   const target = e.target as HTMLInputElement
