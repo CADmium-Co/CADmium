@@ -1,3 +1,6 @@
+[!CAUTION]
+This repo is inactive. No PRs or issues will be accepted.
+
 # CADmium
 
 This project aims to create a new CAD program from scratch. It is small, it runs in a web browser, and the source code is available for free here on Github.
