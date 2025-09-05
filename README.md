@@ -1,5 +1,5 @@
-[!CAUTION]
-This repo is inactive. No PRs or issues will be accepted.
+>[!CAUTION]
+>This repo is inactive. No PRs or issues will be accepted.
 
 # CADmium
 
